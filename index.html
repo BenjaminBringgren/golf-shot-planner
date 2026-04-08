@@ -63,6 +63,26 @@
     }
     .forced-note { font-size: 12px; color: #888; font-style: italic; }
     .approach-line { margin-top: 2px; }
+    .approach-rec {
+      margin-top: 6px; padding: 7px 10px;
+      background: #e8f4e8; border-left: 3px solid #2a6; border-radius: 4px;
+      font-size: 14px; line-height: 1.5;
+    }
+    .approach-rec .rec-club { font-weight: bold; }
+    .approach-rec .rec-note { font-size: 12px; color: #666; font-style: italic; display: block; margin-top: 2px; }
+    .approach-rec .rec-warn { font-size: 11px; color: #a06000; display: block; margin-top: 3px; }
+    .reset-banner {
+      display: none; align-items: center; gap: 8px;
+      margin-bottom: 10px; padding: 8px 12px;
+      background: #fff8e6; border: 1px solid #e0c060;
+      border-radius: 6px; font-size: 13px; color: #7a5500;
+      cursor: pointer; transition: all 0.2s ease;
+    }
+    .reset-banner.visible { display: flex; }
+    .reset-banner.dimmed {
+      background: #f5f5f5; border-color: #ccc;
+      color: #aaa; cursor: default;
+    }
   </style>
 </head>
 <body>
@@ -456,6 +476,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const TEE_KEYS = ['driver','fw3','fw5','fw7','u2','u3','u4'];
     const teeBase = clubsList.filter(c => TEE_KEYS.includes(c.key));
 
+    // ── Recommend approach club for a given distance ─────────────────────
+    // Uses ALL checked clubs (full clubsList), finds the one whose carry is
+    // closest to but does not exceed the approach distance.
+    // i7Known / pwKnown drive the accuracy warning.
+    function approachClub(approachDist) {
+      let best = null;
+      clubsList.forEach(c => {
+        if (c.carry > approachDist) return;          // carry overshoots — skip
+        if (!best || c.carry > best.carry) best = c; // closest without exceeding
+      });
+      return best;
+    }
+
     // ── Render shots + approach into a container element ──────────────────
     function renderPlan(p, container) {
       container.innerHTML = '';
@@ -472,6 +505,44 @@ document.addEventListener('DOMContentLoaded', () => {
       appDiv.className = 'approach-line';
       appDiv.innerHTML = `&nbsp;&nbsp;↳ <b>Approach: ${p.approach.toFixed(0)}m</b>`;
       container.appendChild(appDiv);
+
+      // ── Approach club recommendation ──────────────────────────────────
+      const rec = approachClub(p.approach);
+      if (rec) {
+        const runUp = Math.round(p.approach - rec.carry);
+        const lbl   = clubMap[rec.key]?.label ?? rec.key;
+        const recDiv = document.createElement('div');
+        recDiv.className = 'approach-rec';
+
+        // Main recommendation line
+        const mainLine = document.createElement('span');
+        mainLine.innerHTML = `🏌️ <span class="rec-club">${lbl}</span> — ${rec.carry.toFixed(0)}m carry`;
+        recDiv.appendChild(mainLine);
+
+        // Aim note
+        const aimNote = document.createElement('span');
+        aimNote.className = 'rec-note';
+        if (runUp <= 2) {
+          aimNote.textContent = 'Fly it all the way — minimal roll expected';
+        } else {
+          aimNote.textContent = `Land ${runUp}m short and let it run up to the pin`;
+        }
+        recDiv.appendChild(aimNote);
+
+        // Accuracy warning — shown only if 7i or PW carry is missing
+        // (wedge/short iron carries are less reliable without these anchors)
+        const recIdx = clubOrder.indexOf(rec.key);
+        const needsWarning = recIdx >= idx7 && (!i7 || !pw);
+        if (needsWarning) {
+          const warn = document.createElement('span');
+          warn.className = 'rec-warn';
+          warn.textContent = '⚠ Accuracy improves if you enter ' +
+            (!i7 && !pw ? '7i and PW carry' : !i7 ? '7i carry' : 'PW carry');
+          recDiv.appendChild(warn);
+        }
+
+        container.appendChild(recDiv);
+      }
     }
 
     // ── Find best plan with a specific tee club locked ────────────────────
@@ -517,6 +588,24 @@ document.addEventListener('DOMContentLoaded', () => {
     heading.innerHTML = `<b>Plans by approach strategy</b> <span class="roll-note">(${condLabel} fairway)</span>`;
     output.appendChild(heading);
 
+    // Reset banner — hidden until at least one tee club is changed
+    const resetBanner = document.createElement('div');
+    resetBanner.className = 'reset-banner';
+    resetBanner.innerHTML = '↺ &nbsp;<span>Tee club overridden — press <b>Calculate Shot Plan</b> to restore original recommendations</span>';
+    resetBanner.addEventListener('click', () => {
+      resetBanner.classList.add('dimmed');
+    });
+    output.appendChild(resetBanner);
+
+    // Track how many selectors are currently overridden
+    const overrideState = {};
+
+    function updateResetBanner() {
+      const anyOverridden = Object.values(overrideState).some(Boolean);
+      resetBanner.classList.toggle('visible', anyOverridden);
+      if (anyOverridden) resetBanner.classList.remove('dimmed');
+    }
+
     ordered.forEach(p => {
       const block = document.createElement('div');
       block.className = 'plan-block';
@@ -532,6 +621,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const teeOptions = teeBase.some(c => c.key === naturalTee.key)
         ? teeBase
         : [...teeBase, naturalTee].sort((a, b) => b.total - a.total);
+
+      // Track override state per plan using plan type as key
+      overrideState[p.type] = false;
 
       if (teeOptions.length > 0) {
         const selectorRow = document.createElement('div');
@@ -563,6 +655,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         sel.addEventListener('change', () => {
           const key = sel.value;
+          overrideState[p.type] = (key !== naturalTee.key);
+          updateResetBanner();
           if (key === naturalTee.key) {
             forcedSpan.textContent = '';
             renderPlan(p, content);
