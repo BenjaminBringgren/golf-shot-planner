@@ -1,5 +1,372 @@
-.club-list strong { display: block; margin-bottom: 6px; }
-.club-item { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
-.club-item input[type="checkbox"] { width: auto; margin: 0; flex-shrink: 0; vertical-align: middle; }
-.club-item label { margin: 0; display: flex; align-items: center; }
-.carry-tag { margin-left: auto; font-size: 12px; color: #888; min-width: 38px; text-align: right; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Golf Shot Planner</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 520px; margin: auto; }
+    h1 { font-size: 22px; }
+    label { display: block; margin-top: 10px; font-weight: bold; font-size: 14px; }
+    input[type="number"], select {
+      width: 100%; padding: 10px; margin: 4px 0 8px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px;
+    }
+    button {
+      width: 100%; padding: 12px; margin: 12px 0; font-size: 16px;
+      background: #2a6; color: white; border: none; border-radius: 8px; cursor: pointer;
+    }
+    button:hover { background: #1d5; }
+    .club-list {
+      margin: 10px 0; padding: 10px; border: 1px solid #ccc; border-radius: 8px;
+      max-height: 250px; overflow-y: auto;
+    }
+    .club-list strong { display: block; margin-bottom: 6px; }
+    .club-item { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
+    .club-item input[type="checkbox"] { width: auto; margin: 0; }
+    .carry-tag { margin-left: auto; font-size: 12px; color: #888; min-width: 38px; text-align: right; }
+    .roll-note { font-size: 12px; color: #888; font-weight: normal; }
+    .result {
+      margin-top: 20px; padding: 15px; background: #f2f2f2;
+      border-radius: 8px; min-height: 40px; line-height: 1.7;
+    }
+    .error { color: #c00; }
+    .plan-block { margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h1>⛳ Golf Shot Planner</h1>
+
+  <label for="holeLength">Hole Length (meters)</label>
+  <input type="number" id="holeLength" placeholder="e.g. 380" min="50" max="600" />
+
+  <label for="parSelect">Par</label>
+  <select id="parSelect">
+    <option value="3">Par 3</option>
+    <option value="4" selected>Par 4</option>
+    <option value="5">Par 5</option>
+  </select>
+
+  <label for="driverCarry">Driver Carry (m) *</label>
+  <input type="number" id="driverCarry" placeholder="e.g. 230" min="100" max="350" />
+
+  <label for="i7Carry">7 Iron Carry (m)</label>
+  <input type="number" id="i7Carry" placeholder="e.g. 155 (optional)" min="80" max="220" />
+
+  <label for="pwCarry">PW Carry (m)</label>
+  <input type="number" id="pwCarry" placeholder="e.g. 120 (optional)" min="50" max="160" />
+
+  <div class="club-list">
+    <strong>Select Clubs in Bag:</strong>
+    <div id="clubContainer"></div>
+  </div>
+
+  <button id="calcButton">Calculate Shot Plan</button>
+  <div class="result" id="output">Enter your details and press Calculate.</div>
+
+<script>
+const STORAGE_KEY = 'golfBag_v1';
+
+const clubs = [
+  {key:'driver', label:'Driver',  roll:1.06, checked:true},
+  {key:'fw3',    label:'FW3',     roll:1.06},
+  {key:'fw5',    label:'FW5',     roll:1.05, checked:true},
+  {key:'fw7',    label:'FW7',     roll:1.04},
+  {key:'u2',     label:'U2',      roll:1.04},
+  {key:'u3',     label:'U3',      roll:1.03},
+  {key:'u4',     label:'U4',      roll:1.03, checked:true},
+  {key:'4i',     label:'4i',      roll:1.03},
+  {key:'5i',     label:'5i',      roll:1.02, checked:true},
+  {key:'6i',     label:'6i',      roll:1.02, checked:true},
+  {key:'7i',     label:'7i',      roll:1.01, checked:true},
+  {key:'8i',     label:'8i',      roll:1.01, checked:true},
+  {key:'9i',     label:'9i',      roll:1.00, checked:true},
+  {key:'pw',     label:'PW',      roll:1.00, checked:true},
+  {key:'50',     label:'50°',     roll:1.00},
+  {key:'52',     label:'52°',     roll:1.00, checked:true},
+  {key:'54',     label:'54°',     roll:1.00},
+  {key:'56',     label:'56°',     roll:1.00, checked:true},
+  {key:'58',     label:'58°',     roll:1.00},
+  {key:'60',     label:'60°',     roll:1.00}
+];
+
+const clubOrder   = clubs.map(c => c.key);
+const rollFactors = clubs.reduce((acc, c) => { acc[c.key] = c.roll; return acc; }, {});
+const idx7        = clubOrder.indexOf('7i');
+const idxPW       = clubOrder.indexOf('pw');
+
+// ── Persistence ────────────────────────────────────────────────────────────
+function saveBag() {
+  const checked = clubs.map(c => document.getElementById('cb_' + c.key)?.checked ?? c.checked);
+  const data = {
+    checked,
+    driver: document.getElementById('driverCarry').value,
+    i7:     document.getElementById('i7Carry').value,
+    pw:     document.getElementById('pwCarry').value,
+  };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+}
+
+function loadBag() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+// ── Interpolation ──────────────────────────────────────────────────────────
+function interpolate(driver, i7, pw, club) {
+  const idx = clubOrder.indexOf(club);
+  if (idx === 0) return driver;
+
+  if (i7 && pw) {
+    if (idx <= idx7) return driver + (i7 - driver) * (idx / idx7);
+    return i7 + (pw - i7) * ((idx - idx7) / (idxPW - idx7));
+  }
+  if (i7) {
+    if (idx <= idx7) return driver + (i7 - driver) * (idx / idx7);
+    return i7 * Math.pow(0.97, idx - idx7);
+  }
+  if (pw) {
+    return driver + (pw - driver) * (idx / idxPW);
+  }
+  return driver * Math.pow(0.97, idx);
+}
+
+// ── Club list UI ───────────────────────────────────────────────────────────
+function getCarryInputs() {
+  return {
+    driver: Number(document.getElementById('driverCarry').value) || 0,
+    i7:     Number(document.getElementById('i7Carry').value)     || 0,
+    pw:     Number(document.getElementById('pwCarry').value)     || 0,
+  };
+}
+
+// Update the carry distance labels next to each club checkbox
+function updateCarryLabels() {
+  const { driver, i7, pw } = getCarryInputs();
+  if (!driver) {
+    clubs.forEach(c => {
+      const span = document.getElementById('carry_' + c.key);
+      if (span) span.textContent = '';
+    });
+    return;
+  }
+  clubs.forEach(c => {
+    const span = document.getElementById('carry_' + c.key);
+    if (!span) return;
+    const carry = interpolate(driver, i7, pw, c.key);
+    span.textContent = isFinite(carry) && carry > 0 ? `${carry.toFixed(0)}m` : '';
+  });
+}
+
+function buildClubUI(saved) {
+  const container = document.getElementById('clubContainer');
+  clubs.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'club-item';
+
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.value = c.key;
+    cb.id = 'cb_' + c.key;
+    // Restore saved state, fall back to default
+    cb.checked = saved ? (saved.checked[i] ?? c.checked) : !!c.checked;
+    cb.addEventListener('change', saveBag);
+
+    const lbl = document.createElement('label');
+    lbl.htmlFor = 'cb_' + c.key;
+    lbl.textContent = c.label;
+
+    // Carry distance span — updated live as carry inputs change
+    const carrySpan = document.createElement('span');
+    carrySpan.id = 'carry_' + c.key;
+    carrySpan.className = 'carry-tag';
+
+    div.appendChild(cb);
+    div.appendChild(lbl);
+    div.appendChild(carrySpan);
+    container.appendChild(div);
+  });
+}
+
+// ── Club selection for planning ────────────────────────────────────────────
+function getClubs(driver, i7, pw) {
+  return [...document.querySelectorAll('#clubContainer input:checked')]
+    .map(cb => {
+      const key = cb.value;
+      if (!(key in rollFactors)) return null;
+      const carry = interpolate(driver, i7, pw, key);
+      if (!isFinite(carry) || carry <= 0) return null;
+      return { key, carry, total: carry * rollFactors[key], idx: clubOrder.indexOf(key) };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b.total - a.total);
+}
+
+// ── Validation ─────────────────────────────────────────────────────────────
+function valid(shots, parValue) {
+  for (let i = 1; i < shots.length; i++) {
+    if (shots[i].total >= shots[i - 1].total) return false;
+  }
+
+  if (shots.length > 1 && shots.slice(1).some(s => s.key === 'driver')) return false;
+
+  if (parValue === 5) {
+    const longClubs = ['driver','fw3','fw5','fw7','u2','u3'];
+    if (!longClubs.includes(shots[0].key)) return false;
+  }
+
+  // Layup shots on par 4/5 must be ≤ 7i (no wedge/short-iron layups)
+  if (parValue >= 4 && shots.length > 1) {
+    for (let i = 1; i < shots.length; i++) {
+      if (shots[i].idx > idx7) return false;
+    }
+  }
+
+  return true;
+}
+
+// ── Scoring ────────────────────────────────────────────────────────────────
+function categorize(dist) {
+  if (dist < 110) return { type: 'Short',  target: 90  };
+  if (dist < 150) return { type: 'Medium', target: 130 };
+  return              { type: 'Long',   target: 170 };
+}
+
+function evaluate(shots, hole, parValue, driver) {
+  if (!valid(shots, parValue)) return null;
+  const sum      = shots.reduce((s, x) => s + x.total, 0);
+  const approach = hole - sum;
+  if (approach <= 0)            return null;
+  if (approach > hole * 0.95)   return null;
+  if (approach >= driver)       return null;
+  const cat = categorize(approach);
+  return { shots, approach, score: Math.abs(approach - cat.target), type: cat.type };
+}
+
+// ── Combinations ───────────────────────────────────────────────────────────
+function generateCombinations(arr, n) {
+  if (n === 1) return arr.map(x => [x]);
+  const combos = [];
+  for (let i = 0; i < arr.length; i++) {
+    generateCombinations(arr.slice(i + 1), n - 1).forEach(tail => {
+      combos.push([arr[i], ...tail]);
+    });
+  }
+  return combos;
+}
+
+// ── Par 3: find the best single tee club that leaves closest to green ──────
+function calcPar3(clubsList, hole) {
+  // On a par 3 the tee shot IS the approach — find club whose total is closest to hole
+  // without going past it, and also flag if any club reaches (for a potential ace).
+  let best = null;
+  clubsList.forEach(c => {
+    if (c.total >= hole) return;              // overshot
+    const diff = hole - c.total;             // distance remaining after tee shot
+    if (!best || diff < best.diff) best = { club: c, diff };
+  });
+  return best;
+}
+
+// ── Main ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = loadBag();
+  buildClubUI(saved);
+
+  // Restore carry inputs from saved bag
+  if (saved) {
+    if (saved.driver) document.getElementById('driverCarry').value = saved.driver;
+    if (saved.i7)     document.getElementById('i7Carry').value     = saved.i7;
+    if (saved.pw)     document.getElementById('pwCarry').value     = saved.pw;
+  }
+
+  // Live-update carry labels and auto-save whenever a carry input changes
+  ['driverCarry','i7Carry','pwCarry'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => {
+      updateCarryLabels();
+      saveBag();
+    });
+  });
+
+  // Initial label paint (in case saved values were restored)
+  updateCarryLabels();
+
+  // ── Calculate ────────────────────────────────────────────────────────────
+  document.getElementById('calcButton').addEventListener('click', () => {
+    const output   = document.getElementById('output');
+    const hole     = Number(document.getElementById('holeLength').value);
+    const parValue = Number(document.getElementById('parSelect').value);
+    const driver   = Number(document.getElementById('driverCarry').value);
+    const i7       = Number(document.getElementById('i7Carry').value) || 0;
+    const pw       = Number(document.getElementById('pwCarry').value) || 0;
+
+    if (!hole || hole < 50)     { output.innerHTML = '<span class="error">Please enter a valid hole length.</span>'; return; }
+    if (!driver || driver < 50) { output.innerHTML = '<span class="error">Please enter your driver carry distance.</span>'; return; }
+
+    const clubsList = getClubs(driver, i7, pw);
+    if (clubsList.length === 0) { output.innerHTML = '<span class="error">No clubs selected.</span>'; return; }
+
+    // ── Par 3 — special path ─────────────────────────────────────────────
+    if (parValue === 3) {
+      const result = calcPar3(clubsList, hole);
+      if (!result) {
+        output.innerHTML = '<span class="error">No club reaches within the hole length. Check carry inputs or selected clubs.</span>';
+        return;
+      }
+      const s = result.club;
+      const label = clubs.find(c => c.key === s.key)?.label ?? s.key;
+      const remaining = hole - s.total;
+      output.innerHTML =
+        `<b>Par 3 — Tee shot is the approach:</b><br><br>` +
+        `<b>${label}</b> — carry ${s.carry.toFixed(0)}m / total ${s.total.toFixed(0)}m<br>` +
+        `&nbsp;&nbsp;↳ <b>Remaining to pin: ${remaining.toFixed(0)}m</b>`;
+      return;
+    }
+
+    // ── Par 4 / 5 — combination path ─────────────────────────────────────
+    const maxShots = parValue === 4 ? 2 : 3;
+    const plans = [];
+
+    for (let n = 1; n <= maxShots; n++) {
+      generateCombinations(clubsList, n).forEach(combo => {
+        const result = evaluate(combo, hole, parValue, driver);
+        if (result) plans.push(result);
+      });
+    }
+
+    const best = {};
+    plans.forEach(p => {
+      if (!best[p.type] || p.score < best[p.type].score) best[p.type] = p;
+    });
+
+    const ordered = ['Long','Medium','Short'].map(t => best[t]).filter(Boolean);
+
+    if (ordered.length === 0) {
+      output.innerHTML = '<span class="error">No valid plans found. Check inputs or selected clubs.</span>';
+      return;
+    }
+
+    let html = '<b>Plans by approach strategy:</b>';
+    ordered.forEach(p => {
+      html += `<div class="plan-block"><br><b>${p.type} approach:</b><br>`;
+      p.shots.forEach((s, i) => {
+        const label = clubs.find(c => c.key === s.key)?.label ?? s.key;
+        // Show carry and total with roll separately
+        const rollNote = s.carry !== s.total
+          ? ` <span class="roll-note">(carry ${s.carry.toFixed(0)}m + roll)</span>`
+          : '';
+        html += `Shot ${i + 1}: <b>${label}</b> — ${s.total.toFixed(0)}m${rollNote}<br>`;
+      });
+      html += `&nbsp;&nbsp;↳ <b>Approach: ${p.approach.toFixed(0)}m</b><br>`;
+      html += `</div>`;
+    });
+
+    output.innerHTML = html;
+  });
+});
+</script>
+</body>
+</html>
