@@ -110,7 +110,7 @@
     .load-course-btn {
       display: none;
       position: fixed;
-      bottom: 77px;
+      bottom: calc(6px + 49px + 6px + env(safe-area-inset-bottom));
       left: 0; right: 0;
       align-items: center; justify-content: center; gap: 7px;
       padding: 20px 14px;
@@ -230,6 +230,17 @@
     .mg-stat-tile { background: #f0efeb; border-radius: 9px; padding: 11px 13px; }
     .mg-stat-val  { font-size: 24px; font-weight: 700; color: #1a1a1a; line-height: 1; }
     .mg-stat-lbl  { font-size: 11px; color: #888; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .mg-stat-tile.tappable { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .mg-stat-tile.tappable:active { background: #e5e3df; }
+    .mg-breakdown-card { background: #fff; border-radius: 12px; border: 0.5px solid rgba(0,0,0,0.08); overflow: hidden; }
+    .mg-breakdown-title { font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em; padding: 12px 14px 8px; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+    .mg-breakdown-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.05); }
+    .mg-breakdown-row:last-child { border-bottom: none; }
+    .mg-breakdown-label { font-size: 13px; font-weight: 600; color: #1a1a1a; width: 82px; flex-shrink: 0; }
+    .mg-breakdown-bar-wrap { flex: 1; height: 8px; background: #f0efeb; border-radius: 4px; overflow: hidden; }
+    .mg-breakdown-bar { height: 100%; border-radius: 4px; }
+    .mg-breakdown-pct { font-size: 13px; font-weight: 700; color: #1a1a1a; width: 40px; text-align: right; flex-shrink: 0; }
+    .mg-breakdown-val { font-size: 15px; font-weight: 700; color: #1a1a1a; margin-left: auto; }
 
     /* Section labels inside sub-pages */
     .mg-section-lbl {
@@ -243,17 +254,19 @@
       margin: 0 12px 12px; background: #fff;
       border: 0.5px solid rgba(0,0,0,0.07); border-radius: 12px; overflow: hidden;
     }
-    .mg-round-row {
-      display: flex; align-items: center; padding: 10px 14px;
-      border-bottom: 0.5px solid #f1efe9; gap: 8px;
+    .mg-score-over   { color: #3a6fc4; }
+    .mg-score-under  { color: #c0392b; }
+    .mg-score-even   { color: #aaa; }
+    .mg-chart-strip {
+      display: flex; border-top: 0.5px solid rgba(0,0,0,0.05);
     }
-    .mg-round-row:last-child { border-bottom: none; }
-    .mg-round-course { font-size: 14px; font-weight: 700; color: #1a1a1a; }
-    .mg-round-meta   { font-size: 12px; color: #888; margin-top: 1px; }
-    .mg-round-score  { margin-left: auto; font-size: 16px; font-weight: 700; }
-    .mg-score-over   { color: #a32d2d; }
-    .mg-score-under  { color: #1e7a45; }
-    .mg-score-even   { color: #666; }
+    .mg-chart-strip-item {
+      flex: 1; padding: 12px 0; text-align: center;
+      border-right: 0.5px solid rgba(0,0,0,0.05);
+    }
+    .mg-chart-strip-item:last-child { border-right: none; }
+    .mg-chart-strip-val { font-size: 17px; font-weight: 700; color: #1a1a1a; line-height: 1; }
+    .mg-chart-strip-lbl { font-size: 10px; color: #ccc; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
 
     /* Bag sub-page carry bars */
     .mg-carry-card {
@@ -455,11 +468,12 @@
       width: 28px; height: 28px; border-radius: 50%;
       font-size: 13px; font-weight: 700;
     }
-    .sc-pill.eagle  { background: #1e7a45; color: #fff; }
-    .sc-pill.birdie { background: #c0f0d4; color: #0f5c2e; }
-    .sc-pill.par    { background: #f0efeb; color: #444; }
-    .sc-pill.bogey  { background: #ffe0e0; color: #a32d2d; }
-    .sc-pill.double { background: #ffc0c0; color: #791f1f; }
+    .sc-pill.hole-in-one { background: #f5c400; color: #7a5800; border-radius: 50%; }
+    .sc-pill.eagle  { background: #f07020; color: #fff; border-radius: 50%; }
+    .sc-pill.birdie { background: #c0392b; color: #fff; border-radius: 50%; }
+    .sc-pill.par    { background: #f0efeb; color: #444; border-radius: 50%; }
+    .sc-pill.bogey  { background: #3a6fc4; color: #fff; border-radius: 4px; }
+    .sc-pill.double { background: #1a3a7a; color: #fff; border-radius: 4px; }
     /* Strategy label */
     .sc-strategy            { font-size: 12px; font-weight: 600; color: #a05a5a; }
     .sc-strategy.balanced   { color: #986840; }
@@ -499,8 +513,9 @@
     .course-bar-actions { display: flex; gap: 5px; }
     .course-bar-btn {
       background: #f0efeb; color: #555;
-      border: none; border-radius: 6px; cursor: pointer; flex-shrink: 0;
-      font-size: 12px; padding: 5px 8px; width: auto; margin: 0;
+      border: none; border-radius: 8px; cursor: pointer; flex-shrink: 0;
+      font-size: 14px; padding: 8px 12px; width: auto; margin: 0;
+      min-height: 44px; display: flex; align-items: center; justify-content: center;
     }
     .course-bar-btn:active { background: #e5e3df; }
     .course-bar-btn.dismiss { color: #bbb; }
@@ -539,13 +554,15 @@
     .hole-cell:hover { background: #e5e3df; }
     .hole-cell.current { background: #1a1a1a; color: #fff; }
     .hole-cell.current .hole-cell-par { color: rgba(255,255,255,0.5); }
-    .hole-cell.score-birdie  { background: #d4edda; color: #1e7a45; }
-    .hole-cell.score-birdie .hole-cell-par { color: #6cc08c; }
-    .hole-cell.score-eagle   { background: #1e7a45; color: #fff; }
+    .hole-cell.score-hole-in-one { background: #f5c400; color: #7a5800; }
+    .hole-cell.score-eagle   { background: #f07020; color: #fff; }
+    .hole-cell.score-birdie  { background: #c0392b; color: #fff; }
+    .hole-cell.score-birdie .hole-cell-par { color: rgba(255,255,255,0.6); }
     .hole-cell.score-par     { background: #f0efeb; color: #888; }
-    .hole-cell.score-bogey   { background: #fde8e8; color: #c0392b; }
-    .hole-cell.score-bogey .hole-cell-par { color: #e08080; }
-    .hole-cell.score-double  { background: #fca5a5; color: #7a0000; }
+    .hole-cell.score-bogey   { background: #3a6fc4; color: #fff; }
+    .hole-cell.score-bogey .hole-cell-par { color: rgba(255,255,255,0.6); }
+    .hole-cell.score-double  { background: #1a3a7a; color: #fff; }
+    .hole-cell.current.score-hole-in-one,
     .hole-cell.current.score-birdie,
     .hole-cell.current.score-eagle,
     .hole-cell.current.score-par,
@@ -1131,17 +1148,18 @@
     }
 
     /* ── Strategy plan card (v3 — single card + switcher) ──── */
-    .carousel-outer { overflow: hidden; margin: 0; padding: 0; background: #fff; border-radius: 12px; border: 0.5px solid rgba(0,0,0,0.07); }
+    .carousel-outer { overflow: hidden; margin: 0; padding: 0; background: #fff; border-radius: 12px; border: 0.5px solid rgba(0,0,0,0.07); height: auto; }
     .carousel-track {
-      display: flex; gap: 0;
+      display: flex; gap: 0; align-items: flex-start;
       transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
       will-change: transform;
     }
     .carousel-card {
       flex: 0 0 100%; min-width: 0;
-      border-radius: 12px; overflow: hidden;
+      border-radius: 12px; overflow: visible;
       border: none; background: #fff;
       box-shadow: none;
+      height: auto;
     }
     .carousel-card.compare-card { flex: 0 0 100%; }
 
@@ -1154,8 +1172,8 @@
     /* Header — now light, minimal */
     .cc-header { padding: 13px 14px 10px; cursor: pointer; user-select: none; }
     .cc-badge {
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.5px; margin-bottom: 5px;
+      font-size: 12px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.07em; margin-bottom: 5px; display: block;
     }
     .carousel-card.type-max-distance  .cc-badge { color: #c0392b; }
     .carousel-card.type-controlled    .cc-badge { color: #c07820; }
@@ -1163,8 +1181,8 @@
     .carousel-card.type-custom        .cc-badge { color: #888; }
     .cc-type { font-size: 11px; font-weight: 700; color: #1a1a1a; }
     .cc-score-row { display: flex; align-items: baseline; gap: 6px; margin-top: 4px; }
-    .cc-score-num { font-size: 30px; font-weight: 700; color: #1a1a1a; line-height: 1; letter-spacing: -0.5px; }
-    .cc-score-vs  { font-size: 12px; color: #aaa; }
+    .cc-score-num { font-size: 36px; font-weight: 700; color: #1a1a1a; line-height: 1; letter-spacing: -0.5px; }
+    .cc-score-vs  { font-size: 14px; color: #aaa; }
     .cc-sub  { font-size: 12px; color: #aaa; margin-top: 3px; }
     .cc-score-pill { display: none; }
     .cc-wind-pill {
@@ -1206,7 +1224,7 @@
     .cc-shot-wind.head { color: #c05000; }
     .cc-shot-wind.tail { color: #1e7a45; }
     .cc-shot-right { text-align: right; margin-left: auto; flex-shrink: 0; }
-    .cc-shot-dist { font-size: 24px; font-weight: 700; color: #1a1a1a; line-height: 1; }
+    .cc-shot-dist { font-size: 26px; font-weight: 700; color: #1a1a1a; line-height: 1; }
     .cc-shot-unit { font-size: 12px; color: #bbb; }
     .cc-shot-carry { font-size: 11px; color: #aaa; margin-top: 1px; }
     .cc-shot-done {
@@ -1280,6 +1298,27 @@
     .tee-chip-bag svg { display: block; flex-shrink: 0; }
     .tee-chip-bag-label { font-size: 12px; font-weight: 600; color: #888; }
     .cc-tee-select { width: 100%; padding: 9px 10px; font-size: 14px; border: 1px solid #e0e0e0; border-radius: 6px; margin-top: 5px; background: #f9f8f6; color: #222; font-family: inherit; }
+    /* ── Strategy footer strip ──────────────────────────────── */
+    .cc-strat-footer { display: flex; border-top: 0.5px solid rgba(0,0,0,0.07); }
+    .cc-strat-btn {
+      flex: 1; padding: 9px 4px 8px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2px; cursor: pointer;
+      border-right: 0.5px solid rgba(0,0,0,0.07);
+      border-top: 2.5px solid transparent;
+      background: #fafafa;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cc-strat-btn:last-child { border-right: none; }
+    .cc-strat-btn.active { background: #fff; }
+    .cc-strat-btn-club { font-size: 12px; font-weight: 700; color: #ccc; }
+    .cc-strat-btn-score { font-size: 11px; color: #ccc; }
+    .cc-strat-btn.active .cc-strat-btn-club { color: inherit; }
+    .cc-strat-btn.active .cc-strat-btn-score { color: #555; }
+    .carousel-card.type-max-distance  .cc-strat-btn.active { border-top-color: #c0392b; color: #c0392b; }
+    .carousel-card.type-controlled    .cc-strat-btn.active { border-top-color: #c07820; color: #c07820; }
+    .carousel-card.type-conservative  .cc-strat-btn.active { border-top-color: #1e7a45; color: #1e7a45; }
+    .carousel-card.type-custom        .cc-strat-btn.active { border-top-color: #888;    color: #555; }
 
     /* Detail expansion */
     .cc-detail { display: none; border-top: 0.5px solid #f2f1ee; padding: 10px 14px; }
@@ -1363,7 +1402,7 @@
     #calcButton:hover { background: #333; }
     #calcButton.course-active { display: none; }
     #panePlay.course-active-play { background: #f5f4f0; }
-    #panePlay:not(.course-active-play) { padding-bottom: calc(77px + 58px) !important; }
+    #panePlay:not(.course-active-play) { padding-bottom: calc(6px + 49px + 6px + env(safe-area-inset-bottom) + 58px) !important; }
     #panePrepare.active { min-height: 100vh; }
     #playBodyPad { padding-top: 8px; }
     /* Par/cond strip in body area */
@@ -1604,11 +1643,12 @@
       width: 24px; height: 24px; border-radius: 4px;
       font-size: 13px; font-weight: 700;
     }
-    .sp-eagle  { background: #1e7a45; color: #fff; }
-    .sp-birdie { background: #c0f0d4; color: #0f5c2e; }
-    .sp-par    { background: #f0efeb; color: #444; }
-    .sp-bogey  { background: #ffe0e0; color: #a32d2d; }
-    .sp-double { background: #ffc0c0; color: #791f1f; }
+    .sp-hole-in-one { background: #f5c400; color: #7a5800; border-radius: 50%; }
+    .sp-eagle  { background: #f07020; color: #fff; border-radius: 50%; }
+    .sp-birdie { background: #c0392b; color: #fff; border-radius: 50%; }
+    .sp-par    { background: #f0efeb; color: #444; border-radius: 4px; }
+    .sp-bogey  { background: #3a6fc4; color: #fff; border-radius: 4px; }
+    .sp-double { background: #1a3a7a; color: #fff; border-radius: 4px; }
 
     /* ── Wind offline / manual entry ────────────────────────────────── */
     .wind-offline-msg {
@@ -2241,6 +2281,28 @@
       <div id="savedRoundsSection"></div>
     </div>
 
+    <!-- ── Score Breakdown sub-page ──────────────────────────────────── -->
+    <div class="mg-sub" id="mgSubScoreBreakdown">
+      <div class="mg-sub-header">
+        <button class="mg-back-btn" id="mgBackScoreBreakdown">‹</button>
+        <h2>Score breakdown</h2>
+      </div>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px;" id="mgBreakdownContent">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- ── Putts Breakdown sub-page ────────────────────────────────────── -->
+    <div class="mg-sub" id="mgSubPuttsBreakdown">
+      <div class="mg-sub-header">
+        <button class="mg-back-btn" id="mgBackPuttsBreakdown">‹</button>
+        <h2>Putts breakdown</h2>
+      </div>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px;" id="mgPuttsContent">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
     <!-- ── My Courses sub-page ───────────────────────────────────────── -->
     <div class="mg-sub" id="mgSubCourses">
       <div class="mg-sub-header">
@@ -2573,6 +2635,7 @@ function windCategory(idx) {
 let teeMarked = false;
 
 const teeOverrides = {};
+const shot2Overrides = {}; // user-selected second-shot club per strategy type
 let par3ClubOverride = null; // persists across calculate() calls
 
 // ── Expected strokes remaining lookup ─────────────────────────────────────
@@ -3747,7 +3810,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ? (clubsList.find(c => c.key === par3ClubOverride) || par3DefaultClub)
         : par3DefaultClub;
       const s = par3ActiveClub;
-      const condLabel = document.getElementById('conditions').value === 'firm' ? 'Firm' : 'Soft';
+
+    const condLabel = document.getElementById('conditions').value === 'firm' ? 'Firm' : 'Soft';
 
       const carouselOuter3 = document.createElement('div');
       carouselOuter3.className = 'carousel-outer';
@@ -3973,7 +4037,7 @@ document.addEventListener('DOMContentLoaded', () => {
     lastParValue = parValue;
 
     // Only reset tee overrides when explicitly triggered by the button press
-    if (clearOverrides) { Object.keys(teeOverrides).forEach(k => delete teeOverrides[k]); par3ClubOverride = null; }
+    if (clearOverrides) { Object.keys(teeOverrides).forEach(k => delete teeOverrides[k]); Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]); par3ClubOverride = null; }
 
     // ── Par 4 / 5 — tee-club-rank algorithm ──────────────────────────────
     const validTeeClubs = getValidTeeClubs(clubsList, parValue);
@@ -4103,11 +4167,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ── Render a single strategy card ─────────────────────────────────────
-    function buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen) {
-      const override   = teeOverrides[basePlan.type];
-      const activePlan = override ? (solveForced(override) || basePlan) : basePlan;
+    // Build a modified plan using a user-forced second club.
+    // Preserves the tee shot; replaces the 2nd shot and recalculates approach/score.
+    function buildPlanWithShot2Override(basePlan, activePlan, forced2Key) {
+      if (!activePlan.shots || activePlan.shots.length < 2) return null;
+      const teeShot  = activePlan.shots[0];
+      const forced2  = clubsList.find(c => c.key === forced2Key);
+      if (!forced2) return null;
+      const approach = hole - teeShot.total - forced2.total;
+      if (approach < 0) return null; // overshoots green
+      const driverCarry2 = driverClub ? driverClub.carry : driver;
+      const score = 2 + expectedStrokesRemaining(approach, driverCarry2);
+      return { shots: [teeShot, forced2], approach, score };
+    }
 
-      const isCustom = !!override;
+    function buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen) {
+      const override    = teeOverrides[basePlan.type];
+      const shot2Key    = shot2Overrides[basePlan.type];
+      const basePlanResolved = override ? (solveForced(override) || basePlan) : basePlan;
+      const activePlan  = (shot2Key && basePlanResolved.shots?.length >= 2)
+        ? (buildPlanWithShot2Override(basePlan, basePlanResolved, shot2Key) || basePlanResolved)
+        : basePlanResolved;
+
+      const isCustom = !!override; // shot2 override does NOT trigger custom badge
 
       const card = document.createElement('div');
       card.className = 'carousel-card';
@@ -4189,95 +4271,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const shotsCompleted = teeMarked ? Math.max(1, completedShots.length) : 0;
 
-      // Tee chip row — one chip per valid tee club rank, shows club name
-      const chipRow = document.createElement('div');
-      chipRow.className = 'tee-chip-row';
-      const chipLabel = document.createElement('div');
-      chipLabel.className = 'tee-chip-label';
-      chipLabel.textContent = 'Tee club';
-      chipRow.appendChild(chipLabel);
-
-      const chipsWrap = document.createElement('div');
-      chipsWrap.className = 'tee-chips';
-
-      const validTees = getValidTeeClubs(clubsList, parValue).slice(0, 3);
-      validTees.forEach(teeClub => {
-        const chipLbl      = clubMap[teeClub.key]?.label ?? teeClub.key;
-        const matchingPlan = ordered.find(p => p.shots[0].key === teeClub.key);
-        const isActive     = matchingPlan?.type === basePlan.type && !override;
-        const hasNoPlan    = !matchingPlan;
-
-        const chip = document.createElement('div');
-        chip.className = 'tee-chip' +
-          (isActive                       ? ' active' : '') +
-          (teeMarked || hasNoPlan         ? ' locked' : '');
-        chip.textContent = chipLbl;
-        if (hasNoPlan) chip.title = 'No valid plan for this club on this hole';
-
-        if (!teeMarked && matchingPlan) {
-          chip.addEventListener('click', () => {
-            if (teeOverrides[matchingPlan.type]) teeOverrides[matchingPlan.type] = null;
-            if (typeof window._switchStrategyCard === 'function') {
-              window._switchStrategyCard(matchingPlan.type);
-            }
-          });
-        }
-        chipsWrap.appendChild(chip);
-      });
-
-      // Bag chip
-      const bagChip = document.createElement('div');
-      bagChip.className = 'tee-chip bag-chip' +
-        (teeMarked ? ' locked' : '') +
-        (override  ? ' active' : '');
-
-      const bagInner = document.createElement('div');
-      bagInner.className = 'tee-chip-bag';
-
-      const bagSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      bagSvg.setAttribute('width', '14');
-      bagSvg.setAttribute('height', '21');
-      bagSvg.setAttribute('viewBox', '0 0 349 518');
-      bagSvg.setAttribute('fill', 'none');
-      bagSvg.style.color = override ? '#1e7a45' : '#888';
-      bagSvg.innerHTML = `<path d="M319.865 425.637C314.058 433.485 298.865 430.637 298.865 430.637V189.637C298.865 189.637 316.842 186.765 321.865 195.137C324.879 200.16 323.865 210.137 323.865 210.137V412.137C323.865 412.137 324.163 419.829 319.865 425.637Z" fill="currentColor"/>
-    <path d="M84.8653 448.637H267.365V189.637L48.8653 287.137V347.637V438.137C48.8653 448.637 84.8653 448.637 84.8653 448.637Z" fill="currentColor"/>
-    <path d="M84.8653 237.137V216.637H133.865L84.8653 237.137Z" fill="currentColor"/>
-    <path d="M267.365 150.137L198.365 183.637H84.8653V129.637H133.283L129.865 85.6371C129.865 85.6371 64.7881 120.204 28.3653 103.137C20.4185 99.4134 14.8441 97.9927 9.36529 91.1371C3.58296 83.9017 3.45838 77.7611 1.86529 68.6371C0.018102 58.0577 0.0719012 51.7257 1.86529 41.1371C3.44295 31.8222 3.3754 25.4431 9.36529 18.1371C17.3653 8.37935 27.8653 6.63706 35.3653 3.13704C42.8653 -0.362974 80.5689 -1.43121 112.365 6.63708C120.924 8.80888 126.141 9.35914 133.865 13.6371C141.149 17.6706 149.865 23.137 150.365 27.1371C152.425 43.6149 159.915 107.608 162.489 129.637H177.34L243.865 18.1371C243.865 18.1371 252.242 9.10153 259.365 6.63708C267.116 3.95559 272.444 4.5145 280.365 6.63708C287.365 8.51272 338.865 37.137 344.865 49.6371C350.196 60.7433 348.018 69.2824 344.996 81.1235L344.865 81.6371C341.05 96.5988 336.931 106.91 323.865 115.137C315.286 120.539 308.964 123.035 298.865 122.137C291.171 121.453 287.193 118.75 280.365 115.137C261.546 105.179 243.865 74.6371 243.865 74.6371L213.945 129.637H259.365C262.49 129.637 267.365 129.013 267.365 132.137V150.137Z" fill="currentColor"/>
-    <path d="M267.365 507.762V489.012C267.365 489.012 268.437 483.743 265.865 481.137C263.259 478.496 257.865 479.637 257.865 479.637H93.3653C93.3653 479.637 89.3245 479.407 86.8653 481.637C84.153 484.096 84.8653 489.012 84.8653 489.012V507.762C84.8653 507.762 84.153 513.178 86.8653 515.637C89.3245 517.867 93.3653 517.137 93.3653 517.137H257.865C257.865 517.137 263.259 518.278 265.865 515.637C268.437 513.031 267.365 507.762 267.365 507.762Z" fill="currentColor"/>`;
-
-      const bagLbl = document.createElement('span');
-      bagLbl.className = 'tee-chip-bag-label';
-      bagLbl.textContent = 'Bag';
-      bagInner.appendChild(bagSvg);
-      bagInner.appendChild(bagLbl);
-      bagChip.appendChild(bagInner);
-
-      if (!teeMarked) {
-        bagChip.addEventListener('click', () => {
-          const currentKey = teeOverrides[basePlan.type] || basePlan.shots[0].key;
-          if (typeof window._openClubPicker === 'function') {
-            window._openClubPicker(
-              currentKey,
-              (selectedKey) => {
-                teeOverrides[basePlan.type] = selectedKey !== basePlan.shots[0].key
-                  ? selectedKey : null;
-                const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
-                newCard.id = 'activeStrategyCard';
-                card.replaceWith(newCard);
-                updateCompareTable();
-              },
-              { type: 'par', parValue }
-            );
-          }
-        });
-      }
-
-      chipsWrap.appendChild(bagChip);
-      chipRow.appendChild(chipsWrap);
-      body.appendChild(chipRow);
-
       // Shot rows
+
       activePlan.shots.forEach((s, i) => {
         const lbl    = clubMap[s.key]?.label ?? s.key;
         const isDone = i < shotsCompleted;
@@ -4360,6 +4355,83 @@ document.addEventListener('DOMContentLoaded', () => {
               <div class="cc-shot-dist">${s.total.toFixed(0)}<span class="cc-shot-unit">m</span></div>
             </div>`;
           body.appendChild(row);
+
+          // Second-shot club picker (i===1 only, not GPS-done)
+          if (i === 1 && !isDone) {
+            const shot2AllCandidates = clubsList.filter(c =>
+              c.key !== 'driver' && c.total < activePlan.shots[0].total
+              && (hole - activePlan.shots[0].total - c.total) >= 0
+            );
+            // Always anchor to basePlan recommended club so chips are fixed
+            const recS2Key = basePlan.shots[1]?.key;
+            const recS2Idx = recS2Key ? shot2AllCandidates.findIndex(c => c.key === recS2Key) : -1;
+            const shot2Candidates = recS2Idx >= 0
+              ? shot2AllCandidates.slice(recS2Idx, recS2Idx + 3)
+              : shot2AllCandidates.slice(0, 3);
+            if (shot2Candidates.length > 0) {
+              const s2Row = document.createElement('div');
+              s2Row.className = 'tee-chip-row';
+              const s2Label = document.createElement('div');
+              s2Label.className = 'tee-chip-label';
+              s2Label.textContent = '2nd club';
+              s2Row.appendChild(s2Label);
+
+              const s2Chips = document.createElement('div');
+              s2Chips.className = 'tee-chips';
+
+              const currentS2Key = shot2Key || activePlan.shots[1].key;
+
+              shot2Candidates.forEach(cand => {
+                const chip = document.createElement('div');
+                chip.className = 'tee-chip' + (cand.key === currentS2Key ? ' active' : '');
+                chip.textContent = clubMap[cand.key]?.label ?? cand.key;
+
+                // Show if this club would overshoot (approach < 0)
+                const testApproach = hole - activePlan.shots[0].total - cand.total;
+                if (testApproach < 0) {
+                  chip.classList.add('locked');
+                  chip.title = 'Overshoots the green';
+                } else {
+                  chip.addEventListener('click', () => {
+                    if (cand.key === (shot2Key || activePlan.shots[1].key)) {
+                      // Tapping the active chip resets to recommended
+                      shot2Overrides[basePlan.type] = null;
+                    } else {
+                      shot2Overrides[basePlan.type] = cand.key;
+                    }
+                    const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
+                    newCard.id = card.id || 'activeStrategyCard';
+                    card.replaceWith(newCard);
+                    updateCompareTable();
+                  });
+                }
+                s2Chips.appendChild(chip);
+              });
+
+              // Bag chip — opens full picker for 2nd club
+              const s2BagChip = document.createElement('div');
+              s2BagChip.className = 'tee-chip bag-chip';
+              s2BagChip.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:5px 8px;';
+              s2BagChip.innerHTML = '<svg width="11" height="16" viewBox="0 0 349 518" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;"><path d="M319.865 425.637C314.058 433.485 298.865 430.637 298.865 430.637V189.637C298.865 189.637 316.842 186.765 321.865 195.137C324.879 200.16 323.865 210.137 323.865 210.137V412.137C323.865 412.137 324.163 419.829 319.865 425.637Z" fill="#888"/><path d="M84.8653 448.637H267.365V189.637L48.8653 287.137V347.637V438.137C48.8653 448.637 84.8653 448.637 84.8653 448.637Z" fill="#888"/><path d="M84.8653 237.137V216.637H133.865L84.8653 237.137Z" fill="#888"/><path d="M267.365 150.137L198.365 183.637H84.8653V129.637H133.283L129.865 85.6371C129.865 85.6371 64.7881 120.204 28.3653 103.137C20.4185 99.4134 14.8441 97.9927 9.36529 91.1371C3.58296 83.9017 3.45838 77.7611 1.86529 68.6371C0.018102 58.0577 0.0719012 51.7257 1.86529 41.1371C3.44295 31.8222 3.3754 25.4431 9.36529 18.1371C17.3653 8.37935 27.8653 6.63706 35.3653 3.13704C42.8653 -0.362974 80.5689 -1.43121 112.365 6.63708C120.924 8.80888 126.141 9.35914 133.865 13.6371C141.149 17.6706 149.865 23.137 150.365 27.1371C152.425 43.6149 159.915 107.608 162.489 129.637H177.34L243.865 18.1371C243.865 18.1371 252.242 9.10153 259.365 6.63708C267.116 3.95559 272.444 4.5145 280.365 6.63708C287.365 8.51272 338.865 37.137 344.865 49.6371C350.196 60.7433 348.018 69.2824 344.996 81.1235L344.865 81.6371C341.05 96.5988 336.931 106.91 323.865 115.137C315.286 120.539 308.964 123.035 298.865 122.137C291.171 121.453 287.193 118.75 280.365 115.137C261.546 105.179 243.865 74.6371 243.865 74.6371L213.945 129.637H259.365C262.49 129.637 267.365 129.013 267.365 132.137V150.137Z" fill="#888"/><path d="M267.365 507.762V498.387V489.012C267.365 489.012 268.437 483.743 265.865 481.137C263.259 478.496 257.865 479.637 257.865 479.637H93.3653C93.3653 479.637 89.3245 479.407 86.8653 481.637C84.153 484.096 84.8653 489.012 84.8653 489.012V498.387V507.762C84.8653 507.762 84.153 513.178 86.8653 515.637C89.3245 517.867 93.3653 517.137 93.3653 517.137H257.865C257.865 517.137 263.259 518.278 265.865 515.637C268.437 513.031 267.365 507.762 267.365 507.762Z" fill="#888"/></svg>';
+              s2BagChip.addEventListener('click', () => {
+                const curS2Key = shot2Overrides[basePlan.type] || activePlan.shots[1]?.key;
+                if (typeof window._openClubPicker === 'function') {
+                  window._openClubPicker(curS2Key, (selectedKey) => {
+                    const forced = clubsList.find(c => c.key === selectedKey);
+                    const testApp = forced ? hole - activePlan.shots[0].total - forced.total : -1;
+                    if (testApp >= 0) shot2Overrides[basePlan.type] = selectedKey === activePlan.shots[1]?.key ? null : selectedKey;
+                    const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
+                    newCard.id = card.id || 'activeStrategyCard';
+                    card.replaceWith(newCard); updateCompareTable();
+                  }, { type: 'no-driver' });
+                }
+              });
+              s2Chips.appendChild(s2BagChip);
+
+              s2Row.appendChild(s2Chips);
+              body.appendChild(s2Row);
+            }
+          }
         }
       });
 
@@ -4421,6 +4493,48 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       card.appendChild(body);
+
+      // ── Strategy footer strip
+      if (!teeMarked) {
+        const stratFooter = document.createElement('div');
+        stratFooter.className = 'cc-strat-footer';
+        ordered.forEach(plan => {
+          const res = teeOverrides[plan.type] ? (solveForced(teeOverrides[plan.type]) || plan) : plan;
+          const withS2 = (shot2Overrides[plan.type] && res.shots?.length >= 2)
+            ? (buildPlanWithShot2Override(plan, res, shot2Overrides[plan.type]) || res) : res;
+          const teeKey = teeOverrides[plan.type] || plan.shots[0].key;
+          const teeLabel = clubMap[teeKey]?.label ?? teeKey;
+          const diff = withS2.score - parValue;
+          const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff.toFixed(1) : diff.toFixed(1));
+          const btn = document.createElement('div');
+          btn.className = 'cc-strat-btn' + (plan.type === basePlan.type && !override ? ' active' : '');
+          const clubEl = document.createElement('div'); clubEl.className = 'cc-strat-btn-club'; clubEl.textContent = teeLabel;
+          const scoreEl = document.createElement('div'); scoreEl.className = 'cc-strat-btn-score'; scoreEl.textContent = withS2.score.toFixed(1) + ' · ' + diffStr;
+          btn.appendChild(clubEl); btn.appendChild(scoreEl);
+          btn.addEventListener('click', () => {
+            if (teeOverrides[plan.type]) teeOverrides[plan.type] = null;
+            if (typeof window._switchStrategyCard === 'function') window._switchStrategyCard(plan.type);
+          });
+          stratFooter.appendChild(btn);
+        });
+        // Bag button — custom tee club
+        const bagBtn = document.createElement('div');
+        bagBtn.className = 'cc-strat-btn' + (override ? ' active' : '');
+        bagBtn.style.cssText = 'padding-top:10px;padding-bottom:10px;';
+        bagBtn.innerHTML = '<svg width="14" height="20" viewBox="0 0 349 518" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;"><path d="M319.865 425.637C314.058 433.485 298.865 430.637 298.865 430.637V189.637C298.865 189.637 316.842 186.765 321.865 195.137C324.879 200.16 323.865 210.137 323.865 210.137V412.137C323.865 412.137 324.163 419.829 319.865 425.637Z" fill="currentColor"/><path d="M84.8653 448.637H267.365V189.637L48.8653 287.137V347.637V438.137C48.8653 448.637 84.8653 448.637 84.8653 448.637Z" fill="currentColor"/><path d="M84.8653 237.137V216.637H133.865L84.8653 237.137Z" fill="currentColor"/><path d="M267.365 150.137L198.365 183.637H84.8653V129.637H133.283L129.865 85.6371C129.865 85.6371 64.7881 120.204 28.3653 103.137C20.4185 99.4134 14.8441 97.9927 9.36529 91.1371C3.58296 83.9017 3.45838 77.7611 1.86529 68.6371C0.018102 58.0577 0.0719012 51.7257 1.86529 41.1371C3.44295 31.8222 3.3754 25.4431 9.36529 18.1371C17.3653 8.37935 27.8653 6.63706 35.3653 3.13704C42.8653 -0.362974 80.5689 -1.43121 112.365 6.63708C120.924 8.80888 126.141 9.35914 133.865 13.6371C141.149 17.6706 149.865 23.137 150.365 27.1371C152.425 43.6149 159.915 107.608 162.489 129.637H177.34L243.865 18.1371C243.865 18.1371 252.242 9.10153 259.365 6.63708C267.116 3.95559 272.444 4.5145 280.365 6.63708C287.365 8.51272 338.865 37.137 344.865 49.6371C350.196 60.7433 348.018 69.2824 344.996 81.1235L344.865 81.6371C341.05 96.5988 336.931 106.91 323.865 115.137C315.286 120.539 308.964 123.035 298.865 122.137C291.171 121.453 287.193 118.75 280.365 115.137C261.546 105.179 243.865 74.6371 243.865 74.6371L213.945 129.637H259.365C262.49 129.637 267.365 129.013 267.365 132.137V150.137Z" fill="currentColor"/><path d="M267.365 507.762V498.387V489.012C267.365 489.012 268.437 483.743 265.865 481.137C263.259 478.496 257.865 479.637 257.865 479.637H93.3653C93.3653 479.637 89.3245 479.407 86.8653 481.637C84.153 484.096 84.8653 489.012 84.8653 489.012V498.387V507.762C84.8653 507.762 84.153 513.178 86.8653 515.637C89.3245 517.867 93.3653 517.137 93.3653 517.137H257.865C257.865 517.137 263.259 518.278 265.865 515.637C268.437 513.031 267.365 507.762 267.365 507.762Z" fill="currentColor"/></svg>';
+        bagBtn.addEventListener('click', () => {
+          const currentKey = teeOverrides[basePlan.type] || basePlan.shots[0].key;
+          if (typeof window._openClubPicker === 'function') {
+            window._openClubPicker(currentKey, (selectedKey) => {
+              teeOverrides[basePlan.type] = selectedKey !== basePlan.shots[0].key ? selectedKey : null;
+              const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
+              newCard.id = 'activeStrategyCard'; card.replaceWith(newCard); updateCompareTable();
+            }, { type: 'par', parValue });
+          }
+        });
+        stratFooter.appendChild(bagBtn);
+        card.appendChild(stratFooter);
+      }
 
       // Detail section
       const detail     = document.createElement('div');
@@ -4790,6 +4904,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       function isEnabled(club) {
         if (!constraints) return true;
+        if (constraints.type === 'no-driver') return club.key !== 'driver';
         if (constraints.type === 'par') {
           const pv = constraints.parValue;
           if (pv === 5) return ['driver','fw3','fw5','fw7','u2','u3'].includes(club.key);
@@ -5161,41 +5276,300 @@ function renderMgStatTiles() {
   const avgVsParStr = avgVsPar !== '—' ? (avgVsPar > 0 ? '+' + avgVsPar : avgVsPar) : '—';
   const girPct = totalHoles > 0 ? Math.round(totalGIR / totalHoles * 100) : 0;
   const avgPutts = allRounds.length > 0 ? (totalPutts / allRounds.length).toFixed(1) : '—';
-  el.innerHTML = [
-    ['Rounds', allRounds.length],
-    ['Avg vs par', avgVsParStr],
-    ['GIR', girPct + '%'],
-    ['Putts / round', avgPutts],
-  ].map(([lbl, val]) =>
-    '<div class="mg-stat-tile"><div class="mg-stat-val">' + val + '</div><div class="mg-stat-lbl">' + lbl + '</div></div>'
+  // Best round: lowest totalStrokes — display as raw stroke count
+  let bestRound = null;
+  allRounds.forEach(r => {
+    if (!r.holesPlayed) return;
+    const diff = (r.totalStrokes ?? 0) - (r.totalPar ?? 0);
+    if (bestRound === null || diff < bestRound.diff) bestRound = { diff, r };
+  });
+  const bestVal = bestRound !== null ? (bestRound.r.totalStrokes ?? '—') : '—';
+
+  const tiles = [
+    { lbl: 'Rounds', val: allRounds.length, tappable: false },
+    { lbl: 'Best round', val: bestVal, tappable: true, id: 'mgBestRoundTile' },
+    { lbl: 'GIR', val: girPct + '%', tappable: false },
+    { lbl: 'Putts / round', val: avgPutts, tappable: true, id: 'mgPuttsTile' },
+  ];
+  el.innerHTML = tiles.map(t =>
+    '<div class="mg-stat-tile' + (t.tappable ? ' tappable' : '') + '"' + (t.id ? ' id="' + t.id + '"' : '') + '>' +
+    '<div class="mg-stat-val">' + t.val + '</div>' +
+    '<div class="mg-stat-lbl">' + t.lbl + '</div>' +
+    '</div>'
   ).join('');
+
+  // Wire best round tile → score breakdown sub-page
+  const bestTile = document.getElementById('mgBestRoundTile');
+  if (bestTile) {
+    bestTile.addEventListener('click', () => {
+      renderMgScoreBreakdown();
+      showMgSub('mgSubScoreBreakdown');
+    });
+  }
+  // Wire putts tile → putts breakdown sub-page
+  const puttsTile = document.getElementById('mgPuttsTile');
+  if (puttsTile) {
+    puttsTile.addEventListener('click', () => {
+      renderMgPuttsBreakdown();
+      showMgSub('mgSubPuttsBreakdown');
+    });
+  }
+}
+
+
+function renderMgScoreBreakdown() {
+  const el = document.getElementById('mgBreakdownContent');
+  if (!el) return;
+  const courses = loadCourses ? loadCourses() : {};
+  const allRounds = Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []);
+  if (!allRounds.length) {
+    el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:14px;">No rounds saved yet.</div>';
+    return;
+  }
+
+  // Collect per-hole data across all rounds + courses
+  let counts = { hio: 0, albatross: 0, eagle: 0, birdie: 0, par: 0, bogey: 0, double: 0 };
+  let totalHoles = 0;
+  // Par-specific totals
+  let parData = { 3: { strokes: 0, holes: 0 }, 4: { strokes: 0, holes: 0 }, 5: { strokes: 0, holes: 0 } };
+
+  Object.keys(courses).forEach(courseId => {
+    const course = courses[courseId];
+    const rounds = loadRounds ? loadRounds(courseId) : [];
+    rounds.forEach(round => {
+      if (!round.scores) return;
+      round.scores.forEach((s, i) => {
+        if (!s) return;
+        const par = course.holes?.[i]?.par || 4;
+        const total = (s.fairway || 0) + (s.putts || 0);
+        if (!total) return;
+        const diff = total - par;
+        totalHoles++;
+        if (total === 1 && par >= 2) counts.hio++;
+        else if (diff <= -3) counts.albatross++;
+        else if (diff === -2) counts.eagle++;
+        else if (diff === -1) counts.birdie++;
+        else if (diff === 0) counts.par++;
+        else if (diff === 1) counts.bogey++;
+        else counts.double++;
+        if (parData[par]) { parData[par].strokes += total; parData[par].holes++; }
+      });
+    });
+  });
+
+  // Score distribution card
+  const dist = [
+    { label: 'Hole in one', key: 'hio',       color: '#f5c400', shape: 'circle' },
+    { label: 'Albatross',   key: 'albatross', color: '#7b2fff', shape: 'circle' },
+    { label: 'Eagle',       key: 'eagle',     color: '#f07020', shape: 'circle' },
+    { label: 'Birdie',      key: 'birdie',    color: '#c0392b', shape: 'circle' },
+    { label: 'Par',         key: 'par',       color: '#888',    shape: 'circle' },
+    { label: 'Bogey',       key: 'bogey',     color: '#3a6fc4', shape: 'square' },
+    { label: 'Double+',     key: 'double',    color: '#1a3a7a', shape: 'square' },
+  ];
+  const maxCount = Math.max(...dist.map(d => counts[d.key]), 1);
+
+  let distRows = dist.map(d => {
+    const n = counts[d.key];
+    const pct = totalHoles > 0 ? Math.round(n / totalHoles * 100) : 0;
+    const barW = Math.round(n / maxCount * 100);
+    const dotStyle = d.shape === 'square'
+      ? 'width:10px;height:10px;border-radius:2px;background:' + d.color + ';flex-shrink:0;'
+      : 'width:10px;height:10px;border-radius:50%;background:' + d.color + ';flex-shrink:0;';
+    return '<div class="mg-breakdown-row" style="gap:9px;">' +
+      '<div style="' + dotStyle + '"></div>' +
+      '<div class="mg-breakdown-label">' + d.label + '</div>' +
+      '<div class="mg-breakdown-bar-wrap"><div class="mg-breakdown-bar" style="width:' + barW + '%;background:' + d.color + ';"></div></div>' +
+      '<div class="mg-breakdown-pct">' + pct + '%</div>' +
+      '<div style="font-size:12px;color:#aaa;width:26px;text-align:right;flex-shrink:0;">' + n + '</div>' +
+      '</div>';
+  }).join('');
+
+  // Par breakdown card
+  const parRows = [3, 4, 5].map(p => {
+    const d = parData[p];
+    const avg = d.holes > 0 ? (d.strokes / d.holes).toFixed(2) : '—';
+    const diff = d.holes > 0 ? (d.strokes / d.holes - p) : null;
+    const diffStr = diff === null ? '' : (' (' + (diff >= 0 ? '+' : '') + diff.toFixed(2) + ')');
+    const color = diff === null ? '#888' : diff < 0 ? '#c0392b' : diff === 0 ? '#888' : '#3a6fc4';
+    return '<div class="mg-breakdown-row">' +
+      '<div class="mg-breakdown-label">Par ' + p + '</div>' +
+      '<div style="font-size:12px;color:#aaa;flex:1;">' + d.holes + ' hole' + (d.holes !== 1 ? 's' : '') + '</div>' +
+      '<div class="mg-breakdown-val" style="color:' + color + ';">' + avg + '<span style="font-size:12px;color:#aaa;font-weight:400;">' + diffStr + '</span></div>' +
+      '</div>';
+  }).join('');
+
+  el.innerHTML =
+    '<div class="mg-breakdown-card">' +
+    '<div class="mg-breakdown-title">Score distribution · ' + totalHoles + ' holes</div>' +
+    distRows + '</div>' +
+    '<div class="mg-breakdown-card">' +
+    '<div class="mg-breakdown-title">Avg score by par</div>' +
+    parRows + '</div>';
+}
+
+
+function renderMgPuttsBreakdown() {
+  const el = document.getElementById('mgPuttsContent');
+  if (!el) return;
+  const courses = loadCourses ? loadCourses() : {};
+  const allRounds = Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []);
+  if (!allRounds.length) {
+    el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:14px;">No rounds saved yet.</div>';
+    return;
+  }
+
+  let counts = { 1: 0, 2: 0, 3: 0, more: 0 };
+  let totalHoles = 0;
+
+  Object.keys(courses).forEach(courseId => {
+    const rounds = loadRounds ? loadRounds(courseId) : [];
+    rounds.forEach(round => {
+      if (!round.scores) return;
+      round.scores.forEach(s => {
+        if (!s || s.putts == null) return;
+        const p = s.putts;
+        totalHoles++;
+        if (p === 1) counts[1]++;
+        else if (p === 2) counts[2]++;
+        else if (p === 3) counts[3]++;
+        else counts.more++;
+      });
+    });
+  });
+
+  const avgPutts = totalHoles > 0
+    ? (Object.entries(counts).reduce((a, [k, v]) => a + (k === 'more' ? 4 : +k) * v, 0) / totalHoles).toFixed(2)
+    : '—';
+
+  const rows = [
+    { label: '1 putt',  key: '1',    color: '#1e7a45' },
+    { label: '2 putts', key: '2',    color: '#888' },
+    { label: '3 putts', key: '3',    color: '#c07820' },
+    { label: '3+ putts',key: 'more', color: '#c0392b' },
+  ];
+  const maxCount = Math.max(...rows.map(r => counts[r.key]), 1);
+
+  const distRows = rows.map(r => {
+    const n = counts[r.key];
+    const pct = totalHoles > 0 ? Math.round(n / totalHoles * 100) : 0;
+    const barW = Math.round(n / maxCount * 100);
+    return '<div class="mg-breakdown-row">' +
+      '<div class="mg-breakdown-label">' + r.label + '</div>' +
+      '<div class="mg-breakdown-bar-wrap"><div class="mg-breakdown-bar" style="width:' + barW + '%;background:' + r.color + ';"></div></div>' +
+      '<div class="mg-breakdown-pct">' + pct + '%</div>' +
+      '</div>';
+  }).join('');
+
+  el.innerHTML =
+    '<div class="mg-breakdown-card">' +
+    '<div class="mg-breakdown-title">Putts per hole · ' + totalHoles + ' holes · avg ' + avgPutts + '</div>' +
+    distRows +
+    '</div>';
 }
 
 function renderMgRecentRounds() {
   const el = document.getElementById('mgRecentRounds');
   if (!el) return;
   const courses = loadCourses ? loadCourses() : {};
-  // Collect all rounds across courses, tag with course name
   const all = [];
   Object.keys(courses).forEach(id => {
     const rounds = loadRounds ? loadRounds(id) : [];
     rounds.forEach(r => all.push({ ...r, courseName: courses[id].name }));
   });
-  all.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-  const recent = all.slice(0, 8);
-  if (!recent.length) { el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:14px;">No rounds yet.</div>'; return; }
-  el.innerHTML = recent.map(r => {
-    const diff = (r.totalStrokes ?? 0) - (r.totalPar ?? 0);
-    const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : '' + diff);
-    const cls = diff < 0 ? 'mg-score-under' : diff > 0 ? 'mg-score-over' : 'mg-score-even';
-    const girPct = r.holesPlayed > 0 ? Math.round((r.totalGIR ?? 0) / r.holesPlayed * 100) : 0;
-    const putts = r.totalPutts ?? 0;
-    return '<div class="mg-round-row">' +
-      '<div><div class="mg-round-course">' + escHtml(r.courseName) + '</div>' +
-      '<div class="mg-round-meta">' + (r.date || '—') + ' · ' + r.holesPlayed + 'H · ⛳' + putts + ' · GIR ' + girPct + '%</div></div>' +
-      '<div class="mg-round-score ' + cls + '">' + diffStr + '</div>' +
-      '</div>';
+  all.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  const recent = all.slice(-8);
+  if (!recent.length) {
+    el.innerHTML = '<div style="padding:16px;color:#aaa;font-size:14px;">No rounds yet.</div>';
+    return;
+  }
+
+  const diffs = recent.map(r => (r.totalStrokes ?? 0) - (r.totalPar ?? 0));
+  const W = 312, H = 130, padX = 14, padY = 22;
+  const midY = padY + (H - padY) / 2;
+  const maxAbs = Math.max(...diffs.map(Math.abs), 3);
+  const scale = (H - padY * 2) / 2 / maxAbs;
+  const n = recent.length;
+  const xStep = n > 1 ? (W - padX * 2) / (n - 1) : 0;
+  const xs = recent.map((_, i) => padX + i * xStep);
+  const ys = diffs.map(d => midY + d * scale);
+
+  // polyline points string
+  const pts = xs.map((x, i) => x.toFixed(1) + ',' + ys[i].toFixed(1)).join(' ');
+
+  // clip paths
+  const clipDefs = `<defs>
+    <clipPath id="rr-abv"><rect x="0" y="0" width="${W}" height="${midY.toFixed(1)}"/></clipPath>
+    <clipPath id="rr-blw"><rect x="0" y="${midY.toFixed(1)}" width="${W}" height="${H - midY}"/></clipPath>
+  </defs>`;
+
+  // par zero line
+  const zeroLine = `<line x1="0" y1="${midY.toFixed(1)}" x2="${W}" y2="${midY.toFixed(1)}" stroke="#ece9e4" stroke-width="1"/>
+  <text x="2" y="${(midY - 4).toFixed(1)}" font-size="9" fill="#ccc" font-family="system-ui" font-weight="600">E</text>`;
+
+  // base + coloured segments
+  const lineBase = `<polyline points="${pts}" fill="none" stroke="#e0ddd8" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  const lineRed  = `<polyline points="${pts}" fill="none" stroke="#c0392b" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" clip-path="url(#rr-abv)"/>`;
+  const lineBlue = `<polyline points="${pts}" fill="none" stroke="#3a6fc4" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" clip-path="url(#rr-blw)"/>`;
+
+  // dots + labels
+  let dots = '', labels = '';
+  recent.forEach((r, i) => {
+    const d = diffs[i];
+    const x = xs[i].toFixed(1), y = ys[i].toFixed(1);
+    const isLast = i === recent.length - 1;
+    const col = d < 0 ? '#c0392b' : d > 0 ? '#3a6fc4' : '#ccc';
+    const lbl = d === 0 ? 'E' : (d > 0 ? '+' + d : String(d));
+    // dot: filled for most recent, open otherwise
+    if (isLast) {
+      dots += `<circle cx="${x}" cy="${y}" r="4" fill="${col}" stroke="${col}" stroke-width="2"/>`;
+    } else {
+      dots += `<circle cx="${x}" cy="${y}" r="4" fill="#fff" stroke="${col}" stroke-width="2"/>`;
+    }
+    // label: above dot for under-par, below for over-par
+    const ly = d <= 0
+      ? (parseFloat(y) - 10).toFixed(1)
+      : (parseFloat(y) + 16).toFixed(1);
+    labels += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="11" font-weight="700" fill="${col}" font-family="system-ui">${lbl}</text>`;
+  });
+
+  // date labels row
+  const dateLabels = recent.map((r, i) => {
+    const d = r.date || '';
+    const parts = d.split('-');
+    const mo = parts[1] ? ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(parts[1])] || '' : '';
+    const day = parts[2] ? parseInt(parts[2]) : '';
+    return `<div style="flex:1;text-align:center;font-size:9px;color:#ccc;line-height:1.4;">${mo}<br>${day}</div>`;
   }).join('');
+
+  // summary strip
+  const allDiffs = diffs;
+  const best = Math.min(...allDiffs);
+  const avg = allDiffs.reduce((a, b) => a + b, 0) / allDiffs.length;
+  const avgStr = avg === 0 ? 'E' : (avg > 0 ? '+' + avg.toFixed(1) : avg.toFixed(1));
+  const bestStr = best === 0 ? 'E' : (best > 0 ? '+' + best : String(best));
+  // trend: compare last 3 avg vs first 3 avg
+  const trendDown = allDiffs.length >= 4
+    ? (allDiffs.slice(-3).reduce((a,b)=>a+b,0)/3) < (allDiffs.slice(0,3).reduce((a,b)=>a+b,0)/3)
+    : best < 0;
+  const trendArrow = trendDown ? '↗' : '↘';
+  const trendCol = trendDown ? '#c0392b' : '#3a6fc4';
+  const bestCol = best < 0 ? '#c0392b' : best > 0 ? '#3a6fc4' : '#aaa';
+  const avgCol  = avg < 0  ? '#c0392b' : avg > 0  ? '#3a6fc4' : '#aaa';
+
+  const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;overflow:visible;">
+    ${clipDefs}${zeroLine}${lineBase}${lineRed}${lineBlue}${dots}${labels}
+  </svg>`;
+
+  el.innerHTML =
+    `<div style="padding:22px 18px 0;">${svg}` +
+    `<div style="display:flex;padding:8px 0 0;">${dateLabels}</div></div>` +
+    `<div class="mg-chart-strip">` +
+    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val">${recent.length}</div><div class="mg-chart-strip-lbl">Rounds</div></div>` +
+    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${bestCol};">${bestStr}</div><div class="mg-chart-strip-lbl">Best</div></div>` +
+    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${avgCol};">${avgStr}</div><div class="mg-chart-strip-lbl">Avg</div></div>` +
+    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${trendCol};">${trendArrow}</div><div class="mg-chart-strip-lbl">Trend</div></div>` +
+    `</div>`;
 }
 
 function renderMgCarryBars() {
@@ -5223,6 +5597,8 @@ function renderMgCarryBars() {
   document.getElementById('mgBackProfile')?.addEventListener('click', showMgHub);
   document.getElementById('mgBackBag')?.addEventListener('click', showMgHub);
   document.getElementById('mgBackStats')?.addEventListener('click', showMgHub);
+  document.getElementById('mgBackScoreBreakdown')?.addEventListener('click', () => showMgSub('mgSubStats'));
+  document.getElementById('mgBackPuttsBreakdown')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackCourses')?.addEventListener('click', showMgHub);
   // Edit bag toggle
   document.getElementById('mgEditBagBtn')?.addEventListener('click', () => {
@@ -5362,7 +5738,8 @@ function renderSavedRounds() {
     const total = s.fairway + s.putts;
     const d     = total - par;
     let spClass = 'sp-par';
-    if (d <= -2) spClass = 'sp-eagle';
+    if (total === 1 && par >= 2) spClass = 'sp-hole-in-one';
+    else if (d <= -2) spClass = 'sp-eagle';
     else if (d === -1) spClass = 'sp-birdie';
     else if (d === 1)  spClass = 'sp-bogey';
     else if (d >= 2)   spClass = 'sp-double';
@@ -5872,6 +6249,7 @@ function saveScores(courseId, scores) {
 function scoreCssClass(strokes, par) {
   if (strokes == null) return '';
   const diff = strokes - par;
+  if (strokes === 1 && par >= 2) return 'score-hole-in-one';
   if (diff <= -2) return 'score-eagle';
   if (diff === -1) return 'score-birdie';
   if (diff === 0)  return 'score-par';
@@ -6059,6 +6437,7 @@ function renderPlayCourseBar(courseId) {
         try {
           localStorage.removeItem('roundScores_' + courseId);
           sessionStorage.removeItem('committedStrategies');
+          Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
         } catch(e) {}
         // Reset GPS state + button UI
         if (typeof window.clearGpsState === 'function') window.clearGpsState();
@@ -6073,6 +6452,13 @@ function renderPlayCourseBar(courseId) {
         bar.remove();
         const se = document.getElementById('scoreEntry');
         if (se) se.remove();
+        // Clear strategy output so previous hole doesn't persist
+        const _out = document.getElementById('output');
+        if (_out) _out.innerHTML = '';
+        const _recalc = document.getElementById('recalcLink');
+        if (_recalc) _recalc.classList.remove('visible');
+        const _actionRow = document.getElementById('playActionRow');
+        if (_actionRow) _actionRow.style.display = 'none';
         if (typeof hideScorefab === 'function') hideScorefab();
         if (typeof window.updateLoadCourseBtn === 'function') window.updateLoadCourseBtn();
         if (typeof updateHoleCardMode === 'function') updateHoleCardMode();
@@ -6151,7 +6537,13 @@ function renderPlayCourseBar(courseId) {
   function pillHtml(total, par) {
     if (total == null) return '—';
     const diff = total - par;
-    const cls = diff <= -2 ? 'eagle' : diff === -1 ? 'birdie' : diff === 0 ? 'par' : diff === 1 ? 'bogey' : 'double';
+    let cls;
+    if (total === 1 && par >= 2) cls = 'hole-in-one';
+    else if (diff <= -2) cls = 'eagle';
+    else if (diff === -1) cls = 'birdie';
+    else if (diff === 0) cls = 'par';
+    else if (diff === 1) cls = 'bogey';
+    else cls = 'double';
     return `<span class="sc-pill ${cls}">${total}</span>`;
   }
 
