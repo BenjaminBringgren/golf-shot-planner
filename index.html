@@ -42,7 +42,7 @@
       background: rgba(249, 248, 246, 0.92);
       -webkit-backdrop-filter: blur(12px);
       backdrop-filter: blur(12px);
-      border-top: 0.5px solid #d8e8d8;
+      border-top: 0.5px solid rgba(0,0,0,0.1);
       border-bottom: none;
       margin-bottom: 0;
       padding-top: 6px;
@@ -100,7 +100,6 @@
     #panePlay > .gps-row { margin: 0; }
     #panePlay > .gps-warning { margin: -4px 0 0; font-size: 12px; }
     #panePlay > .cond-strip { margin: 0; padding: 0; }
-    #panePlay > .load-course-btn { margin: 0; }
     #panePlay > #calcButton { margin-top: 0; }
     #panePlay > .collapsible + .gps-row { margin-top: 0; }
     #calcButton { margin: 0; width: 100%; border-radius: 11px; padding: 14px; font-size: 15px; }
@@ -109,12 +108,18 @@
 
     /* ── Course picker ──────────────────────────────────────── */
     .load-course-btn {
-      display: flex; align-items: center; justify-content: center; gap: 7px;
-      margin: 0; padding: 13px 14px;
-      background: #1a1a1a !important; border: none; border-radius: 11px;
-      color: #fff !important; font-size: 14px; font-weight: 700;
+      display: none;
+      position: fixed;
+      bottom: calc(77px + env(safe-area-inset-bottom));
+      left: 0; right: 0;
+      align-items: center; justify-content: center; gap: 7px;
+      padding: 16px 14px;
+      background: #1a1a1a !important; border: none; border-radius: 0;
+      color: #fff !important; font-size: 15px; font-weight: 700;
       cursor: pointer; width: 100%; box-sizing: border-box;
+      z-index: 850;
     }
+    .load-course-btn.visible { display: flex; }
     .load-course-btn svg { stroke: #fff !important; }
     .load-course-btn:hover { background: #333 !important; }
     .load-course-btn:active { background: #333 !important; }
@@ -289,7 +294,7 @@
       border: 0.5px solid #dedad4; border-radius: 9px;
       background: #fffffe; color: #1a1a1a;
     }
-    .mg-profile-input:focus { outline: none; border-color: #1e7a45; }
+    .mg-profile-input:focus { outline: none; border-color: #1a1a1a; }
     .mg-hcp-row { display: flex; gap: 8px; }
     .mg-hcp-row .mg-profile-input { flex: 1; }
     .mg-profile-save-btn {
@@ -304,12 +309,12 @@
     /* Edit bag button */
     .mg-edit-btn {
       display: block; margin: 0 12px 12px;
-      padding: 11px; background: #f1f5ee;
-      border: 1px solid #c5ddc0; border-radius: 9px;
+      padding: 11px; background: #f0efeb;
+      border: 1px solid #e0ddd8; border-radius: 9px;
       text-align: center; font-size: 14px; font-weight: 700;
-      color: #1e7a45; cursor: pointer;
+      color: #1a1a1a; cursor: pointer;
     }
-    .mg-edit-btn:active { background: #e3eed8; }
+    .mg-edit-btn:active { background: #e8e6e1; }
 
     /* Prepare tab (legacy — keep for course editor) */
     .prepare-header {
@@ -322,8 +327,8 @@
     .course-list { margin-bottom: 12px; }
     .course-item {
       display: flex; align-items: stretch; justify-content: space-between;
-      padding: 0; border: 1px solid #1e7a45; border-radius: 10px;
-      margin-bottom: 8px; background: #1e7a45; cursor: default;
+      padding: 0; border: 1px solid #e0ddd8; border-radius: 10px;
+      margin-bottom: 8px; background: #1a1a1a; cursor: default;
       overflow: hidden;
     }
     .course-item-info {
@@ -364,7 +369,7 @@
     }
     .course-editor-header {
       display: flex; align-items: center; gap: 10px;
-      padding: 12px 14px; border-bottom: 1px solid #d8e8d8;
+      padding: 12px 14px; border-bottom: 1px solid #e0ddd8;
     }
     .course-editor-header input {
       flex: 1; font-size: 16px; font-weight: 600; border: none;
@@ -389,20 +394,20 @@
       width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed;
     }
     .scorecard th {
-      background: #f1f5ee; padding: 8px 6px; text-align: center;
-      font-weight: 600; color: #555; border-bottom: 1px solid #d8e8d8;
+      background: #f0efeb; padding: 8px 6px; text-align: center;
+      font-weight: 600; color: #555; border-bottom: 1px solid #e0ddd8;
       font-size: 12px;
     }
     .scorecard th.sc-th-hole {
       background: #1e7a45; color: #fff; width: 48px;
     }
     .scorecard th.sc-th-par {
-      background: #f1f5ee; border-right: 1.5px solid #d8e8d8; width: 64px;
+      background: #f0efeb; border-right: 1.5px solid #e0ddd8; width: 64px;
     }
     .scorecard th.sc-th-len { width: 80px; }
     .scorecard td {
       padding: 8px 6px; text-align: center; vertical-align: middle;
-      border-bottom: 0.5px solid #d8e8d8;
+      border-bottom: 0.5px solid #e0ddd8;
     }
     .scorecard tr:last-child td { border-bottom: none; }
     .scorecard .sc-hole {
@@ -410,24 +415,24 @@
       font-weight: 700; font-size: 14px; width: 48px;
     }
     .scorecard .sc-par {
-      background: #f1f5ee; color: #666; font-size: 14px; font-weight: 600;
-      border-right: 1.5px solid #d8e8d8; width: 64px;
+      background: #f0efeb; color: #666; font-size: 14px; font-weight: 600;
+      border-right: 1.5px solid #e0ddd8; width: 64px;
     }
     .scorecard .sc-section td {
-      background: #f1f5ee; color: #1e7a45; font-weight: 700;
+      background: #f0efeb; color: #555; font-weight: 700;
       padding: 5px 8px; font-size: 12px; letter-spacing: 0.5px;
       text-align: left; text-transform: uppercase;
-      border-top: 1px solid #d8e8d8; border-bottom: 1px solid #d8e8d8;
+      border-top: 1px solid #e0ddd8; border-bottom: 1px solid #e0ddd8;
     }
     .scorecard .sc-section .sc-hole {
       background: #155c33; color: #fff;
     }
     .scorecard .sc-total td {
-      background: #f1f5ee; font-weight: 700; font-size: 13px;
-      border-top: 1.5px solid #d8e8d8;
+      background: #f0efeb; font-weight: 700; font-size: 13px;
+      border-top: 1.5px solid #e0ddd8;
     }
     .scorecard .sc-total .sc-hole { background: #155c33; }
-    .scorecard .sc-total .sc-par  { background: #f1f5ee; }
+    .scorecard .sc-total .sc-par  { background: #f0efeb; }
     .scorecard .sc-total .sc-hole { font-size: 11px; letter-spacing: 0.3px; text-transform: uppercase; }
     /* Editor inputs */
     .scorecard input[type="number"] {
@@ -452,7 +457,7 @@
     }
     .sc-pill.eagle  { background: #1e7a45; color: #fff; }
     .sc-pill.birdie { background: #c0f0d4; color: #0f5c2e; }
-    .sc-pill.par    { background: #f1f5ee; color: #444; }
+    .sc-pill.par    { background: #f0efeb; color: #444; }
     .sc-pill.bogey  { background: #ffe0e0; color: #a32d2d; }
     .sc-pill.double { background: #ffc0c0; color: #791f1f; }
     /* Strategy label */
@@ -612,7 +617,7 @@
     /* Score entry */
     .score-entry {
       margin-top: 14px; padding: 12px 14px;
-      background: #f1f5ee; border: 1px solid #d8e8d8;
+      background: #f0efeb; border: 1px solid #e0ddd8;
       border-radius: 8px;
     }
     .score-entry-title {
@@ -639,14 +644,14 @@
       cursor: pointer; display: flex; align-items: center;
       justify-content: center; flex-shrink: 0;
     }
-    .score-stepper-btn:hover { background: #f1f5ee; }
+    .score-stepper-btn:hover { background: #f0efeb; }
     .score-stepper-val {
       font-size: 25px; font-weight: bold; min-width: 32px;
       text-align: center; color: #222;
     }
     .score-total-row {
       display: flex; align-items: center; justify-content: space-between;
-      margin-top: 10px; padding-top: 8px; border-top: 1px solid #d8e8d8;
+      margin-top: 10px; padding-top: 8px; border-top: 1px solid #e0ddd8;
       font-size: 15px;
     }
     .score-total-val { font-weight: bold; font-size: 17px; }
@@ -656,16 +661,16 @@
     }
     .score-vs-par.under { background: #c0f0d4; color: #0f5c2e; }
     .score-vs-par.over  { background: #fff0f0; color: #c00; }
-    .score-vs-par.even  { background: #f1f5ee; color: #555; }
+    .score-vs-par.even  { background: #f0efeb; color: #555; }
 
     /* New course button */
     .new-course-btn {
       width: 100%; padding: 11px; font-size: 15px; font-weight: 600;
-      background: #fffffe; color: #1e7a45; border: 2px dashed #d8e8d8;
+      background: #fffffe; color: #555; border: 2px dashed #e0ddd8;
       border-radius: 10px; cursor: pointer; margin: 0; margin-top: 16px;
       transition: background 0.12s, border-color 0.12s;
     }
-    .new-course-btn:hover { background: #f1f5ee; border-color: #1e7a45; }
+    .new-course-btn:hover { background: #f0efeb; border-color: #aaa; }
 
     /* ── This Hole card ────────────────────────────────────── */
     .card {
@@ -834,7 +839,7 @@
     .approach-line { margin-top: 2px; }
     .approach-rec {
       margin-top: 6px; padding: 7px 10px;
-      background: #f1f5ee; border-left: 3px solid #1e7a45; border-radius: 4px;
+      background: #f0f9f4; border-left: 3px solid #1e7a45; border-radius: 4px;
       font-size: 15px; line-height: 1.5;
     }
     .approach-rec .rec-club { font-weight: bold; }
@@ -1028,14 +1033,15 @@
       margin: 0; padding: 0; line-height: 1;
       font-family: inherit;
     }
-    .score-fab.visible { display: none; }
-    .score-fab:hover { background: #155c33; transform: scale(1.06); }
+    .score-fab.visible { display: flex; }
+    .score-fab:hover { background: #333; transform: scale(1.06); }
     .score-fab.has-score { background: #1e7a45; font-size: 21px; }
 
     /* ── Score drawer ────────────────────────────────────────── */
     .score-drawer-overlay {
       display: none; position: fixed; inset: 0; z-index: 999;
-      background: transparent;
+      background: rgba(0,0,0,0.45);
+      transition: opacity 0.2s;
     }
     .score-drawer-overlay.visible { display: block; }
 
@@ -1076,14 +1082,14 @@
       background: #f5f4f0;
       display: flex; align-items: center; gap: 6px;
       cursor: pointer; user-select: none;
-      background: #f1f5ee;
+      background: #f0efeb;
     }
     .course-bar-last-round:hover { background: #ebe9e4; }
     .course-bar-last-round .lrh-label { color: #888; flex-shrink: 0; }
     .course-bar-last-round .lrh-score { font-weight: 700; color: #1e7a45; }
     .course-bar-last-round .lrh-score.over  { color: #c00; }
     .course-bar-last-round .lrh-score.even  { color: #555; }
-    .course-bar-last-round .lrh-strategy { color: #1e7a45; font-size: 12px; }
+    .course-bar-last-round .lrh-strategy { color: #888; font-size: 12px; }
     .course-bar-last-round .lrh-expand { margin-left: auto; color: #aaa; font-size: 12px; }
 
     /* ── Strategy history hint (expanded, in course bar) ─────── */
@@ -1323,13 +1329,13 @@
       font-size: 12px; font-weight: 700; color: #888;
       text-transform: uppercase; letter-spacing: 0.4px;
       padding: 8px 5px; text-align: center;
-      border-bottom: 1px solid #f1f5ee; background: #f9f8f6;
+      border-bottom: 1px solid #ece9e4; background: #f9f8f6;
     }
     .cc-compare-table th:first-child { text-align: left; width: 82px; }
     .cc-compare-table th.active-col { background: #f9f8f6; }
     .cc-compare-table td {
       padding: 9px 5px; text-align: center; font-size: 14px;
-      border-bottom: 0.5px solid #f1f5ee; vertical-align: top;
+      border-bottom: 0.5px solid #ece9e4; vertical-align: top;
     }
     .cc-compare-table td:first-child {
       text-align: left; font-size: 12px; font-weight: 600;
@@ -1346,7 +1352,7 @@
     .cc-compare-table .cv-dist { font-size: 13px; color: #888; display: block; }
     .cc-compare-table .cv-wind { font-size: 12px; color: #c05000; display: block; }
     .cc-delta-section {
-      padding: 12px 14px 4px; border-bottom: 1px solid #f1f5ee;
+      padding: 12px 14px 4px; border-bottom: 1px solid #ece9e4;
     }
     .cc-delta-label { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
     .cc-delta-row {
@@ -1359,10 +1365,10 @@
     .cc-delta-val.best { color: #1e7a45; }
     .cc-delta-insight {
       font-size: 12px; color: #888; margin-top: 4px; padding-top: 6px;
-      border-top: 0.5px solid #f1f5ee; margin-bottom: 8px;
+      border-top: 0.5px solid #ece9e4; margin-bottom: 8px;
     }
     .cc-compare-footer {
-      padding: 10px 14px; border-top: 1px solid #f1f5ee;
+      padding: 10px 14px; border-top: 1px solid #ece9e4;
       background: #f9f8f6; text-align: center;
       font-size: 13px; color: #aaa;
     }
@@ -1374,6 +1380,7 @@
     #calcButton:hover { background: #333; }
     #calcButton.course-active { display: none; }
     #panePlay.course-active-play { background: #f5f4f0; }
+    #panePlay:not(.course-active-play) { padding-bottom: calc(77px + env(safe-area-inset-bottom) + 58px) !important; }
     #panePrepare.active { min-height: 100vh; }
     #playBodyPad { padding-top: 8px; }
     /* Par/cond strip in body area */
@@ -1388,11 +1395,10 @@
       color: #555; text-decoration: underline dotted; cursor: pointer;
     }
 
-    /* ── FAB — hidden, action row is used instead ─────────────── */
+    /* ── FAB — positioned above tab bar ─────────────────────── */
     .score-fab {
       bottom: calc(77px + env(safe-area-inset-bottom) + 12px);
       right: 20px;
-      display: none !important;
     }
 
     /* ── Courses tab — course blocks ───────────────────────── */
@@ -1412,7 +1418,7 @@
       justify-content: space-between;
       border-bottom: 1px solid #ece9e4;
     }
-    .course-hdr-name { font-size: 16px; font-weight: 700; color: #1e7a45; }
+    .course-hdr-name { font-size: 16px; font-weight: 700; color: #1a1a1a; }
     .course-hdr-meta { font-size: 13px; color: #888; margin-top: 3px; }
     .course-hdr-arr  { font-size: 14px; color: #aaa; }
     .course-body     { display: none; background: #fffffe; }
@@ -1420,7 +1426,7 @@
 
     /* ── Subsection headers (Strategy history / Saved rounds) ── */
     .subsection-hdr {
-      background: #f1f5ee;
+      background: #f0efeb;
       padding: 9px 14px;
       display: flex;
       align-items: center;
@@ -1466,7 +1472,7 @@
     .hole-row {
       display: flex; align-items: center;
       padding: 9px 14px;
-      border-bottom: 1px solid #f1f5ee;
+      border-bottom: 1px solid #ece9e4;
       cursor: pointer; user-select: none;
       background: #fffffe;
     }
@@ -1523,7 +1529,7 @@
 
     /* ── Front/Back 9 divider ──────────────────────────────── */
     .nine-divider {
-      background: #f1f5ee;
+      background: #f0efeb;
       border-top: 1px solid #ece9e4;
       border-bottom: 1px solid #ece9e4;
       padding: 5px 14px;
@@ -1552,7 +1558,7 @@
       display: flex; align-items: center;
       justify-content: space-between;
       padding: 11px 14px;
-      border-bottom: 1px solid #f1f5ee;
+      border-bottom: 1px solid #ece9e4;
       cursor: pointer; user-select: none;
     }
     .round-row:hover { background: #f9f8f6; }
@@ -1581,35 +1587,35 @@
     /* ── Round scorecard table ─────────────────────────────── */
     .sc-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
     .sc-table th {
-      background: #f1f5ee; padding: 8px 6px; text-align: center;
-      font-weight: 600; color: #555; border-bottom: 1px solid #d8e8d8;
+      background: #f0efeb; padding: 8px 6px; text-align: center;
+      font-weight: 600; color: #555; border-bottom: 1px solid #e0ddd8;
       font-size: 12px;
     }
-    .sc-table th:first-child { background: #1e7a45; color: #fff; width: 48px; }
-    .sc-table th:nth-child(2) { background: #f1f5ee; border-right: 1.5px solid #d8e8d8; width: 44px; }
+    .sc-table th:first-child { background: #1a1a1a; color: #fff; width: 48px; }
+    .sc-table th:nth-child(2) { background: #f0efeb; border-right: 1.5px solid #e0ddd8; width: 44px; }
     .sc-table td {
       padding: 8px 6px; text-align: center; vertical-align: middle;
-      border-bottom: 0.5px solid #d8e8d8;
+      border-bottom: 0.5px solid #e0ddd8;
     }
-    .sc-table td:first-child { background: #1e7a45; color: #fff; font-weight: 700; font-size: 14px; }
+    .sc-table td:first-child { background: #1a1a1a; color: #fff; font-weight: 700; font-size: 14px; }
     .sc-table td:nth-child(2) {
-      background: #f1f5ee; color: #666; font-size: 14px; font-weight: 600;
-      border-right: 1.5px solid #d8e8d8;
+      background: #f0efeb; color: #666; font-size: 14px; font-weight: 600;
+      border-right: 1.5px solid #e0ddd8;
     }
     .sc-table tr:last-child td { border-bottom: none; }
     .sc-table .sc-section td {
-      background: #f1f5ee; color: #1e7a45; font-weight: 700;
+      background: #f0efeb; color: #555; font-weight: 700;
       padding: 5px 8px; font-size: 12px; letter-spacing: 0.5px;
       text-align: left; text-transform: uppercase;
-      border-top: 1px solid #d8e8d8; border-bottom: 1px solid #d8e8d8;
+      border-top: 1px solid #e0ddd8; border-bottom: 1px solid #e0ddd8;
     }
     .sc-table .sc-section td:first-child { background: #155c33; color: #fff; }
     .sc-table .sc-total td {
-      background: #f1f5ee; font-weight: 700; font-size: 13px;
-      border-top: 1.5px solid #d8e8d8;
+      background: #f0efeb; font-weight: 700; font-size: 13px;
+      border-top: 1.5px solid #e0ddd8;
     }
     .sc-table .sc-total td:first-child { background: #155c33; color: #fff; font-size: 12px; letter-spacing: 0.3px; text-transform: uppercase; }
-    .sc-table .sc-total td:nth-child(2) { background: #f1f5ee; }
+    .sc-table .sc-total td:nth-child(2) { background: #f0efeb; }
     .score-pill {
       display: inline-flex; align-items: center; justify-content: center;
       width: 24px; height: 24px; border-radius: 4px;
@@ -1617,7 +1623,7 @@
     }
     .sp-eagle  { background: #1e7a45; color: #fff; }
     .sp-birdie { background: #c0f0d4; color: #0f5c2e; }
-    .sp-par    { background: #f1f5ee; color: #444; }
+    .sp-par    { background: #f0efeb; color: #444; }
     .sp-bogey  { background: #ffe0e0; color: #a32d2d; }
     .sp-double { background: #ffc0c0; color: #791f1f; }
 
@@ -1690,7 +1696,7 @@
 
     .club-picker-item {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 13px 0; border-bottom: 0.5px solid #f1f5ee;
+      padding: 13px 0; border-bottom: 0.5px solid #ece9e4;
       cursor: pointer; min-height: 44px;
     }
     .club-picker-item:last-child { border-bottom: none; }
@@ -2105,12 +2111,6 @@
     </div>
   </div>
 
-  <!-- ── Load course button ─────────────────────────────────────────────── -->
-  <button class="load-course-btn" id="loadCourseBtn" type="button">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-    Load a course
-  </button>
-
   <!-- ── Course picker sheet ────────────────────────────────────────────── -->
   <div class="course-picker-overlay" id="coursePickerOverlay">
     <div class="course-picker-sheet" id="coursePickerSheet">
@@ -2136,6 +2136,12 @@
       </button>
     </div>
   </div>
+
+  <!-- ── Load course button (fixed above tab bar) ──────────────────────── -->
+  <button class="load-course-btn" id="loadCourseBtn" type="button">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+    Load a course
+  </button>
 
   </div><!-- /panePlay -->
 
@@ -2867,7 +2873,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('loadCourseBtn');
     if (!btn) return;
     const courseActive = !!sessionStorage.getItem('activeCourse');
-    btn.style.display = courseActive ? 'none' : 'flex';
+    btn.classList.toggle('visible', !courseActive);
   }
   window.updateLoadCourseBtn = updateLoadCourseBtn;
 
@@ -3780,7 +3786,6 @@ document.addEventListener('DOMContentLoaded', () => {
         header.appendChild(badge);
 
         // Expected strokes score row
-        const expStrokes = expectedStrokesRemaining(0, driverCarry) + 1; // 1 shot + expected putts
         const gpsActive3 = window.teeMarked && window.completedShots?.length > 0
           && window.completedShots[window.completedShots.length - 1]?.remaining != null;
         let scoreVal3;
@@ -5011,6 +5016,9 @@ document.addEventListener('DOMContentLoaded', () => {
       calculate();
     }
   });
+
+  // Ensure load-course button visibility is correct on first paint
+  updateLoadCourseBtn();
 });
 
   // ── Segmented control wiring ──────────────────────────────────────────
@@ -6850,7 +6858,7 @@ document.getElementById('newCourseBtn').addEventListener('click', () => {
     <div style="font-size:14px; color:#666; margin-bottom:20px;">Your scores for this round will not be saved.</div>
     <div style="display:flex; gap:10px;">
       <button id="cancelRoundConfirm" style="flex:1; padding:11px; background:#c00; color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer;">Quit round</button>
-      <button id="cancelRoundAbort" style="flex:1; padding:11px; background:#f1f5ee; color:#333; border:1px solid #ece9e4; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer;">Keep playing</button>
+      <button id="cancelRoundAbort" style="flex:1; padding:11px; background:#f0efeb; color:#333; border:1px solid #e0ddd8; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer;">Keep playing</button>
     </div>
   </div>
 </div>
