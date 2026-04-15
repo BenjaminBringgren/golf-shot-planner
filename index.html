@@ -22,12 +22,12 @@
     label { display: block; margin-top: 10px; font-weight: 600; font-size: 14px; color: #444; }
     input[type="number"], select {
       width: 100%; padding: 10px 12px; margin: 4px 0 8px; font-size: 17px;
-      border: 1px solid #dedad4; border-radius: 6px;
+      border: none; border-radius: 6px; background: #f0efeb;
       font-family: inherit; color: #222;
       appearance: auto; -webkit-appearance: auto;
     }
     button {
-      width: 100%; padding: 12px; margin: 12px 0; font-size: 16px; font-weight: 600;
+      width: 100%; padding: 20px; margin: 12px 0; font-size: 16px; font-weight: 600;
       background: #1a1a1a; color: white; border: none; border-radius: 8px; cursor: pointer;
       font-family: inherit;
     }
@@ -73,7 +73,7 @@
       -webkit-tap-highlight-color: transparent;
     }
     .tab-btn:hover { background: none; color: #555; }
-    .tab-btn.active { color: #1e7a45; border-bottom-color: transparent; }
+    .tab-btn.active { color: #1a1a1a; border-bottom-color: transparent; }
     .tab-btn svg path,
     .tab-btn svg circle,
     .tab-btn svg line,
@@ -83,9 +83,9 @@
     .tab-btn.active svg circle,
     .tab-btn.active svg line,
     .tab-btn.active svg ellipse,
-    .tab-btn.active svg polyline { stroke: #1e7a45; }
+    .tab-btn.active svg polyline { stroke: #1a1a1a; }
     .tab-btn .tab-icon-bag { fill: #aaa; }
-    .tab-btn.active .tab-icon-bag { fill: #1e7a45; }
+    .tab-btn.active .tab-icon-bag { fill: #1a1a1a; }
     #panePlay, #panePrepare { display: none; }
     #panePlay.active {
       display: flex; flex-direction: column; gap: 8px;
@@ -99,10 +99,10 @@
     #panePlay > .collapsible { margin: 0; }
     #panePlay > .gps-row { margin: 0; }
     #panePlay > .gps-warning { margin: -4px 0 0; font-size: 12px; }
-    #panePlay > .cond-strip { margin: 0; padding: 0; }
+    #panePlay > .cond-strip { margin: 0; }
     #panePlay > #calcButton { margin-top: 0; }
     #panePlay > .collapsible + .gps-row { margin-top: 0; }
-    #calcButton { margin: 0; width: 100%; border-radius: 11px; padding: 14px; font-size: 15px; }
+    #calcButton { margin: 0; width: 100%; border-radius: 11px; padding: 20px; font-size: 17px; }
     #calcButton.course-active { display: none; }
     #playBodyPad { padding: 0; display: flex; flex-direction: column; gap: 8px; }
 
@@ -113,9 +113,9 @@
       bottom: calc(6px + 49px + 6px + env(safe-area-inset-bottom));
       left: 0; right: 0;
       align-items: center; justify-content: center; gap: 7px;
-      padding: 20px 14px;
+      padding: 26px 14px;
       background: #1a1a1a !important; border: none; border-radius: 0;
-      color: #fff !important; font-size: 15px; font-weight: 700;
+      color: #fff !important; font-size: 17px; font-weight: 700;
       cursor: pointer; width: 100%; box-sizing: border-box;
       z-index: 850;
     }
@@ -149,7 +149,7 @@
     }
     .course-picker-dot {
       width: 9px; height: 9px; border-radius: 50%;
-      background: #1e7a45; flex-shrink: 0;
+      background: #1a1a1a; flex-shrink: 0;
     }
     .course-picker-dot.unplayed { background: #ccc; }
     .course-picker-info { flex: 1; min-width: 0; }
@@ -160,13 +160,13 @@
     .course-picker-meta { font-size: 12px; color: #888; margin-top: 2px; }
     .course-picker-play {
       background: #1a1a1a !important; color: #fff !important; border: none;
-      border-radius: 7px; padding: 7px 14px;
-      font-size: 13px; font-weight: 700; cursor: pointer;
+      border-radius: 7px; padding: 17px 18px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
       flex-shrink: 0; width: auto; margin: 0;
     }
     .course-picker-play:hover { background: #333 !important; }
     .course-picker-cancel {
-      display: block; width: 100%; padding: 14px;
+      display: block; width: 100%; padding: 18px;
       text-align: center; font-size: 15px; color: #888 !important;
       border: none; background: #fff !important; cursor: pointer;
       border-top: 0.5px solid #f1efe9; margin: 0; border-radius: 0 !important;
@@ -312,9 +312,9 @@
     .mg-hcp-row .mg-profile-input { flex: 1; }
     .mg-profile-save-btn {
       display: block; margin: 4px 12px 16px;
-      padding: 12px; background: #1a1a1a;
+      padding: 17px; background: #1a1a1a;
       border: none; border-radius: 9px;
-      text-align: center; font-size: 15px; font-weight: 700;
+      text-align: center; font-size: 17px; font-weight: 700;
       color: #fff; cursor: pointer; width: calc(100% - 24px);
     }
     .mg-profile-save-btn:active { background: #333; }
@@ -322,9 +322,9 @@
     /* Edit bag button */
     .mg-edit-btn {
       display: block; margin: 0 12px 12px;
-      padding: 11px; background: #f0efeb;
-      border: 1px solid #e0ddd8; border-radius: 9px;
-      text-align: center; font-size: 14px; font-weight: 700;
+      padding: 17px; background: #f0efeb;
+      border: none; border-radius: 9px;
+      text-align: center; font-size: 16px; font-weight: 700;
       color: #1a1a1a; cursor: pointer;
     }
     .mg-edit-btn:active { background: #e8e6e1; }
@@ -340,7 +340,7 @@
     .course-list { margin-bottom: 12px; }
     .course-item {
       display: flex; align-items: stretch; justify-content: space-between;
-      padding: 0; border: 1px solid #e0ddd8; border-radius: 10px;
+      padding: 0; border: none; border-radius: 10px;
       margin-bottom: 8px; background: #1a1a1a; cursor: default;
       overflow: hidden;
     }
@@ -348,30 +348,30 @@
       padding: 11px 14px; flex: 1; cursor: pointer;
     }
     .course-item-name { font-size: 16px; font-weight: 600; color: #fff; }
-    .course-item-meta { font-size: 13px; color: #a8dfc0; margin-top: 2px; }
+    .course-item-meta { font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 2px; }
     .course-item-actions {
       display: flex; align-items: stretch; gap: 0; flex-shrink: 0;
-      border-left: 1px solid #155c33;
+      border-left: 1px solid rgba(255,255,255,0.12);
     }
     .course-action-btn {
       font-size: 14px; padding: 8px 14px; border-radius: 0;
-      border: none; border-left: 1px solid #155c33;
+      border: none; border-left: 1px solid rgba(255,255,255,0.12);
       background: transparent; color: #fff;
       cursor: pointer; width: auto; margin: 0;
       display: flex; align-items: center;
     }
     .course-action-btn:first-child { border-left: none; }
-    .course-action-btn:hover { background: #155c33; }
+    .course-action-btn:hover { background: rgba(255,255,255,0.1); }
     .course-action-btn.danger { color: #ffc0c0; }
-    .course-action-btn.danger:hover { background: #155c33; color: #fff; }
+    .course-action-btn.danger:hover { background: rgba(255,255,255,0.1); color: #fff; }
     /* ── iOS touch target minimums ───────────────────────────── */
-    .course-action-btn { min-height: 44px; padding: 8px 16px; }
+    .course-action-btn { min-height: 42px; padding: 11px 16px; }
     /* hole-cell sizing controlled by main rule below */
-    .collapsible-header { min-height: 44px; }
+    .collapsible-header { min-height: 42px; }
     /* gps-btn height handled by main rule */
     /* .wind-strip-btn touch target handled in main rule */
-    .course-bar-btn { min-height: 44px; }
-    .hint-collapsed { min-height: 44px; }
+    .course-bar-btn { min-height: 60px; }
+    .hint-collapsed { min-height: 42px; }
 
 
 
@@ -390,13 +390,13 @@
       background: transparent;
     }
     .course-editor-cancel {
-      padding: 8px 14px; font-size: 14px; font-weight: 600;
-      background: #fffffe; color: #888; border: 1px solid #ece9e4;
+      padding: 12px 16px; font-size: 14px; font-weight: 600;
+      background: #f0efeb; color: #888; border: none;
       border-radius: 7px; cursor: pointer; width: auto; margin: 0; flex-shrink: 0;
     }
     .course-editor-cancel:hover { background: #f9f8f6; color: #555; }
     .course-editor-save {
-      font-size: 14px; padding: 5px 12px; border-radius: 5px;
+      font-size: 14px; padding: 12px 16px; border-radius: 5px;
       border: none; background: #1a1a1a; color: #fff;
       cursor: pointer; width: auto; margin: 0; flex-shrink: 0;
     }
@@ -412,7 +412,7 @@
       font-size: 12px;
     }
     .scorecard th.sc-th-hole {
-      background: #1e7a45; color: #fff; width: 48px;
+      background: #1a1a1a; color: #fff; width: 48px;
     }
     .scorecard th.sc-th-par {
       background: #f0efeb; border-right: 1.5px solid #e0ddd8; width: 64px;
@@ -424,7 +424,7 @@
     }
     .scorecard tr:last-child td { border-bottom: none; }
     .scorecard .sc-hole {
-      background: #1e7a45; color: #fff;
+      background: #1a1a1a; color: #fff;
       font-weight: 700; font-size: 14px; width: 48px;
     }
     .scorecard .sc-par {
@@ -438,13 +438,13 @@
       border-top: 1px solid #e0ddd8; border-bottom: 1px solid #e0ddd8;
     }
     .scorecard .sc-section .sc-hole {
-      background: #155c33; color: #fff;
+      background: #444; color: #fff;
     }
     .scorecard .sc-total td {
       background: #f0efeb; font-weight: 700; font-size: 13px;
       border-top: 1.5px solid #e0ddd8;
     }
-    .scorecard .sc-total .sc-hole { background: #155c33; }
+    .scorecard .sc-total .sc-hole { background: #333; }
     .scorecard .sc-total .sc-par  { background: #f0efeb; }
     .scorecard .sc-total .sc-hole { font-size: 11px; letter-spacing: 0.3px; text-transform: uppercase; }
     /* Editor inputs */
@@ -494,7 +494,7 @@
     }
     .course-bar-name-wrap { flex: 1; min-width: 0; }
     .course-bar-name {
-      font-size: 11px; font-weight: 500; color: #aaa;
+      font-size: 13px; font-weight: 600; color: #888;
       letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .course-bar-hole-num {
@@ -514,8 +514,8 @@
     .course-bar-btn {
       background: #f0efeb; color: #555;
       border: none; border-radius: 8px; cursor: pointer; flex-shrink: 0;
-      font-size: 14px; padding: 8px 12px; width: auto; margin: 0;
-      min-height: 44px; display: flex; align-items: center; justify-content: center;
+      font-size: 15px; padding: 8px 12px; width: auto; margin: 0;
+      min-height: 60px; display: flex; align-items: center; justify-content: center;
     }
     .course-bar-btn:active { background: #e5e3df; }
     .course-bar-btn.dismiss { color: #bbb; }
@@ -634,7 +634,7 @@
     /* Score entry */
     .score-entry {
       margin-top: 14px; padding: 12px 14px;
-      background: #f0efeb; border: 1px solid #e0ddd8;
+      background: #f0efeb;
       border-radius: 8px;
     }
     .score-entry-title {
@@ -655,9 +655,9 @@
       display: flex; align-items: center; gap: 6px;
     }
     .score-stepper-btn {
-      width: 44px; height: 44px; margin: 0; padding: 0;
+      width: 60px; height: 60px; margin: 0; padding: 0;
       font-size: 23px; line-height: 1; border-radius: 50%;
-      background: #fffffe; color: #333; border: 1px solid #dedad4;
+      background: #fffffe; color: #333; border: none;
       cursor: pointer; display: flex; align-items: center;
       justify-content: center; flex-shrink: 0;
     }
@@ -682,7 +682,7 @@
 
     /* New course button */
     .new-course-btn {
-      width: 100%; padding: 11px; font-size: 15px; font-weight: 600;
+      width: 100%; padding: 17px; font-size: 15px; font-weight: 600;
       background: #fffffe; color: #555; border: 2px dashed #e0ddd8;
       border-radius: 10px; cursor: pointer; margin: 0; margin-top: 16px;
       transition: background 0.12s, border-color 0.12s;
@@ -706,7 +706,7 @@
     .hole-compact-summary {
       display: none;
       align-items: center; gap: 6px;
-      font-size: 15px; font-weight: 600; color: #1e7a45;
+      font-size: 15px; font-weight: 600; color: #1a1a1a;
       margin-bottom: 10px;
     }
     .hole-compact-summary .hcs-conditions {
@@ -728,8 +728,8 @@
     }
     .collapsible-header {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 12px; cursor: pointer; user-select: none;
-      background: #fff; border-radius: 12px; min-height: 44px;
+      padding: 14px 14px; cursor: pointer; user-select: none;
+      background: #fff; border-radius: 12px; min-height: 42px;
     }
     .collapsible-header:hover { background: #fafafa; }
     .collapsible-header .col-title {
@@ -845,7 +845,7 @@
       font-size: 14px; padding: 1px 0;
     }
     .shot-done-label {
-      color: #1e7a45; font-size: 13px; font-weight: bold; margin-left: 4px;
+      color: #1a1a1a; font-size: 13px; font-weight: bold; margin-left: 4px;
     }
     .tee-selector-locked {
       display: flex; align-items: center; gap: 6px;
@@ -887,17 +887,17 @@
       display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;
     }
     .wind-strip-text {
-      font-size: 13px; color: #1a1a1a; flex: 1;
+      font-size: 15px; color: #1a1a1a; flex: 1;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       font-weight: 500;
     }
     .wind-strip-btn {
-      font-size: 12px; color: #555; cursor: pointer;
+      font-size: 13px; color: #555; cursor: pointer;
       background: #f0f0ee; border: none;
       border-radius: 7px; width: auto; margin: 0;
       white-space: nowrap; flex-shrink: 0; font-weight: 600;
       display: flex; align-items: center; justify-content: center;
-      padding: 0 10px; height: 32px; min-height: 32px;
+      padding: 0 10px; height: 42px; min-height: 42px;
     }
     .wind-strip-btn:hover { background: #e5e5e2; }
     .wind-strip-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
@@ -949,7 +949,7 @@
     .compass-deg-display { font-size: 13px; font-weight: 700; color: #1a1a1a; }
     .compass-deg-label { font-size: 11px; color: #aaa; }
     .compass-lock-btn {
-      padding: 7px 12px; font-size: 12px; font-weight: 700;
+      padding: 12px 14px; font-size: 13px; font-weight: 700;
       background: #1a1a1a !important; color: #fff !important;
       border: none; border-radius: 8px;
       cursor: pointer; width: auto; margin: 0; margin-left: auto;
@@ -1004,7 +1004,7 @@
     .gps-row { display: flex; gap: 8px; }
     .gps-tile {
       flex: 1; background: #fff !important; border-radius: 10px;
-      padding: 9px 12px; display: flex; align-items: center; gap: 9px;
+      padding: 18px 12px; display: flex; align-items: center; gap: 9px;
       border: 0.5px solid rgba(0,0,0,0.07); cursor: pointer;
       color: inherit; font-size: inherit; font-weight: inherit;
       width: auto; margin: 0;
@@ -1017,8 +1017,8 @@
     }
     .gps-tile-indicator.idle { border: 1.5px solid #ccc; background: transparent; }
     .gps-tile-indicator.set  { background: #1e7a45; border: none; }
-    .gps-tile-label { font-size: 13px; font-weight: 600; color: #1a1a1a; line-height: 1.2; }
-    .gps-tile-status { font-size: 11px; color: #bbb; margin-top: 0; line-height: 1.2; }
+    .gps-tile-label { font-size: 15px; font-weight: 600; color: #1a1a1a; line-height: 1.2; }
+    .gps-tile-status { font-size: 12px; color: #bbb; margin-top: 2px; line-height: 1.2; }
     .gps-tile-status.ready { color: #1e7a45; }
     .gps-tile-status.tap   { color: #1e7a45; }
     .gps-tile-dist {
@@ -1040,9 +1040,9 @@
     /* ── Score FAB ───────────────────────────────────────────── */
     .score-fab {
       position: fixed; bottom: 24px; right: 20px; z-index: 1000;
-      width: 64px; height: 64px; border-radius: 50%;
+      width: 72px; height: 72px; border-radius: 50%;
       background: #1a1a1a; color: #fff; border: none;
-      font-size: 32px; font-weight: 700;
+      font-size: 36px; font-weight: 700;
       box-shadow: 0 4px 16px #0004;
       cursor: pointer; display: none;
       align-items: center; justify-content: center;
@@ -1280,18 +1280,18 @@
     .tee-chip-label { font-size: 11px; color: #bbb; flex-shrink: 0; }
     .tee-chips { display: flex; gap: 5px; flex-wrap: wrap; }
     .tee-chip {
-      border: 0.5px solid #e5e5e0; border-radius: 6px;
-      padding: 5px 10px; background: #f5f4f0;
-      cursor: pointer; font-size: 12px; font-weight: 600; color: #555;
-      transition: background 0.1s, border-color 0.1s; min-height: 0;
+      border: none; border-radius: 6px;
+      padding: 12px 12px; background: #f5f4f0;
+      cursor: pointer; font-size: 13px; font-weight: 600; color: #555;
+      transition: background 0.1s, border-color 0.1s; min-height: 42px;
       height: auto; width: auto; margin: 0; user-select: none;
       display: inline-flex; align-items: center; justify-content: center;
     }
     .tee-chip:hover { background: #eeecea; }
-    .carousel-card.type-max-distance  .tee-chip.active { border-color: #c0392b; background: #fde8e8; color: #c0392b; }
-    .carousel-card.type-controlled    .tee-chip.active { border-color: #c07820; background: #fef3e2; color: #c07820; }
-    .carousel-card.type-conservative  .tee-chip.active { border-color: #1e7a45; background: #d4edda; color: #1e7a45; }
-    .carousel-card.type-custom        .tee-chip.active { border-color: #888;    background: #f0f0f0; color: #555; }
+    .carousel-card.type-max-distance  .tee-chip.active { border: 1.5px solid #c0392b; background: #fde8e8; color: #c0392b; }
+    .carousel-card.type-controlled    .tee-chip.active { border: 1.5px solid #c07820; background: #fef3e2; color: #c07820; }
+    .carousel-card.type-conservative  .tee-chip.active { border: 1.5px solid #1e7a45; background: #d4edda; color: #1e7a45; }
+    .carousel-card.type-custom        .tee-chip.active { border: 1.5px solid #888; background: #f0f0f0; color: #555; }
     .tee-chip.locked { opacity: 0.4; pointer-events: none; }
     .tee-chip.bag-chip { flex: 0 0 auto; }
     .tee-chip-bag { display: flex; align-items: center; gap: 4px; }
@@ -1301,7 +1301,7 @@
     /* ── Strategy footer strip ──────────────────────────────── */
     .cc-strat-footer { display: flex; border-top: 0.5px solid rgba(0,0,0,0.07); }
     .cc-strat-btn {
-      flex: 1; padding: 9px 4px 8px;
+      flex: 1; padding: 18px 4px;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 2px; cursor: pointer;
       border-right: 0.5px solid rgba(0,0,0,0.07);
@@ -1311,8 +1311,8 @@
     }
     .cc-strat-btn:last-child { border-right: none; }
     .cc-strat-btn.active { background: #fff; }
-    .cc-strat-btn-club { font-size: 12px; font-weight: 700; color: #ccc; }
-    .cc-strat-btn-score { font-size: 11px; color: #ccc; }
+    .cc-strat-btn-club { font-size: 13px; font-weight: 700; color: #ccc; }
+    .cc-strat-btn-score { font-size: 12px; color: #ccc; }
     .cc-strat-btn.active .cc-strat-btn-club { color: inherit; }
     .cc-strat-btn.active .cc-strat-btn-score { color: #555; }
     .carousel-card.type-max-distance  .cc-strat-btn.active { border-top-color: #c0392b; color: #c0392b; }
@@ -1335,14 +1335,14 @@
     }
     .play-next-btn {
       background: #f0efeb !important; border-radius: 11px;
-      padding: 13px 15px; display: flex; align-items: center; justify-content: center;
+      padding: 22px 15px; display: flex; align-items: center; justify-content: center;
       cursor: pointer; border: none; width: 100%; margin: 0; font-family: inherit;
       -webkit-tap-highlight-color: transparent;
     }
     .play-next-btn:hover { background: #e5e3df !important; }
     .play-next-btn:active { background: #e5e3df !important; }
     .play-next-btn-text { color: #555 !important; }
-    .play-next-btn-text { font-size: 14px; font-weight: 700; color: #555; }
+    .play-next-btn-text { font-size: 16px; font-weight: 700; color: #555; }
     /* Compare table */
     .cc-compare-table {
       width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed;
@@ -1425,10 +1425,11 @@
 
     /* ── Courses tab — course blocks ───────────────────────── */
     .course-block {
-      border: 1px solid #ece9e4;
+      border: none;
       border-radius: 12px;
       margin-bottom: 10px;
       overflow: hidden;
+      background: #fff;
     }
     .course-hdr {
       background: #fffffe;
@@ -1502,7 +1503,7 @@
     .hole-row:hover:not(.nodata) { background: #f9f8f6; }
     .hole-num {
       width: 28px; height: 28px; border-radius: 7px;
-      background: #1e7a45; color: #fff;
+      background: #1a1a1a; color: #fff;
       font-size: 13px; font-weight: 700;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
@@ -1601,7 +1602,7 @@
     .round-detail.open { display: block; }
     .show-more {
       text-align: center; padding: 10px 14px;
-      font-size: 13px; color: #1e7a45; font-weight: 600;
+      font-size: 13px; color: #555; font-weight: 600;
       border-top: 1px solid #ece9e4; cursor: pointer;
     }
     .show-more:hover { background: #f9f8f6; }
@@ -1631,12 +1632,12 @@
       text-align: left; text-transform: uppercase;
       border-top: 1px solid #e0ddd8; border-bottom: 1px solid #e0ddd8;
     }
-    .sc-table .sc-section td:first-child { background: #155c33; color: #fff; }
+    .sc-table .sc-section td:first-child { background: #444; color: #fff; }
     .sc-table .sc-total td {
       background: #f0efeb; font-weight: 700; font-size: 13px;
       border-top: 1.5px solid #e0ddd8;
     }
-    .sc-table .sc-total td:first-child { background: #155c33; color: #fff; font-size: 12px; letter-spacing: 0.3px; text-transform: uppercase; }
+    .sc-table .sc-total td:first-child { background: #333; color: #fff; font-size: 12px; letter-spacing: 0.3px; text-transform: uppercase; }
     .sc-table .sc-total td:nth-child(2) { background: #f0efeb; }
     .score-pill {
       display: inline-flex; align-items: center; justify-content: center;
@@ -1665,16 +1666,16 @@
     .wind-manual-field { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 100px; }
     .wind-manual-field label { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.4px; margin: 0; }
     .wind-manual-field input, .wind-manual-field select {
-      padding: 8px 10px; font-size: 16px; border: 1px solid #e0c070;
-      border-radius: 6px; background: #fffffe; color: #222;
+      padding: 8px 10px; font-size: 16px; border: none;
+      border-radius: 6px; background: #f0efeb; color: #222;
       font-family: inherit; width: 100%; margin: 0;
     }
     .wind-manual-apply {
-      padding: 9px 16px; font-size: 14px; font-weight: 700;
+      padding: 12px 16px; font-size: 14px; font-weight: 700;
       background: #1a1a1a; color: #fff; border: none; border-radius: 6px;
       cursor: pointer; white-space: nowrap; width: auto; margin: 0; flex-shrink: 0;
     }
-    .wind-manual-apply:hover { background: #155c33; }
+    .wind-manual-apply:hover { background: #333; }
 
     /* ── Club picker modal ───────────────────────────────────── */
     .club-picker-overlay {
@@ -1719,18 +1720,18 @@
 
     .club-picker-item {
       display: flex; align-items: center; justify-content: space-between;
-      padding: 13px 0; border-bottom: 0.5px solid #ece9e4;
-      cursor: pointer; min-height: 44px;
+      padding: 18px 0; border-bottom: 0.5px solid #ece9e4;
+      cursor: pointer; min-height: 60px;
     }
     .club-picker-item:last-child { border-bottom: none; }
     .club-picker-item:active { background: #f9f8f6; }
-    .club-picker-item.active { background: #f0faf4; }
-    .cpi-name { font-size: 16px; font-weight: 600; color: #222; }
-    .club-picker-item.active .cpi-name { color: #1e7a45; }
+    .club-picker-item.active { background: #f0efeb; }
+    .cpi-name { font-size: 17px; font-weight: 600; color: #222; }
+    .club-picker-item.active .cpi-name { color: #1a1a1a; }
     .cpi-dist { font-size: 14px; color: #888; }
     .cpi-check {
       width: 22px; height: 22px; border-radius: 50%;
-      background: #1e7a45; display: none;
+      background: #1a1a1a; display: none;
       align-items: center; justify-content: center; flex-shrink: 0;
     }
     .club-picker-item.active .cpi-check { display: flex; }
@@ -1745,10 +1746,10 @@
       vertical-align: middle; text-transform: uppercase; letter-spacing: 0.3px;
     }
     .cc-custom-clear {
-      font-size: 12px; color: #1e7a45; text-decoration: underline dotted;
+      font-size: 12px; color: #555; text-decoration: underline dotted;
       cursor: pointer; margin-top: 3px; display: inline-block;
     }
-    .cc-custom-clear:hover { color: #155c33; }
+    .cc-custom-clear:hover { color: #1a1a1a; }
 
 
 
@@ -1769,16 +1770,16 @@
 /* ── Par & Conditions — compact inline strip ────────────── */
     .chip-control-grid { display: none; }
     .cond-strip {
-      display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap;
+      display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;
       background: transparent !important; border: none !important;
-      padding: 6px 0 !important;
+      padding: 2px 14px !important;
     }
     .cond-strip-label { font-size: 11px; color: #bbb; flex-shrink: 0; }
-    .cond-strip-sep { width: 1px; height: 13px; background: #e5e5e0; flex-shrink: 0; }
+    .cond-strip-sep { display: none; }
     .chip-control-row { display: flex; gap: 5px; }
     .chip-control-btn {
-      background: #eeede9 !important; border: 1px solid transparent !important;
-      border-radius: 7px; padding: 7px 13px;
+      background: #eeede9 !important; border: none !important;
+      border-radius: 7px; padding: 12px 14px;
       font-size: 13px; font-weight: 600; color: #999 !important;
       cursor: pointer; font-family: inherit;
       width: auto; margin: 0; line-height: 1;
@@ -1839,6 +1840,25 @@
 
   <!-- Course bar injected here by JS (playCourseBar) -->
 
+  <!-- ── Par + Conditions strip ─────────────────────────────────────────── -->
+  <div class="cond-strip" id="parCondGrid">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span class="cond-strip-label" id="parChipGroup">Par</span>
+      <div class="chip-control-row" id="parChipRow">
+        <button class="chip-control-btn" data-value="3" type="button">3</button>
+        <button class="chip-control-btn active" data-value="4" type="button">4</button>
+        <button class="chip-control-btn" data-value="5" type="button">5</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span class="cond-strip-label">Cond.</span>
+      <div class="chip-control-row" id="condChipRow">
+        <button class="chip-control-btn active" data-value="soft" type="button">Soft</button>
+        <button class="chip-control-btn" data-value="firm" type="button">Firm</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ── This Hole card (manual mode / no course) ─────────────────────── -->
   <div class="card" id="thisHoleCard">
     <!-- Compact summary hidden — course bar handles it -->
@@ -1891,6 +1911,7 @@
           </svg>
         </div>
         <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">Wind</div>
           <div class="wind-strip-text" id="windText">Tap to fetch local wind</div>
         </div>
       </div>
@@ -2102,14 +2123,14 @@
     <div class="gps-tile" id="gpsTeeBtn">
       <div class="gps-tile-indicator idle" id="gpsTeeIndicator"></div>
       <div>
-        <div class="gps-tile-label">Tee</div>
+        <div class="gps-tile-label">Tee location</div>
         <div class="gps-tile-status" id="gpsTeeStatus">Tap to mark</div>
       </div>
     </div>
     <div class="gps-tile" id="gpsBallBtn" style="opacity:0.45;pointer-events:none;">
       <div class="gps-tile-indicator idle" id="gpsBallIndicator"></div>
       <div style="flex:1;">
-        <div class="gps-tile-label">Ball</div>
+        <div class="gps-tile-label">Ball position</div>
         <div class="gps-tile-status" id="gpsBallStatus">Mark tee first</div>
       </div>
       <div class="gps-tile-dist" id="gpsBallDist" style="display:none;"></div>
@@ -2118,21 +2139,6 @@
   </div>
   <div class="gps-warning" id="gpsWarning" style="display:none;margin:0 14px;"></div>
 
-  <!-- ── Par + Conditions strip ─────────────────────────────────────────── -->
-  <div class="cond-strip" id="parCondGrid">
-    <span class="cond-strip-label" id="parChipGroup">Par</span>
-    <div class="chip-control-row" id="parChipRow">
-      <button class="chip-control-btn" data-value="3" type="button">3</button>
-      <button class="chip-control-btn active" data-value="4" type="button">4</button>
-      <button class="chip-control-btn" data-value="5" type="button">5</button>
-    </div>
-    <div class="cond-strip-sep"></div>
-    <span class="cond-strip-label">Cond.</span>
-    <div class="chip-control-row" id="condChipRow">
-      <button class="chip-control-btn active" data-value="soft" type="button">Soft</button>
-      <button class="chip-control-btn" data-value="firm" type="button">Firm</button>
-    </div>
-  </div>
 
   <!-- ── Course picker sheet ────────────────────────────────────────────── -->
   <div class="course-picker-overlay" id="coursePickerOverlay">
@@ -3904,7 +3910,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const bagSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
           bagSvg.setAttribute('width','14'); bagSvg.setAttribute('height','21');
           bagSvg.setAttribute('viewBox','0 0 349 518'); bagSvg.setAttribute('fill','none');
-          bagSvg.style.color = par3ClubOverride ? '#1e7a45' : '#888';
+          bagSvg.style.color = par3ClubOverride ? '#1a1a1a' : '#888';
           bagSvg.innerHTML = `<path d="M319.865 425.637C314.058 433.485 298.865 430.637 298.865 430.637V189.637C298.865 189.637 316.842 186.765 321.865 195.137C324.879 200.16 323.865 210.137 323.865 210.137V412.137C323.865 412.137 324.163 419.829 319.865 425.637Z" fill="currentColor"/><path d="M84.8653 448.637H267.365V189.637L48.8653 287.137V347.637V438.137C48.8653 448.637 84.8653 448.637 84.8653 448.637Z" fill="currentColor"/><path d="M267.365 150.137L198.365 183.637H84.8653V129.637H133.283L129.865 85.6371C129.865 85.6371 64.7881 120.204 28.3653 103.137C20.4185 99.4134 14.8441 97.9927 9.36529 91.1371C3.58296 83.9017 3.45838 77.7611 1.86529 68.6371C0.018102 58.0577 0.0719012 51.7257 1.86529 41.1371C3.44295 31.8222 3.3754 25.4431 9.36529 18.1371C17.3653 8.37935 27.8653 6.63706 35.3653 3.13704C42.8653 -0.362974 80.5689 -1.43121 112.365 6.63708C120.924 8.80888 126.141 9.35914 133.865 13.6371C141.149 17.6706 149.865 23.137 150.365 27.1371C152.425 43.6149 159.915 107.608 162.489 129.637H177.34L243.865 18.1371C243.865 18.1371 252.242 9.10153 259.365 6.63708C267.116 3.95559 272.444 4.5145 280.365 6.63708C287.365 8.51272 338.865 37.137 344.865 49.6371C350.196 60.7433 348.018 69.2824 344.996 81.1235L344.865 81.6371C341.05 96.5988 336.931 106.91 323.865 115.137C315.286 120.539 308.964 123.035 298.865 122.137C291.171 121.453 287.193 118.75 280.365 115.137C261.546 105.179 243.865 74.6371 243.865 74.6371L213.945 129.637H259.365C262.49 129.637 267.365 129.013 267.365 132.137V150.137Z" fill="currentColor"/><path d="M267.365 507.762V489.012C267.365 489.012 268.437 483.743 265.865 481.137C263.259 478.496 257.865 479.637 257.865 479.637H93.3653C93.3653 479.637 89.3245 479.407 86.8653 481.637C84.153 484.096 84.8653 489.012 84.8653 489.012V507.762C84.8653 507.762 84.153 513.178 86.8653 515.637C89.3245 517.867 93.3653 517.137 93.3653 517.137H257.865C257.865 517.137 263.259 518.278 265.865 515.637C268.437 513.031 267.365 507.762 267.365 507.762Z" fill="currentColor"/>`;
           const bagLbl = document.createElement('span');
           bagLbl.className = 'tee-chip-bag-label'; bagLbl.textContent = 'Bag';
@@ -6069,7 +6075,7 @@ function renderSavedRounds() {
 
       // Delete button
       const delBtn = document.createElement('button');
-      delBtn.style.cssText = 'margin-top:10px; width:100%; padding:9px; font-size:14px; font-weight:600; background:none; border:1px solid #e8d4d4; border-radius:7px; color:#a32d2d; cursor:pointer;';
+      delBtn.style.cssText = 'margin-top:10px; width:100%; padding:12px; font-size:14px; font-weight:600; background:#fde8e8; border:none; border-radius:7px; color:#a32d2d; cursor:pointer;';
       delBtn.textContent = 'Delete round';
       delBtn.addEventListener('click', () => {
         if (!confirm('Delete this round? This cannot be undone.')) return;
@@ -6662,7 +6668,7 @@ function renderPlayCourseBar(courseId) {
       const saveBtn = document.createElement('button');
       saveBtn.className = 'save-round-btn';
       saveBtn.type = 'button';
-      saveBtn.style.cssText = 'margin-top:10px; font-size:14px; padding:9px 14px; background:#1a1a1a; color:#fff; border:none; border-radius:7px; width:100%; cursor:pointer; font-weight:600;';
+      saveBtn.style.cssText = 'margin-top:10px; font-size:14px; padding:17px 14px; background:#1a1a1a; color:#fff; border:none; border-radius:7px; width:100%; cursor:pointer; font-weight:600;';
       saveBtn.textContent = '💾 Save Round';
       saveBtn.addEventListener('click', () => {
         // Collect committed strategies per hole from sessionStorage
@@ -7203,8 +7209,8 @@ document.getElementById('newCourseBtn').addEventListener('click', () => {
     <div style="font-size:17px; font-weight:700; color:#222; margin-bottom:8px;">Quit round?</div>
     <div style="font-size:14px; color:#666; margin-bottom:20px;">Your scores for this round will not be saved.</div>
     <div style="display:flex; gap:10px;">
-      <button id="cancelRoundConfirm" style="flex:1; padding:11px; background:#c00; color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer;">Quit round</button>
-      <button id="cancelRoundAbort" style="flex:1; padding:11px; background:#f0efeb; color:#333; border:1px solid #e0ddd8; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer;">Keep playing</button>
+      <button id="cancelRoundConfirm" style="flex:1; padding:17px; background:#c00; color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer;">Quit round</button>
+      <button id="cancelRoundAbort" style="flex:1; padding:17px; background:#f0efeb; color:#333; border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer;">Keep playing</button>
     </div>
   </div>
 </div>
