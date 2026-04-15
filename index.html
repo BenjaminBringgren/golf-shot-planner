@@ -110,10 +110,10 @@
     .load-course-btn {
       display: none;
       position: fixed;
-      bottom: calc(77px + env(safe-area-inset-bottom));
+      bottom: 77px;
       left: 0; right: 0;
       align-items: center; justify-content: center; gap: 7px;
-      padding: 16px 14px;
+      padding: 20px 14px;
       background: #1a1a1a !important; border: none; border-radius: 0;
       color: #fff !important; font-size: 15px; font-weight: 700;
       cursor: pointer; width: 100%; box-sizing: border-box;
@@ -753,10 +753,10 @@
     .wsb-detail { font-size: 12px; color: #888; }
     .wsb-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
     .wsb-badge {
-      font-size: 11px; font-weight: 600; color: #a8c8f0;
+      font-size: 11px; font-weight: 600; color: #1a1a1a;
       letter-spacing: 0.4px; text-transform: uppercase;
     }
-    .wsb-location { font-size: 12px; color: #a8c8f0; }
+    .wsb-location { font-size: 12px; color: #555; }
 
     /* ── Wind breakdown rows ──────────────────────────────────── */
     /* Wind breakdown — 2×2 stat grid */
@@ -920,12 +920,12 @@
     .compass-location { font-size: 10px; color: #aaa; }
     .compass-wrap { display: contents; }
     .compass-svg-wrap {
-      position: relative; width: 36px; height: 36px; flex-shrink: 0;
+      position: relative; width: 72px; height: 72px; flex-shrink: 0;
       cursor: grab; user-select: none;
       background: #f0efeb; border-radius: 50%; overflow: hidden;
     }
     .compass-svg-wrap:active { cursor: grabbing; }
-    #compassSvg { width: 36px; height: 36px; transition: none; }
+    #compassSvg { width: 72px; height: 72px; transition: none; }
     .compass-right {
       flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px;
     }
@@ -1035,7 +1035,7 @@
     }
     .score-fab.visible { display: flex; }
     .score-fab:hover { background: #333; transform: scale(1.06); }
-    .score-fab.has-score { background: #1e7a45; font-size: 21px; }
+    .score-fab.has-score { background: #1a1a1a; font-size: 21px; }
 
     /* ── Score drawer ────────────────────────────────────────── */
     .score-drawer-overlay {
@@ -1305,9 +1305,6 @@
     .play-next-btn-text { color: #555 !important; }
     .play-next-btn-text { font-size: 14px; font-weight: 700; color: #555; }
     /* Compare table */
-    .cc-compare-header {
-      background: #1a1a1a; padding: 13px 16px;
-    }
     .cc-compare-table {
       width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed;
     }
@@ -1366,7 +1363,7 @@
     #calcButton:hover { background: #333; }
     #calcButton.course-active { display: none; }
     #panePlay.course-active-play { background: #f5f4f0; }
-    #panePlay:not(.course-active-play) { padding-bottom: calc(77px + env(safe-area-inset-bottom) + 58px) !important; }
+    #panePlay:not(.course-active-play) { padding-bottom: calc(77px + 58px) !important; }
     #panePrepare.active { min-height: 100vh; }
     #playBodyPad { padding-top: 8px; }
     /* Par/cond strip in body area */
@@ -1732,17 +1729,17 @@
 /* ── Par & Conditions — compact inline strip ────────────── */
     .chip-control-grid { display: none; }
     .cond-strip {
-      display: flex; align-items: center; gap: 5px; flex-wrap: wrap;
+      display: flex; align-items: center; justify-content: center; gap: 5px; flex-wrap: wrap;
       background: transparent !important; border: none !important;
-      padding: 4px 0 !important;
+      padding: 6px 0 !important;
     }
     .cond-strip-label { font-size: 11px; color: #bbb; flex-shrink: 0; }
     .cond-strip-sep { width: 1px; height: 13px; background: #e5e5e0; flex-shrink: 0; }
-    .chip-control-row { display: flex; gap: 4px; }
+    .chip-control-row { display: flex; gap: 5px; }
     .chip-control-btn {
       background: #eeede9 !important; border: 1px solid transparent !important;
-      border-radius: 6px; padding: 4px 9px;
-      font-size: 12px; font-weight: 600; color: #999 !important;
+      border-radius: 7px; padding: 7px 13px;
+      font-size: 13px; font-weight: 600; color: #999 !important;
       cursor: pointer; font-family: inherit;
       width: auto; margin: 0; line-height: 1;
       -webkit-tap-highlight-color: transparent;
@@ -2639,6 +2636,7 @@ let windState = {
   crosswind:  null,   // computed crosswind component (magnitude)
   active:     false,  // true when wind data + hole direction both set
   enabled:    true,   // user toggle — false disables all wind adjustments
+  tempC:      null,   // air temperature °C from weather API
 };
 
 // ── Altitude correction factors ────────────────────────────────────────────
@@ -2719,7 +2717,7 @@ function windAdjustedRoll(baseRoll, clubIdx) {
 // Requests sustained wind, gusts, and direction in one call.
 async function fetchWind(lat, lon) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-    `&current=wind_speed_10m,wind_gusts_10m,wind_direction_10m&wind_speed_unit=ms&forecast_days=1`;
+    `&current=wind_speed_10m,wind_gusts_10m,wind_direction_10m,temperature_2m&wind_speed_unit=ms&forecast_days=1`;
   const resp = await fetch(url);
   if (!resp.ok) throw new Error('Weather fetch failed');
   const data = await resp.json();
@@ -2727,6 +2725,7 @@ async function fetchWind(lat, lon) {
     speedMs: data.current.wind_speed_10m,
     gustMs:  data.current.wind_gusts_10m,
     dirDeg:  data.current.wind_direction_10m,
+    tempC:   data.current.temperature_2m,
   };
 }
 
@@ -2940,8 +2939,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const cwPart = cw >= 1 ? ` · ${cw.toFixed(1)} cross` : '';
     detailEl.textContent = hwSign + cwPart;
 
-    badgeEl.textContent = (lockPhase === 'idle' && windState.holeDeg != null)
-      ? 'LOCKED' : 'ACTIVE';
+    if (windState.tempC !== undefined && windState.tempC !== null) {
+      badgeEl.textContent = `${Math.round(windState.tempC)}°C`;
+    } else {
+      badgeEl.textContent = '';
+    }
 
     const compassLocEl = document.getElementById('compassLocation');
     locEl2.textContent = compassLocEl?.textContent?.replace('📍 ', '') || '';
@@ -3367,10 +3369,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ── Shared: apply fetched or manual wind data ────────────────────────
-  function applyWindData(speedMs, gustMs, dirDeg, locationLabel) {
+  function applyWindData(speedMs, gustMs, dirDeg, locationLabel, tempC) {
     windState.speedMs = speedMs;
     windState.gustMs  = gustMs;
     windState.dirDeg  = dirDeg;
+    if (tempC !== undefined && tempC !== null) windState.tempC = tempC;
     if (locationLabel) compassLocation.textContent = `📍 ${locationLabel}`;
     updateWindStripText();
     document.getElementById('compassSection').style.display = 'block';
@@ -3456,7 +3459,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch(_) {} // geocode failure is non-fatal
 
         const w = await fetchWind(lat, lon);
-        applyWindData(w.speedMs, w.gustMs, w.dirDeg, locationName);
+        applyWindData(w.speedMs, w.gustMs, w.dirDeg, locationName, w.tempC);
 
       } catch(e) {
         // Distinguish offline (network error) from server errors
@@ -4452,13 +4455,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'carousel-card compare-card';
       card.id = 'compareCard';
-
-      const header = document.createElement('div');
-      header.className = 'cc-compare-header';
-      header.innerHTML =
-        `<div class="cc-badge">All strategies · swipe right to play</div>` +
-        `<div class="cc-type" style="font-size:19px;">Compare approaches</div>`;
-      card.appendChild(header);
 
       const deltaSection = document.createElement('div');
       deltaSection.className = 'cc-delta-section';
