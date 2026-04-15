@@ -1294,25 +1294,11 @@
     .play-action-row {
       display: flex; gap: 8px; padding: 0;
     }
-    .play-score-btn {
-      flex: 1; background: #1a1a1a !important; border-radius: 11px;
-      padding: 13px 14px; display: flex; align-items: center;
-      justify-content: space-between; cursor: pointer;
-      border: none; width: auto; margin: 0; font-family: inherit;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .play-score-btn:hover { background: #333 !important; }
-    .play-score-btn:active { background: #333 !important; }
-    .play-score-btn-text { color: #fff; font-size: 14px; font-weight: 700; }
-    .play-score-btn-badge {
-      background: rgba(255,255,255,0.15); border-radius: 5px;
-      padding: 2px 8px; color: #fff; font-size: 13px; font-weight: 700;
-    }
     .play-next-btn {
       background: #f0efeb !important; border-radius: 11px;
-      padding: 13px 15px; display: flex; align-items: center;
-      cursor: pointer; border: none; width: auto; margin: 0; font-family: inherit;
-      -webkit-tap-highlight-color: transparent; flex-shrink: 0;
+      padding: 13px 15px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: none; width: 100%; margin: 0; font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
     }
     .play-next-btn:hover { background: #e5e3df !important; }
     .play-next-btn:active { background: #e5e3df !important; }
@@ -2127,12 +2113,8 @@
     <div class="result" id="output" style="background:transparent;border:none;padding:0;margin:0;"></div>
     <div class="recalc-link" id="recalcLink"><a id="recalcAnchor">↺ Recalculate</a></div>
     <div class="play-action-row" id="playActionRow" style="display:none;">
-      <button class="play-score-btn" id="playScoreBtn" type="button">
-        <span class="play-score-btn-text">Score hole</span>
-        <span class="play-score-btn-badge" id="playScoreBadge">—</span>
-      </button>
       <button class="play-next-btn" id="playNextBtn" type="button">
-        <span class="play-next-btn-text">Next →</span>
+        <span class="play-next-btn-text">Next hole →</span>
       </button>
     </div>
   </div>
@@ -4654,24 +4636,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Update action row
     if (typeof updateCalcButtonVisibility === 'function') updateCalcButtonVisibility();
-    (function updateActionBadge() {
-      const badge = document.getElementById('playScoreBadge');
-      const btnText = document.getElementById('playScoreBtn')?.querySelector('.play-score-btn-text');
-      if (!badge) return;
-      const sess = sessionStorage.getItem('activeCourse');
-      if (!sess) return;
-      try {
-        const { id, holeIdx: hi } = JSON.parse(sess);
-        const courses = loadCourses();
-        const c2 = courses[id]; if (!c2) return;
-        const sc2 = loadScores(id);
-        let tStr = 0, tPar = 0, played = 0;
-        sc2.forEach((s2, i2) => { if (!s2) return; tStr += s2.fairway + s2.putts; tPar += c2.holes[i2]?.par || 4; played++; });
-        const diff = played ? tStr - tPar : null;
-        badge.textContent = diff === null || diff === 0 ? 'E' : diff > 0 ? `+${diff}` : `${diff}`;
-        if (btnText) btnText.textContent = `Score hole ${hi + 1}`;
-      } catch(e) {}
-    })();
+
 
     currentCardIndex = 0;
     const shownPlan    = ordered.find(p => p.type === activePlanType) || ordered[0];
@@ -4967,15 +4932,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Wire action row buttons ─────────────────────────────────────────────
   (function wireActionRow() {
-    const scoreBtn = document.getElementById('playScoreBtn');
-    const nextBtn  = document.getElementById('playNextBtn');
-    if (!scoreBtn || !nextBtn) return;
-
-    scoreBtn.addEventListener('click', () => {
-      // Delegate to score FAB click
-      const fab = document.getElementById('scoreFab');
-      if (fab) fab.click();
-    });
+    const nextBtn = document.getElementById('playNextBtn');
+    if (!nextBtn) return;
 
     nextBtn.addEventListener('click', () => {
       // Advance to next hole via course bar
