@@ -5023,16 +5023,19 @@ document.addEventListener('DOMContentLoaded', () => {
       // rAF1: browser lays out new card at full height
       // rAF2: measure final position and scroll if strategy footer is hidden
       requestAnimationFrame(() => requestAnimationFrame(() => {
-        // Measure the strategy footer strip — that's what must stay visible
-        const footer = newCard.querySelector('.cc-strat-footer');
-        const target = footer || newCard.closest('.carousel-outer');
-        if (!target) return;
-        const rect = target.getBoundingClientRect();
+        const outer = newCard.closest('.carousel-outer');
+        if (!outer) return;
+        const outerBottom = outer.getBoundingClientRect().bottom;
         const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-        // Account for fixed next-hole button (~72px) above tab bar
-        const fixedOffset = 80;
-        if (rect.bottom + fixedOffset > vh) {
-          window.scrollBy({ top: rect.bottom + fixedOffset - vh, behavior: 'smooth' });
+        // Fixed elements above viewport bottom: tab bar (~61px) + next hole btn
+        const actionRow = document.getElementById('playActionRow');
+        const actionRowH = actionRow && actionRow.style.display !== 'none'
+          ? actionRow.getBoundingClientRect().height : 0;
+        const tabBarH = 61; // approximate tab bar height
+        const totalFixed = actionRowH + tabBarH + 80; // dots (~24px) + recalc (~30px) + gap
+        const clearance = vh - totalFixed;
+        if (outerBottom > clearance) {
+          window.scrollBy({ top: outerBottom - clearance, behavior: 'smooth' });
         }
       }));
       // Persist committed strategy
