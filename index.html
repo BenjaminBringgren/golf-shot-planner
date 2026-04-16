@@ -2670,8 +2670,14 @@ function findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry
 
   const singleApproach = hole - teeClub.total;
 
-  // Single-shot plan: tee club carries to or near the green (no overshoot)
-  if (singleApproach >= 0 && singleApproach <= maxApproach) {
+  // Longest total distance of any non-driver approach club
+  const approachClubs = clubsList.filter(c => c.key !== 'driver');
+  const longestApproachTotal = approachClubs.length > 0
+    ? Math.max(...approachClubs.map(c => c.total))
+    : 0;
+
+  // Single-shot plan: tee club leaves an approach the longest club can actually reach
+  if (singleApproach >= 0 && singleApproach <= maxApproach && singleApproach <= longestApproachTotal) {
     const score = 1 + expectedStrokesRemaining(singleApproach, teeClub.carry);
     return { shots: [teeClub], approach: singleApproach, score };
   }
