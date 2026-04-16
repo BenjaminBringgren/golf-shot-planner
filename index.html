@@ -5020,17 +5020,21 @@ document.addEventListener('DOMContentLoaded', () => {
       newCard.classList.add('active-card');
       oldCard.replaceWith(newCard);
       updateCompareTable();
-      // Set carousel height instantly, then ensure full card + dots are visible
-      // Card is now visible at natural height — scroll if needed
-      requestAnimationFrame(() => {
-        const outer = newCard.closest('.carousel-outer');
-        if (!outer) return;
-        const outerRect = outer.getBoundingClientRect();
+      // rAF1: browser lays out new card at full height
+      // rAF2: measure final position and scroll if strategy footer is hidden
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        // Measure the strategy footer strip — that's what must stay visible
+        const footer = newCard.querySelector('.cc-strat-footer');
+        const target = footer || newCard.closest('.carousel-outer');
+        if (!target) return;
+        const rect = target.getBoundingClientRect();
         const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-        if (outerRect.bottom + 36 > vh) {
-          window.scrollBy({ top: outerRect.bottom + 36 - vh, behavior: 'smooth' });
+        // Account for fixed next-hole button (~72px) above tab bar
+        const fixedOffset = 80;
+        if (rect.bottom + fixedOffset > vh) {
+          window.scrollBy({ top: rect.bottom + fixedOffset - vh, behavior: 'smooth' });
         }
-      });
+      }));
       // Persist committed strategy
       try {
         const raw = sessionStorage.getItem('committedStrategies');
