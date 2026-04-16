@@ -225,6 +225,34 @@
     .mg-menu-sub   { font-size: 12px; color: #888; margin: 2px 0 0; }
     .mg-menu-arrow { margin-left: auto; color: #bbb; font-size: 17px; font-weight: 300; }
 
+    .mg-baseline-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; padding: 4px 0 4px; }
+    .mg-baseline-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .mg-baseline-num { font-size: 12px; font-weight: 500; color: #888; }
+    .mg-baseline-dot { width: 42px; height: 42px; border-radius: 8px; max-width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+    .mg-baseline-dot.none  { background: #f0efeb; }
+    .mg-baseline-dot.under { background: #E1F5EE; }
+    .mg-baseline-dot.even  { background: #f0efeb; }
+    .mg-baseline-dot.over1 { background: #FAEEDA; }
+    .mg-baseline-dot.over2 { background: #F5C4B3; }
+    .mg-baseline-dot.over3 { background: #F09595; }
+    .mg-baseline-delta { font-size: 11px; font-weight: 600; line-height: 1; }
+    .mg-baseline-dot.none  .mg-baseline-delta { color: #bbb; font-size: 9px; }
+    .mg-baseline-dot.under .mg-baseline-delta { color: #085041; }
+    .mg-baseline-dot.even  .mg-baseline-delta { color: #888; }
+    .mg-baseline-dot.over1 .mg-baseline-delta { color: #633806; }
+    .mg-baseline-dot.over2 .mg-baseline-delta { color: #712B13; }
+    .mg-baseline-dot.over3 .mg-baseline-delta { color: #791F1F; }
+    .mg-baseline-rounds { font-size: 9px; line-height: 1; }
+    .mg-baseline-dot.none  .mg-baseline-rounds { color: #ccc; }
+    .mg-baseline-dot.under .mg-baseline-rounds { color: #0F6E56; }
+    .mg-baseline-dot.even  .mg-baseline-rounds { color: #aaa; }
+    .mg-baseline-dot.over1 .mg-baseline-rounds { color: #854F0B; }
+    .mg-baseline-dot.over2 .mg-baseline-rounds { color: #993C1D; }
+    .mg-baseline-dot.over3 .mg-baseline-rounds { color: #A32D2D; }
+    .mg-baseline-legend { display: flex; align-items: center; gap: 10px; padding: 10px 0 2px; flex-wrap: wrap; }
+    .mg-baseline-legend-item { display: flex; align-items: center; gap: 5px; }
+    .mg-baseline-legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+    .mg-baseline-legend-lbl { font-size: 11px; color: #888; }
     .mg-par-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; padding: 0 2px 2px; }
     .mg-par-tile { background: #f5f4f0; border-radius: 10px; padding: 14px 12px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .mg-par-val { font-size: 26px; font-weight: 500; color: #1a1a1a; line-height: 1; margin: 0; }
@@ -1162,19 +1190,17 @@
     }
 
     /* ── Strategy plan card (v3 — single card + switcher) ──── */
-    .carousel-outer { overflow: hidden; margin: 0; padding: 0; background: #fff; border-radius: 12px; border: 0.5px solid rgba(0,0,0,0.07); transition: height 0.32s cubic-bezier(0.32, 0.72, 0, 1); }
+    .carousel-outer { overflow: visible; margin: 0; padding: 0; background: #fff; border-radius: 12px; border: 0.5px solid rgba(0,0,0,0.07); }
     .carousel-track {
-      display: flex; gap: 0; align-items: flex-start;
-      transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
-      will-change: transform;
+      display: block;
     }
     .carousel-card {
-      flex: 0 0 100%; min-width: 0;
       border-radius: 12px; overflow: visible;
       border: none; background: #fff;
       box-shadow: none;
-      height: auto;
+      height: auto; display: none;
     }
+    .carousel-card.active-card { display: block; }
     .carousel-card.compare-card { flex: 0 0 100%; }
 
     /* Strategy type colours — Option 1: top border accent */
@@ -1308,6 +1334,8 @@
     .carousel-card.type-custom        .tee-chip.active { border: 1.5px solid #888; background: #f0f0f0; color: #555; }
     .tee-chip.locked { opacity: 0.4; pointer-events: none; }
     .tee-chip.bag-chip { width: auto; padding: 0 16px; flex-shrink: 0; }
+    .tee-chip.tee-chip-sm { width: 42px; height: 42px; font-size: 13px; }
+    .tee-chip.tee-chip-sm.bag-chip { width: auto; height: 42px; min-height: 42px; padding: 0 12px; }
     .tee-chip-bag { display: flex; align-items: center; gap: 6px; }
     .tee-chip-bag svg { display: block; flex-shrink: 0; }
     .tee-chip-bag-label { font-size: 14px; font-weight: 600; color: #888; }
@@ -2323,6 +2351,17 @@
         <h2>Putts breakdown</h2>
       </div>
       <div style="padding:12px;display:flex;flex-direction:column;gap:12px;" id="mgPuttsContent">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- ── Personal Baseline sub-page ─────────────────────────────────── -->
+    <div class="mg-sub" id="mgSubBaseline">
+      <div class="mg-sub-header">
+        <button class="mg-back-btn" id="mgBackBaseline">‹</button>
+        <h2>Personal baseline</h2>
+      </div>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px;" id="mgBaselineContent">
         <!-- populated by JS -->
       </div>
     </div>
@@ -4279,6 +4318,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const badgeDiv = document.createElement('div');
       badgeDiv.className = 'cc-badge';
       badgeDiv.textContent = isCustom ? 'Custom' : basePlan.type;
+      // Personal baseline indicator
+      try {
+        const _bSess = sessionStorage.getItem('activeCourse');
+        if (_bSess) {
+          const { id: _bid, holeIdx: _bhi } = JSON.parse(_bSess);
+          const _bl = computeHoleBaseline(_bid, _bhi ?? 0);
+          if (_bl) {
+            const ind = document.createElement('div');
+            ind.style.cssText = 'font-size:10px;color:#888;font-weight:500;';
+            ind.textContent = 'Personal · ' + _bl.rounds + ' rounds';
+            badgeDiv.appendChild(ind);
+          }
+        }
+      } catch(e) {}
       header.appendChild(badgeDiv);
 
       // Score row: big number + label + vs par
@@ -4366,7 +4419,7 @@ document.addEventListener('DOMContentLoaded', () => {
               teeOverrides[basePlan.type] = null;
               const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
               newCard.id = 'activeStrategyCard';
-              card.replaceWith(newCard); syncOuterHeight();
+              newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight();
               updateCompareTable();
             });
           }
@@ -4427,7 +4480,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
               shot2Candidates.forEach(cand => {
                 const chip = document.createElement('div');
-                chip.className = 'tee-chip' + (cand.key === currentS2Key ? ' active' : '');
+                chip.className = 'tee-chip tee-chip-sm' + (cand.key === currentS2Key ? ' active' : '');
                 chip.textContent = clubMap[cand.key]?.label ?? cand.key;
 
                 // Show if this club would overshoot (approach < 0)
@@ -4445,7 +4498,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
                     newCard.id = card.id || 'activeStrategyCard';
-                    card.replaceWith(newCard); syncOuterHeight();
+                    newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight();
                     updateCompareTable();
                   });
                 }
@@ -4454,7 +4507,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
               // Bag chip — opens full picker for 2nd club
               const s2BagChip = document.createElement('div');
-              s2BagChip.className = 'tee-chip bag-chip';
+              s2BagChip.className = 'tee-chip bag-chip tee-chip-sm';
               const s2BagInner = document.createElement('div');
               s2BagInner.className = 'tee-chip-bag';
               const s2BagSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -4475,7 +4528,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (testApp >= 0) shot2Overrides[basePlan.type] = selectedKey === activePlan.shots[1]?.key ? null : selectedKey;
                     const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
                     newCard.id = card.id || 'activeStrategyCard';
-                    card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
+                    newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
                   }, { type: 'no-driver' });
                 }
               });
@@ -4590,7 +4643,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window._openClubPicker(currentKey, (selectedKey) => {
               teeOverrides[basePlan.type] = selectedKey !== basePlan.shots[0].key ? selectedKey : null;
               const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
-              newCard.id = 'activeStrategyCard'; card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
+              newCard.id = 'activeStrategyCard'; newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
             }, { type: 'par', parValue });
           }
         });
@@ -4860,15 +4913,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return firstCard ? firstCard.offsetWidth : 0;
     }
 
-    function syncOuterHeight() {
-      requestAnimationFrame(() => {
-        const cards = track.querySelectorAll('.carousel-card');
-        const active = cards[currentCardIndex];
-        if (active && carouselOuter) {
-          carouselOuter.style.height = active.getBoundingClientRect().height + 'px';
-        }
-      });
-    }
+    function syncOuterHeight() { /* no-op: height managed by active-card display */ }
     window._syncCarouselHeight = syncOuterHeight;
 
     function goToCard(idx, animate = true) {
@@ -4879,11 +4924,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof updateDots === 'function') updateDots(currentCardIndex);
       // Track last strategy card (not compare card) for column highlighting
       if (ordered[idx]?.type) lastStrategyCardIndex = idx;
-      if (!animate) track.style.transition = 'none';
-      track.style.transform = `translateX(-${idx * getCardWidth()}px)`;
-      if (!animate) setTimeout(() => { track.style.transition = ''; }, 0);
-      // Sync outer height to active card after transition
-      setTimeout(syncOuterHeight, animate ? 340 : 0);
+      // Show only active card
+      track.querySelectorAll('.carousel-card').forEach((c, i) => {
+        c.classList.toggle('active-card', i === idx);
+      });
 
       // Only persist strategy when on the strategy card (idx 0), not compare card
       if (idx === 0) {
@@ -4951,9 +4995,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!oldCard) return;
       const newCard = buildStrategyCard(plan, 0, 2, false);
       newCard.id = 'activeStrategyCard';
+      newCard.classList.add('active-card');
       oldCard.replaceWith(newCard);
-      if (typeof window._syncCarouselHeight === 'function') window._syncCarouselHeight();
       updateCompareTable();
+      // Set carousel height instantly, then ensure full card + dots are visible
+      // Card is now visible at natural height — scroll if needed
+      requestAnimationFrame(() => {
+        const outer = newCard.closest('.carousel-outer');
+        if (!outer) return;
+        const outerRect = outer.getBoundingClientRect();
+        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        if (outerRect.bottom + 36 > vh) {
+          window.scrollBy({ top: outerRect.bottom + 36 - vh, behavior: 'smooth' });
+        }
+      });
       // Persist committed strategy
       try {
         const raw = sessionStorage.getItem('committedStrategies');
@@ -5537,6 +5592,66 @@ function renderMgScoreBreakdown() {
 }
 
 
+function renderMgBaseline() {
+  const el = document.getElementById('mgBaselineContent');
+  if (!el) return;
+  const courses = loadCourses ? loadCourses() : {};
+  const courseIds = Object.keys(courses).filter(id => (loadRounds ? loadRounds(id) : []).length > 0);
+  if (!courseIds.length) {
+    el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:14px;">No rounds saved yet.</div>';
+    return;
+  }
+  el.innerHTML = courseIds.map(courseId => {
+    const course = courses[courseId];
+    const rounds = loadRounds ? loadRounds(courseId) : [];
+    const holes = course.holes || [];
+    const numHoles = Math.max(holes.length, 18);
+    // Accumulate strokes and par per hole across all rounds
+    const holeData = Array.from({length: numHoles}, () => ({ strokes: 0, par: 0, count: 0 }));
+    rounds.forEach(r => {
+      if (!r.scores) return;
+      r.scores.forEach((s, i) => {
+        if (!s || i >= numHoles) return;
+        const strokes = (s.fairway || 0) + (s.putts || 0);
+        if (!strokes) return;
+        const par = holes[i]?.par || 4;
+        holeData[i].strokes += strokes;
+        holeData[i].par += par;
+        holeData[i].count++;
+      });
+    });
+    const holesWithData = holeData.filter(h => h.count >= 1).length;
+    const dots = holeData.slice(0, 18).map((h, i) => {
+      if (h.count === 0) {
+        return '<div class="mg-baseline-cell"><span class="mg-baseline-num">' + (i+1) + '</span>' +
+          '<div class="mg-baseline-dot none"><span class="mg-baseline-delta">—</span></div></div>';
+      }
+      const avgDiff = (h.strokes - h.par) / h.count;
+      const cls = avgDiff < -0.05 ? 'under' : avgDiff < 0.05 ? 'even' : avgDiff < 1.05 ? 'over1' : avgDiff < 2.05 ? 'over2' : 'over3';
+      const diffStr = avgDiff < -0.05 ? (avgDiff.toFixed(1)) : avgDiff < 0.05 ? 'E' : '+' + avgDiff.toFixed(1);
+      return '<div class="mg-baseline-cell"><span class="mg-baseline-num">' + (i+1) + '</span>' +
+        '<div class="mg-baseline-dot ' + cls + '">' +
+        '<span class="mg-baseline-delta">' + diffStr + '</span>' +
+        '<span class="mg-baseline-rounds">' + h.count + 'r</span>' +
+        '</div></div>';
+    }).join('');
+    const legend =
+      '<div class="mg-baseline-legend">' +
+      '<div class="mg-baseline-legend-item"><div class="mg-baseline-legend-dot" style="background:#E1F5EE;"></div><span class="mg-baseline-legend-lbl">Under par</span></div>' +
+      '<div class="mg-baseline-legend-item"><div class="mg-baseline-legend-dot" style="background:#f0efeb;border:0.5px solid #e0ddd8;"></div><span class="mg-baseline-legend-lbl">Even</span></div>' +
+      '<div class="mg-baseline-legend-item"><div class="mg-baseline-legend-dot" style="background:#FAEEDA;"></div><span class="mg-baseline-legend-lbl">+0–1</span></div>' +
+      '<div class="mg-baseline-legend-item"><div class="mg-baseline-legend-dot" style="background:#F5C4B3;"></div><span class="mg-baseline-legend-lbl">+1–2</span></div>' +
+      '<div class="mg-baseline-legend-item"><div class="mg-baseline-legend-dot" style="background:#F09595;"></div><span class="mg-baseline-legend-lbl">+2 or more</span></div>' +
+      '</div>';
+    return '<div class="mg-breakdown-card">' +
+      '<div class="mg-breakdown-title">' + (course.name || 'Course') + '</div>' +
+      '<div style="padding:6px 14px 4px;font-size:12px;color:#aaa;">' + rounds.length + ' round' + (rounds.length !== 1 ? 's' : '') + ' · avg vs par per hole</div>' +
+      '<div style="padding:0 14px;">' +
+      '<div class="mg-baseline-grid">' + dots + '</div>' +
+      legend + '</div></div>';
+  }).join('');
+}
+
 function renderMgAvgStrokesBreakdown() {
   const el = document.getElementById('mgAvgStrokesContent');
   if (!el) return;
@@ -5583,6 +5698,7 @@ function renderMgAvgStrokesBreakdown() {
       '<div class="mg-par-sub' + diffClass + '">' + (diff !== null ? diffStr : '') + '</div></div>';
   }).join('');
 
+  // Set main content via innerHTML first
   el.innerHTML =
     '<div class="mg-breakdown-card"><div class="mg-breakdown-title">Score by par type</div>' +
     '<div style="padding:10px 12px 12px;"><div class="mg-par-grid">' + parTiles + '</div></div></div>' +
@@ -5601,6 +5717,12 @@ function renderMgAvgStrokesBreakdown() {
     '<div class="mg-breakdown-label">Putts per GIR hole</div>' +
     '<div class="mg-breakdown-val">' + avgPuttsGIR + '</div></div>' +
     '</div>';
+  // Append baseline button last (needs live event listener — cannot use innerHTML)
+  const baselineBtn = document.createElement('div');
+  baselineBtn.style.cssText = 'padding:12px 14px;font-size:14px;font-weight:500;color:#1a1a1a;cursor:pointer;background:#fff;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);display:flex;justify-content:space-between;align-items:center;margin-top:0;';
+  baselineBtn.innerHTML = '<span>Personal baseline coverage</span><span style="color:#aaa;font-size:16px;">›</span>';
+  baselineBtn.addEventListener('click', () => { renderMgBaseline(); showMgSub('mgSubBaseline'); });
+  el.appendChild(baselineBtn);
 }
 
 function renderMgPuttsBreakdown() {
@@ -5831,6 +5953,7 @@ function renderMgCarryBars() {
   document.getElementById('mgBackScoreBreakdown')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackPuttsBreakdown')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackAvgStrokes')?.addEventListener('click', () => showMgSub('mgSubStats'));
+  document.getElementById('mgBackBaseline')?.addEventListener('click', () => showMgSub('mgSubAvgStrokes'));
   document.getElementById('mgBackRoundsHistory')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackCourses')?.addEventListener('click', showMgHub);
   // Edit bag toggle
