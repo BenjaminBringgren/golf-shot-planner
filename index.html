@@ -4563,6 +4563,37 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
+      // Ghost placeholder for 2nd shot + chip row — keeps card height equal to 2-shot plans
+      if (activePlan.shots.length === 1 && !teeMarked) {
+        const ghostDivider = document.createElement('div');
+        ghostDivider.className = 'cc-section-divider';
+        ghostDivider.innerHTML = '<div class="cc-section-divider-line"></div><div class="cc-section-divider-label">Approach</div><div class="cc-section-divider-line"></div>';
+        ghostDivider.style.cssText = 'opacity:0;pointer-events:none;';
+        body.appendChild(ghostDivider);
+        // Ghost shot row
+        const ghostRow = document.createElement('div');
+        ghostRow.className = 'cc-shot-row';
+        ghostRow.style.cssText = 'opacity:0;pointer-events:none;';
+        ghostRow.innerHTML =
+          '<div class="cc-shot-num">2</div>' +
+          '<div style="flex:1"><div class="cc-shot-club">—</div><div class="cc-shot-carry">—</div></div>' +
+          '<div class="cc-shot-right"><div class="cc-shot-dist">—<span class="cc-shot-unit">m</span></div></div>';
+        body.appendChild(ghostRow);
+        // Ghost chip row — matches tee-chip-row with 3 chips + bag
+        const ghostChipRow = document.createElement('div');
+        ghostChipRow.className = 'tee-chip-row';
+        ghostChipRow.style.cssText = 'opacity:0;pointer-events:none;';
+        ghostChipRow.innerHTML =
+          '<div class="tee-chip-label">2nd club</div>' +
+          '<div class="tee-chips">' +
+          '<div class="tee-chip tee-chip-sm">—</div>' +
+          '<div class="tee-chip tee-chip-sm">—</div>' +
+          '<div class="tee-chip tee-chip-sm">—</div>' +
+          '<div class="tee-chip bag-chip tee-chip-sm">—</div>' +
+          '</div>';
+        body.appendChild(ghostChipRow);
+      }
+
       // GPS remaining
       if (teeMarked && completedShots.length > 0) {
         const lastShot = completedShots[completedShots.length - 1];
@@ -5020,24 +5051,7 @@ document.addEventListener('DOMContentLoaded', () => {
       newCard.classList.add('active-card');
       oldCard.replaceWith(newCard);
       updateCompareTable();
-      // rAF1: browser lays out new card at full height
-      // rAF2: measure final position and scroll if strategy footer is hidden
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        const outer = newCard.closest('.carousel-outer');
-        if (!outer) return;
-        const outerBottom = outer.getBoundingClientRect().bottom;
-        const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-        // Fixed elements above viewport bottom: tab bar (~61px) + next hole btn
-        const actionRow = document.getElementById('playActionRow');
-        const actionRowH = actionRow && actionRow.style.display !== 'none'
-          ? actionRow.getBoundingClientRect().height : 0;
-        const tabBarH = 61; // approximate tab bar height
-        const totalFixed = actionRowH + tabBarH + 80; // dots (~24px) + recalc (~30px) + gap
-        const clearance = vh - totalFixed;
-        if (outerBottom > clearance) {
-          window.scrollBy({ top: outerBottom - clearance, behavior: 'smooth' });
-        }
-      }));
+      // Card heights are equalised by ghost row — no scroll needed on strategy switch
       // Persist committed strategy
       try {
         const raw = sessionStorage.getItem('committedStrategies');
