@@ -67,7 +67,7 @@
       cursor: pointer;
       border-radius: 0;
       color: #aaa;
-      font-size: 10px;
+      font-size: 13px;
       font-weight: 500;
       transition: color 0.15s;
       -webkit-tap-highlight-color: transparent;
@@ -89,7 +89,7 @@
     #panePlay, #panePrepare { display: none; }
     #panePlay.active {
       display: flex; flex-direction: column; gap: 8px;
-      padding: 10px 12px calc(77px + env(safe-area-inset-bottom) + 10px) 12px;
+      padding: 10px 12px calc(77px + env(safe-area-inset-bottom) + 110px) 12px;
     }
     #panePrepare.active {
       display: block;
@@ -218,7 +218,7 @@
     .mg-menu-row:last-child { border-bottom: none; }
     .mg-menu-row:active { background: #f5f4f0; }
     .mg-menu-icon {
-      width: 38px; height: 38px; border-radius: 9px;
+      width: 42px; height: 42px; border-radius: 9px;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .mg-menu-title { font-size: 15px; font-weight: 700; color: #1a1a1a; margin: 0; }
@@ -280,7 +280,7 @@
     .mg-carry-row:last-child { border-bottom: none; }
     .mg-carry-name { font-size: 14px; font-weight: 700; color: #1a1a1a; min-width: 44px; }
     .mg-carry-bar-wrap { flex: 1; height: 6px; background: #ede9e3; border-radius: 3px; overflow: hidden; }
-    .mg-carry-bar      { height: 100%; background: #1e7a45; border-radius: 3px; }
+    .mg-carry-bar      { height: 100%; background: #555; border-radius: 3px; }
     .mg-carry-val { font-size: 13px; color: #888; min-width: 50px; text-align: right; }
 
     /* Profile sub-page */
@@ -337,40 +337,40 @@
     .prepare-header h2 {
       font-size: 17px; font-weight: 700; color: #333; margin: 0;
     }
-    .course-list { margin-bottom: 12px; }
+    .course-list { margin-bottom: 12px; margin-top: 16px; }
     .course-item {
       display: flex; align-items: stretch; justify-content: space-between;
       padding: 0; border: none; border-radius: 10px;
-      margin-bottom: 8px; background: #1a1a1a; cursor: default;
+      margin-bottom: 8px; background: #ffffff; cursor: default;
       overflow: hidden;
     }
     .course-item-info {
       padding: 11px 14px; flex: 1; cursor: pointer;
     }
-    .course-item-name { font-size: 16px; font-weight: 600; color: #fff; }
-    .course-item-meta { font-size: 13px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+    .course-item-name { font-size: 16px; font-weight: 600; color: #1a1a1a; }
+    .course-item-meta { font-size: 13px; color: #888; margin-top: 2px; }
     .course-item-actions {
       display: flex; align-items: stretch; gap: 0; flex-shrink: 0;
-      border-left: 1px solid rgba(255,255,255,0.12);
+      border-left: 1px solid rgba(0,0,0,0.07);
     }
     .course-action-btn {
       font-size: 14px; padding: 8px 14px; border-radius: 0;
-      border: none; border-left: 1px solid rgba(255,255,255,0.12);
-      background: transparent; color: #fff;
+      border: none; border-left: 1px solid rgba(0,0,0,0.07);
+      background: transparent; color: #1a1a1a;
       cursor: pointer; width: auto; margin: 0;
       display: flex; align-items: center;
     }
     .course-action-btn:first-child { border-left: none; }
-    .course-action-btn:hover { background: rgba(255,255,255,0.1); }
-    .course-action-btn.danger { color: #ffc0c0; }
-    .course-action-btn.danger:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .course-action-btn:hover { background: rgba(0,0,0,0.05); }
+    .course-action-btn.danger { color: #c0392b; }
+    .course-action-btn.danger:hover { background: rgba(0,0,0,0.05); color: #a32d2d; }
     /* ── iOS touch target minimums ───────────────────────────── */
     .course-action-btn { min-height: 42px; padding: 11px 16px; }
     /* hole-cell sizing controlled by main rule below */
     .collapsible-header { min-height: 42px; }
     /* gps-btn height handled by main rule */
     /* .wind-strip-btn touch target handled in main rule */
-    .course-bar-btn { min-height: 60px; }
+    .course-bar-btn { width: 42px; height: 42px; }
     .hint-collapsed { min-height: 42px; }
 
 
@@ -514,8 +514,8 @@
     .course-bar-btn {
       background: #f0efeb; color: #555;
       border: none; border-radius: 8px; cursor: pointer; flex-shrink: 0;
-      font-size: 15px; padding: 8px 12px; width: auto; margin: 0;
-      min-height: 60px; display: flex; align-items: center; justify-content: center;
+      font-size: 18px; padding: 0; width: 42px; height: 42px; margin: 0;
+      display: flex; align-items: center; justify-content: center;
     }
     .course-bar-btn:active { background: #e5e3df; }
     .course-bar-btn.dismiss { color: #bbb; }
@@ -894,10 +894,10 @@
     .wind-strip-btn {
       font-size: 13px; color: #555; cursor: pointer;
       background: #f0f0ee; border: none;
-      border-radius: 7px; width: auto; margin: 0;
+      border-radius: 7px; width: 42px; margin: 0;
       white-space: nowrap; flex-shrink: 0; font-weight: 600;
       display: flex; align-items: center; justify-content: center;
-      padding: 0 10px; height: 42px; min-height: 42px;
+      padding: 0; height: 42px; min-height: 42px;
     }
     .wind-strip-btn:hover { background: #e5e5e2; }
     .wind-strip-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
@@ -937,21 +937,21 @@
     .compass-location { font-size: 10px; color: #aaa; }
     .compass-wrap { display: contents; }
     .compass-svg-wrap {
-      position: relative; width: 72px; height: 72px; flex-shrink: 0;
+      position: relative; width: 96px; height: 96px; flex-shrink: 0;
       cursor: grab; user-select: none;
       background: #f0efeb; border-radius: 50%; overflow: hidden;
     }
     .compass-svg-wrap:active { cursor: grabbing; }
-    #compassSvg { width: 72px; height: 72px; transition: none; }
+    #compassSvg { width: 96px; height: 96px; transition: none; }
     .compass-right {
       flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px;
     }
     .compass-deg-display { font-size: 13px; font-weight: 700; color: #1a1a1a; }
     .compass-deg-label { font-size: 11px; color: #aaa; }
     .compass-lock-btn {
-      padding: 12px 14px; font-size: 13px; font-weight: 700;
+      padding: 0 14px; font-size: 13px; font-weight: 700;
       background: #1a1a1a !important; color: #fff !important;
-      border: none; border-radius: 8px;
+      border: none; border-radius: 8px; height: 42px;
       cursor: pointer; width: auto; margin: 0; margin-left: auto;
       display: flex; align-items: center; gap: 5px; flex-shrink: 0;
     }
@@ -1148,7 +1148,7 @@
     }
 
     /* ── Strategy plan card (v3 — single card + switcher) ──── */
-    .carousel-outer { overflow: hidden; margin: 0; padding: 0; background: #fff; border-radius: 12px; border: 0.5px solid rgba(0,0,0,0.07); height: auto; }
+    .carousel-outer { overflow: hidden; margin: 0; padding: 0; background: #fff; border-radius: 12px; border: 0.5px solid rgba(0,0,0,0.07); transition: height 0.32s cubic-bezier(0.32, 0.72, 0, 1); }
     .carousel-track {
       display: flex; gap: 0; align-items: flex-start;
       transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
@@ -1209,8 +1209,8 @@
     .cc-shot-row:last-child { border-bottom: none; }
     .cc-shot-row.tee-shot { border-left: none; padding-left: 0; margin-left: 0; }
     .cc-shot-num {
-      width: 26px; height: 26px; border-radius: 50%;
-      font-size: 11px; font-weight: 700;
+      width: 42px; height: 42px; border-radius: 50%;
+      font-size: 15px; font-weight: 700;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .carousel-card.type-max-distance  .cc-shot-num { background: #fde8e8; color: #c0392b; }
@@ -1273,18 +1273,18 @@
 
     /* Tee chip row — alt club switcher */
     .tee-chip-row {
-      padding: 9px 14px 11px;
+      padding: 8px 14px 10px;
       border-top: 0.5px solid #f2f1ee;
-      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
     }
     .tee-chip-label { font-size: 11px; color: #bbb; flex-shrink: 0; }
     .tee-chips { display: flex; gap: 5px; flex-wrap: wrap; }
     .tee-chip {
-      border: none; border-radius: 6px;
-      padding: 12px 12px; background: #f5f4f0;
-      cursor: pointer; font-size: 13px; font-weight: 600; color: #555;
-      transition: background 0.1s, border-color 0.1s; min-height: 42px;
-      height: auto; width: auto; margin: 0; user-select: none;
+      border: none; border-radius: 8px;
+      padding: 0; background: #f5f4f0;
+      cursor: pointer; font-size: 15px; font-weight: 600; color: #555;
+      transition: background 0.1s, border-color 0.1s;
+      height: 60px; width: 60px; flex-shrink: 0; margin: 0; user-select: none;
       display: inline-flex; align-items: center; justify-content: center;
     }
     .tee-chip:hover { background: #eeecea; }
@@ -1293,13 +1293,13 @@
     .carousel-card.type-conservative  .tee-chip.active { border: 1.5px solid #1e7a45; background: #d4edda; color: #1e7a45; }
     .carousel-card.type-custom        .tee-chip.active { border: 1.5px solid #888; background: #f0f0f0; color: #555; }
     .tee-chip.locked { opacity: 0.4; pointer-events: none; }
-    .tee-chip.bag-chip { flex: 0 0 auto; }
-    .tee-chip-bag { display: flex; align-items: center; gap: 4px; }
+    .tee-chip.bag-chip { width: auto; padding: 0 16px; flex-shrink: 0; }
+    .tee-chip-bag { display: flex; align-items: center; gap: 6px; }
     .tee-chip-bag svg { display: block; flex-shrink: 0; }
-    .tee-chip-bag-label { font-size: 12px; font-weight: 600; color: #888; }
+    .tee-chip-bag-label { font-size: 14px; font-weight: 600; color: #888; }
     .cc-tee-select { width: 100%; padding: 9px 10px; font-size: 14px; border: 1px solid #e0e0e0; border-radius: 6px; margin-top: 5px; background: #f9f8f6; color: #222; font-family: inherit; }
     /* ── Strategy footer strip ──────────────────────────────── */
-    .cc-strat-footer { display: flex; border-top: 0.5px solid rgba(0,0,0,0.07); }
+    .cc-strat-footer { display: flex; border-top: 0.5px solid rgba(0,0,0,0.07); margin-top: 8px; }
     .cc-strat-btn {
       flex: 1; padding: 18px 4px;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -1311,8 +1311,8 @@
     }
     .cc-strat-btn:last-child { border-right: none; }
     .cc-strat-btn.active { background: #fff; }
-    .cc-strat-btn-club { font-size: 13px; font-weight: 700; color: #ccc; }
-    .cc-strat-btn-score { font-size: 12px; color: #ccc; }
+    .cc-strat-btn-club { font-size: 16px; font-weight: 700; color: #ccc; }
+    .cc-strat-btn-score { font-size: 13px; color: #ccc; }
     .cc-strat-btn.active .cc-strat-btn-club { color: inherit; }
     .cc-strat-btn.active .cc-strat-btn-score { color: #555; }
     .carousel-card.type-max-distance  .cc-strat-btn.active { border-top-color: #c0392b; color: #c0392b; }
@@ -1331,7 +1331,12 @@
 
     /* Action row — replaces FAB */
     .play-action-row {
-      display: flex; gap: 8px; padding: 0;
+      position: fixed;
+      bottom: calc(6px + 49px + 6px + env(safe-area-inset-bottom));
+      left: 0; right: 0;
+      padding: 0 12px 8px;
+      z-index: 849;
+      background: #f5f4f0;
     }
     .play-next-btn {
       background: #f0efeb !important; border-radius: 11px;
@@ -1409,7 +1414,7 @@
     #gpsAndCondWrap { padding: 0 14px; margin-bottom: 2px; }
     #parCondGrid { background: transparent; }
     .recalc-link {
-      display: none; text-align: center; margin-top: 0; margin-bottom: 0;
+      display: none; text-align: center; margin-top: 0; margin-bottom: 20px;
       font-size: 13px; color: #aaa;
     }
     .recalc-link.visible { display: block; }
@@ -1756,7 +1761,7 @@
     /* ── Carousel dot indicator ──────────────────────────────── */
     .carousel-dots {
       display: flex; justify-content: center; align-items: center;
-      gap: 6px; padding: 10px 0 4px;
+      gap: 6px; padding: 10px 0 16px;
     }
     .carousel-dot {
       width: 6px; height: 6px; border-radius: 50%;
@@ -1776,13 +1781,13 @@
     }
     .cond-strip-label { font-size: 11px; color: #bbb; flex-shrink: 0; }
     .cond-strip-sep { display: none; }
-    .chip-control-row { display: flex; gap: 5px; }
+    .chip-control-row { display: flex; gap: 6px; }
     .chip-control-btn {
       background: #eeede9 !important; border: none !important;
-      border-radius: 7px; padding: 12px 14px;
+      border-radius: 7px; padding: 0; width: 42px; height: 42px; flex-shrink: 0;
       font-size: 13px; font-weight: 600; color: #999 !important;
       cursor: pointer; font-family: inherit;
-      width: auto; margin: 0; line-height: 1;
+      margin: 0; line-height: 1;
       -webkit-tap-highlight-color: transparent;
       transition: background 0.1s, color 0.1s, border-color 0.1s;
     }
@@ -2096,7 +2101,7 @@
         <!-- Wind breakdown rows -->
         <div class="wind-breakdown" id="windBreakdown" style="display:none">
           <div class="wind-breakdown-row">
-            <span class="wbr-label">Headwind</span>
+            <span class="wbr-label">Headwind / Tailwind</span>
             <span class="wbr-val" id="wbrHead">—</span>
           </div>
           <div class="wind-breakdown-row">
@@ -2155,11 +2160,11 @@
   <div id="playBodyPad">
     <div class="result" id="output" style="background:transparent;border:none;padding:0;margin:0;"></div>
     <div class="recalc-link" id="recalcLink"><a id="recalcAnchor">↺ Recalculate</a></div>
-    <div class="play-action-row" id="playActionRow" style="display:none;">
-      <button class="play-next-btn" id="playNextBtn" type="button">
-        <span class="play-next-btn-text">Next hole →</span>
-      </button>
-    </div>
+  </div>
+  <div class="play-action-row" id="playActionRow" style="display:none;">
+    <button class="play-next-btn" id="playNextBtn" type="button">
+      <span class="play-next-btn-text">Next hole →</span>
+    </button>
   </div>
 
   <!-- ── Load course button (fixed above tab bar) ──────────────────────── -->
@@ -3003,8 +3008,8 @@ document.addEventListener('DOMContentLoaded', () => {
     speedEl.textContent = `${windState.speedMs.toFixed(1)} m/s`;
 
     const hwSign = Math.abs(hw) < 0.5 ? 'Calm'
-      : hw > 0 ? `↑ ${hw.toFixed(1)} headwind`
-      : `↓ ${Math.abs(hw).toFixed(1)} tailwind`;
+      : hw > 0 ? `↓ ${hw.toFixed(1)} headwind`
+      : `↑ ${Math.abs(hw).toFixed(1)} tailwind`;
     const cwPart = cw >= 1 ? ` · ${cw.toFixed(1)} cross` : '';
     detailEl.textContent = hwSign + cwPart;
 
@@ -3040,9 +3045,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (Math.abs(hw) < 0.5) {
         headEl.textContent = 'Calm'; headEl.className = 'wbr-val';
       } else if (hw > 0) {
-        headEl.textContent = `↑ ${hw.toFixed(1)} m/s`; headEl.className = 'wbr-val head';
+        headEl.textContent = `↓ ${hw.toFixed(1)} m/s`; headEl.className = 'wbr-val head';
       } else {
-        headEl.textContent = `↓ ${Math.abs(hw).toFixed(1)} m/s`; headEl.className = 'wbr-val tail';
+        headEl.textContent = `↑ ${Math.abs(hw).toFixed(1)} m/s`; headEl.className = 'wbr-val tail';
       }
     }
 
@@ -3908,7 +3913,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const bagInner = document.createElement('div');
           bagInner.className = 'tee-chip-bag';
           const bagSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-          bagSvg.setAttribute('width','14'); bagSvg.setAttribute('height','21');
+          bagSvg.setAttribute('width','18'); bagSvg.setAttribute('height','27');
           bagSvg.setAttribute('viewBox','0 0 349 518'); bagSvg.setAttribute('fill','none');
           bagSvg.style.color = par3ClubOverride ? '#1a1a1a' : '#888';
           bagSvg.innerHTML = `<path d="M319.865 425.637C314.058 433.485 298.865 430.637 298.865 430.637V189.637C298.865 189.637 316.842 186.765 321.865 195.137C324.879 200.16 323.865 210.137 323.865 210.137V412.137C323.865 412.137 324.163 419.829 319.865 425.637Z" fill="currentColor"/><path d="M84.8653 448.637H267.365V189.637L48.8653 287.137V347.637V438.137C48.8653 448.637 84.8653 448.637 84.8653 448.637Z" fill="currentColor"/><path d="M267.365 150.137L198.365 183.637H84.8653V129.637H133.283L129.865 85.6371C129.865 85.6371 64.7881 120.204 28.3653 103.137C20.4185 99.4134 14.8441 97.9927 9.36529 91.1371C3.58296 83.9017 3.45838 77.7611 1.86529 68.6371C0.018102 58.0577 0.0719012 51.7257 1.86529 41.1371C3.44295 31.8222 3.3754 25.4431 9.36529 18.1371C17.3653 8.37935 27.8653 6.63706 35.3653 3.13704C42.8653 -0.362974 80.5689 -1.43121 112.365 6.63708C120.924 8.80888 126.141 9.35914 133.865 13.6371C141.149 17.6706 149.865 23.137 150.365 27.1371C152.425 43.6149 159.915 107.608 162.489 129.637H177.34L243.865 18.1371C243.865 18.1371 252.242 9.10153 259.365 6.63708C267.116 3.95559 272.444 4.5145 280.365 6.63708C287.365 8.51272 338.865 37.137 344.865 49.6371C350.196 60.7433 348.018 69.2824 344.996 81.1235L344.865 81.6371C341.05 96.5988 336.931 106.91 323.865 115.137C315.286 120.539 308.964 123.035 298.865 122.137C291.171 121.453 287.193 118.75 280.365 115.137C261.546 105.179 243.865 74.6371 243.865 74.6371L213.945 129.637H259.365C262.49 129.637 267.365 129.013 267.365 132.137V150.137Z" fill="currentColor"/><path d="M267.365 507.762V489.012C267.365 489.012 268.437 483.743 265.865 481.137C263.259 478.496 257.865 479.637 257.865 479.637H93.3653C93.3653 479.637 89.3245 479.407 86.8653 481.637C84.153 484.096 84.8653 489.012 84.8653 489.012V507.762C84.8653 507.762 84.153 513.178 86.8653 515.637C89.3245 517.867 93.3653 517.137 93.3653 517.137H257.865C257.865 517.137 263.259 518.278 265.865 515.637C268.437 513.031 267.365 507.762 267.365 507.762Z" fill="currentColor"/>`;
@@ -4150,8 +4155,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const hw = windState.headwind;
       const cw = windState.crosswind;
       const hwLabel = Math.abs(hw) < 0.5 ? 'calm'
-        : hw > 0 ? `↑ ${hw.toFixed(1)} m/s head`
-        : `↓ ${Math.abs(hw).toFixed(1)} m/s tail`;
+        : hw > 0 ? `↓ ${hw.toFixed(1)} m/s head`
+        : `↑ ${Math.abs(hw).toFixed(1)} m/s tail`;
       return cw >= 2 ? `${hwLabel} · ${cw.toFixed(1)} m/s cross` : hwLabel;
     }
 
@@ -4328,7 +4333,7 @@ document.addEventListener('DOMContentLoaded', () => {
               teeOverrides[basePlan.type] = null;
               const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
               newCard.id = 'activeStrategyCard';
-              card.replaceWith(newCard);
+              card.replaceWith(newCard); syncOuterHeight();
               updateCompareTable();
             });
           }
@@ -4407,7 +4412,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
                     newCard.id = card.id || 'activeStrategyCard';
-                    card.replaceWith(newCard);
+                    card.replaceWith(newCard); syncOuterHeight();
                     updateCompareTable();
                   });
                 }
@@ -4417,8 +4422,17 @@ document.addEventListener('DOMContentLoaded', () => {
               // Bag chip — opens full picker for 2nd club
               const s2BagChip = document.createElement('div');
               s2BagChip.className = 'tee-chip bag-chip';
-              s2BagChip.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;padding:5px 8px;';
-              s2BagChip.innerHTML = '<svg width="11" height="16" viewBox="0 0 349 518" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;"><path d="M319.865 425.637C314.058 433.485 298.865 430.637 298.865 430.637V189.637C298.865 189.637 316.842 186.765 321.865 195.137C324.879 200.16 323.865 210.137 323.865 210.137V412.137C323.865 412.137 324.163 419.829 319.865 425.637Z" fill="#888"/><path d="M84.8653 448.637H267.365V189.637L48.8653 287.137V347.637V438.137C48.8653 448.637 84.8653 448.637 84.8653 448.637Z" fill="#888"/><path d="M84.8653 237.137V216.637H133.865L84.8653 237.137Z" fill="#888"/><path d="M267.365 150.137L198.365 183.637H84.8653V129.637H133.283L129.865 85.6371C129.865 85.6371 64.7881 120.204 28.3653 103.137C20.4185 99.4134 14.8441 97.9927 9.36529 91.1371C3.58296 83.9017 3.45838 77.7611 1.86529 68.6371C0.018102 58.0577 0.0719012 51.7257 1.86529 41.1371C3.44295 31.8222 3.3754 25.4431 9.36529 18.1371C17.3653 8.37935 27.8653 6.63706 35.3653 3.13704C42.8653 -0.362974 80.5689 -1.43121 112.365 6.63708C120.924 8.80888 126.141 9.35914 133.865 13.6371C141.149 17.6706 149.865 23.137 150.365 27.1371C152.425 43.6149 159.915 107.608 162.489 129.637H177.34L243.865 18.1371C243.865 18.1371 252.242 9.10153 259.365 6.63708C267.116 3.95559 272.444 4.5145 280.365 6.63708C287.365 8.51272 338.865 37.137 344.865 49.6371C350.196 60.7433 348.018 69.2824 344.996 81.1235L344.865 81.6371C341.05 96.5988 336.931 106.91 323.865 115.137C315.286 120.539 308.964 123.035 298.865 122.137C291.171 121.453 287.193 118.75 280.365 115.137C261.546 105.179 243.865 74.6371 243.865 74.6371L213.945 129.637H259.365C262.49 129.637 267.365 129.013 267.365 132.137V150.137Z" fill="#888"/><path d="M267.365 507.762V498.387V489.012C267.365 489.012 268.437 483.743 265.865 481.137C263.259 478.496 257.865 479.637 257.865 479.637H93.3653C93.3653 479.637 89.3245 479.407 86.8653 481.637C84.153 484.096 84.8653 489.012 84.8653 489.012V498.387V507.762C84.8653 507.762 84.153 513.178 86.8653 515.637C89.3245 517.867 93.3653 517.137 93.3653 517.137H257.865C257.865 517.137 263.259 518.278 265.865 515.637C268.437 513.031 267.365 507.762 267.365 507.762Z" fill="#888"/></svg>';
+              const s2BagInner = document.createElement('div');
+              s2BagInner.className = 'tee-chip-bag';
+              const s2BagSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+              s2BagSvg.setAttribute('width', '18'); s2BagSvg.setAttribute('height', '27');
+              s2BagSvg.setAttribute('viewBox', '0 0 349 518'); s2BagSvg.setAttribute('fill', 'none');
+              s2BagSvg.style.color = '#888';
+              s2BagSvg.innerHTML = '<path d="M319.865 425.637C314.058 433.485 298.865 430.637 298.865 430.637V189.637C298.865 189.637 316.842 186.765 321.865 195.137C324.879 200.16 323.865 210.137 323.865 210.137V412.137C323.865 412.137 324.163 419.829 319.865 425.637Z" fill="currentColor"/><path d="M84.8653 448.637H267.365V189.637L48.8653 287.137V347.637V438.137C48.8653 448.637 84.8653 448.637 84.8653 448.637Z" fill="currentColor"/><path d="M84.8653 237.137V216.637H133.865L84.8653 237.137Z" fill="currentColor"/><path d="M267.365 150.137L198.365 183.637H84.8653V129.637H133.283L129.865 85.6371C129.865 85.6371 64.7881 120.204 28.3653 103.137C20.4185 99.4134 14.8441 97.9927 9.36529 91.1371C3.58296 83.9017 3.45838 77.7611 1.86529 68.6371C0.018102 58.0577 0.0719012 51.7257 1.86529 41.1371C3.44295 31.8222 3.3754 25.4431 9.36529 18.1371C17.3653 8.37935 27.8653 6.63706 35.3653 3.13704C42.8653 -0.362974 80.5689 -1.43121 112.365 6.63708C120.924 8.80888 126.141 9.35914 133.865 13.6371C141.149 17.6706 149.865 23.137 150.365 27.1371C152.425 43.6149 159.915 107.608 162.489 129.637H177.34L243.865 18.1371C243.865 18.1371 252.242 9.10153 259.365 6.63708C267.116 3.95559 272.444 4.5145 280.365 6.63708C287.365 8.51272 338.865 37.137 344.865 49.6371C350.196 60.7433 348.018 69.2824 344.996 81.1235L344.865 81.6371C341.05 96.5988 336.931 106.91 323.865 115.137C315.286 120.539 308.964 123.035 298.865 122.137C291.171 121.453 287.193 118.75 280.365 115.137C261.546 105.179 243.865 74.6371 243.865 74.6371L213.945 129.637H259.365C262.49 129.637 267.365 129.013 267.365 132.137V150.137Z" fill="currentColor"/><path d="M267.365 507.762V498.387V489.012C267.365 489.012 268.437 483.743 265.865 481.137C263.259 478.496 257.865 479.637 257.865 479.637H93.3653C93.3653 479.637 89.3245 479.407 86.8653 481.637C84.153 484.096 84.8653 489.012 84.8653 489.012V498.387V507.762C84.8653 507.762 84.153 513.178 86.8653 515.637C89.3245 517.867 93.3653 517.137 93.3653 517.137H257.865C257.865 517.137 263.259 518.278 265.865 515.637C268.437 513.031 267.365 507.762 267.365 507.762Z" fill="currentColor"/>';
+              const s2BagLbl = document.createElement('span');
+              s2BagLbl.className = 'tee-chip-bag-label'; s2BagLbl.textContent = 'Bag';
+              s2BagInner.appendChild(s2BagSvg); s2BagInner.appendChild(s2BagLbl);
+              s2BagChip.appendChild(s2BagInner);
               s2BagChip.addEventListener('click', () => {
                 const curS2Key = shot2Overrides[basePlan.type] || activePlan.shots[1]?.key;
                 if (typeof window._openClubPicker === 'function') {
@@ -4428,7 +4442,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (testApp >= 0) shot2Overrides[basePlan.type] = selectedKey === activePlan.shots[1]?.key ? null : selectedKey;
                     const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
                     newCard.id = card.id || 'activeStrategyCard';
-                    card.replaceWith(newCard); updateCompareTable();
+                    card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
                   }, { type: 'no-driver' });
                 }
               });
@@ -4501,9 +4515,9 @@ document.addEventListener('DOMContentLoaded', () => {
       card.appendChild(body);
 
       // ── Strategy footer strip
+      const stratFooter = document.createElement('div');
+      stratFooter.className = 'cc-strat-footer';
       if (!teeMarked) {
-        const stratFooter = document.createElement('div');
-        stratFooter.className = 'cc-strat-footer';
         ordered.forEach(plan => {
           const res = teeOverrides[plan.type] ? (solveForced(teeOverrides[plan.type]) || plan) : plan;
           const withS2 = (shot2Overrides[plan.type] && res.shots?.length >= 2)
@@ -4526,23 +4540,31 @@ document.addEventListener('DOMContentLoaded', () => {
         // Bag button — custom tee club
         const bagBtn = document.createElement('div');
         bagBtn.className = 'cc-strat-btn' + (override ? ' active' : '');
-        bagBtn.style.cssText = 'padding-top:10px;padding-bottom:10px;';
-        bagBtn.innerHTML = '<svg width="14" height="20" viewBox="0 0 349 518" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;flex-shrink:0;"><path d="M319.865 425.637C314.058 433.485 298.865 430.637 298.865 430.637V189.637C298.865 189.637 316.842 186.765 321.865 195.137C324.879 200.16 323.865 210.137 323.865 210.137V412.137C323.865 412.137 324.163 419.829 319.865 425.637Z" fill="currentColor"/><path d="M84.8653 448.637H267.365V189.637L48.8653 287.137V347.637V438.137C48.8653 448.637 84.8653 448.637 84.8653 448.637Z" fill="currentColor"/><path d="M84.8653 237.137V216.637H133.865L84.8653 237.137Z" fill="currentColor"/><path d="M267.365 150.137L198.365 183.637H84.8653V129.637H133.283L129.865 85.6371C129.865 85.6371 64.7881 120.204 28.3653 103.137C20.4185 99.4134 14.8441 97.9927 9.36529 91.1371C3.58296 83.9017 3.45838 77.7611 1.86529 68.6371C0.018102 58.0577 0.0719012 51.7257 1.86529 41.1371C3.44295 31.8222 3.3754 25.4431 9.36529 18.1371C17.3653 8.37935 27.8653 6.63706 35.3653 3.13704C42.8653 -0.362974 80.5689 -1.43121 112.365 6.63708C120.924 8.80888 126.141 9.35914 133.865 13.6371C141.149 17.6706 149.865 23.137 150.365 27.1371C152.425 43.6149 159.915 107.608 162.489 129.637H177.34L243.865 18.1371C243.865 18.1371 252.242 9.10153 259.365 6.63708C267.116 3.95559 272.444 4.5145 280.365 6.63708C287.365 8.51272 338.865 37.137 344.865 49.6371C350.196 60.7433 348.018 69.2824 344.996 81.1235L344.865 81.6371C341.05 96.5988 336.931 106.91 323.865 115.137C315.286 120.539 308.964 123.035 298.865 122.137C291.171 121.453 287.193 118.75 280.365 115.137C261.546 105.179 243.865 74.6371 243.865 74.6371L213.945 129.637H259.365C262.49 129.637 267.365 129.013 267.365 132.137V150.137Z" fill="currentColor"/><path d="M267.365 507.762V498.387V489.012C267.365 489.012 268.437 483.743 265.865 481.137C263.259 478.496 257.865 479.637 257.865 479.637H93.3653C93.3653 479.637 89.3245 479.407 86.8653 481.637C84.153 484.096 84.8653 489.012 84.8653 489.012V498.387V507.762C84.8653 507.762 84.153 513.178 86.8653 515.637C89.3245 517.867 93.3653 517.137 93.3653 517.137H257.865C257.865 517.137 263.259 518.278 265.865 515.637C268.437 513.031 267.365 507.762 267.365 507.762Z" fill="currentColor"/></svg>';
+        const bagBtnInner = document.createElement('div');
+        bagBtnInner.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:4px;';
+        const bagBtnSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        bagBtnSvg.setAttribute('width', '18'); bagBtnSvg.setAttribute('height', '27');
+        bagBtnSvg.setAttribute('viewBox', '0 0 349 518'); bagBtnSvg.setAttribute('fill', 'none');
+        bagBtnSvg.style.color = override ? 'inherit' : '#888';
+        bagBtnSvg.innerHTML = '<path d="M319.865 425.637C314.058 433.485 298.865 430.637 298.865 430.637V189.637C298.865 189.637 316.842 186.765 321.865 195.137C324.879 200.16 323.865 210.137 323.865 210.137V412.137C323.865 412.137 324.163 419.829 319.865 425.637Z" fill="currentColor"/><path d="M84.8653 448.637H267.365V189.637L48.8653 287.137V347.637V438.137C48.8653 448.637 84.8653 448.637 84.8653 448.637Z" fill="currentColor"/><path d="M84.8653 237.137V216.637H133.865L84.8653 237.137Z" fill="currentColor"/><path d="M267.365 150.137L198.365 183.637H84.8653V129.637H133.283L129.865 85.6371C129.865 85.6371 64.7881 120.204 28.3653 103.137C20.4185 99.4134 14.8441 97.9927 9.36529 91.1371C3.58296 83.9017 3.45838 77.7611 1.86529 68.6371C0.018102 58.0577 0.0719012 51.7257 1.86529 41.1371C3.44295 31.8222 3.3754 25.4431 9.36529 18.1371C17.3653 8.37935 27.8653 6.63706 35.3653 3.13704C42.8653 -0.362974 80.5689 -1.43121 112.365 6.63708C120.924 8.80888 126.141 9.35914 133.865 13.6371C141.149 17.6706 149.865 23.137 150.365 27.1371C152.425 43.6149 159.915 107.608 162.489 129.637H177.34L243.865 18.1371C243.865 18.1371 252.242 9.10153 259.365 6.63708C267.116 3.95559 272.444 4.5145 280.365 6.63708C287.365 8.51272 338.865 37.137 344.865 49.6371C350.196 60.7433 348.018 69.2824 344.996 81.1235L344.865 81.6371C341.05 96.5988 336.931 106.91 323.865 115.137C315.286 120.539 308.964 123.035 298.865 122.137C291.171 121.453 287.193 118.75 280.365 115.137C261.546 105.179 243.865 74.6371 243.865 74.6371L213.945 129.637H259.365C262.49 129.637 267.365 129.013 267.365 132.137V150.137Z" fill="currentColor"/><path d="M267.365 507.762V498.387V489.012C267.365 489.012 268.437 483.743 265.865 481.137C263.259 478.496 257.865 479.637 257.865 479.637H93.3653C93.3653 479.637 89.3245 479.407 86.8653 481.637C84.153 484.096 84.8653 489.012 84.8653 489.012V498.387V507.762C84.8653 507.762 84.153 513.178 86.8653 515.637C89.3245 517.867 93.3653 517.137 93.3653 517.137H257.865C257.865 517.137 263.259 518.278 265.865 515.637C268.437 513.031 267.365 507.762 267.365 507.762Z" fill="currentColor"/>';
+        const bagBtnLbl = document.createElement('span');
+        bagBtnLbl.className = 'cc-strat-btn-club'; bagBtnLbl.style.color = override ? 'inherit' : '#ccc'; bagBtnLbl.textContent = 'Bag';
+        bagBtnInner.appendChild(bagBtnSvg); bagBtnInner.appendChild(bagBtnLbl);
+        bagBtn.appendChild(bagBtnInner);
         bagBtn.addEventListener('click', () => {
           const currentKey = teeOverrides[basePlan.type] || basePlan.shots[0].key;
           if (typeof window._openClubPicker === 'function') {
             window._openClubPicker(currentKey, (selectedKey) => {
               teeOverrides[basePlan.type] = selectedKey !== basePlan.shots[0].key ? selectedKey : null;
               const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
-              newCard.id = 'activeStrategyCard'; card.replaceWith(newCard); updateCompareTable();
+              newCard.id = 'activeStrategyCard'; card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
             }, { type: 'par', parValue });
           }
         });
         stratFooter.appendChild(bagBtn);
-        card.appendChild(stratFooter);
       }
 
-      // Detail section
+      // Detail section — appended BEFORE stratFooter so it shows above
       const detail     = document.createElement('div');
       detail.className = 'cc-detail' + (detailOpen ? ' open' : '');
       const detailLbl  = document.createElement('div');
@@ -4566,6 +4588,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
       card.appendChild(detail);
       header.addEventListener('click', () => detail.classList.toggle('open'));
+
+      if (!teeMarked) card.appendChild(stratFooter);
 
       return card;
     }
@@ -4803,6 +4827,17 @@ document.addEventListener('DOMContentLoaded', () => {
       return firstCard ? firstCard.offsetWidth : 0;
     }
 
+    function syncOuterHeight() {
+      requestAnimationFrame(() => {
+        const cards = track.querySelectorAll('.carousel-card');
+        const active = cards[currentCardIndex];
+        if (active && carouselOuter) {
+          carouselOuter.style.height = active.getBoundingClientRect().height + 'px';
+        }
+      });
+    }
+    window._syncCarouselHeight = syncOuterHeight;
+
     function goToCard(idx, animate = true) {
       const totalCards = 2; // strategy card + compare card
       idx = Math.max(0, Math.min(idx, totalCards - 1));
@@ -4814,6 +4849,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!animate) track.style.transition = 'none';
       track.style.transform = `translateX(-${idx * getCardWidth()}px)`;
       if (!animate) setTimeout(() => { track.style.transition = ''; }, 0);
+      // Sync outer height to active card after transition
+      setTimeout(syncOuterHeight, animate ? 340 : 0);
 
       // Only persist strategy when on the strategy card (idx 0), not compare card
       if (idx === 0) {
@@ -4840,6 +4877,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     goToCard(currentCardIndex, false);
+    syncOuterHeight();
 
     // Touch swipe
     let touchStartX = null;
@@ -4881,6 +4919,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const newCard = buildStrategyCard(plan, 0, 2, false);
       newCard.id = 'activeStrategyCard';
       oldCard.replaceWith(newCard);
+      if (typeof window._syncCarouselHeight === 'function') window._syncCarouselHeight();
       updateCompareTable();
       // Persist committed strategy
       try {
@@ -4976,12 +5015,42 @@ document.addEventListener('DOMContentLoaded', () => {
         if (activeItem) activeItem.scrollIntoView({ block: 'center' });
       }, 10);
       overlay.onclick = closeClubPicker;
+
+      // ── Swipe down to dismiss ─────────────────────────────────
+      const cpHandle = document.getElementById('clubPickerSheet').querySelector('.club-picker-handle-area');
+      let cpDragY = null;
+      function cpDragStart(e) {
+        cpDragY = (e.touches ? e.touches[0].clientY : e.clientY);
+        sheet.style.transition = 'none';
+      }
+      function cpDragMove(e) {
+        if (cpDragY === null) return;
+        const delta = Math.max(0, (e.touches ? e.touches[0].clientY : e.clientY) - cpDragY);
+        sheet.style.transform = `translateY(${delta}px)`;
+      }
+      function cpDragEnd(e) {
+        if (cpDragY === null) return;
+        const delta = Math.max(0, (e.changedTouches ? e.changedTouches[0].clientY : e.clientY) - cpDragY);
+        cpDragY = null;
+        sheet.style.transition = '';
+        if (delta > 80) { closeClubPicker(); }
+        else { sheet.style.transform = 'translateY(0)'; }
+      }
+      if (cpHandle) {
+        cpHandle.addEventListener('touchstart', cpDragStart, { passive: true });
+        cpHandle.addEventListener('touchmove',  cpDragMove, { passive: true });
+        cpHandle.addEventListener('touchend',   cpDragEnd);
+        cpHandle.addEventListener('mousedown',  cpDragStart);
+        window.addEventListener('mousemove',   cpDragMove);
+        window.addEventListener('mouseup',     cpDragEnd);
+      }
     };
 
     function closeClubPicker() {
       const overlay = document.getElementById('clubPickerOverlay');
       const sheet   = document.getElementById('clubPickerSheet');
       if (!overlay || !sheet) return;
+      sheet.style.transition = '';
       sheet.classList.remove('open');
       overlay.classList.remove('open');
       document.body.style.overflow = '';
@@ -5141,10 +5210,15 @@ window.switchTab = function(name) {
   const btn  = document.getElementById('tab'  + name.charAt(0).toUpperCase() + name.slice(1));
   if (pane) pane.classList.add('active');
   if (btn)  btn.classList.add('active');
+  // Reset scroll position on tab switch
+  window.scrollTo(0, 0);
+  if (pane) pane.scrollTop = 0;
   if (name === 'play') {
     if (typeof window.updateLoadCourseBtn === 'function') window.updateLoadCourseBtn();
   }
   if (name === 'prepare') {
+    // Always return to My Golf hub when switching to My Golf tab
+    showMgHub();
     renderCourseList();
     renderSavedRounds();
     refreshMgHub();
@@ -5581,11 +5655,21 @@ function renderMgRecentRounds() {
 function renderMgCarryBars() {
   const el = document.getElementById('mgCarryBars');
   if (!el) return;
-  const driver = parseFloat(document.getElementById('driverCarry')?.value);
-  if (!driver || !window.clubs) { el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:14px;">Enter driver carry to see distances.</div>'; return; }
-  const active = [...document.querySelectorAll('#clubContainer input:checked')].map(cb => cb.value);
-  const rows = window.clubs.filter(c => active.includes(c.key)).map(c => {
-    const carry = Math.round(driver * c.relCarry);
+  const saved = loadBag();
+  const driver = parseFloat(saved?.driver) || 0;
+  const i7     = parseFloat(saved?.i7)     || 0;
+  const pw     = parseFloat(saved?.pw)     || 0;
+  if (!driver || !window.clubs) {
+    el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:14px;">Enter driver carry to see distances.</div>';
+    return;
+  }
+  const activeKeys = new Set(
+    saved.checked
+      ? window.clubs.filter((c, i) => saved.checked[i]).map(c => c.key)
+      : window.clubs.map(c => c.key)
+  );
+  const rows = window.clubs.filter(c => activeKeys.has(c.key)).map(c => {
+    const carry = Math.round(interpolate(driver, i7, pw, c.key));
     const pct = Math.round((carry / driver) * 100);
     return '<div class="mg-carry-row"><div class="mg-carry-name">' + c.label + '</div>' +
       '<div class="mg-carry-bar-wrap"><div class="mg-carry-bar" style="width:' + pct + '%"></div></div>' +
