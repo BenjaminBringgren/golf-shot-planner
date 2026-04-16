@@ -225,6 +225,20 @@
     .mg-menu-sub   { font-size: 12px; color: #888; margin: 2px 0 0; }
     .mg-menu-arrow { margin-left: auto; color: #bbb; font-size: 17px; font-weight: 300; }
 
+    .mg-par-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; padding: 0 2px 2px; }
+    .mg-par-tile { background: #f5f4f0; border-radius: 10px; padding: 14px 12px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .mg-par-val { font-size: 26px; font-weight: 500; color: #1a1a1a; line-height: 1; margin: 0; }
+    .mg-par-lbl { font-size: 11px; font-weight: 500; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin: 0; }
+    .mg-par-sub { font-size: 12px; color: #888; margin: 0; }
+    .mg-par-sub.pos { color: #3a6fc4; }
+    .mg-par-sub.neg { color: #c0392b; }
+    .lrh-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 0.5px solid #f2f1ee; }
+    .lrh-row:last-child { border-bottom: none; }
+    .lrh-course { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+    .lrh-date { font-size: 12px; color: #aaa; margin-top: 2px; }
+    .lrh-right { text-align: right; }
+    .lrh-score { font-size: 18px; font-weight: 700; color: #1a1a1a; }
+    .lrh-diff { font-size: 13px; font-weight: 600; margin-top: 1px; }
     /* Stat tiles */
     .mg-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; }
     .mg-stat-tile { background: #f0efeb; border-radius: 9px; padding: 11px 13px; }
@@ -236,7 +250,7 @@
     .mg-breakdown-title { font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em; padding: 12px 14px 8px; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
     .mg-breakdown-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.05); }
     .mg-breakdown-row:last-child { border-bottom: none; }
-    .mg-breakdown-label { font-size: 13px; font-weight: 600; color: #1a1a1a; width: 82px; flex-shrink: 0; }
+    .mg-breakdown-label { font-size: 13px; font-weight: 400; color: #1a1a1a; flex: 1; }
     .mg-breakdown-bar-wrap { flex: 1; height: 8px; background: #f0efeb; border-radius: 4px; overflow: hidden; }
     .mg-breakdown-bar { height: 100%; border-radius: 4px; }
     .mg-breakdown-pct { font-size: 13px; font-weight: 700; color: #1a1a1a; width: 40px; text-align: right; flex-shrink: 0; }
@@ -1917,7 +1931,7 @@
         </div>
         <div style="flex:1;min-width:0">
           <div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">Wind</div>
-          <div class="wind-strip-text" id="windText">Tap to fetch local wind</div>
+          <div class="wind-strip-text" id="windText">Fetch local wind</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
@@ -2287,9 +2301,8 @@
         <h2>My Stats</h2>
       </div>
       <div class="mg-stat-grid" id="mgStatTiles"><!-- populated by JS --></div>
-      <div class="mg-section-lbl">Recent rounds</div>
-      <div class="mg-rounds-card" id="mgRecentRounds"><!-- populated by JS --></div>
-      <div id="savedRoundsSection"></div>
+      <div class="mg-rounds-card" id="mgRecentRounds"><!-- chart --></div>
+      <div id="mgRoundsHistoryContent" data-limit="5"></div>
     </div>
 
     <!-- ── Score Breakdown sub-page ──────────────────────────────────── -->
@@ -2310,6 +2323,26 @@
         <h2>Putts breakdown</h2>
       </div>
       <div style="padding:12px;display:flex;flex-direction:column;gap:12px;" id="mgPuttsContent">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- ── Rounds History sub-page ────────────────────────────────────── -->
+    <div class="mg-sub" id="mgSubRoundsHistory">
+      <div class="mg-sub-header">
+        <button class="mg-back-btn" id="mgBackRoundsHistory">‹</button>
+        <h2>Rounds history</h2>
+      </div>
+      <div id="savedRoundsSection"></div>
+    </div>
+
+    <!-- ── Avg Strokes Breakdown sub-page ───────────────────────────── -->
+    <div class="mg-sub" id="mgSubAvgStrokes">
+      <div class="mg-sub-header">
+        <button class="mg-back-btn" id="mgBackAvgStrokes">‹</button>
+        <h2>Strokes breakdown</h2>
+      </div>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px;" id="mgAvgStrokesContent">
         <!-- populated by JS -->
       </div>
     </div>
@@ -3347,7 +3380,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateWindStripText() {
     const el = document.getElementById('windText');
     if (!windState.speedMs) {
-      el.textContent = 'Tap to fetch local wind';
+      el.textContent = 'Fetch local wind';
       return;
     }
     const fromLabel = windDirectionLabel(windState.dirDeg);
@@ -5220,7 +5253,6 @@ window.switchTab = function(name) {
     // Always return to My Golf hub when switching to My Golf tab
     showMgHub();
     renderCourseList();
-    renderSavedRounds();
     refreshMgHub();
   }
   // FAB only visible on Play tab when course is active
@@ -5242,7 +5274,8 @@ function showMgSub(id) {
   document.querySelectorAll('.mg-sub').forEach(s => s.classList.remove('active'));
   const sub = document.getElementById(id);
   if (sub) sub.classList.add('active');
-  if (id === 'mgSubStats') { renderSavedRounds(); renderMgStatTiles(); renderMgRecentRounds(); }
+  if (id === 'mgSubStats') { renderMgStatTiles(); renderMgRecentRounds(); renderMgRoundsHistory(); }
+  if (id === 'mgSubRoundsHistory') { renderSavedRounds(); }
   if (id === 'mgSubCourses') renderCourseList();
   if (id === 'mgSubBag') renderMgCarryBars();
   if (id === 'mgSubProfile') {
@@ -5365,10 +5398,12 @@ function renderMgStatTiles() {
   });
   const bestVal = bestRound !== null ? (bestRound.r.totalStrokes ?? '—') : '—';
 
+  const avgStrokes = allRounds.length > 0 ? (totalStrokes / allRounds.length).toFixed(1) : '—';
+
   const tiles = [
-    { lbl: 'Rounds', val: allRounds.length, tappable: false },
-    { lbl: 'Best round', val: bestVal, tappable: true, id: 'mgBestRoundTile' },
-    { lbl: 'GIR', val: girPct + '%', tappable: false },
+    { lbl: 'Rounds', val: allRounds.length, tappable: true, id: 'mgRoundsTile' },
+    { lbl: 'Best score', val: bestVal, tappable: true, id: 'mgBestRoundTile' },
+    { lbl: 'Avg strokes', val: avgStrokes, tappable: true, id: 'mgAvgStrokesTile' },
     { lbl: 'Putts / round', val: avgPutts, tappable: true, id: 'mgPuttsTile' },
   ];
   el.innerHTML = tiles.map(t =>
@@ -5378,7 +5413,15 @@ function renderMgStatTiles() {
     '</div>'
   ).join('');
 
-  // Wire best round tile → score breakdown sub-page
+  // Wire rounds tile → rounds history
+  const roundsTile = document.getElementById('mgRoundsTile');
+  if (roundsTile) {
+    roundsTile.addEventListener('click', () => {
+      renderMgRoundsHistory();
+      showMgSub('mgSubRoundsHistory');
+    });
+  }
+  // Wire best score tile → score breakdown
   const bestTile = document.getElementById('mgBestRoundTile');
   if (bestTile) {
     bestTile.addEventListener('click', () => {
@@ -5386,7 +5429,15 @@ function renderMgStatTiles() {
       showMgSub('mgSubScoreBreakdown');
     });
   }
-  // Wire putts tile → putts breakdown sub-page
+  // Wire avg strokes tile → strokes breakdown
+  const avgTile = document.getElementById('mgAvgStrokesTile');
+  if (avgTile) {
+    avgTile.addEventListener('click', () => {
+      renderMgAvgStrokesBreakdown();
+      showMgSub('mgSubAvgStrokes');
+    });
+  }
+  // Wire putts tile → putts breakdown
   const puttsTile = document.getElementById('mgPuttsTile');
   if (puttsTile) {
     puttsTile.addEventListener('click', () => {
@@ -5482,12 +5533,75 @@ function renderMgScoreBreakdown() {
   el.innerHTML =
     '<div class="mg-breakdown-card">' +
     '<div class="mg-breakdown-title">Score distribution · ' + totalHoles + ' holes</div>' +
-    distRows + '</div>' +
-    '<div class="mg-breakdown-card">' +
-    '<div class="mg-breakdown-title">Avg score by par</div>' +
-    parRows + '</div>';
+    distRows + '</div>';
 }
 
+
+function renderMgAvgStrokesBreakdown() {
+  const el = document.getElementById('mgAvgStrokesContent');
+  if (!el) return;
+  const courses = loadCourses ? loadCourses() : {};
+  const allRounds = Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []);
+  if (!allRounds.length) { el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:14px;">No rounds saved yet.</div>'; return; }
+
+  let parData = { 3: { strokes: 0, holes: 0 }, 4: { strokes: 0, holes: 0 }, 5: { strokes: 0, holes: 0 } };
+  let totalGIR = 0, totalHolesGIR = 0, totalPuttsOnGIR = 0;
+  let totalPutts = 0, totalPuttsHoles = 0;
+
+  Object.keys(courses).forEach(courseId => {
+    const course = courses[courseId];
+    const rounds = loadRounds ? loadRounds(courseId) : [];
+    rounds.forEach(round => {
+      if (!round.scores) return;
+      round.scores.forEach((s, i) => {
+        if (!s) return;
+        const par = course.holes?.[i]?.par || 4;
+        const total = (s.fairway || 0) + (s.putts || 0);
+        if (!total) return;
+        if (parData[par]) { parData[par].strokes += total; parData[par].holes++; }
+        totalHolesGIR++;
+        if (s.gir) { totalGIR++; if (s.putts != null) totalPuttsOnGIR += s.putts; }
+        if (s.putts != null) { totalPutts += s.putts; totalPuttsHoles++; }
+      });
+    });
+  });
+
+  const girPct = totalHolesGIR > 0 ? Math.round(totalGIR / totalHolesGIR * 100) : 0;
+  const girPerRound = allRounds.length > 0 ? (totalGIR / allRounds.length).toFixed(1) : '—';
+  const avgPuttsGIR = totalGIR > 0 ? (totalPuttsOnGIR / totalGIR).toFixed(1) : '—';
+  const avgPuttsRound = allRounds.length > 0 ? (totalPutts / allRounds.length).toFixed(1) : '—';
+
+  // Par type tiles
+  const parTiles = [3, 4, 5].map(p => {
+    const d = parData[p];
+    const avg = d.holes > 0 ? (d.strokes / d.holes).toFixed(1) : '—';
+    const diff = d.holes > 0 ? (d.strokes / d.holes - p) : null;
+    const diffStr = diff === null ? '' : diff === 0 ? 'E' : (diff > 0 ? '+' : '') + diff.toFixed(1);
+    const diffClass = diff === null ? '' : diff > 0 ? ' pos' : diff < 0 ? ' neg' : '';
+    return '<div class="mg-par-tile"><div class="mg-par-lbl">Par ' + p + '</div>' +
+      '<div class="mg-par-val">' + avg + '</div>' +
+      '<div class="mg-par-sub' + diffClass + '">' + (diff !== null ? diffStr : '') + '</div></div>';
+  }).join('');
+
+  el.innerHTML =
+    '<div class="mg-breakdown-card"><div class="mg-breakdown-title">Score by par type</div>' +
+    '<div style="padding:10px 12px 12px;"><div class="mg-par-grid">' + parTiles + '</div></div></div>' +
+    '<div class="mg-breakdown-card"><div class="mg-breakdown-title">GIR</div>' +
+    '<div style="display:flex;align-items:center;gap:14px;padding:9px 14px;">' +
+    '<div style="font-size:28px;font-weight:700;color:#1a1a1a;">' + girPct + '%</div>' +
+    '<div style="flex:1;height:8px;background:#ede9e3;border-radius:4px;overflow:hidden;">' +
+    '<div style="width:' + girPct + '%;height:100%;background:#555;border-radius:4px;"></div></div></div>' +
+    '<div style="font-size:12px;color:#aaa;padding:0 14px 10px;">' + girPerRound + ' of 18 greens hit per round</div>' +
+    '</div>' +
+    '<div class="mg-breakdown-card"><div class="mg-breakdown-title">Putting</div>' +
+    '<div class="mg-breakdown-row" style="border-bottom:0.5px solid #f2f1ee;padding-bottom:8px;margin-bottom:8px;">' +
+    '<div class="mg-breakdown-label">Putts per round</div>' +
+    '<div class="mg-breakdown-val">' + avgPuttsRound + '</div></div>' +
+    '<div class="mg-breakdown-row">' +
+    '<div class="mg-breakdown-label">Putts per GIR hole</div>' +
+    '<div class="mg-breakdown-val">' + avgPuttsGIR + '</div></div>' +
+    '</div>';
+}
 
 function renderMgPuttsBreakdown() {
   const el = document.getElementById('mgPuttsContent');
@@ -5546,6 +5660,33 @@ function renderMgPuttsBreakdown() {
     '<div class="mg-breakdown-title">Putts per hole · ' + totalHoles + ' holes · avg ' + avgPutts + '</div>' +
     distRows +
     '</div>';
+}
+
+function renderMgRoundsHistory() {
+  // Populate both instances: stats page (limited) and full history page
+  ['mgRoundsHistoryContent', 'mgRoundsHistoryFull'].forEach(elId => {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  const courses = loadCourses ? loadCourses() : {};
+  const all = [];
+  Object.keys(courses).forEach(id => {
+    const rounds = loadRounds ? loadRounds(id) : [];
+    rounds.forEach(r => all.push({ ...r, courseName: courses[id].name, courseId: id }));
+  });
+  if (!all.length) { el.innerHTML = '<div style="padding:16px;color:#aaa;font-size:14px;">No rounds saved yet.</div>'; return; }
+  all.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const limit = el.dataset.limit ? parseInt(el.dataset.limit) : all.length;
+  const shown = all.slice(0, limit);
+  el.innerHTML = shown.map(r => {
+    const diff = (r.totalStrokes || 0) - (r.totalPar || 0);
+    const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff);
+    const color = diff < 0 ? '#1e7a45' : diff > 0 ? '#3a6fc4' : '#888';
+    return '<div class="lrh-row"><div class="lrh-left"><div class="lrh-course">' + (r.courseName || '—') + '</div>' +
+      '<div class="lrh-date">' + (r.date || '—') + '</div></div>' +
+      '<div class="lrh-right"><div class="lrh-score">' + (r.totalStrokes || '—') + '</div>' +
+      '<div class="lrh-diff" style="color:' + color + '">' + diffStr + '</div></div></div>';
+  }).join('');
+  }); // end forEach
 }
 
 function renderMgRecentRounds() {
@@ -5689,6 +5830,8 @@ function renderMgCarryBars() {
   document.getElementById('mgBackStats')?.addEventListener('click', showMgHub);
   document.getElementById('mgBackScoreBreakdown')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackPuttsBreakdown')?.addEventListener('click', () => showMgSub('mgSubStats'));
+  document.getElementById('mgBackAvgStrokes')?.addEventListener('click', () => showMgSub('mgSubStats'));
+  document.getElementById('mgBackRoundsHistory')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackCourses')?.addEventListener('click', showMgHub);
   // Edit bag toggle
   document.getElementById('mgEditBagBtn')?.addEventListener('click', () => {
@@ -6220,10 +6363,10 @@ function renderSavedRounds() {
     section.appendChild(block);
   });
 
-  const statsPane = document.getElementById('mgSubStats');
+  const targetPane = document.getElementById('mgSubRoundsHistory');
   const existingSection = document.getElementById('savedRoundsSection');
   if (existingSection) existingSection.replaceWith(section);
-  else statsPane.appendChild(section);
+  else if (targetPane) targetPane.appendChild(section);
 }
 
 
