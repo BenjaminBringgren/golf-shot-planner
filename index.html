@@ -673,11 +673,39 @@
       background: #f5f4f0 !important; color: #888 !important;
     }
 
-    /* Score entry */
-    .score-entry {
-      margin-top: 14px; padding: 12px 14px;
-      background: #f0efeb;
-      border-radius: 8px;
+    /* ── Round complete overlay ─────────────────────────────── */
+    .rc-body { max-width: 420px; margin: 0 auto; width: 100%; padding-bottom: 40px; }
+    .rc-header { background: #1a1a1a; color: #fff; padding: 16px 16px 14px; position: sticky; top: 0; z-index: 1; }
+    .rc-header-title { font-size: 17px; font-weight: 700; }
+    .rc-header-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 3px; }
+    .rc-section { background: #fff; margin: 12px 12px 0; border-radius: 10px; overflow: hidden; }
+    .rc-section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #888; padding: 12px 14px 6px; }
+    .rc-hero { text-align: center; padding: 18px 14px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.07); }
+    .rc-hero-score { font-size: 44px; font-weight: 700; line-height: 1; }
+    .rc-hero-sub { font-size: 13px; color: #888; margin-top: 5px; }
+    .rc-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .rc-stat-cell { text-align: center; padding: 10px 6px 12px; border-right: 0.5px solid rgba(0,0,0,0.07); }
+    .rc-stat-cell:last-child { border-right: none; }
+    .rc-stat-val { font-size: 21px; font-weight: 700; color: #1a1a1a; line-height: 1; }
+    .rc-stat-lbl { font-size: 10px; color: #888; margin-top: 4px; font-weight: 500; letter-spacing: 0.2px; }
+    .rc-breakdown-row { display: flex; padding: 9px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.06); align-items: center; gap: 8px; }
+    .rc-breakdown-row:last-child { border-bottom: none; }
+    .rc-bd-label { font-size: 13px; color: #888; width: 70px; flex-shrink: 0; }
+    .rc-bd-dots { flex: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 3px; }
+    .rc-bd-count { font-size: 13px; font-weight: 700; color: #1a1a1a; min-width: 20px; text-align: right; }
+    .rc-table { width: 100%; font-size: 12px; border-collapse: collapse; }
+    .rc-table th { background: #f5f4f0; color: #888; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 6px 5px; text-align: center; border-bottom: 0.5px solid rgba(0,0,0,0.08); }
+    .rc-table td { padding: 8px 5px; text-align: center; border-bottom: 0.5px solid rgba(0,0,0,0.06); color: #1a1a1a; }
+    .rc-table tr:last-child td { border-bottom: none; }
+    .rc-hole { background: #f0efeb; font-weight: 700; font-size: 11px; }
+    .rc-sect td { background: #f5f4f0; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #666; padding: 4px 5px !important; }
+    .rc-total td { background: #f5f4f0; font-weight: 700; font-size: 11px; border-top: 0.5px solid rgba(0,0,0,0.1) !important; }
+    .rc-btn-row { display: flex; gap: 10px; padding: 14px 12px 0; }
+    .rc-btn-primary { flex: 1; background: #1a1a1a; color: #fff; border: none; border-radius: 8px; height: 56px; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .rc-btn-secondary { flex: 1; background: #f0efeb; color: #333; border: none; border-radius: 8px; height: 56px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .rc-footnote { text-align: center; font-size: 12px; color: #aaa; padding: 10px 0 4px; }
+
+
     }
     .score-entry-title {
       font-size: 13px; font-weight: 700; color: #888;
@@ -943,7 +971,15 @@
     }
     .wind-strip-btn:hover { background: #e5e5e2; }
     .wind-strip-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
-    .wind-strip-btn.locking { background: #1a1a1a; color: #fff; }
+    .wind-strip-btn.locked { background: #1a1a1a; }
+    @keyframes wli-spin { to { transform: rotate(360deg); } }
+    .wind-strip-btn .wli-needle { fill: #555; stroke: #555; }
+    .wind-strip-btn .wli-stem   { stroke: #555; }
+    .wind-strip-btn .wli-n      { stroke: #555; }
+    .wind-strip-btn.locked .wli-needle { fill: #fff; stroke: #fff; }
+    .wind-strip-btn.locked .wli-stem   { stroke: #fff; }
+    .wind-strip-btn.locked .wli-n      { stroke: #fff; }
+    .wind-strip-btn.locking #windLockIcon { animation: wli-spin 1.5s linear infinite; }
 
     /* Wind toggle — label is purely the track, outer div handles alignment */
     .wind-toggle-wrap { cursor: pointer; }
@@ -1969,7 +2005,13 @@
             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
           </svg>
         </button>
-        <button class="wind-strip-btn" id="windLockStrip" type="button">Lock</button>
+        <button class="wind-strip-btn" id="windLockStrip" type="button" aria-label="Lock wind direction">
+          <svg id="windLockIcon" width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="transition:transform 0.3s ease;">
+            <path d="M7.55772 20.3781L11.9548 11.0954C11.9729 11.0573 12.0271 11.0573 12.0452 11.0954L16.4423 20.3781C16.4621 20.4201 16.4192 20.4641 16.3768 20.4452L12.0203 18.509C12.0074 18.5033 11.9926 18.5033 11.9797 18.509L7.62322 20.4452C7.58083 20.4641 7.53787 20.4201 7.55772 20.3781Z" class="wli-needle" fill-opacity="0.3" stroke-linecap="round" stroke-width="1"/>
+            <path d="M12 11.5V18.5" class="wli-stem" stroke-width="1.2"/>
+            <path d="M10.5 8.5V3.68052C10.5 3.6298 10.5668 3.61131 10.5929 3.65479L13.4071 8.34521C13.4332 8.38869 13.5 8.3702 13.5 8.31948V3.5" class="wli-n" stroke-opacity="0.5" stroke-linecap="round" stroke-width="1.2"/>
+          </svg>
+        </button>
         <div class="wind-toggle-wrap" id="windToggleWrap" style="padding:2px 6px;">
           <label class="wind-toggle">
             <input type="checkbox" id="windEnabled" checked>
@@ -2737,6 +2779,7 @@ let teeMarked = false;
 const teeOverrides = {};
 const shot2Overrides = {}; // user-selected second-shot club per strategy type
 const approachOverrides = {}; // user-selected approach club per strategy type (1-shot plans)
+const gpsShot2Overrides = {}; // user-selected next club after GPS ball mark
 let par3ClubOverride = null; // persists across calculate() calls
 
 // ── Expected strokes remaining lookup ─────────────────────────────────────
@@ -3462,6 +3505,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ── Strip lock button — mirrors compassLock, works when panel is collapsed ─
+  function setLockIcon(state, deg) {
+    const btn  = document.getElementById('windLockStrip');
+    const icon = document.getElementById('windLockIcon');
+    if (!btn || !icon) return;
+    btn.classList.remove('locking', 'locked');
+    if (state === 'locking') btn.classList.add('locking');
+    if (state === 'locked')  btn.classList.add('locked');
+    icon.style.transform = (state === 'locked' && deg != null)
+      ? `rotate(${Math.round(deg)}deg)` : 'rotate(0deg)';
+  }
+
   const windLockStrip = document.getElementById('windLockStrip');
   windLockStrip.addEventListener('click', async (e) => {
     e.stopPropagation(); // don't toggle the collapsible
@@ -3474,8 +3528,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const deg = Math.round(windState.holeDeg);
       const lbl = bearingLabel(deg);
       document.getElementById('compassLockLabel').textContent = `Locked: ${deg}° (${lbl})`;
-      windLockStrip.textContent  = `🔒 ${lbl}`;
-      windLockStrip.classList.remove('locking');
+      setLockIcon('locked', deg);
       computeWindComponents();
       updateWindEffectNote();
       updateWindStripText();
@@ -3491,17 +3544,16 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const perm = await DeviceOrientationEvent.requestPermission();
         if (perm !== 'granted') {
-          windLockStrip.textContent = '⚠ Denied';
+          setLockIcon('idle');
           return;
         }
       } catch(e) {
-        windLockStrip.textContent = '⚠ N/A';
+        setLockIcon('idle');
         return;
       }
     }
     lockPhase = 'live';
-    windLockStrip.textContent = '🔒 Tap to lock';
-    windLockStrip.classList.add('locking');
+    setLockIcon('locking');
     compassLiveBadge.classList.add('active');
     liveOrientationActive = true;
     orientationHandler = (e) => {
@@ -3524,8 +3576,8 @@ document.addEventListener('DOMContentLoaded', () => {
         lockPhase = 'idle';
         const deg = Math.round(windState.holeDeg);
         document.getElementById('compassLockLabel').textContent = `Auto-locked: ${deg}°`;
-        windLockStrip.textContent = `🔒 ${bearingLabel(deg)}`;
         windLockStrip.classList.remove('locking');
+        setLockIcon('locked', deg);
         computeWindComponents(); updateWindEffectNote(); updateWindStripText(); saveWindPrefs();
         updateWindSectionStatus();
       }
@@ -3989,7 +4041,7 @@ document.addEventListener('DOMContentLoaded', () => {
           chipsWrap.className = 'tee-chips';
 
           const recChip = document.createElement('div');
-          recChip.className = 'tee-chip' + (!par3ClubOverride ? ' active' : '');
+          recChip.className = 'tee-chip tee-chip-sm' + (!par3ClubOverride ? ' active' : '');
           recChip.textContent = clubMap[par3DefaultClub.key]?.label ?? par3DefaultClub.key;
           recChip.addEventListener('click', () => {
             par3ClubOverride = null;
@@ -3999,7 +4051,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Bag chip
           const bagChip = document.createElement('div');
-          bagChip.className = 'tee-chip bag-chip' + (par3ClubOverride ? ' active' : '');
+          bagChip.className = 'tee-chip tee-chip-sm bag-chip' + (par3ClubOverride ? ' active' : '');
           const bagInner = document.createElement('div');
           bagInner.className = 'tee-chip-bag';
           const bagSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
@@ -4140,7 +4192,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Only reset tee overrides when explicitly triggered by the button press
     if (clearOverrides) { Object.keys(teeOverrides).forEach(k => delete teeOverrides[k]); Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
-          Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]); Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]); par3ClubOverride = null; }
+          Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
+          Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]); Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
+          Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]); par3ClubOverride = null; }
 
     // ── Par 4 / 5 — tee-club-rank algorithm ──────────────────────────────
     const validTeeClubs = getValidTeeClubs(clubsList, parValue);
@@ -4398,11 +4452,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const shotsCompleted = teeMarked ? Math.max(1, completedShots.length) : 0;
 
+      // When GPS ball is marked: build fresh plan from actual remaining distance
+      let gpsContinuation = null;
+      if (gpsActive && gpsRemaining != null) {
+        const gpsOverrideKey = gpsShot2Overrides[basePlan.type] || null;
+        if (gpsOverrideKey) {
+          const forcedClub = clubsList.find(c => c.key === gpsOverrideKey);
+          if (forcedClub) {
+            const approach = gpsRemaining - forcedClub.total;
+            gpsContinuation = approach >= 0
+              ? { shots: [forcedClub], approach, score: 1 + expectedStrokesRemaining(approach, driverCarry) }
+              : findBestContinuation(forcedClub, gpsRemaining, driverTotal, clubsList, driverCarry);
+          }
+        }
+        if (!gpsContinuation) {
+          gpsContinuation = findBestContinuation(
+            clubsList.reduce((best, c) => {
+              const app = gpsRemaining - c.total;
+              if (c.key === 'driver') return best;
+              const score = 1 + expectedStrokesRemaining(Math.max(0, app), driverCarry);
+              return (!best || score < best.score) ? { club: c, score } : best;
+            }, null)?.club || clubsList.find(c => c.key !== 'driver') || clubsList[0],
+            gpsRemaining, driverTotal, clubsList, driverCarry
+          );
+        }
+      }
+
       // Shot rows
 
       activePlan.shots.forEach((s, i) => {
         const lbl    = clubMap[s.key]?.label ?? s.key;
         const isDone = i < shotsCompleted;
+
+        // Skip planned (not-yet-played) shots when GPS active — continuation replaces them
+        if (!isDone && gpsActive) return;
 
         if (isDone) {
           const measured  = completedShots[i];
@@ -4656,21 +4739,113 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // GPS remaining
-      if (teeMarked && completedShots.length > 0) {
-        const lastShot = completedShots[completedShots.length - 1];
-        if (lastShot.remaining != null) {
-          const gpsBlock = document.createElement('div');
-          gpsBlock.className = 'cc-gps-remaining';
-          gpsBlock.innerHTML =
-            `<div class="cc-gps-label">GPS · remaining to pin</div>` +
-            `<div class="cc-gps-dist">${lastShot.remaining}<span style="font-size:14px;color:#aaa;margin-left:2px;">m</span></div>`;
-          body.appendChild(gpsBlock);
+      // GPS continuation — pill + recalculated next shot(s) + approach
+      if (gpsActive && gpsContinuation) {
+        // GPS pill
+        const gpsPill = document.createElement('div');
+        gpsPill.style.cssText = 'display:flex;align-items:center;gap:8px;margin:0 14px 2px;background:#f0faf4;border-radius:8px;padding:8px 12px;';
+        gpsPill.innerHTML =
+          '<div style="width:7px;height:7px;border-radius:50%;background:#1e7a45;flex-shrink:0;"></div>' +
+          '<span style="font-size:12px;font-weight:600;color:#1e7a45;">Ball position marked</span>' +
+          '<span style="font-size:12px;color:#888;margin-left:auto;">' + gpsRemaining + 'm to pin</span>';
+        body.appendChild(gpsPill);
+
+        // Render GPS continuation shots
+        gpsContinuation.shots.forEach((s, i) => {
+          const lbl = clubMap[s.key]?.label ?? s.key;
+          const isLast = i === gpsContinuation.shots.length - 1;
+          const divLbl = i === 0 ? 'Next shot · recalculated' : 'Final approach';
+          const divEl = document.createElement('div');
+          divEl.className = 'cc-section-divider';
+          divEl.innerHTML = `<div class="cc-section-divider-line"></div><div class="cc-section-divider-label">${divLbl}</div><div class="cc-section-divider-line"></div>`;
+          body.appendChild(divEl);
+          const windDelta = (windState.active && windState.enabled && s.baseCarry != null) ? Math.round(s.carry - s.baseCarry) : 0;
+          const windHtml = windDelta !== 0 ? `<div class="cc-shot-wind ${windDelta < 0 ? 'head' : 'tail'}">${windDelta > 0 ? '+' : ''}${windDelta}m wind</div>` : '';
+          const rollAmt = (s.total - s.carry).toFixed(0);
+          const rollHtml = `<div class="cc-shot-carry">${s.carry.toFixed(0)}m carry${s.roll > 1.00 ? ' + ' + rollAmt + 'm roll' : ''}</div>`;
+          const row = document.createElement('div');
+          row.className = 'cc-shot-row';
+          row.innerHTML =
+            `<div class="cc-shot-num">${completedShots.length + i + 1}</div>
+            <div style="flex:1;min-width:0;">
+              <div class="cc-shot-club">${lbl}</div>
+              ${windHtml}${rollHtml}
+            </div>
+            <div class="cc-shot-right">
+              <div class="cc-shot-dist">${s.total.toFixed(0)}<span class="cc-shot-unit">m</span></div>
+            </div>`;
+          body.appendChild(row);
+
+          // Club chip row for first GPS continuation shot
+          if (i === 0) {
+            const gpsOverrideKey = gpsShot2Overrides[basePlan.type] || null;
+            const allCands = clubsList.filter(c => c.key !== 'driver' && (gpsRemaining - c.total) >= 0);
+            const recIdx = allCands.findIndex(c => c.key === s.key);
+            const chipCands = recIdx >= 0 ? allCands.slice(recIdx, recIdx + 3) : allCands.slice(0, 3);
+            if (chipCands.length > 0) {
+              const chipRow = document.createElement('div');
+              chipRow.className = 'tee-chip-row';
+              const chipLabel = document.createElement('div');
+              chipLabel.className = 'tee-chip-label';
+              chipLabel.textContent = 'Club';
+              chipRow.appendChild(chipLabel);
+              const chips = document.createElement('div');
+              chips.className = 'tee-chips';
+              chipCands.forEach(c => {
+                const isActive = gpsOverrideKey ? c.key === gpsOverrideKey : c.key === s.key;
+                const chip = document.createElement('div');
+                chip.className = 'tee-chip tee-chip-sm' + (isActive ? ' active' : '');
+                chip.textContent = clubMap[c.key]?.label ?? c.key;
+                chip.addEventListener('click', () => {
+                  gpsShot2Overrides[basePlan.type] = c.key === s.key ? null : c.key;
+                  const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
+                  newCard.id = card.id || 'activeStrategyCard';
+                  newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
+                });
+                chips.appendChild(chip);
+              });
+              // Bag chip
+              const bagChip = document.createElement('div');
+              bagChip.className = 'tee-chip bag-chip tee-chip-sm';
+              const bagInner = document.createElement('div'); bagInner.className = 'tee-chip-bag';
+              const bagSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+              bagSvg.setAttribute('width', '18'); bagSvg.setAttribute('height', '27'); bagSvg.setAttribute('viewBox', '0 0 349 518'); bagSvg.setAttribute('fill', 'none'); bagSvg.style.color = '#888';
+              bagSvg.innerHTML = '<path d="M319.865 425.637C314.058 433.485 298.865 430.637 298.865 430.637V189.637C298.865 189.637 316.842 186.765 321.865 195.137C324.879 200.16 323.865 210.137 323.865 210.137V412.137C323.865 412.137 324.163 419.829 319.865 425.637Z" fill="currentColor"/><path d="M84.8653 448.637H267.365V189.637L48.8653 287.137V347.637V438.137C48.8653 448.637 84.8653 448.637 84.8653 448.637Z" fill="currentColor"/><path d="M267.365 150.137L198.365 183.637H84.8653V129.637H133.283L129.865 85.6371C129.865 85.6371 64.7881 120.204 28.3653 103.137C20.4185 99.4134 14.8441 97.9927 9.36529 91.1371C3.58296 83.9017 3.45838 77.7611 1.86529 68.6371C0.018102 58.0577 0.0719012 51.7257 1.86529 41.1371C3.44295 31.8222 3.3754 25.4431 9.36529 18.1371C17.3653 8.37935 27.8653 6.63706 35.3653 3.13704C42.8653 -0.362974 80.5689 -1.43121 112.365 6.63708C120.924 8.80888 126.141 9.35914 133.865 13.6371C141.149 17.6706 149.865 23.137 150.365 27.1371C152.425 43.6149 159.915 107.608 162.489 129.637H177.34L243.865 18.1371C243.865 18.1371 252.242 9.10153 259.365 6.63708C267.116 3.95559 272.444 4.5145 280.365 6.63708C287.365 8.51272 338.865 37.137 344.865 49.6371C350.196 60.7433 348.018 69.2824 344.996 81.1235L344.865 81.6371C341.05 96.5988 336.931 106.91 323.865 115.137C315.286 120.539 308.964 123.035 298.865 122.137C291.171 121.453 287.193 118.75 280.365 115.137C261.546 105.179 243.865 74.6371 243.865 74.6371L213.945 129.637H259.365C262.49 129.637 267.365 129.013 267.365 132.137V150.137Z" fill="currentColor"/><path d="M267.365 507.762V498.387V489.012C267.365 489.012 268.437 483.743 265.865 481.137C263.259 478.496 257.865 479.637 257.865 479.637H93.3653C93.3653 479.637 89.3245 479.407 86.8653 481.637C84.153 484.096 84.8653 489.012 84.8653 489.012V498.387V507.762C84.8653 507.762 84.153 513.178 86.8653 515.637C89.3245 517.867 93.3653 517.137 93.3653 517.137H257.865C257.865 517.137 263.259 518.278 265.865 515.637C268.437 513.031 267.365 507.762 267.365 507.762Z" fill="currentColor"/>';
+              const bagLbl = document.createElement('span'); bagLbl.className = 'tee-chip-bag-label'; bagLbl.textContent = 'Bag';
+              bagInner.appendChild(bagSvg); bagInner.appendChild(bagLbl); bagChip.appendChild(bagInner);
+              bagChip.addEventListener('click', () => {
+                if (typeof window._openClubPicker === 'function') {
+                  window._openClubPicker(gpsShot2Overrides[basePlan.type] || s.key, (selectedKey) => {
+                    gpsShot2Overrides[basePlan.type] = selectedKey === s.key ? null : selectedKey;
+                    const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
+                    newCard.id = card.id || 'activeStrategyCard';
+                    newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
+                  }, { type: 'no-driver' });
+                }
+              });
+              chips.appendChild(bagChip);
+              chipRow.appendChild(chips);
+              body.appendChild(chipRow);
+            }
+          }
+        });
+
+        // Approach rec from GPS continuation
+        const gpsRec = approachRecHtml(gpsContinuation.approach);
+        if (gpsRec) {
+          const appDiv = document.createElement('div');
+          appDiv.className = 'cc-approach';
+          appDiv.innerHTML =
+            '<div class="cc-app-label">Final approach · adjusted</div>' +
+            `<div class="cc-app-dist">${gpsContinuation.approach.toFixed(0)}<span class="cc-app-dist-unit">m</span></div>` +
+            `<div class="cc-app-club">${gpsRec.lbl} — ${gpsRec.carry}m carry${gpsRec.windNote}</div>` +
+            `<div class="cc-app-note">${gpsRec.aimNote}</div>`;
+          body.appendChild(appDiv);
         }
       }
 
-      // Wind effect summary row
-      if (windState.active && windState.enabled) {
+      // Wind effect summary row (suppress when GPS active)
+      if (!gpsActive && windState.active && windState.enabled) {
         const anyDelta = activePlan.shots.reduce((acc, s) => {
           if (s.baseCarry != null) acc += Math.round(s.carry - s.baseCarry);
           return acc;
@@ -4688,7 +4863,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Approach rec — use override club if set for 1-shot plans
+      // Approach rec + crosswind (suppress when GPS active — continuation has its own)
+      if (!gpsActive) {
       const _appOverKey = activePlan.shots.length === 1 ? (approachOverrides[basePlan.type] || null) : null;
       const _appDistForRec = _appOverKey
         ? (() => { const oc = clubsList.find(c => c.key === _appOverKey); return oc ? activePlan.approach : activePlan.approach; })()
@@ -4718,6 +4894,7 @@ document.addEventListener('DOMContentLoaded', () => {
           `<div class="cc-crosswind-note">Aim ${aimSide} into the wind</div>`;
         body.appendChild(cwDiv);
       }
+      } // end !gpsActive
 
       card.appendChild(body);
 
@@ -5324,17 +5501,20 @@ document.addEventListener('DOMContentLoaded', () => {
       // Advance to next hole via course bar
       const session = sessionStorage.getItem('activeCourse');
       if (!session) return;
-      try {
-        const { id, holeIdx } = JSON.parse(session);
-        const courses = loadCourses();
-        const c = courses[id];
-        if (!c) return;
-        const nextIdx = holeIdx < 17 ? holeIdx + 1 : 0;
-        sessionStorage.setItem('activeCourse', JSON.stringify({ id, holeIdx: nextIdx }));
-        // Trigger bar refresh
-        const bar = document.getElementById('playCourseBar');
-        if (bar?._navigateTo) bar._navigateTo(nextIdx);
-      } catch(e) {}
+      const { id, holeIdx } = JSON.parse(session);
+      const courses = loadCourses();
+      const c = courses[id];
+      if (!c) return;
+      if (holeIdx === 17) {
+        // Last hole — show round complete overlay instead of wrapping
+        window.showRoundCompleteOverlay(id);
+        return;
+      }
+      const nextIdx = holeIdx + 1;
+      sessionStorage.setItem('activeCourse', JSON.stringify({ id, holeIdx: nextIdx }));
+      // Trigger bar refresh
+      const bar = document.getElementById('playCourseBar');
+      if (bar?._navigateTo) bar._navigateTo(nextIdx);
     });
   })();
 
@@ -6906,6 +7086,7 @@ function renderPlayCourseBar(courseId) {
           sessionStorage.removeItem('committedStrategies');
           Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
           Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
+          Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]);
         } catch(e) {}
         // Reset GPS state + button UI
         if (typeof window.clearGpsState === 'function') window.clearGpsState();
@@ -6937,6 +7118,7 @@ function renderPlayCourseBar(courseId) {
       document.getElementById('cancelRoundAbort').onclick = () => {
         overlay.style.display = 'none';
       };
+
 
       overlay.onclick = (e) => {
         if (e.target === overlay) overlay.style.display = 'none';
@@ -7622,6 +7804,217 @@ function renderScoreEntry(courseId, holeIdx, scores) {
   }
 }
 
+
+// ── Round complete overlay ─────────────────────────────────────────────────
+// ── Round complete overlay ───────────────────────────────────────────
+window.showRoundCompleteOverlay = function showRoundCompleteOverlay(courseId) {
+  const courses = loadCourses();
+  const c = courses[courseId];
+  if (!c) return;
+
+  const scores = loadScores(courseId);
+
+  // Compute stats
+  const played = scores.map((s, i) => ({
+    hole: i + 1, par: c.holes[i]?.par || 4,
+    total: s ? s.fairway + s.putts : null,
+    fairway: s?.fairway ?? null, putts: s?.putts ?? null, gir: s?.gir ?? null,
+  }));
+
+  let totalStrokes = 0, totalPar = 0, totalFW = 0, totalPutts = 0, totalGIR = 0, holesPlayed = 0;
+  let birdies = 0, pars = 0, bogeys = 0, doubles = 0;
+  played.forEach(h => {
+    if (h.total != null) {
+      totalStrokes += h.total; totalPar += h.par;
+      totalFW += h.fairway; totalPutts += h.putts;
+      if (h.gir === true) totalGIR++;
+      holesPlayed++;
+      const d = h.total - h.par;
+      if (d <= -1) birdies++;
+      else if (d === 0) pars++;
+      else if (d === 1) bogeys++;
+      else doubles++;
+    }
+  });
+
+  let front9Par = 0, front9Strokes = 0, front9Putts = 0, front9Played = 0;
+  played.slice(0, 9).forEach(h => {
+    front9Par += h.par;
+    if (h.total != null) { front9Strokes += h.total; front9Putts += h.putts; front9Played++; }
+  });
+  let back9Par = 0, back9Strokes = 0, back9Putts = 0, back9Played = 0;
+  played.slice(9, 18).forEach(h => {
+    back9Par += h.par;
+    if (h.total != null) { back9Strokes += h.total; back9Putts += h.putts; back9Played++; }
+  });
+
+  const vsPar = totalStrokes - totalPar;
+  const vsParStr = vsPar === 0 ? 'E' : (vsPar > 0 ? '+' + vsPar : '' + vsPar);
+  const vsParColor = vsPar < 0 ? '#1e7a45' : vsPar > 0 ? '#a32d2d' : '#444';
+  const puttsPerGir = totalGIR > 0 ? (totalPutts / totalGIR).toFixed(2) : '—';
+  const today = new Date().toLocaleDateString('sv-SE');
+
+  // Score breakdown dots
+  function dotStrip(count, bg, shape) {
+    const r = shape === 'circle' ? '50%' : '2px';
+    return Array.from({ length: count }, () =>
+      `<span style="display:inline-block;width:10px;height:10px;border-radius:${r};background:${bg};margin:0 2px;"></span>`
+    ).join('');
+  }
+
+  // Scorecard rows
+  function pillHtml2(total, par) {
+    if (total == null) return '—';
+    const d = total - par;
+    let bg, color;
+    if (d <= -1) { bg = '#e6f4ec'; color = '#1e7a45'; }
+    else if (d === 0) { bg = '#f0efeb'; color = '#444'; }
+    else if (d === 1) { bg = '#fff3e0'; color = '#b25000'; }
+    else { bg = '#fde8e8'; color = '#a32d2d'; }
+    const lbl = d === 0 ? 'E' : (d > 0 ? '+' + d : '' + d);
+    return `<span style="display:inline-block;background:${bg};color:${color};font-weight:700;font-size:11px;border-radius:10px;padding:2px 6px;">${lbl}</span>`;
+  }
+
+  function scRows(from, to) {
+    return played.slice(from, to).map(h => {
+      if (h.total == null) return `<tr><td class="rc-hole">${h.hole}</td><td>${h.par}</td><td>—</td><td>—</td><td>—</td></tr>`;
+      return `<tr><td class="rc-hole">${h.hole}</td><td>${h.par}</td><td>${h.total}</td><td>${h.putts}</td><td>${pillHtml2(h.total, h.par)}</td></tr>`;
+    }).join('');
+  }
+
+  const el = document.getElementById('roundCompleteOverlay');
+  el.querySelector('.rc-body').innerHTML = `
+    <div class="rc-header">
+      <div class="rc-header-title">Round complete</div>
+      <div class="rc-header-sub">${c.name || 'Course'} · ${today}</div>
+    </div>
+    <div class="rc-section">
+      <div class="rc-hero">
+        <div class="rc-hero-score" style="color:${vsParColor}">${vsParStr}</div>
+        <div class="rc-hero-sub">${totalStrokes} strokes · par ${totalPar} · ${holesPlayed} holes</div>
+      </div>
+      <div class="rc-stat-grid">
+        <div class="rc-stat-cell"><div class="rc-stat-val">${totalGIR}</div><div class="rc-stat-lbl">GIR</div></div>
+        <div class="rc-stat-cell"><div class="rc-stat-val">${totalPutts}</div><div class="rc-stat-lbl">Putts</div></div>
+        <div class="rc-stat-cell"><div class="rc-stat-val">${totalFW}</div><div class="rc-stat-lbl">FW hit</div></div>
+        <div class="rc-stat-cell"><div class="rc-stat-val">${puttsPerGir}</div><div class="rc-stat-lbl">Putts/GIR</div></div>
+      </div>
+    </div>
+    <div class="rc-section" style="margin-top:10px;">
+      <div class="rc-section-label">Score breakdown</div>
+      ${birdies > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Birdies</span><span class="rc-bd-dots">${dotStrip(birdies, '#1e7a45', 'circle')}</span><span class="rc-bd-count" style="color:#1e7a45">${birdies}</span></div>` : ''}
+      ${pars > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Pars</span><span class="rc-bd-dots">${dotStrip(pars, '#c8c6c0', 'square')}</span><span class="rc-bd-count">${pars}</span></div>` : ''}
+      ${bogeys > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Bogeys</span><span class="rc-bd-dots">${dotStrip(bogeys, '#e8a070', 'square')}</span><span class="rc-bd-count">${bogeys}</span></div>` : ''}
+      ${doubles > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Doubles+</span><span class="rc-bd-dots">${dotStrip(doubles, '#a32d2d', 'square')}</span><span class="rc-bd-count" style="color:#a32d2d">${doubles}</span></div>` : ''}
+    </div>
+    <div class="rc-section" style="margin-top:10px;padding-bottom:8px;">
+      <div class="rc-section-label">Scorecard</div>
+      <table class="rc-table">
+        <thead><tr><th>Hole</th><th>Par</th><th>Score</th><th>Putts</th><th>+/−</th></tr></thead>
+        <tbody>
+          <tr class="rc-sect"><td colspan="5">Front 9</td></tr>
+          ${scRows(0, 9)}
+          <tr class="rc-total"><td class="rc-hole" style="background:#e5e3df">Out</td><td>${front9Par}</td><td>${front9Played ? front9Strokes : '—'}</td><td>${front9Played ? front9Putts : '—'}</td><td>${front9Played ? pillHtml2(front9Strokes, front9Par) : '—'}</td></tr>
+          <tr class="rc-sect"><td colspan="5">Back 9</td></tr>
+          ${scRows(9, 18)}
+          <tr class="rc-total"><td class="rc-hole" style="background:#e5e3df">In</td><td>${back9Par}</td><td>${back9Played ? back9Strokes : '—'}</td><td>${back9Played ? back9Putts : '—'}</td><td>${back9Played ? pillHtml2(back9Strokes, back9Par) : '—'}</td></tr>
+          <tr class="rc-total"><td class="rc-hole" style="background:#333;color:#fff">Total</td><td>${totalPar}</td><td>${totalStrokes}</td><td>${totalPutts}</td><td>${pillHtml2(totalStrokes, totalPar)}</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="rc-btn-row">
+      <button class="rc-btn-primary" id="rcSaveBtn" type="button">Save round</button>
+      <button class="rc-btn-secondary" id="rcKeepPlayingBtn" type="button">Keep playing</button>
+    </div>
+    <div class="rc-footnote">Saving adds this round to My Golf stats</div>
+  `;
+
+  // Wire save button
+  const saveBtn = el.querySelector('#rcSaveBtn');
+  saveBtn.addEventListener('click', () => {
+    const committedStrategies = {};
+    try {
+      const raw = sessionStorage.getItem('committedStrategies');
+      if (raw) Object.assign(committedStrategies, JSON.parse(raw));
+    } catch(e) {}
+
+    const roundScores = loadScores(courseId);
+    const roundData = {
+      date: today,
+      scores: roundScores,
+      strategies: committedStrategies,
+      holesPlayed,
+      totalStrokes: holesPlayed ? totalStrokes : 0,
+      totalPar:     holesPlayed ? totalPar     : 0,
+      totalPutts:   holesPlayed ? totalPutts   : 0,
+      totalGIR:     holesPlayed ? totalGIR     : 0,
+    };
+    saveRound(courseId, roundData);
+
+    saveBtn.textContent = 'Saved!';
+    saveBtn.disabled = true;
+    saveBtn.style.background = '#888';
+    saveBtn.style.cursor = 'default';
+
+    try {
+      localStorage.removeItem('roundScores_' + courseId);
+      sessionStorage.removeItem('committedStrategies');
+    } catch(e) {}
+
+    if (typeof renderSavedRounds === 'function') renderSavedRounds();
+
+    // Auto-dismiss and clean up after short delay
+    setTimeout(() => _dismissRoundComplete(courseId), 700);
+  });
+
+  // Wire keep playing button
+  el.querySelector('#rcKeepPlayingBtn').addEventListener('click', () => {
+    el.style.display = 'none';
+    // Advance to hole 1 (index 0)
+    sessionStorage.setItem('activeCourse', JSON.stringify({ id: courseId, holeIdx: 0 }));
+    const bar = document.getElementById('playCourseBar');
+    if (bar?._navigateTo) bar._navigateTo(0);
+  });
+
+  el.style.display = 'flex';
+}
+
+function _dismissRoundComplete(courseId) {
+  const el = document.getElementById('roundCompleteOverlay');
+  el.style.display = 'none';
+  // Full round teardown (same as quit round)
+  sessionStorage.removeItem('activeCourse');
+  try {
+    Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
+    Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
+    Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]);
+    Object.keys(teeOverrides).forEach(k => delete teeOverrides[k]);
+    sessionStorage.removeItem('committedStrategies');
+  } catch(e) {}
+  if (typeof window.clearGpsState === 'function') window.clearGpsState();
+  try { localStorage.removeItem('golfTee_v1'); } catch(e) {}
+  const resetBtn = document.getElementById('gpsReset');
+  const gpsWarn  = document.getElementById('gpsWarning');
+  if (resetBtn) resetBtn.style.display = 'none';
+  if (gpsWarn)  gpsWarn.style.display  = 'none';
+  if (typeof gpsTeeSetState === 'function') gpsTeeSetState('idle');
+  if (typeof gpsBallSetState === 'function') gpsBallSetState('locked', null, 0);
+  const bar2 = document.getElementById('playCourseBar');
+  if (bar2) bar2.remove();
+  const se = document.getElementById('scoreEntry');
+  if (se) se.remove();
+  const out = document.getElementById('output');
+  if (out) out.innerHTML = '';
+  const recalc = document.getElementById('recalcLink');
+  if (recalc) recalc.classList.remove('visible');
+  const actionRow = document.getElementById('playActionRow');
+  if (actionRow) actionRow.style.display = 'none';
+  if (typeof hideScorefab === 'function') hideScorefab();
+  if (typeof window.updateLoadCourseBtn === 'function') window.updateLoadCourseBtn();
+  if (typeof updateHoleCardMode === 'function') updateHoleCardMode();
+  if (typeof updateCalcButtonVisibility === 'function') updateCalcButtonVisibility();
+}
+
 // ── Hide FAB when no course is active ─────────────────────────────────────
 function hideScorefab() {
   const fab = document.getElementById('scoreFab');
@@ -7671,6 +8064,10 @@ document.getElementById('newCourseBtn').addEventListener('click', () => {
     </div>
     <div class="score-drawer-inner" id="scoreDrawerInner"></div>
   </div>
+
+<div id="roundCompleteOverlay" style="display:none; position:fixed; inset:0; background:#f5f4f0; z-index:2000; flex-direction:column; overflow-y:auto;">
+  <div class="rc-body"></div>
+</div>
 
 <div id="cancelRoundOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; align-items:center; justify-content:center;">
   <div style="background:#fffffe; border-radius:12px; padding:24px 20px; max-width:300px; width:90%; margin:auto; text-align:center;">
