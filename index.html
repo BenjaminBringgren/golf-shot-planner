@@ -2730,6 +2730,7 @@ let teeMarked = false;
 
 const teeOverrides = {};
 const shot2Overrides = {}; // user-selected second-shot club per strategy type
+const approachOverrides = {}; // user-selected approach club per strategy type (1-shot plans)
 let par3ClubOverride = null; // persists across calculate() calls
 
 // ── Expected strokes remaining lookup ─────────────────────────────────────
@@ -4132,7 +4133,8 @@ document.addEventListener('DOMContentLoaded', () => {
     lastParValue = parValue;
 
     // Only reset tee overrides when explicitly triggered by the button press
-    if (clearOverrides) { Object.keys(teeOverrides).forEach(k => delete teeOverrides[k]); Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]); par3ClubOverride = null; }
+    if (clearOverrides) { Object.keys(teeOverrides).forEach(k => delete teeOverrides[k]); Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
+          Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]); Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]); par3ClubOverride = null; }
 
     // ── Par 4 / 5 — tee-club-rank algorithm ──────────────────────────────
     const validTeeClubs = getValidTeeClubs(clubsList, parValue);
@@ -4579,19 +4581,73 @@ document.addEventListener('DOMContentLoaded', () => {
           '<div style="flex:1"><div class="cc-shot-club">—</div><div class="cc-shot-carry">—</div></div>' +
           '<div class="cc-shot-right"><div class="cc-shot-dist">—<span class="cc-shot-unit">m</span></div></div>';
         body.appendChild(ghostRow);
-        // Ghost chip row — matches tee-chip-row with 3 chips + bag
-        const ghostChipRow = document.createElement('div');
-        ghostChipRow.className = 'tee-chip-row';
-        ghostChipRow.style.cssText = 'opacity:0;pointer-events:none;';
-        ghostChipRow.innerHTML =
-          '<div class="tee-chip-label">2nd club</div>' +
-          '<div class="tee-chips">' +
-          '<div class="tee-chip tee-chip-sm">—</div>' +
-          '<div class="tee-chip tee-chip-sm">—</div>' +
-          '<div class="tee-chip tee-chip-sm">—</div>' +
-          '<div class="tee-chip bag-chip tee-chip-sm">—</div>' +
-          '</div>';
-        body.appendChild(ghostChipRow);
+        // Real approach club chip row for 1-shot plans
+        const appOverrideKey = approachOverrides[basePlan.type] || null;
+        const recAppClub = approachClub(activePlan.approach);
+        const appCandidates = clubsList.filter(c => c.key !== 'driver').slice(0, 4);
+        if (appCandidates.length > 0) {
+          const appChipRow = document.createElement('div');
+          appChipRow.className = 'tee-chip-row';
+          const appLabel = document.createElement('div');
+          appLabel.className = 'tee-chip-label';
+          appLabel.textContent = 'Approach';
+          appChipRow.appendChild(appLabel);
+          const appChips = document.createElement('div');
+          appChips.className = 'tee-chips';
+          // Rec chip
+          const recChip = document.createElement('div');
+          recChip.className = 'tee-chip tee-chip-sm' + (!appOverrideKey ? ' active' : '');
+          recChip.textContent = clubMap[recAppClub?.key]?.label ?? '—';
+          recChip.addEventListener('click', () => {
+            delete approachOverrides[basePlan.type];
+            const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
+            newCard.id = card.id || 'activeStrategyCard';
+            newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
+          });
+          appChips.appendChild(recChip);
+          // 2 more candidates around rec
+          const recIdx = appCandidates.findIndex(c => c.key === recAppClub?.key);
+          const candidates = recIdx >= 0 ? appCandidates.slice(Math.max(0, recIdx - 1), recIdx + 3).filter(c => c.key !== recAppClub?.key) : appCandidates.slice(0, 2);
+          candidates.forEach(c => {
+            const chip = document.createElement('div');
+            chip.className = 'tee-chip tee-chip-sm' + (appOverrideKey === c.key ? ' active' : '');
+            chip.textContent = clubMap[c.key]?.label ?? c.key;
+            chip.addEventListener('click', () => {
+              approachOverrides[basePlan.type] = c.key;
+              const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
+              newCard.id = card.id || 'activeStrategyCard';
+              newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
+            });
+            appChips.appendChild(chip);
+          });
+          // Bag chip
+          const appBagChip = document.createElement('div');
+          appBagChip.className = 'tee-chip bag-chip tee-chip-sm';
+          const appBagInner = document.createElement('div');
+          appBagInner.className = 'tee-chip-bag';
+          const appBagSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+          appBagSvg.setAttribute('width', '18'); appBagSvg.setAttribute('height', '27');
+          appBagSvg.setAttribute('viewBox', '0 0 349 518'); appBagSvg.setAttribute('fill', 'none');
+          appBagSvg.style.color = '#888';
+          appBagSvg.innerHTML = '<path d="M319.865 425.637C314.058 433.485 298.865 430.637 298.865 430.637V189.637C298.865 189.637 316.842 186.765 321.865 195.137C324.879 200.16 323.865 210.137 323.865 210.137V412.137C323.865 412.137 324.163 419.829 319.865 425.637Z" fill="currentColor"/><path d="M84.8653 448.637H267.365V189.637L48.8653 287.137V347.637V438.137C48.8653 448.637 84.8653 448.637 84.8653 448.637Z" fill="currentColor"/><path d="M267.365 150.137L198.365 183.637H84.8653V129.637H133.283L129.865 85.6371C129.865 85.6371 64.7881 120.204 28.3653 103.137C20.4185 99.4134 14.8441 97.9927 9.36529 91.1371C3.58296 83.9017 3.45838 77.7611 1.86529 68.6371C0.018102 58.0577 0.0719012 51.7257 1.86529 41.1371C3.44295 31.8222 3.3754 25.4431 9.36529 18.1371C17.3653 8.37935 27.8653 6.63706 35.3653 3.13704C42.8653 -0.362974 80.5689 -1.43121 112.365 6.63708C120.924 8.80888 126.141 9.35914 133.865 13.6371C141.149 17.6706 149.865 23.137 150.365 27.1371C152.425 43.6149 159.915 107.608 162.489 129.637H177.34L243.865 18.1371C243.865 18.1371 252.242 9.10153 259.365 6.63708C267.116 3.95559 272.444 4.5145 280.365 6.63708C287.365 8.51272 338.865 37.137 344.865 49.6371C350.196 60.7433 348.018 69.2824 344.996 81.1235L344.865 81.6371C341.05 96.5988 336.931 106.91 323.865 115.137C315.286 120.539 308.964 123.035 298.865 122.137C291.171 121.453 287.193 118.75 280.365 115.137C261.546 105.179 243.865 74.6371 243.865 74.6371L213.945 129.637H259.365C262.49 129.637 267.365 129.013 267.365 132.137V150.137Z" fill="currentColor"/><path d="M267.365 507.762V498.387V489.012C267.365 489.012 268.437 483.743 265.865 481.137C263.259 478.496 257.865 479.637 257.865 479.637H93.3653C93.3653 479.637 89.3245 479.407 86.8653 481.637C84.153 484.096 84.8653 489.012 84.8653 489.012V498.387V507.762C84.8653 507.762 84.153 513.178 86.8653 515.637C89.3245 517.867 93.3653 517.137 93.3653 517.137H257.865C257.865 517.137 263.259 518.278 265.865 515.637C268.437 513.031 267.365 507.762 267.365 507.762Z" fill="currentColor"/>';
+          const appBagLbl = document.createElement('span');
+          appBagLbl.className = 'tee-chip-bag-label'; appBagLbl.textContent = 'Bag';
+          appBagInner.appendChild(appBagSvg); appBagInner.appendChild(appBagLbl);
+          appBagChip.appendChild(appBagInner);
+          appBagChip.addEventListener('click', () => {
+            if (typeof window._openClubPicker === 'function') {
+              window._openClubPicker(appOverrideKey || recAppClub?.key, (selectedKey) => {
+                approachOverrides[basePlan.type] = selectedKey === recAppClub?.key ? null : selectedKey;
+                const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
+                newCard.id = card.id || 'activeStrategyCard';
+                newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
+              }, { type: 'no-driver' });
+            }
+          });
+          appChips.appendChild(appBagChip);
+          appChipRow.appendChild(appChips);
+          body.appendChild(appChipRow);
+        }
       }
 
       // GPS remaining
@@ -4626,8 +4682,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // Approach rec
-      const rec = approachRecHtml(activePlan.approach);
+      // Approach rec — use override club if set for 1-shot plans
+      const _appOverKey = activePlan.shots.length === 1 ? (approachOverrides[basePlan.type] || null) : null;
+      const _appDistForRec = _appOverKey
+        ? (() => { const oc = clubsList.find(c => c.key === _appOverKey); return oc ? activePlan.approach : activePlan.approach; })()
+        : activePlan.approach;
+      const rec = _appOverKey
+        ? (() => { const oc = clubsList.find(c => c.key === _appOverKey); if (!oc) return approachRecHtml(activePlan.approach); const runUp = Math.round(activePlan.approach - oc.carry); const lbl2 = clubMap[oc.key]?.label ?? oc.key; let windNote2 = ''; if (windState.active && windState.enabled && oc.baseCarry != null) { const d = Math.round(oc.carry - oc.baseCarry); if (d !== 0) windNote2 = ` (${d > 0 ? '+' : ''}${d}m wind)`; } const aimNote2 = runUp < 0 ? `Shortest club in bag — choke down and play a controlled ${lbl2}` : runUp <= 2 ? 'Fly it all the way — minimal roll expected' : `Land ${runUp}m short, let it run to the pin`; return { lbl: lbl2, carry: oc.carry.toFixed(0), windNote: windNote2, aimNote: aimNote2 }; })()
+        : approachRecHtml(activePlan.approach);
       if (rec) {
         const appDiv = document.createElement('div');
         appDiv.className = 'cc-approach';
@@ -6837,6 +6899,7 @@ function renderPlayCourseBar(courseId) {
           localStorage.removeItem('roundScores_' + courseId);
           sessionStorage.removeItem('committedStrategies');
           Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
+          Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
         } catch(e) {}
         // Reset GPS state + button UI
         if (typeof window.clearGpsState === 'function') window.clearGpsState();
