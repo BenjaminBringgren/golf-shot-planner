@@ -2399,12 +2399,23 @@
           <button class="course-editor-cancel" type="button" id="courseEditorCancel">Cancel</button>
           <button class="course-editor-save" type="button" id="courseEditorSave">Save</button>
         </div>
+        <div style="display:flex;gap:8px;padding:0 8px 8px;">
+          <div style="flex:1;">
+            <div style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">Course rating</div>
+            <input type="number" id="courseRatingInput" placeholder="e.g. 71.4" min="60" max="80" step="0.1" style="width:100%;padding:8px 10px;font-size:15px;border:none;border-radius:6px;background:#f0efeb;color:#222;font-family:inherit;"/>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">Slope rating</div>
+            <input type="number" id="slopeRatingInput" placeholder="e.g. 125" min="55" max="155" style="width:100%;padding:8px 10px;font-size:15px;border:none;border-radius:6px;background:#f0efeb;color:#222;font-family:inherit;"/>
+          </div>
+        </div>
         <div style="padding:0 8px 8px;">
           <table class="scorecard" id="scorecardTable">
             <thead>
               <tr>
                 <th class="sc-th-hole">#</th>
                 <th class="sc-th-par">Par</th>
+                <th style="width:42px;">SI</th>
                 <th class="sc-th-len">Length (m)</th>
                 <th style="text-align:left; padding-left:6px;">Note</th>
               </tr>
@@ -2759,7 +2770,7 @@ function expectedStrokesRemaining(approachDist, driverCarry, applyWindAdj) {
   } catch(e) {}
 
   // Wind adjustment — only when wind is active and enabled
-  const useWind = applyWindAdj !== false; // default true, pass false to suppress
+  const useWind = applyWindAdj !== false && !(typeof applyWindAdj === 'object' && applyWindAdj?.noWind);
   let windAdj = 0;
   if (useWind && windState && windState.active && windState.enabled) {
     // Altitude-correct to mid-iron trajectory height (~22m)
@@ -4146,6 +4157,16 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Extract course+hole SI for per-hole HCP adjustment
+    let _holeStrokeIndex = null;
+    try {
+      const _siSess = sessionStorage.getItem('activeCourse');
+      if (_siSess) {
+        const { id: _siId, holeIdx: _siHi } = JSON.parse(_siSess);
+        _holeStrokeIndex = loadCourses()[_siId]?.holes?.[_siHi]?.si || null;
+      }
+    } catch(e) {}
+
     // Default: lowest expected total strokes
     let activePlanType = ordered.reduce(
       (best, p) => p.score < best.score ? p : best,
@@ -4260,7 +4281,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const approach = hole - teeShot.total - forced2.total;
       if (approach < 0) return null; // overshoots green
       const driverCarry2 = driverClub ? driverClub.carry : driver;
-      const score = 2 + expectedStrokesRemaining(approach, driverCarry2);
+      const score = 2 + expectedStrokesRemaining(approach, driverCarry2, _holeStrokeIndex ? { holeStrokeIndex: _holeStrokeIndex } : undefined);
       return { shots: [teeShot, forced2], approach, score };
     }
 
@@ -6803,6 +6824,7 @@ function renderPlayCourseBar(courseId) {
         const _gpsWarn  = document.getElementById('gpsWarning');
         if (typeof gpsTeeSetState === 'function') gpsTeeSetState('idle');
         if (typeof gpsBallSetState === 'function') gpsBallSetState('locked', null, 0);
+        try { localStorage.removeItem('golfTee_v1'); } catch(e) {}
         if (_resetBtn) _resetBtn.style.display = 'none';
         if (_gpsWarn)  _gpsWarn.style.display  = 'none';
         bar.remove();
@@ -7252,6 +7274,8 @@ function openEditor(id) {
             <option value="5" ${h.par==5?'selected':''}>5</option>
           </select>
         </td>` +
+        `<td><input type="number" class="hole-si" data-hole="${i}"
+             value="${h.si||''}" placeholder="—" min="1" max="18" style="width:38px;"/></td>` +
         `<td><input type="number" class="hole-length" data-hole="${i}"
              value="${h.length||''}" placeholder="—" min="50" max="700"/></td>` +
         `<td><input type="text" class="note-input hole-note" data-hole="${i}"
@@ -7267,12 +7291,15 @@ function openEditor(id) {
 
     const holes = Array.from({length:18}, (_, i) => ({
       par:    Number(tbody.querySelector(`.hole-par[data-hole="${i}"]`).value),
+      si:     Number(tbody.querySelector(`.hole-si[data-hole="${i}"]`).value) || 0,
       length: Number(tbody.querySelector(`.hole-length[data-hole="${i}"]`).value) || 0,
       note:   tbody.querySelector(`.hole-note[data-hole="${i}"]`).value.trim(),
     }));
+    const courseRating = parseFloat(document.getElementById('courseRatingInput').value) || 0;
+    const slopeRating  = parseInt(document.getElementById('slopeRatingInput').value) || 0;
 
     const updated = loadCourses();
-    updated[courseId] = { name, holes };
+    updated[courseId] = { name, holes, ...(courseRating ? { courseRating } : {}), ...(slopeRating ? { slopeRating } : {}) };
     saveCourses(updated);
 
     editor.style.display = 'none';
