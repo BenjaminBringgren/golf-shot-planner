@@ -225,10 +225,10 @@
     .mg-menu-sub   { font-size: 12px; color: #888; margin: 2px 0 0; }
     .mg-menu-arrow { margin-left: auto; color: #bbb; font-size: 17px; font-weight: 300; }
 
-    .mg-baseline-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px; padding: 4px 0 4px; }
-    .mg-baseline-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .mg-baseline-num { font-size: 12px; font-weight: 500; color: #888; }
-    .mg-baseline-dot { width: 42px; height: 42px; border-radius: 8px; max-width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+    .mg-baseline-grid { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 4px; padding: 4px 0; }
+    .mg-baseline-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .mg-baseline-num { font-size: 11px; font-weight: 500; color: #888; }
+    .mg-baseline-dot { width: 100%; aspect-ratio: 1; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
     .mg-baseline-dot.none  { background: #f0efeb; }
     .mg-baseline-dot.under { background: #E1F5EE; }
     .mg-baseline-dot.even  { background: #f0efeb; }
