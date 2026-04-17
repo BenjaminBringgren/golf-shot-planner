@@ -5790,7 +5790,15 @@ function renderMgStatTiles() {
   const avgVsPar = totalPar > 0 ? ((totalStrokes - totalPar) / allRounds.length).toFixed(1) : '—';
   const avgVsParStr = avgVsPar !== '—' ? (avgVsPar > 0 ? '+' + avgVsPar : avgVsPar) : '—';
   const girPct = totalHoles > 0 ? Math.round(totalGIR / totalHoles * 100) : 0;
-  const avgPutts = allRounds.length > 0 ? (totalPutts / allRounds.length).toFixed(1) : '—';
+  const avgPutts = (() => {
+    const qualified = allRounds.filter(r => (r.holesPlayed ?? 0) >= 9);
+    if (!qualified.length) return '—';
+    const normalised = qualified.reduce((a, r) => {
+      const holes = r.holesPlayed ?? 18;
+      return a + (r.totalPutts ?? 0) * (18 / holes);
+    }, 0);
+    return (normalised / qualified.length).toFixed(1);
+  })();
   // Best round: lowest totalStrokes — display as raw stroke count
   let bestRound = null;
   allRounds.forEach(r => {
