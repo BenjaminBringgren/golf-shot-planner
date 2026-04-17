@@ -5920,7 +5920,7 @@ function renderMgScoreBreakdown() {
       round.scores.forEach((s, i) => {
         if (!s) return;
         const par = course.holes?.[i]?.par || 4;
-        const total = (s.fairway || 0) + (s.putts || 0);
+        const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
         if (!total) return;
         const diff = total - par;
         totalHoles++;
@@ -6005,7 +6005,7 @@ function renderMgBaseline() {
       if (!r.scores) return;
       r.scores.forEach((s, i) => {
         if (!s || i >= numHoles) return;
-        const strokes = (s.fairway || 0) + (s.putts || 0);
+        const strokes = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
         if (!strokes) return;
         const par = holes[i]?.par || 4;
         holeData[i].strokes += strokes;
@@ -6064,7 +6064,7 @@ function renderMgAvgStrokesBreakdown() {
       round.scores.forEach((s, i) => {
         if (!s) return;
         const par = course.holes?.[i]?.par || 4;
-        const total = (s.fairway || 0) + (s.putts || 0);
+        const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
         if (!total) return;
         if (parData[par]) { parData[par].strokes += total; parData[par].holes++; }
         totalHolesGIR++;
@@ -6498,7 +6498,7 @@ function renderSavedRounds() {
   function scRowHtml(s, i, course, round) {
     if (!s) return '';
     const par   = course.holes[i]?.par || 4;
-    const total = (s.fairway || 0) + (s.putts || 0);
+    const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
     const d     = total - par;
     let spClass = 'sp-par';
     if (total === 1 && par >= 2) spClass = 'sp-hole-in-one';
@@ -6621,7 +6621,7 @@ function renderSavedRounds() {
           typeof window.decodeStrategy === 'function'
             ? window.decodeStrategy(strat)
             : { type: strat, club: null };
-        const diff = ((s.fairway || 0) + (s.putts || 0)) - par;
+        const diff = ((s.fairway || 0) + (s.rough || 0) + (s.putts || 0)) - par;
         if (!holeStats[i]) holeStats[i] = {};
         if (!holeStats[i][strat]) {
           holeStats[i][strat] = {
@@ -6786,7 +6786,7 @@ function renderSavedRounds() {
       (round.scores || []).forEach((s, i) => {
         if (!s) return;
         const par   = course.holes[i]?.par || 4;
-        const total = (s.fairway || 0) + (s.putts || 0);
+        const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
         if (i < 9)  { f9Par+=par; f9S+=total; f9FW+=s.fairway; f9P+=s.putts; if(s.gir)f9G++; f9n++; }
         else        { b9Par+=par; b9S+=total; b9FW+=s.fairway; b9P+=s.putts; if(s.gir)b9G++; b9n++; }
       });
@@ -6977,7 +6977,7 @@ function computeHoleBaseline(courseId, holeIdx) {
   const data = rounds.reduce((acc, r) => {
     const s = r.scores?.[holeIdx];
     if (!s) return acc;
-    const strokes = (s.fairway || 0) + (s.putts || 0);
+    const strokes = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
     if (!strokes) return acc;
     acc.total += strokes;
     acc.count++;
@@ -7202,7 +7202,7 @@ function renderPlayCourseBar(courseId) {
     let totalStrokes = 0, totalPar = 0, holesPlayed = 0;
     scores.forEach((s, i) => {
       if (!s) return;
-      totalStrokes += (s.fairway || 0) + (s.putts || 0);
+      totalStrokes += (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
       totalPar     += c.holes[i]?.par || 4;
       holesPlayed++;
     });
@@ -7293,7 +7293,7 @@ function renderPlayCourseBar(courseId) {
         const cell  = document.createElement('div');
         cell.className = 'hole-cell';
         const sc    = scores[i];
-        const total = sc ? sc.fairway + sc.putts : null;
+        const total = sc ? (sc.fairway || 0) + (sc.rough || 0) + (sc.putts || 0) : null;
         const par   = c.holes[i]?.par || 4;
         const cls   = scoreCssClass(total, par);
         if (cls) cell.classList.add(cls);
@@ -7355,7 +7355,7 @@ function renderPlayCourseBar(courseId) {
     scores = loadScores(courseId);
     const played = scores.map((s, i) => ({
       hole: i + 1, par: c.holes[i]?.par || 4,
-      total: s ? (s.fairway || 0) + (s.putts || 0) : null,
+      total: s ? (s.fairway || 0) + (s.rough || 0) + (s.putts || 0) : null,
       fairway: s?.fairway ?? null, rough: s?.rough ?? null, putts: s?.putts ?? null, gir: s?.gir ?? null, fir: s?.fir ?? null,
     }));
 
@@ -7509,7 +7509,7 @@ function renderPlayCourseBar(courseId) {
       const par   = c.holes[idx]?.par || 4;
       const strat = round.strategies?.[idx];
       if (!strat) return;
-      const diff  = (holeScore.fairway + holeScore.putts) - par;
+      const diff  = ((holeScore.fairway || 0) + (holeScore.rough || 0) + (holeScore.putts || 0)) - par;
       if (!stratStats[strat]) stratStats[strat] = { totalDiff: 0, count: 0 };
       stratStats[strat].totalDiff += diff;
       stratStats[strat].count++;
@@ -7790,8 +7790,8 @@ function renderScoreEntry(courseId, holeIdx, scores) {
   const newFab = fab.cloneNode(true);
   fab.parentNode.replaceChild(newFab, fab);
   newFab.classList.add('visible');
-  const total0 = fairway + putts;
-  if (existing_score || fairway > 0 || putts > 0) {
+  const total0 = fairway + rough + putts;
+  if (existing_score || fairway > 0 || rough > 0 || putts > 0) {
     newFab.classList.add('has-score');
     newFab.textContent = total0 > 0 ? String(total0) : '+';
   } else {
@@ -7860,7 +7860,7 @@ function renderScoreEntry(courseId, holeIdx, scores) {
     renderTotal();
     // Update FAB
     const f = document.getElementById('scoreFab');
-    const total = fairway + putts;
+    const total = fairway + rough + putts;
     f.textContent = total > 0 ? String(total) : '+';
     if (total > 0) f.classList.add('has-score');
     else f.classList.remove('has-score');
@@ -7905,14 +7905,14 @@ function renderScoreEntry(courseId, holeIdx, scores) {
   totalRow.className = 'score-total-row';
 
   function renderTotal() {
-    const total = fairway + putts;
+    const total = fairway + rough + putts;
     const diff  = total - par;
     const diffLabel = diff === 0 ? 'E' : (diff > 0 ? `+${diff}` : `${diff}`);
     const cls = diff < 0 ? 'under' : diff > 0 ? 'over' : 'even';
     const allScores = loadScores(courseId);
     let runTotal = 0, runPar = 0;
     allScores.forEach((s, i) => {
-      if (s && i !== holeIdx) { runTotal += (s.fairway || 0) + (s.putts || 0); runPar += course.holes[i]?.par || 4; }
+      if (s && i !== holeIdx) { runTotal += (s.fairway || 0) + (s.rough || 0) + (s.putts || 0); runPar += course.holes[i]?.par || 4; }
     });
     runTotal += total; runPar += par;
     const runDiff = runTotal - runPar;
@@ -7941,59 +7941,19 @@ function renderScoreEntry(courseId, holeIdx, scores) {
     title.textContent = `Hole ${holeIdx + 1}  ·  Par ${par}`;
     inner.appendChild(title);
 
-    // ── Shots row: stepper + inline Rough chip ───────────────────────────
-    const shotsRow = document.createElement('div');
-    shotsRow.className = 'score-row';
-
-    const shotsLblWrap = document.createElement('div');
-    shotsLblWrap.style.cssText = 'flex:1; display:flex; flex-direction:column; gap:6px;';
-
-    const shotsLblTop = document.createElement('div');
-    shotsLblTop.className = 'score-row-label';
-    shotsLblTop.innerHTML = curGpsActive
+    // ── Fairway shots row ─────────────────────────────────────────────────
+    const fwLabel = curGpsActive
       ? `🏌️ Fairway shots <span class="inprogress">${curGpsShots > 0 ? '· GPS tracked' : '· tee marked'}</span>`
       : '🏌️ Fairway shots';
-
-    const roughChip = document.createElement('button');
-    roughChip.type = 'button';
-    function updateRoughChip() {
-      roughChip.textContent = rough > 0 ? 'Rough' : 'Rough?';
-      roughChip.style.cssText = rough > 0
-        ? 'background:#fef3e8;color:#854f0b;border:1.5px solid #854f0b;border-radius:6px;padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;width:fit-content;'
-        : 'background:#f5f4f0;color:#bbb;border:1.5px solid #e0ddd8;border-radius:6px;padding:5px 12px;font-size:13px;font-weight:500;cursor:pointer;width:fit-content;';
-    }
-    updateRoughChip();
-    roughChip.addEventListener('click', () => {
-      rough = rough > 0 ? 0 : 1;
-      gir = autoGir();
-      fir = autoFir();
-      updateRoughChip();
-      saveAndRefresh();
-    });
-
-    shotsLblWrap.appendChild(shotsLblTop);
-    shotsLblWrap.appendChild(roughChip);
-    shotsRow.appendChild(shotsLblWrap);
-
-    const shotsStepper = document.createElement('div');
-    shotsStepper.className = 'score-stepper';
-    const shotsMinus = document.createElement('button');
-    shotsMinus.type = 'button'; shotsMinus.className = 'score-stepper-btn'; shotsMinus.textContent = '−';
-    const shotsVal = document.createElement('span');
-    shotsVal.className = 'score-stepper-val'; shotsVal.textContent = fairway;
-    const shotsPlus = document.createElement('button');
-    shotsPlus.type = 'button'; shotsPlus.className = 'score-stepper-btn'; shotsPlus.textContent = '+';
-    shotsMinus.addEventListener('click', () => {
-      if (fairway > 0) { fairway--; shotsVal.textContent = fairway; gir = autoGir(); fir = autoFir(); saveAndRefresh(); }
-    });
-    shotsPlus.addEventListener('click', () => {
-      fairway++; shotsVal.textContent = fairway; gir = autoGir(); fir = autoFir(); saveAndRefresh();
-    });
-    shotsStepper.appendChild(shotsMinus);
-    shotsStepper.appendChild(shotsVal);
-    shotsStepper.appendChild(shotsPlus);
-    shotsRow.appendChild(shotsStepper);
+    const { row: shotsRow, valSpan: shotsVal } = makeStepperRow(fwLabel, () => fairway, v => {
+      fairway = v; gir = autoGir(); fir = autoFir();
+    }, 0);
     inner.appendChild(shotsRow);
+
+    const { row: roughRow } = makeStepperRow('🌿 Rough shots', () => rough, v => {
+      rough = v; gir = autoGir(); fir = autoFir();
+    }, 0);
+    inner.appendChild(roughRow);
 
     const { row: puttRow } = makeStepperRow('⛳ Putts', () => putts, v => { putts = v; }, 0);
     inner.appendChild(puttRow);
@@ -8017,7 +7977,7 @@ window.showRoundCompleteOverlay = function showRoundCompleteOverlay(courseId) {
   // Compute stats
   const played = scores.map((s, i) => ({
     hole: i + 1, par: c.holes[i]?.par || 4,
-    total: s ? (s.fairway || 0) + (s.putts || 0) : null,
+    total: s ? (s.fairway || 0) + (s.rough || 0) + (s.putts || 0) : null,
     fairway: s?.fairway ?? null, putts: s?.putts ?? null, gir: s?.gir ?? null,
   }));
 
