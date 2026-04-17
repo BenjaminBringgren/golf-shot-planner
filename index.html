@@ -4272,35 +4272,58 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(e) {}
 
     // ── Approach club recommendation ─────────────────────────────────────
+    const isFirm = document.getElementById('conditions').value === 'firm';
+    const MAX_RUNUP = isFirm ? 20 : 15; // max acceptable gap between carry and pin
+
     function approachClub(approachDist) {
       const approachList = clubsList.filter(c => c.key !== 'driver');
-      let best = null;
-      approachList.forEach(c => {
-        if (c.carry > approachDist) return;
-        if (!best || c.carry > best.carry) best = c;
-        else if (Math.abs(c.carry - best.carry) <= 3) {
-          if (['fw3','fw5','fw7'].includes(c.key) && ['u2','u3','u4'].includes(best.key)) best = c;
-        }
-      });
-      if (!best && approachList.length > 0) best = approachList.reduce((s, c) => c.carry < s.carry ? c : s);
-      return best;
-    }
-
-    // ── Bag chip override ─────────────────────────────────────────────────
-    function solveForced(forcedTeeKey) {
-      const teeClub = clubsList.find(c => c.key === forcedTeeKey);
-      if (!teeClub) return null;
-      if (parValue === 4 && teeClub.idx > idx7) return null;
-      if (parValue === 5) {
-        const longClubs = ['driver','fw3','fw5','fw7','u2','u3','u4'];
-        if (!longClubs.includes(teeClub.key)) return null;
+      // Zone 1: clubs whose carry lands within MAX_RUNUP of the pin
+      const reachable = approachList.filter(c => c.carry <= approachDist && approachDist - c.carry <= MAX_RUNUP);
+      if (reachable.length > 0) {
+        return reachable.reduce((best, c) => c.carry > best.carry ? c : best);
       }
-      const driverCarry = driverClub ? driverClub.carry : driver;
-      return findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry);
+      // Zone 2: approach shorter than any full-carry club — use most lofted club at partial swing
+      const overShoot = approachList.filter(c => c.carry > approachDist);
+      if (overShoot.length > 0) {
+        const shortest = overShoot.reduce((s, c) => c.carry < s.carry ? c : s);
+        return { ...shortest, partial: true };
+      }
+      return null;
     }
 
-    const condLabel = document.getElementById('conditions').value === 'firm' ? 'Firm' : 'Soft';
-    output.innerHTML = '';
+    function approachRecHtml(approachDist) {
+      const rec = approachClub(approachDist);
+      if (!rec) return null;
+      const lbl = clubMap[rec.key]?.label ?? rec.key;
+      let windNote = '';
+      if (!rec.partial && windState.active && windState.enabled && rec.baseCarry != null) {
+        const delta = Math.round(rec.carry - rec.baseCarry);
+        if (delta !== 0) windNote = ` (${delta > 0 ? '+' : ''}${delta}m wind)`;
+      }
+      let carryStr, aimNote;
+      if (rec.partial) {
+        carryStr = approachDist.toFixed(0);
+        aimNote  = `Partial swing — flight it to ${approachDist.toFixed(0)}m`;
+      } else {
+        const runUp = Math.round(approachDist - rec.carry);
+        carryStr = rec.carry.toFixed(0);
+        aimNote  = runUp <= 2 ? 'Carry it all the way — minimal roll'
+                 : runUp <= 8 ? `Land ${runUp}m short and let it release`
+                 :              `Land ${runUp}m short — play a bump and run`;
+      }
+      return { lbl, carry: carryStr, windNote, aimNote };
+    }
+
+    // ── Render a single strategy card ─────────────────────────────────────
+    function windSummaryStr() {
+      if (!windState.active || !windState.enabled) return '';
+      const hw = windState.headwind;
+      const cw = windState.crosswind;
+      const hwLabel = Math.abs(hw) < 0.5 ? 'calm'
+        : hw > 0 ? `↓ ${hw.toFixed(1)} m/s head`
+        : `↑ ${Math.abs(hw).toFixed(1)} m/s tail`;
+      return cw >= 2 ? `${hwLabel} · ${cw.toFixed(1)} m/s cross` : hwLabel;
+    }
 
     function strategyDisplayName(type) { return type; }
     window.strategyDisplayName = strategyDisplayName;
@@ -4326,34 +4349,19 @@ document.addEventListener('DOMContentLoaded', () => {
       return type;
     }
 
-    function windSummaryStr() {
-      if (!windState.active || !windState.enabled) return '';
-      const hw = windState.headwind;
-      const cw = windState.crosswind;
-      const hwLabel = Math.abs(hw) < 0.5 ? 'calm'
-        : hw > 0 ? `↓ ${hw.toFixed(1)} m/s head`
-        : `↑ ${Math.abs(hw).toFixed(1)} m/s tail`;
-      return cw >= 2 ? `${hwLabel} · ${cw.toFixed(1)} m/s cross` : hwLabel;
-    }
-
-    function approachRecHtml(approachDist) {
-      const rec = approachClub(approachDist);
-      if (!rec) return null;
-      const runUp = Math.round(approachDist - rec.carry);
-      const lbl   = clubMap[rec.key]?.label ?? rec.key;
-      let windNote = '';
-      if (windState.active && windState.enabled && rec.baseCarry != null) {
-        const delta = Math.round(rec.carry - rec.baseCarry);
-        if (delta !== 0) windNote = ` (${delta > 0 ? '+' : ''}${delta}m wind)`;
+    // ── Bag chip override ─────────────────────────────────────────────────
+    function solveForced(forcedTeeKey) {
+      const teeClub = clubsList.find(c => c.key === forcedTeeKey);
+      if (!teeClub) return null;
+      if (parValue === 4 && teeClub.idx > idx7) return null;
+      if (parValue === 5) {
+        const longClubs = ['driver','fw3','fw5','fw7','u2','u3','u4'];
+        if (!longClubs.includes(teeClub.key)) return null;
       }
-      let aimNote;
-      if (runUp < 0)      aimNote = `Shortest club in bag — choke down and play a controlled ${lbl}`;
-      else if (runUp <= 2) aimNote = 'Fly it all the way — minimal roll expected';
-      else                aimNote = `Land ${runUp}m short, let it run to the pin`;
-      return { lbl, carry: rec.carry.toFixed(0), windNote, aimNote };
+      const driverCarry = driverClub ? driverClub.carry : driver;
+      return findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry);
     }
 
-    // ── Render a single strategy card ─────────────────────────────────────
     // Build a modified plan using a user-forced second club.
     // Preserves the tee shot; replaces the 2nd shot and recalculates approach/score.
     function buildPlanWithShot2Override(basePlan, activePlan, forced2Key) {
@@ -4700,7 +4708,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Real approach club chip row for 1-shot plans
         const appOverrideKey = approachOverrides[basePlan.type] || null;
         const recAppClub = approachClub(activePlan.approach);
-        const allAppCandidates = clubsList.filter(c => c.key !== 'driver');
+        // Only show clubs that can actually reach within the runup cap
+        // Include clubs reachable within MAX_RUNUP, plus partial-swing zone (carry > approach)
+        const allAppCandidates = clubsList.filter(c =>
+          c.key !== 'driver' &&
+          activePlan.approach - c.carry <= MAX_RUNUP
+        );
         const recAppIdx = recAppClub ? allAppCandidates.findIndex(c => c.key === recAppClub.key) : -1;
         // Show rec club + 1 longer + 2 shorter (centred on rec so short approaches show wedges)
         const appCandidates = recAppIdx >= 0
@@ -4902,7 +4915,21 @@ document.addEventListener('DOMContentLoaded', () => {
         ? (() => { const oc = clubsList.find(c => c.key === _appOverKey); return oc ? activePlan.approach : activePlan.approach; })()
         : activePlan.approach;
       const rec = _appOverKey
-        ? (() => { const oc = clubsList.find(c => c.key === _appOverKey); if (!oc) return approachRecHtml(activePlan.approach); const runUp = Math.round(activePlan.approach - oc.carry); const lbl2 = clubMap[oc.key]?.label ?? oc.key; let windNote2 = ''; if (windState.active && windState.enabled && oc.baseCarry != null) { const d = Math.round(oc.carry - oc.baseCarry); if (d !== 0) windNote2 = ` (${d > 0 ? '+' : ''}${d}m wind)`; } const aimNote2 = runUp < 0 ? `Shortest club in bag — choke down and play a controlled ${lbl2}` : runUp <= 2 ? 'Fly it all the way — minimal roll expected' : `Land ${runUp}m short, let it run to the pin`; return { lbl: lbl2, carry: oc.carry.toFixed(0), windNote: windNote2, aimNote: aimNote2 }; })()
+        ? (() => {
+            const oc = clubsList.find(c => c.key === _appOverKey);
+            if (!oc) return approachRecHtml(activePlan.approach);
+            const runUp = Math.round(activePlan.approach - oc.carry);
+            const lbl2 = clubMap[oc.key]?.label ?? oc.key;
+            let windNote2 = '';
+            if (windState.active && windState.enabled && oc.baseCarry != null) {
+              const d = Math.round(oc.carry - oc.baseCarry);
+              if (d !== 0) windNote2 = ` (${d > 0 ? '+' : ''}${d}m wind)`;
+            }
+            const aimNote2 = runUp <= 2 ? 'Carry it all the way — minimal roll'
+              : runUp <= 8 ? `Land ${runUp}m short and let it release`
+              : `Land ${runUp}m short — play a bump and run`;
+            return { lbl: lbl2, carry: oc.carry.toFixed(0), windNote: windNote2, aimNote: aimNote2 };
+          })()
         : approachRecHtml(activePlan.approach);
       if (rec) {
         const appDiv = document.createElement('div');
