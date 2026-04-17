@@ -703,6 +703,7 @@
     .rc-btn-row { display: flex; gap: 10px; padding: 14px 12px 0; }
     .rc-btn-primary { flex: 1; background: #1a1a1a; color: #fff; border: none; border-radius: 8px; height: 56px; font-size: 15px; font-weight: 700; cursor: pointer; }
     .rc-btn-secondary { flex: 1; background: #f0efeb; color: #333; border: none; border-radius: 8px; height: 56px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .rc-btn-delete { display: block; width: calc(100% - 24px); margin: 10px 12px 0; background: none; color: #aaa; border: none; border-radius: 8px; height: 44px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s, color 0.15s; }
     .rc-footnote { text-align: center; font-size: 12px; color: #aaa; padding: 10px 0 4px; }
 
 
@@ -775,8 +776,8 @@
     .card.course-active { display: none; }
     .hole-compact-summary {
       display: none;
-      align-items: center; gap: 6px;
-      font-size: 15px; font-weight: 600; color: #1a1a1a;
+      align-items: center; gap: 6px; flex-wrap: wrap;
+      font-size: 16px; font-weight: 600; color: #1a1a1a;
       margin-bottom: 10px;
     }
     .hole-compact-summary .hcs-conditions {
@@ -1947,6 +1948,7 @@
     <!-- Compact summary hidden — course bar handles it -->
     <div class="hole-compact-summary" id="holeCompactSummary" style="display:none;">
       <span id="holeCompactText">—</span>
+      <span id="holeCompactNote" style="display:none;font-size:14px;font-weight:500;color:#666;margin-top:2px;width:100%;"></span>
     </div>
 
     <!-- Full manual fields — hidden when course is active -->
@@ -2725,8 +2727,10 @@ function findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry
   }
 
   // Two-shot plan: find best second club
+  // Any non-driver club is a valid candidate — the approach distance filter handles validity.
+  // Wedges are explicitly included for short par-5s or long par-4s where the 2nd shot is a layup.
   const candidates = clubsList.filter(c =>
-    c.total < teeClub.total && c.key !== 'driver' && c.idx <= idx7
+    c.total < teeClub.total && c.key !== 'driver'
   );
 
   let best = null;
@@ -3050,6 +3054,12 @@ document.addEventListener('DOMContentLoaded', () => {
         `Hole ${holeIdx + 1} · Par ${par} · ${length}`;
       const _hcc = document.getElementById('holeCompactConditions');
       if (_hcc) _hcc.textContent = cond;
+      const noteEl = document.getElementById('holeCompactNote');
+      if (noteEl) {
+        const noteText = hole?.note?.trim() || '';
+        noteEl.textContent = noteText;
+        noteEl.style.display = noteText ? 'block' : 'none';
+      }
     } else {
       card.classList.remove('course-active');
     }
@@ -3763,6 +3773,7 @@ document.addEventListener('DOMContentLoaded', () => {
     teeMarked = false;
     window.completedShots = completedShots;
     window.teeMarked = teeMarked;
+    Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]);
     try { localStorage.removeItem(GPS_STORAGE_KEY); } catch(e) {}
   }
   window.clearGpsState = clearGpsState;
@@ -3895,10 +3906,9 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const session   = JSON.parse(sessionStorage.getItem('activeCourse') || '{}');
       const holeIdx   = session.holeIdx ?? 0;
-      const raw       = sessionStorage.getItem('committedStrategies');
-      const committed = raw ? JSON.parse(raw) : {};
+      const committed = getCommittedStrategies();
       delete committed[holeIdx];
-      sessionStorage.setItem('committedStrategies', JSON.stringify(committed));
+      setCommittedStrategies(null, committed);
     } catch(e) {}
 
     gpsTeeSetState('idle');
@@ -4178,11 +4188,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const sess = sessionStorage.getItem('activeCourse');
         if (sess) {
           const { holeIdx } = JSON.parse(sess);
-          const raw       = sessionStorage.getItem('committedStrategies');
-          const committed = raw ? JSON.parse(raw) : {};
+          const committed = getCommittedStrategies();
           const clubLabel = clubMap[s.key]?.label ?? s.key;
           committed[holeIdx] = `Par 3 · ${clubLabel}`;
-          sessionStorage.setItem('committedStrategies', JSON.stringify(committed));
+          setCommittedStrategies(null, committed);
         }
       } catch(e) {}
 
@@ -4222,13 +4231,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Extract course+hole SI for per-hole HCP adjustment
     let _holeStrokeIndex = null;
+    let _blCourseId = null, _blHoleIdx = null;
     try {
       const _siSess = sessionStorage.getItem('activeCourse');
       if (_siSess) {
         const { id: _siId, holeIdx: _siHi } = JSON.parse(_siSess);
         _holeStrokeIndex = loadCourses()[_siId]?.holes?.[_siHi]?.si || null;
+        _blCourseId = _siId; _blHoleIdx = _siHi;
       }
     } catch(e) {}
+
+    // Apply personal baseline blend to each plan score
+    if (_blCourseId !== null && _blHoleIdx !== null) {
+      ordered.forEach(plan => {
+        const bl = blendedScore(plan.score, _blCourseId, _blHoleIdx);
+        plan.score = bl.score;
+        plan.blended = bl.blended;
+        plan.blendRounds = bl.rounds;
+      });
+    }
 
     // Default: lowest expected total strokes
     let activePlanType = ordered.reduce(
@@ -4237,8 +4258,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ).type;
 
     try {
-      const raw = sessionStorage.getItem('committedStrategies');
-      const committed = raw ? JSON.parse(raw) : {};
+      const committed = getCommittedStrategies();
       const sess = sessionStorage.getItem('activeCourse');
       if (sess) {
         const { holeIdx } = JSON.parse(sess);
@@ -4403,19 +4423,26 @@ document.addEventListener('DOMContentLoaded', () => {
       badgeDiv.className = 'cc-badge';
       badgeDiv.textContent = isCustom ? 'Custom' : basePlan.type;
       // Personal baseline indicator
-      try {
-        const _bSess = sessionStorage.getItem('activeCourse');
-        if (_bSess) {
-          const { id: _bid, holeIdx: _bhi } = JSON.parse(_bSess);
-          const _bl = computeHoleBaseline(_bid, _bhi ?? 0);
-          if (_bl) {
-            const ind = document.createElement('div');
-            ind.style.cssText = 'font-size:10px;color:#888;font-weight:500;';
-            ind.textContent = 'Personal · ' + _bl.rounds + ' rounds';
-            badgeDiv.appendChild(ind);
+      if (activePlan.blended && activePlan.blendRounds) {
+        const ind = document.createElement('div');
+        ind.style.cssText = 'font-size:10px;color:#888;font-weight:500;';
+        ind.textContent = 'Personal · ' + activePlan.blendRounds + ' rounds';
+        badgeDiv.appendChild(ind);
+      } else {
+        try {
+          const _bSess = sessionStorage.getItem('activeCourse');
+          if (_bSess) {
+            const { id: _bid, holeIdx: _bhi } = JSON.parse(_bSess);
+            const _bl = computeHoleBaseline(_bid, _bhi ?? 0);
+            if (_bl) {
+              const ind = document.createElement('div');
+              ind.style.cssText = 'font-size:10px;color:#888;font-weight:500;';
+              ind.textContent = 'Personal · ' + _bl.rounds + ' rounds';
+              badgeDiv.appendChild(ind);
+            }
           }
-        }
-      } catch(e) {}
+        } catch(e) {}
+      }
       header.appendChild(badgeDiv);
 
       // Score row: big number + label + vs par
@@ -4673,7 +4700,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Real approach club chip row for 1-shot plans
         const appOverrideKey = approachOverrides[basePlan.type] || null;
         const recAppClub = approachClub(activePlan.approach);
-        const appCandidates = clubsList.filter(c => c.key !== 'driver').slice(0, 4);
+        const allAppCandidates = clubsList.filter(c => c.key !== 'driver');
+        const recAppIdx = recAppClub ? allAppCandidates.findIndex(c => c.key === recAppClub.key) : -1;
+        // Show rec club + 1 longer + 2 shorter (centred on rec so short approaches show wedges)
+        const appCandidates = recAppIdx >= 0
+          ? allAppCandidates.slice(Math.max(0, recAppIdx - 1), recAppIdx + 3)
+          : allAppCandidates.slice(0, 4);
         if (appCandidates.length > 0) {
           const appChipRow = document.createElement('div');
           appChipRow.className = 'tee-chip-row';
@@ -4695,8 +4727,8 @@ document.addEventListener('DOMContentLoaded', () => {
           });
           appChips.appendChild(recChip);
           // 2 more candidates around rec
-          const recIdx = appCandidates.findIndex(c => c.key === recAppClub?.key);
-          const candidates = recIdx >= 0 ? appCandidates.slice(Math.max(0, recIdx - 1), recIdx + 3).filter(c => c.key !== recAppClub?.key) : appCandidates.slice(0, 2);
+          // Alternate candidates — appCandidates already centred on rec, just exclude rec itself
+          const candidates = appCandidates.filter(c => c.key !== recAppClub?.key);
           candidates.forEach(c => {
             const chip = document.createElement('div');
             chip.className = 'tee-chip tee-chip-sm' + (appOverrideKey === c.key ? ' active' : '');
@@ -5173,13 +5205,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const _sess2 = sessionStorage.getItem('activeCourse');
       if (_sess2 && shownPlan) {
         const { holeIdx: _hi2 } = JSON.parse(_sess2);
-        const _raw2 = sessionStorage.getItem('committedStrategies');
-        const _committed2 = _raw2 ? JSON.parse(_raw2) : {};
+        const _committed2 = getCommittedStrategies();
         const _teeKey2 = teeOverrides[shownPlan.type] || (shownPlan.shots[0]?.key ?? null);
         _committed2[_hi2] = _teeKey2
           ? encodeStrategy(shownPlan.type, _teeKey2)
           : shownPlan.type;
-        sessionStorage.setItem('committedStrategies', JSON.stringify(_committed2));
+        setCommittedStrategies(null, _committed2);
       }
     } catch(e) {}
 
@@ -5230,8 +5261,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Only persist strategy when on the strategy card (idx 0), not compare card
       if (idx === 0) {
         try {
-          const raw = sessionStorage.getItem('committedStrategies');
-          const committed = raw ? JSON.parse(raw) : {};
+          const committed = getCommittedStrategies();
           const sess = sessionStorage.getItem('activeCourse');
           if (sess) {
             const { holeIdx } = JSON.parse(sess);
@@ -5243,7 +5273,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? encodeStrategy(_goType, _goTeeKey)
                 : _goType;
             }
-            sessionStorage.setItem('committedStrategies', JSON.stringify(committed));
+            setCommittedStrategies(null, committed);
           }
         } catch(e) {}
       }
@@ -5299,15 +5329,14 @@ document.addEventListener('DOMContentLoaded', () => {
       // Card heights are equalised by ghost row — no scroll needed on strategy switch
       // Persist committed strategy
       try {
-        const raw = sessionStorage.getItem('committedStrategies');
-        const committed = raw ? JSON.parse(raw) : {};
+        const committed = getCommittedStrategies();
         const sess = sessionStorage.getItem('activeCourse');
         if (sess) {
           const { holeIdx } = JSON.parse(sess);
           const _activePlan = ordered.find(p => p.type === planType);
           const _teeKey = teeOverrides[planType] || (_activePlan?.shots[0]?.key ?? null);
           committed[holeIdx] = _teeKey ? encodeStrategy(planType, _teeKey) : planType;
-          sessionStorage.setItem('committedStrategies', JSON.stringify(committed));
+          setCommittedStrategies(null, committed);
         }
       } catch(e) {}
     };
@@ -5444,10 +5473,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const _sess = sessionStorage.getItem('activeCourse');
         if (_sess) {
           const { holeIdx: _hi } = JSON.parse(_sess);
-          const _raw = sessionStorage.getItem('committedStrategies');
-          const _committed = _raw ? JSON.parse(_raw) : {};
+          const _committed = getCommittedStrategies();
           delete _committed[_hi];
-          sessionStorage.setItem('committedStrategies', JSON.stringify(_committed));
+          setCommittedStrategies(null, _committed);
         }
       } catch(e) {}
     }
@@ -5744,7 +5772,8 @@ function renderMgStatTiles() {
   });
   const bestVal = bestRound !== null ? (bestRound.r.totalStrokes ?? '—') : '—';
 
-  const avgStrokes = allRounds.length > 0 ? (totalStrokes / allRounds.length).toFixed(1) : '—';
+  const fullRounds = allRounds.filter(r => (r.holesPlayed ?? 0) >= 18);
+  const avgStrokes = fullRounds.length > 0 ? (fullRounds.reduce((a, r) => a + (r.totalStrokes ?? 0), 0) / fullRounds.length).toFixed(1) : '—';
 
   const tiles = [
     { lbl: 'Rounds', val: allRounds.length, tappable: true, id: 'mgRoundsTile' },
@@ -6291,6 +6320,27 @@ window.addEventListener('load', () => { if (typeof clubs !== 'undefined') window
 // Structure: { [courseId]: { name, holes: [{par, length, note}×18], source } }
 // source = 'manual' | 'api'  — tracked for display only
 const COURSES_KEY = 'golfCourses_v1';
+
+// ── Committed strategies — persisted to localStorage per course ───────────
+function _csKey(courseId) { return 'committedStrategies_' + courseId; }
+function _csGetCourseId() {
+  try { const ss = sessionStorage.getItem('activeCourse'); return ss ? JSON.parse(ss).id : null; } catch(e) { return null; }
+}
+function getCommittedStrategies(courseId) {
+  const id = courseId || _csGetCourseId();
+  if (!id) return {};
+  try { return JSON.parse(localStorage.getItem(_csKey(id))) || {}; } catch(e) { return {}; }
+}
+function setCommittedStrategies(courseId, obj) {
+  const id = courseId || _csGetCourseId();
+  if (!id) return;
+  try { localStorage.setItem(_csKey(id), JSON.stringify(obj)); } catch(e) {}
+}
+function removeCommittedStrategies(courseId) {
+  const id = courseId || _csGetCourseId();
+  if (!id) return;
+  try { localStorage.removeItem(_csKey(id)); } catch(e) {}
+}
 
 function loadCourses() {
   try { return JSON.parse(localStorage.getItem(COURSES_KEY)) || {}; } catch(e) { return {}; }
@@ -6852,6 +6902,37 @@ function loadRounds(courseId) {
   } catch(e) { return []; }
 }
 
+// ── Personal baseline helpers ─────────────────────────────────────────────
+// Returns { avgScore, avgDiff, rounds } for a course+hole, or null if <3 rounds.
+function computeHoleBaseline(courseId, holeIdx) {
+  const rounds = loadRounds(courseId);
+  const courses = loadCourses();
+  const par = courses[courseId]?.holes?.[holeIdx]?.par || 4;
+  const data = rounds.reduce((acc, r) => {
+    const s = r.scores?.[holeIdx];
+    if (!s) return acc;
+    const strokes = (s.fairway || 0) + (s.putts || 0);
+    if (!strokes) return acc;
+    acc.total += strokes;
+    acc.count++;
+    return acc;
+  }, { total: 0, count: 0 });
+  if (data.count < 3) return null;
+  const avgScore = data.total / data.count;
+  return { avgScore, avgDiff: avgScore - par, rounds: data.count, par };
+}
+
+// Blends model score with personal baseline.
+// Weight ramps from 0→1 as rounds go from 3→8+.
+function blendedScore(modelScore, courseId, holeIdx) {
+  const bl = computeHoleBaseline(courseId, holeIdx);
+  if (!bl) return { score: modelScore, blended: false };
+  const weight = Math.min(1, (bl.rounds - 3) / 5); // 0 at 3 rounds, 1 at 8+
+  const score = modelScore * (1 - weight) + bl.avgScore * weight;
+  return { score, blended: true, rounds: bl.rounds, weight };
+}
+
+
 function saveRound(courseId, roundData) {
   try {
     const all = JSON.parse(localStorage.getItem(ROUNDS_KEY)) || {};
@@ -7083,7 +7164,7 @@ function renderPlayCourseBar(courseId) {
         // Clear in-progress scores for this course
         try {
           localStorage.removeItem('roundScores_' + courseId);
-          sessionStorage.removeItem('committedStrategies');
+          removeCommittedStrategies(courseId);
           Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
           Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
           Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]);
@@ -7317,11 +7398,7 @@ function renderPlayCourseBar(courseId) {
       saveBtn.textContent = '💾 Save Round';
       saveBtn.addEventListener('click', () => {
         // Collect committed strategies per hole from sessionStorage
-        const committedStrategies = {};
-        try {
-          const raw = sessionStorage.getItem('committedStrategies');
-          if (raw) Object.assign(committedStrategies, JSON.parse(raw));
-        } catch(e) {}
+        const committedStrategies = getCommittedStrategies();
 
         const roundScores = loadScores(courseId);
         const roundData = {
@@ -7344,7 +7421,7 @@ function renderPlayCourseBar(courseId) {
         // Clear session scores after saving so next load starts fresh
         try {
           localStorage.removeItem('roundScores_' + courseId);
-          sessionStorage.removeItem('committedStrategies');
+          removeCommittedStrategies(courseId);
         } catch(e) {}
 
         // Refresh Courses tab so round appears there
@@ -7522,7 +7599,9 @@ function openEditor(id) {
   editor.style.display = 'block';
   editor.dataset.editingId = courseId;
 
-  document.getElementById('courseNameInput').value = course.name;
+  document.getElementById('courseNameInput').value    = course.name;
+  document.getElementById('courseRatingInput').value  = course.courseRating || '';
+  document.getElementById('slopeRatingInput').value   = course.slopeRating  || '';
   // Build scorecard rows
   const tbody = document.getElementById('scorecardBody');
   tbody.innerHTML = '';
@@ -7924,19 +8003,16 @@ window.showRoundCompleteOverlay = function showRoundCompleteOverlay(courseId) {
     </div>
     <div class="rc-btn-row">
       <button class="rc-btn-primary" id="rcSaveBtn" type="button">Save round</button>
-      <button class="rc-btn-secondary" id="rcKeepPlayingBtn" type="button">Keep playing</button>
+      <button class="rc-btn-secondary" id="rcBackBtn" type="button">Back to round</button>
     </div>
+    <button class="rc-btn-delete" id="rcDeleteBtn" type="button">Delete round</button>
     <div class="rc-footnote">Saving adds this round to My Golf stats</div>
   `;
 
   // Wire save button
   const saveBtn = el.querySelector('#rcSaveBtn');
   saveBtn.addEventListener('click', () => {
-    const committedStrategies = {};
-    try {
-      const raw = sessionStorage.getItem('committedStrategies');
-      if (raw) Object.assign(committedStrategies, JSON.parse(raw));
-    } catch(e) {}
+    const committedStrategies = getCommittedStrategies();
 
     const roundScores = loadScores(courseId);
     const roundData = {
@@ -7958,7 +8034,7 @@ window.showRoundCompleteOverlay = function showRoundCompleteOverlay(courseId) {
 
     try {
       localStorage.removeItem('roundScores_' + courseId);
-      sessionStorage.removeItem('committedStrategies');
+      removeCommittedStrategies(courseId);
     } catch(e) {}
 
     if (typeof renderSavedRounds === 'function') renderSavedRounds();
@@ -7967,13 +8043,39 @@ window.showRoundCompleteOverlay = function showRoundCompleteOverlay(courseId) {
     setTimeout(() => _dismissRoundComplete(courseId), 700);
   });
 
-  // Wire keep playing button
-  el.querySelector('#rcKeepPlayingBtn').addEventListener('click', () => {
+  // Wire back to round button
+  el.querySelector('#rcBackBtn').addEventListener('click', () => {
     el.style.display = 'none';
-    // Advance to hole 1 (index 0)
-    sessionStorage.setItem('activeCourse', JSON.stringify({ id: courseId, holeIdx: 0 }));
+    sessionStorage.setItem('activeCourse', JSON.stringify({ id: courseId, holeIdx: 17 }));
     const bar = document.getElementById('playCourseBar');
-    if (bar?._navigateTo) bar._navigateTo(0);
+    if (bar?._navigateTo) bar._navigateTo(17);
+  });
+
+  // Wire delete button — inline confirmation on first tap
+  const deleteBtn = el.querySelector('#rcDeleteBtn');
+  let deleteArmed = false;
+  deleteBtn.addEventListener('click', () => {
+    if (!deleteArmed) {
+      deleteArmed = true;
+      deleteBtn.textContent = 'Tap again to delete — this cannot be undone';
+      deleteBtn.style.background = '#c00';
+      deleteBtn.style.color = '#fff';
+      setTimeout(() => {
+        if (deleteArmed) {
+          deleteArmed = false;
+          deleteBtn.textContent = 'Delete round';
+          deleteBtn.style.background = '';
+          deleteBtn.style.color = '';
+        }
+      }, 3000);
+      return;
+    }
+    // Confirmed — discard and close
+    try {
+      localStorage.removeItem('roundScores_' + courseId);
+      removeCommittedStrategies(courseId);
+    } catch(e) {}
+    _dismissRoundComplete(courseId);
   });
 
   el.style.display = 'flex';
@@ -7989,7 +8091,7 @@ function _dismissRoundComplete(courseId) {
     Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
     Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]);
     Object.keys(teeOverrides).forEach(k => delete teeOverrides[k]);
-    sessionStorage.removeItem('committedStrategies');
+    removeCommittedStrategies(null);
   } catch(e) {}
   if (typeof window.clearGpsState === 'function') window.clearGpsState();
   try { localStorage.removeItem('golfTee_v1'); } catch(e) {}
