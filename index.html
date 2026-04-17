@@ -2780,6 +2780,12 @@ function windCategory(idx) {
 // and lock the tee selector in results. Set by GPS tracker, read by calculate().
 let teeMarked = false;
 
+// Per-hole HCP adjustment — set by calculate() using refined WHS model when
+// course has CR/Slope/SI and player has handicap index. Falls back to flat model.
+let _holeHcpAdj = null; // null = use flat model inside expectedStrokesRemaining
+// Rough lie flag — set true when GPS ball mark is in rough, adds penalty to expected strokes
+let _inRough = false;
+
 const teeOverrides = {};
 const shot2Overrides = {}; // user-selected second-shot club per strategy type
 const approachOverrides = {}; // user-selected approach club per strategy type (1-shot plans)
@@ -2809,19 +2815,21 @@ function expectedStrokesRemaining(approachDist, driverCarry, applyWindAdj) {
   const bi = EXPECTED_STROKES.bands.findIndex(b => approachDist <= b);
   const base = EXPECTED_STROKES.values[bi === -1 ? 5 : bi][ti === -1 ? 3 : ti];
 
-  // Handicap adjustment — scales expected strokes based on player ability.
-  // The EXPECTED_STROKES table is calibrated to a low-handicap baseline (~scratch).
-  // Each handicap index point adds ~0.056 strokes per approach shot (Broadie SG model):
-  // roughly half from approach quality, half from short game / putting.
-  // Cap: HCP 0–54 → +0.0 to +3.0 strokes additive. Applied before wind to keep model ordered.
+  // Handicap adjustment — refined WHS per-hole model when available,
+  // flat Broadie model as fallback.
   let hcpAdj = 0;
-  try {
-    const prof = JSON.parse(localStorage.getItem('golfProfile_v1') || '{}');
-    const hcp = parseFloat(prof.handicap);
-    if (!isNaN(hcp) && hcp > 0) {
-      hcpAdj = Math.min(hcp * 0.056, 3.0);
-    }
-  } catch(e) {}
+  if (_holeHcpAdj !== null) {
+    // Refined: playing handicap strokes allocated by SI — 0 or 1 on this hole
+    hcpAdj = _holeHcpAdj;
+  } else {
+    try {
+      const prof = JSON.parse(localStorage.getItem('golfProfile_v1') || '{}');
+      const hcp = parseFloat(prof.handicap);
+      if (!isNaN(hcp) && hcp > 0) {
+        hcpAdj = Math.min(hcp * 0.056, 3.0);
+      }
+    } catch(e) {}
+  }
 
   // Wind adjustment — only when wind is active and enabled
   const useWind = applyWindAdj !== false && !(typeof applyWindAdj === 'object' && applyWindAdj?.noWind);
@@ -2834,7 +2842,9 @@ function expectedStrokesRemaining(approachDist, driverCarry, applyWindAdj) {
     windAdj = Math.max(-0.15, Math.min(0.25, penalty));
   }
 
-  return base + hcpAdj + windAdj;
+  // Rough lie penalty — ~0.35 strokes based on Broadie amateur rough data
+  const roughAdj = _inRough ? 0.35 : 0;
+  return base + hcpAdj + windAdj + roughAdj;
 }
 
 
@@ -4232,14 +4242,41 @@ document.addEventListener('DOMContentLoaded', () => {
     // Extract course+hole SI for per-hole HCP adjustment
     let _holeStrokeIndex = null;
     let _blCourseId = null, _blHoleIdx = null;
+    _holeHcpAdj = null; // reset each calculate() call — default to flat model
     try {
       const _siSess = sessionStorage.getItem('activeCourse');
       if (_siSess) {
         const { id: _siId, holeIdx: _siHi } = JSON.parse(_siSess);
-        _holeStrokeIndex = loadCourses()[_siId]?.holes?.[_siHi]?.si || null;
+        const _siCourse = loadCourses()[_siId];
+        _holeStrokeIndex = _siCourse?.holes?.[_siHi]?.si || null;
         _blCourseId = _siId; _blHoleIdx = _siHi;
+
+        // ── Refined WHS per-hole HCP adjustment ──────────────────────────
+        // Requires: handicap index, course rating, slope rating, and all 18 SI values
+        const _prof = JSON.parse(localStorage.getItem('golfProfile_v1') || '{}');
+        const _hcpIdx = parseFloat(_prof.handicap);
+        const _cr  = parseFloat(_siCourse?.courseRating);
+        const _sl  = parseInt(_siCourse?.slopeRating);
+        const _par = (_siCourse?.holes || []).reduce((a, h) => a + (h.par || 4), 0);
+        const _allSI = (_siCourse?.holes || []).map(h => h.si || 0);
+        const _siOk = _allSI.length === 18 && _allSI.every(si => si >= 1 && si <= 18);
+
+        if (!isNaN(_hcpIdx) && _hcpIdx > 0 && _cr > 0 && _sl > 0 && _siOk) {
+          // WHS playing handicap: HCP Index × (Slope/113) + (CR − Par)
+          const _playingHcp = Math.round(_hcpIdx * (_sl / 113) + (_cr - _par));
+          // Distribute strokes to holes in SI order
+          // Full strokes: holes where SI <= _playingHcp get 1 stroke
+          // Extra strokes: if _playingHcp > 18, holes where SI <= (_playingHcp - 18) get 2 strokes
+          const _si = _allSI[_siHi];
+          const _fullRounds = Math.floor(_playingHcp / 18);
+          const _remainder  = _playingHcp % 18;
+          const _strokes = _fullRounds + (_si <= _remainder ? 1 : 0);
+          // Convert stroke allocation to expected strokes adjustment
+          // Each stroke = player is expected to take 1 more shot than scratch on this hole
+          _holeHcpAdj = _strokes;
+        }
       }
-    } catch(e) {}
+    } catch(e) { _holeHcpAdj = null; }
 
     // Apply personal baseline blend to each plan score
     if (_blCourseId !== null && _blHoleIdx !== null) {
@@ -6177,62 +6214,57 @@ function renderMgRecentRounds() {
     rounds.forEach(r => all.push({ ...r, courseName: courses[id].name }));
   });
   all.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-  const recent = all.slice(-8);
+  // Only full 18-hole rounds for the chart — partial rounds distort the stroke scale
+  const full = all.filter(r => (r.holesPlayed ?? 0) >= 18);
+  const recent = full.slice(-8);
   if (!recent.length) {
-    el.innerHTML = '<div style="padding:16px;color:#aaa;font-size:14px;">No rounds yet.</div>';
+    el.innerHTML = '<div style="padding:16px;color:#aaa;font-size:14px;">No full rounds yet.</div>';
     return;
   }
 
-  const diffs = recent.map(r => (r.totalStrokes ?? 0) - (r.totalPar ?? 0));
+  const strokes = recent.map(r => r.totalStrokes ?? 0);
+  const diffs   = recent.map(r => (r.totalStrokes ?? 0) - (r.totalPar ?? 0));
+  const minS = Math.min(...strokes);
+  const maxS = Math.max(...strokes);
+  const range = Math.max(maxS - minS, 4); // min range of 4 strokes for readability
+
   const W = 312, H = 130, padX = 14, padY = 22;
-  const midY = padY + (H - padY) / 2;
-  const maxAbs = Math.max(...diffs.map(Math.abs), 3);
-  const scale = (H - padY * 2) / 2 / maxAbs;
+  const scale = (H - padY * 2) / range;
   const n = recent.length;
   const xStep = n > 1 ? (W - padX * 2) / (n - 1) : 0;
   const xs = recent.map((_, i) => padX + i * xStep);
-  const ys = diffs.map(d => midY + d * scale);
+  // Y: higher strokes = higher on canvas (worse = up), flip so better = up
+  const ys = strokes.map(v => padY + (maxS - v) * scale);
 
-  // polyline points string
   const pts = xs.map((x, i) => x.toFixed(1) + ',' + ys[i].toFixed(1)).join(' ');
 
-  // clip paths
-  const clipDefs = `<defs>
-    <clipPath id="rr-abv"><rect x="0" y="0" width="${W}" height="${midY.toFixed(1)}"/></clipPath>
-    <clipPath id="rr-blw"><rect x="0" y="${midY.toFixed(1)}" width="${W}" height="${H - midY}"/></clipPath>
-  </defs>`;
+  // Avg reference line
+  const avgStrokes = strokes.reduce((a, b) => a + b, 0) / strokes.length;
+  const avgY = (padY + (maxS - avgStrokes) * scale).toFixed(1);
+  const avgLine = `<line x1="0" y1="${avgY}" x2="${W}" y2="${avgY}" stroke="#ece9e4" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="2" y="${(parseFloat(avgY) - 3).toFixed(1)}" font-size="9" fill="#ccc" font-family="system-ui" font-weight="600">avg</text>`;
 
-  // par zero line
-  const zeroLine = `<line x1="0" y1="${midY.toFixed(1)}" x2="${W}" y2="${midY.toFixed(1)}" stroke="#ece9e4" stroke-width="1"/>
-  <text x="2" y="${(midY - 4).toFixed(1)}" font-size="9" fill="#ccc" font-family="system-ui" font-weight="600">E</text>`;
-
-  // base + coloured segments
   const lineBase = `<polyline points="${pts}" fill="none" stroke="#e0ddd8" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`;
-  const lineRed  = `<polyline points="${pts}" fill="none" stroke="#c0392b" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" clip-path="url(#rr-abv)"/>`;
-  const lineBlue = `<polyline points="${pts}" fill="none" stroke="#3a6fc4" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" clip-path="url(#rr-blw)"/>`;
+  const lineColored = `<polyline points="${pts}" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
 
-  // dots + labels
   let dots = '', labels = '';
   recent.forEach((r, i) => {
-    const d = diffs[i];
     const x = xs[i].toFixed(1), y = ys[i].toFixed(1);
+    const d = diffs[i];
     const isLast = i === recent.length - 1;
-    const col = d < 0 ? '#c0392b' : d > 0 ? '#3a6fc4' : '#ccc';
-    const lbl = d === 0 ? 'E' : (d > 0 ? '+' + d : String(d));
-    // dot: filled for most recent, open otherwise
+    const col = d < 0 ? '#1e7a45' : d > 0 ? '#3a6fc4' : '#aaa';
+    const lbl = String(strokes[i]);
     if (isLast) {
       dots += `<circle cx="${x}" cy="${y}" r="4" fill="${col}" stroke="${col}" stroke-width="2"/>`;
     } else {
       dots += `<circle cx="${x}" cy="${y}" r="4" fill="#fff" stroke="${col}" stroke-width="2"/>`;
     }
-    // label: above dot for under-par, below for over-par
-    const ly = d <= 0
+    const ly = strokes[i] <= avgStrokes
       ? (parseFloat(y) - 10).toFixed(1)
       : (parseFloat(y) + 16).toFixed(1);
     labels += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="11" font-weight="700" fill="${col}" font-family="system-ui">${lbl}</text>`;
   });
 
-  // date labels row
   const dateLabels = recent.map((r, i) => {
     const d = r.date || '';
     const parts = d.split('-');
@@ -6241,23 +6273,21 @@ function renderMgRecentRounds() {
     return `<div style="flex:1;text-align:center;font-size:9px;color:#ccc;line-height:1.4;">${mo}<br>${day}</div>`;
   }).join('');
 
-  // summary strip
-  const allDiffs = diffs;
-  const best = Math.min(...allDiffs);
-  const avg = allDiffs.reduce((a, b) => a + b, 0) / allDiffs.length;
+  // Strip stats — vs par for Best and Avg
+  const best = Math.min(...diffs);
+  const avg = diffs.reduce((a, b) => a + b, 0) / diffs.length;
   const avgStr = avg === 0 ? 'E' : (avg > 0 ? '+' + avg.toFixed(1) : avg.toFixed(1));
   const bestStr = best === 0 ? 'E' : (best > 0 ? '+' + best : String(best));
-  // trend: compare last 3 avg vs first 3 avg
-  const trendDown = allDiffs.length >= 4
-    ? (allDiffs.slice(-3).reduce((a,b)=>a+b,0)/3) < (allDiffs.slice(0,3).reduce((a,b)=>a+b,0)/3)
+  const trendDown = diffs.length >= 4
+    ? (diffs.slice(-3).reduce((a,b)=>a+b,0)/3) < (diffs.slice(0,3).reduce((a,b)=>a+b,0)/3)
     : best < 0;
   const trendArrow = trendDown ? '↗' : '↘';
-  const trendCol = trendDown ? '#c0392b' : '#3a6fc4';
-  const bestCol = best < 0 ? '#c0392b' : best > 0 ? '#3a6fc4' : '#aaa';
-  const avgCol  = avg < 0  ? '#c0392b' : avg > 0  ? '#3a6fc4' : '#aaa';
+  const trendCol = trendDown ? '#1e7a45' : '#3a6fc4';
+  const bestCol = best < 0 ? '#1e7a45' : best > 0 ? '#3a6fc4' : '#aaa';
+  const avgCol  = avg  < 0 ? '#1e7a45' : avg  > 0 ? '#3a6fc4' : '#aaa';
 
   const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;overflow:visible;">
-    ${clipDefs}${zeroLine}${lineBase}${lineRed}${lineBlue}${dots}${labels}
+    ${avgLine}${lineBase}${lineColored}${dots}${labels}
   </svg>`;
 
   el.innerHTML =
@@ -6468,7 +6498,7 @@ function renderSavedRounds() {
   function scRowHtml(s, i, course, round) {
     if (!s) return '';
     const par   = course.holes[i]?.par || 4;
-    const total = s.fairway + s.putts;
+    const total = (s.fairway || 0) + (s.putts || 0);
     const d     = total - par;
     let spClass = 'sp-par';
     if (total === 1 && par >= 2) spClass = 'sp-hole-in-one';
@@ -6591,7 +6621,7 @@ function renderSavedRounds() {
           typeof window.decodeStrategy === 'function'
             ? window.decodeStrategy(strat)
             : { type: strat, club: null };
-        const diff = (s.fairway + s.putts) - par;
+        const diff = ((s.fairway || 0) + (s.putts || 0)) - par;
         if (!holeStats[i]) holeStats[i] = {};
         if (!holeStats[i][strat]) {
           holeStats[i][strat] = {
@@ -6756,7 +6786,7 @@ function renderSavedRounds() {
       (round.scores || []).forEach((s, i) => {
         if (!s) return;
         const par   = course.holes[i]?.par || 4;
-        const total = s.fairway + s.putts;
+        const total = (s.fairway || 0) + (s.putts || 0);
         if (i < 9)  { f9Par+=par; f9S+=total; f9FW+=s.fairway; f9P+=s.putts; if(s.gir)f9G++; f9n++; }
         else        { b9Par+=par; b9S+=total; b9FW+=s.fairway; b9P+=s.putts; if(s.gir)b9G++; b9n++; }
       });
@@ -7172,7 +7202,7 @@ function renderPlayCourseBar(courseId) {
     let totalStrokes = 0, totalPar = 0, holesPlayed = 0;
     scores.forEach((s, i) => {
       if (!s) return;
-      totalStrokes += s.fairway + s.putts;
+      totalStrokes += (s.fairway || 0) + (s.putts || 0);
       totalPar     += c.holes[i]?.par || 4;
       holesPlayed++;
     });
@@ -7325,8 +7355,8 @@ function renderPlayCourseBar(courseId) {
     scores = loadScores(courseId);
     const played = scores.map((s, i) => ({
       hole: i + 1, par: c.holes[i]?.par || 4,
-      total: s ? s.fairway + s.putts : null,
-      fairway: s?.fairway ?? null, putts: s?.putts ?? null, gir: s?.gir ?? null,
+      total: s ? (s.fairway || 0) + (s.putts || 0) : null,
+      fairway: s?.fairway ?? null, rough: s?.rough ?? null, putts: s?.putts ?? null, gir: s?.gir ?? null, fir: s?.fir ?? null,
     }));
 
     let totalStrokes = 0, totalPar = 0, totalFW = 0, totalPutts = 0, totalGIR = 0, holesPlayed = 0;
@@ -7363,7 +7393,7 @@ function renderPlayCourseBar(courseId) {
             <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
           </tr>`;
         const diff = h.total - h.par;
-        const girVal = h.gir !== null ? h.gir : (h.fairway === (h.par - 2));
+        const girVal = h.gir !== null ? h.gir : ((h.fairway + (h.rough || 0)) === (h.par - 2));
         const girMark = girVal ? '<span style="color:#1e7a45;font-weight:700;">✓</span>' : '<span style="color:#ccc;">✗</span>';
         return `
           <tr>
@@ -7722,10 +7752,19 @@ function renderScoreEntry(courseId, holeIdx, scores) {
 
   const existing_score = scores[holeIdx];
   let fairway = existing_score?.fairway ?? (gpsActive ? Math.max(1, gpsShots) : 0);
+  let rough   = existing_score?.rough   ?? 0;
   let putts   = existing_score?.putts   ?? 0;
-  // GIR = reached green in regulation (fairway shots === par - 2)
-  function autoGir() { return fairway === (par - 2); }
+  // GIR = reached green in regulation (fairway shots === par - 2, rough shots don't count)
+  function autoGir() { return (fairway + rough) === (par - 2); }
+  // FIR = fairway in regulation: true if first shot entered as fairway, false if rough first
+  function autoFir() {
+    if (par <= 3) return null; // not applicable on par 3
+    if (rough > 0 && fairway === 0) return false; // started with rough shots
+    if (fairway > 0) return true;  // has fairway shots, no rough first
+    return null; // not yet entered
+  }
   let gir = existing_score?.gir ?? autoGir();
+  let fir = existing_score?.fir ?? autoFir();
 
   // ── FAB ────────────────────────────────────────────────────────────────
   const fab = document.getElementById('scoreFab');
@@ -7813,7 +7852,7 @@ function renderScoreEntry(courseId, holeIdx, scores) {
 
   // ── Build drawer content ──────────────────────────────────────────────
   function saveAndRefresh() {
-    scores[holeIdx] = { fairway, putts, gir };
+    scores[holeIdx] = { fairway, rough, putts, gir, fir: autoFir() };
     saveScores(courseId, scores);
     const bar = document.getElementById('playCourseBar');
     if (bar?._refreshGrid) bar._refreshGrid();
@@ -7873,7 +7912,7 @@ function renderScoreEntry(courseId, holeIdx, scores) {
     const allScores = loadScores(courseId);
     let runTotal = 0, runPar = 0;
     allScores.forEach((s, i) => {
-      if (s && i !== holeIdx) { runTotal += s.fairway + s.putts; runPar += course.holes[i]?.par || 4; }
+      if (s && i !== holeIdx) { runTotal += (s.fairway || 0) + (s.putts || 0); runPar += course.holes[i]?.par || 4; }
     });
     runTotal += total; runPar += par;
     const runDiff = runTotal - runPar;
@@ -7894,6 +7933,7 @@ function renderScoreEntry(courseId, holeIdx, scores) {
     const existing = scores[holeIdx];
     if (!existing) {
       fairway = curGpsActive ? Math.max(1, curGpsShots) : 0;
+      rough = 0;
     }
 
     const title = document.createElement('div');
@@ -7901,14 +7941,59 @@ function renderScoreEntry(courseId, holeIdx, scores) {
     title.textContent = `Hole ${holeIdx + 1}  ·  Par ${par}`;
     inner.appendChild(title);
 
-    const fwLabel = curGpsActive
+    // ── Shots row: stepper + inline Rough chip ───────────────────────────
+    const shotsRow = document.createElement('div');
+    shotsRow.className = 'score-row';
+
+    const shotsLblWrap = document.createElement('div');
+    shotsLblWrap.style.cssText = 'flex:1; display:flex; flex-direction:column; gap:6px;';
+
+    const shotsLblTop = document.createElement('div');
+    shotsLblTop.className = 'score-row-label';
+    shotsLblTop.innerHTML = curGpsActive
       ? `🏌️ Fairway shots <span class="inprogress">${curGpsShots > 0 ? '· GPS tracked' : '· tee marked'}</span>`
       : '🏌️ Fairway shots';
-    const { row: fwRow } = makeStepperRow(fwLabel, () => fairway, v => {
-      fairway = v;
+
+    const roughChip = document.createElement('button');
+    roughChip.type = 'button';
+    function updateRoughChip() {
+      roughChip.textContent = rough > 0 ? 'Rough' : 'Rough?';
+      roughChip.style.cssText = rough > 0
+        ? 'background:#fef3e8;color:#854f0b;border:1.5px solid #854f0b;border-radius:6px;padding:5px 12px;font-size:13px;font-weight:700;cursor:pointer;width:fit-content;'
+        : 'background:#f5f4f0;color:#bbb;border:1.5px solid #e0ddd8;border-radius:6px;padding:5px 12px;font-size:13px;font-weight:500;cursor:pointer;width:fit-content;';
+    }
+    updateRoughChip();
+    roughChip.addEventListener('click', () => {
+      rough = rough > 0 ? 0 : 1;
       gir = autoGir();
-    }, 0);
-    inner.appendChild(fwRow);
+      fir = autoFir();
+      updateRoughChip();
+      saveAndRefresh();
+    });
+
+    shotsLblWrap.appendChild(shotsLblTop);
+    shotsLblWrap.appendChild(roughChip);
+    shotsRow.appendChild(shotsLblWrap);
+
+    const shotsStepper = document.createElement('div');
+    shotsStepper.className = 'score-stepper';
+    const shotsMinus = document.createElement('button');
+    shotsMinus.type = 'button'; shotsMinus.className = 'score-stepper-btn'; shotsMinus.textContent = '−';
+    const shotsVal = document.createElement('span');
+    shotsVal.className = 'score-stepper-val'; shotsVal.textContent = fairway;
+    const shotsPlus = document.createElement('button');
+    shotsPlus.type = 'button'; shotsPlus.className = 'score-stepper-btn'; shotsPlus.textContent = '+';
+    shotsMinus.addEventListener('click', () => {
+      if (fairway > 0) { fairway--; shotsVal.textContent = fairway; gir = autoGir(); fir = autoFir(); saveAndRefresh(); }
+    });
+    shotsPlus.addEventListener('click', () => {
+      fairway++; shotsVal.textContent = fairway; gir = autoGir(); fir = autoFir(); saveAndRefresh();
+    });
+    shotsStepper.appendChild(shotsMinus);
+    shotsStepper.appendChild(shotsVal);
+    shotsStepper.appendChild(shotsPlus);
+    shotsRow.appendChild(shotsStepper);
+    inner.appendChild(shotsRow);
 
     const { row: puttRow } = makeStepperRow('⛳ Putts', () => putts, v => { putts = v; }, 0);
     inner.appendChild(puttRow);
@@ -7932,7 +8017,7 @@ window.showRoundCompleteOverlay = function showRoundCompleteOverlay(courseId) {
   // Compute stats
   const played = scores.map((s, i) => ({
     hole: i + 1, par: c.holes[i]?.par || 4,
-    total: s ? s.fairway + s.putts : null,
+    total: s ? (s.fairway || 0) + (s.putts || 0) : null,
     fairway: s?.fairway ?? null, putts: s?.putts ?? null, gir: s?.gir ?? null,
   }));
 
