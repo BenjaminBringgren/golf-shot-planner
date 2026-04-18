@@ -5880,8 +5880,9 @@ function refreshMgHub() {
       const totalGIR = allRounds.reduce((a, r) => a + (r.totalGIR ?? 0), 0);
       const totalHoles = allRounds.reduce((a, r) => a + (r.holesPlayed ?? 0), 0);
       const girPct = totalHoles > 0 ? Math.round(totalGIR / totalHoles * 100) : 0;
-      const avgPutts = allRounds.length > 0
-        ? (allRounds.reduce((a, r) => a + (r.totalPutts ?? 0), 0) / allRounds.length).toFixed(1)
+      const _fullPuttRounds = allRounds.filter(r => (r.holesPlayed ?? 0) >= 18);
+      const avgPutts = _fullPuttRounds.length > 0
+        ? (_fullPuttRounds.reduce((a, r) => a + (r.totalPutts ?? 0), 0) / _fullPuttRounds.length).toFixed(1)
         : '—';
       statsSub.textContent = allRounds.length + ' rounds · GIR ' + girPct + '% · ' + avgPutts + ' putts/rnd';
     }
@@ -5910,13 +5911,10 @@ function renderMgStatTiles() {
   const avgVsParStr = avgVsPar !== '—' ? (avgVsPar > 0 ? '+' + avgVsPar : avgVsPar) : '—';
   const girPct = totalHoles > 0 ? Math.round(totalGIR / totalHoles * 100) : 0;
   const avgPutts = (() => {
-    const qualified = allRounds.filter(r => (r.holesPlayed ?? 0) >= 9);
-    if (!qualified.length) return '—';
-    const normalised = qualified.reduce((a, r) => {
-      const holes = r.holesPlayed ?? 18;
-      return a + (r.totalPutts ?? 0) * (18 / holes);
-    }, 0);
-    return (normalised / qualified.length).toFixed(1);
+    const full = allRounds.filter(r => (r.holesPlayed ?? 0) >= 18);
+    if (!full.length) return '—';
+    const total = full.reduce((a, r) => a + (r.totalPutts ?? (r.scores||[]).reduce((x,sc)=>x+(sc?.putts||0),0)), 0);
+    return (total / full.length).toFixed(1);
   })();
   // Best round: lowest totalStrokes — display as raw stroke count
   let bestRound = null;
@@ -6159,7 +6157,10 @@ function renderMgAvgStrokesBreakdown() {
   const girPct = totalHolesGIR > 0 ? Math.round(totalGIR / totalHolesGIR * 100) : 0;
   const girPerRound = allRounds.length > 0 ? (totalGIR / allRounds.length).toFixed(1) : '—';
   const avgPuttsGIR = totalGIR > 0 ? (totalPuttsOnGIR / totalGIR).toFixed(1) : '—';
-  const avgPuttsRound = allRounds.length > 0 ? (totalPutts / allRounds.length).toFixed(1) : '—';
+  const fullRoundsForPutts = allRounds.filter(r => (r.holesPlayed ?? 0) >= 18);
+  const avgPuttsRound = fullRoundsForPutts.length > 0
+    ? (fullRoundsForPutts.reduce((a, r) => a + (r.totalPutts ?? (r.scores||[]).reduce((x,sc)=>x+(sc?.putts||0),0)), 0) / fullRoundsForPutts.length).toFixed(1)
+    : '—';
 
   // Par type tiles
   const parTiles = [3, 4, 5].map(p => {
