@@ -3068,11 +3068,14 @@ function generateCombinations(arr, n) {
 
 // ── Par 3 ──────────────────────────────────────────────────────────────────
 function calcPar3(clubsList, hole) {
+  // Find the club that produces the lowest expected score on a par 3.
+  // Clubs that reach or overshoot the green: remaining = 0 (on green, putts only).
+  // Clubs that fall short: remaining = hole - total (chip/pitch distance).
+  // Pick the club with the smallest remaining distance — closest to pin.
   let best = null;
   clubsList.forEach(c => {
-    if (c.total >= hole) return;
-    const diff = hole - c.total;
-    if (!best || diff < best.diff) best = { club: c, diff };
+    const remaining = Math.max(0, hole - c.total);
+    if (!best || remaining < best.diff) best = { club: c, diff: remaining };
   });
   return best;
 }
