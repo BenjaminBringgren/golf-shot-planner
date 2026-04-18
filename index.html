@@ -964,23 +964,30 @@
     }
     .wind-strip-btn {
       font-size: 13px; color: #555; cursor: pointer;
-      background: #f0f0ee; border: none;
+      background: #f0f0ee; border: 1.5px solid transparent;
       border-radius: 7px; width: 42px; margin: 0;
       white-space: nowrap; flex-shrink: 0; font-weight: 600;
       display: flex; align-items: center; justify-content: center;
       padding: 0; height: 42px; min-height: 42px;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
     }
     .wind-strip-btn:hover { background: #e5e5e2; }
+    .wind-strip-btn:active { transform: scale(0.93); background: #d8d8d5; }
     .wind-strip-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
-    .wind-strip-btn.locked { background: #1a1a1a; }
+    .wind-strip-btn.locking { background: #e8f0fb !important; border-color: #185fa5 !important; color: #185fa5; }
+    .wind-strip-btn.locked { background: #1a1a1a; border-color: transparent; }
     @keyframes wli-spin { to { transform: rotate(360deg); } }
     .wind-strip-btn .wli-needle { fill: #555; stroke: #555; }
     .wind-strip-btn .wli-stem   { stroke: #555; }
     .wind-strip-btn .wli-n      { stroke: #555; }
+    .wind-strip-btn.locking .wli-needle { fill: #185fa5; stroke: #185fa5; }
+    .wind-strip-btn.locking .wli-stem   { stroke: #185fa5; }
+    .wind-strip-btn.locking .wli-n      { stroke: #185fa5; }
     .wind-strip-btn.locked .wli-needle { fill: #fff; stroke: #fff; }
     .wind-strip-btn.locked .wli-stem   { stroke: #fff; }
     .wind-strip-btn.locked .wli-n      { stroke: #fff; }
-    .wind-strip-btn.locking #windLockIcon { animation: wli-spin 1.5s linear infinite; }
+    .wind-strip-btn.locking #windLockIcon { animation: none; transition: transform 0.2s ease; }
+    .wind-strip-btn.locked  #windLockIcon { transition: transform 0.3s ease; }
 
     /* Wind toggle — label is purely the track, outer div handles alignment */
     .wind-toggle-wrap { cursor: pointer; }
@@ -1713,7 +1720,6 @@
       background: #fff; color: #888; font-size: 13px; font-weight: 400;
       border-right: 0.5px solid rgba(0,0,0,0.08);
     }
-    .sc-table tr:last-child td { border-bottom: none; }
     .sc-table .sc-section td {
       background: #f5f4f0; color: #555; font-weight: 700;
       padding: 5px 8px; font-size: 11px; letter-spacing: 0.4px;
@@ -3550,11 +3556,11 @@ document.addEventListener('DOMContentLoaded', () => {
       lockPhase = 'idle';
       const deg = Math.round(windState.holeDeg);
       const lbl = bearingLabel(deg);
-      document.getElementById('compassLockLabel').textContent = `Locked: ${deg}° (${lbl})`;
+      const _cll = document.getElementById('compassLockLabel'); if (_cll) _cll.textContent = `Locked: ${deg}° (${lbl})`;
       setLockIcon('locked', deg);
       computeWindComponents();
       updateWindEffectNote();
-      updateWindStripText();
+      updateWindStripText(); // restores normal wind text
       saveWindPrefs();
       const out = document.getElementById('output');
       if (out.querySelector('.carousel-outer, .error')) calculate();
@@ -3586,6 +3592,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (heading == null || isNaN(heading)) return;
       windState.holeDeg = heading;
       setCompassAngle(heading);
+      // Rotate strip icon live with phone heading instead of CSS spin
+      const icon = document.getElementById('windLockIcon');
+      if (icon) icon.style.transform = `rotate(${Math.round(heading)}deg)`;
     };
     const _absWrapper2 = (e) => { window._absOrientFired = true; orientationHandler(e); };
     window.addEventListener('deviceorientationabsolute', _absWrapper2);
@@ -5604,7 +5613,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!c) return;
       if (holeIdx === 17) {
         // Last hole — show round complete overlay instead of wrapping
-        window.showRoundCompleteOverlay(id);
+        window.showRoundCompleteOverlay(id, holeIdx);
         return;
       }
       const nextIdx = holeIdx + 1;
@@ -8017,7 +8026,8 @@ function renderScoreEntry(courseId, holeIdx, scores) {
 
 // ── Round complete overlay ─────────────────────────────────────────────────
 // ── Round complete overlay ───────────────────────────────────────────
-window.showRoundCompleteOverlay = function showRoundCompleteOverlay(courseId) {
+window.showRoundCompleteOverlay = function showRoundCompleteOverlay(courseId, fromHoleIdx) {
+  const backHoleIdx = (fromHoleIdx != null) ? fromHoleIdx : 17;
   const courses = loadCourses();
   const c = courses[courseId];
   if (!c) return;
@@ -8178,9 +8188,9 @@ window.showRoundCompleteOverlay = function showRoundCompleteOverlay(courseId) {
   // Wire back to round button
   el.querySelector('#rcBackBtn').addEventListener('click', () => {
     el.style.display = 'none';
-    sessionStorage.setItem('activeCourse', JSON.stringify({ id: courseId, holeIdx: 17 }));
+    sessionStorage.setItem('activeCourse', JSON.stringify({ id: courseId, holeIdx: backHoleIdx }));
     const bar = document.getElementById('playCourseBar');
-    if (bar?._navigateTo) bar._navigateTo(17);
+    if (bar?._navigateTo) bar._navigateTo(backHoleIdx);
   });
 
   // Wire delete button — inline confirmation on first tap
