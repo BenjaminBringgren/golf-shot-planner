@@ -2828,9 +2828,8 @@ const EXPECTED_STROKES = {
 // (approach shots). Effect: ~0.04 strokes per m/s of effective headwind.
 // Cap: −0.15 max benefit (tailwind can't make it too easy), +0.25 max penalty.
 function expectedStrokesRemaining(approachDist, driverCarry, applyWindAdj) {
-  // Adjust driverCarry tier for temperature — warmer = more carry = better tier
-  const tempAdjDriverCarry = driverCarry * tempCarryFactor();
-  const ti = EXPECTED_STROKES.tiers.findIndex(t => tempAdjDriverCarry < t);
+  // Tier lookup uses raw driver carry — reflects player ability, not per-shot conditions
+  const ti = EXPECTED_STROKES.tiers.findIndex(t => driverCarry < t);
   const bi = EXPECTED_STROKES.bands.findIndex(b => approachDist <= b);
   const base = EXPECTED_STROKES.values[bi === -1 ? 5 : bi][ti === -1 ? 3 : ti];
 
