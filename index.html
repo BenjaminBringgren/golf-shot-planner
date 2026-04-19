@@ -2738,7 +2738,7 @@ function findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry
 
   // Single-shot plan: tee club leaves an approach the longest club can actually reach
   if (singleApproach >= 0 && singleApproach <= maxApproach && singleApproach <= longestApproachTotal) {
-    const score = 1 + expectedStrokesRemaining(singleApproach, teeClub.carry);
+    const score = 1 + expectedStrokesRemaining(singleApproach, driverCarry);
     return { shots: [teeClub], approach: singleApproach, score };
   }
 
@@ -2753,7 +2753,7 @@ function findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry
   candidates.forEach(second => {
     const approach = hole - teeClub.total - second.total;
     if (approach < 0 || approach > maxApproach) return;
-    const score = 2 + expectedStrokesRemaining(approach, teeClub.carry);
+    const score = 2 + expectedStrokesRemaining(approach, driverCarry);
     if (!best || score < best.score) {
       best = { shots: [teeClub, second], approach, score };
     }
@@ -4806,6 +4806,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (cand.key === (shot2Key || activePlan.shots[1].key)) {
                       // Already active — do nothing to prevent accidental reset
                       return;
+                    } else if (cand.key === recS2Key) {
+                      // Tapping back to recommended — remove override so blended score is used
+                      delete shot2Overrides[_hk(basePlan.type)];
                     } else {
                       shot2Overrides[_hk(basePlan.type)] = cand.key;
                     }
@@ -5237,8 +5240,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!ordered.length) { wrap.style.display = 'none'; return; }
       const currentType = getCurrentCarouselType();
       const plans = ordered.map(p => {
-        const ov = teeOverrides[p.type];
-        return ov ? (solveForced(ov) || p) : p;
+        const ov = teeOverrides[_hk(p.type)];
+        const resolved = ov ? (solveForced(ov) || p) : p;
+        const s2Key = shot2Overrides[_hk(p.type)];
+        if (s2Key && resolved.shots?.length >= 2) {
+          const override = buildPlanWithShot2Override(p, resolved, s2Key);
+          return override ? { ...override, type: p.type } : resolved;
+        }
+        return resolved;
       });
       const scores = plans.map(p => p.score);
       const minScore = Math.min(...scores);
@@ -5284,13 +5293,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const types = ordered.map(p => p.type);
       const currentType = getCurrentCarouselType();
 
-      // Resolve the active plan per type (apply tee override if set)
+      // Resolve the active plan per type (apply tee and shot2 overrides if set)
       function getActivePlan(t) {
         const base = ordered.find(p => p.type === t);
         if (!base) return null;
         const ov = teeOverrides[_hk(t)];
-        if (!ov) return base;
-        return solveForced(ov) || base;
+        const resolved = ov ? (solveForced(ov) || base) : base;
+        const s2Key = shot2Overrides[_hk(t)];
+        if (s2Key && resolved.shots?.length >= 2) {
+          const override = buildPlanWithShot2Override(base, resolved, s2Key);
+          return override ? { ...override, type: t } : resolved;
+        }
+        return resolved;
       }
 
       let thead = `<thead><tr><th></th>`;
@@ -5368,6 +5382,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateCompareTable() {
       const wrap = document.getElementById('compareTableWrap');
       if (wrap) buildCompareTable(wrap);
+      const delta = document.getElementById('compareDeltaSection');
+      if (delta) buildDeltaSection(delta);
     }
 
     // ── Carousel state ────────────────────────────────────────────────────
