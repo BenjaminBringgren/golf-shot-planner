@@ -2807,7 +2807,21 @@ const teeOverrides = {};
 const shot2Overrides = {}; // user-selected second-shot club per strategy type
 const approachOverrides = {}; // user-selected approach club per strategy type (1-shot plans)
 const gpsShot2Overrides = {}; // user-selected next club after GPS ball mark
-let par3ClubOverride = null; // persists across calculate() calls
+const par3ClubOverrides = {}; // keyed by holeIdx
+function par3Override() { return par3ClubOverrides[_overrideCourseId + "|" + _overrideHoleIdx] ?? null; }
+
+// Course+hole namespace for overrides — set by calculate() each call
+let _overrideHoleIdx = 0;
+let _overrideCourseId = '';
+// Initialise from session immediately so first calculate() call has correct namespace
+(function() {
+  try {
+    const _s = sessionStorage.getItem('activeCourse');
+    if (_s) { const _o = JSON.parse(_s); _overrideHoleIdx = _o.holeIdx ?? 0; _overrideCourseId = _o.id ?? ''; }
+  } catch(e) {}
+})();
+// Namespace key: course|hole|strategyType — prevents cross-course/cross-hole bleed
+function _hk(type) { return _overrideCourseId + '|' + _overrideHoleIdx + '|' + type; }
 
 // ── Expected strokes remaining lookup ─────────────────────────────────────
 const EXPECTED_STROKES = {
@@ -3068,16 +3082,28 @@ function generateCombinations(arr, n) {
 
 // ── Par 3 ──────────────────────────────────────────────────────────────────
 function calcPar3(clubsList, hole) {
-  // Find the club that produces the lowest expected score on a par 3.
-  // Clubs that reach or overshoot the green: remaining = 0 (on green, putts only).
-  // Clubs that fall short: remaining = hole - total (chip/pitch distance).
-  // Pick the club with the smallest remaining distance — closest to pin.
-  let best = null;
+  // Find the club that gets closest to the hole.
+  // Clubs that fall short: remaining = hole - total (positive, smaller is better).
+  // Clubs that overshoot: penalise heavily — only used if nothing reaches.
+  // Among clubs that reach (overshoot or exact), prefer the shortest one (least overshoot).
+  let bestShort = null;   // best club that falls short
+  let bestOver  = null;   // best club that reaches/overshoots (shortest total)
+
   clubsList.forEach(c => {
-    const remaining = Math.max(0, hole - c.total);
-    if (!best || remaining < best.diff) best = { club: c, diff: remaining };
+    const remaining = hole - c.total;
+    if (remaining >= 0) {
+      // Falls short — smaller remaining is better
+      if (!bestShort || remaining < bestShort.diff) bestShort = { club: c, diff: remaining };
+    } else {
+      // Overshoots — smaller overshoot (less negative) is better
+      if (!bestOver || remaining > bestOver.diff) bestOver = { club: c, diff: remaining };
+    }
   });
-  return best;
+
+  // Prefer the club that falls shortest — if it lands close enough
+  // If nothing falls short, use the club that overshoots least
+  if (bestShort) return bestShort;
+  return bestOver;
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────
@@ -4038,6 +4064,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const hole     = Number(document.getElementById('holeLength').value);
     const parValue = Number(document.getElementById('parSelect').value);
     const driver   = Number(document.getElementById('driverCarry').value);
+    // Sync override namespace to current course + hole
+    try {
+      const _sess = sessionStorage.getItem('activeCourse');
+      const _sessObj = _sess ? JSON.parse(_sess) : {};
+      _overrideHoleIdx  = _sessObj.holeIdx  ?? 0;
+      _overrideCourseId = _sessObj.id        ?? '';
+    } catch(e) { _overrideHoleIdx = 0; _overrideCourseId = ''; }
     const i7       = Number(document.getElementById('i7Carry').value) || 0;
     const pw       = Number(document.getElementById('pwCarry').value) || 0;
 
@@ -4060,8 +4093,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       const par3DefaultClub = result.club;
-      const par3ActiveClub  = par3ClubOverride
-        ? (clubsList.find(c => c.key === par3ClubOverride) || par3DefaultClub)
+      const par3ActiveClub  = par3Override()
+        ? (clubsList.find(c => c.key === par3Override()) || par3DefaultClub)
         : par3DefaultClub;
       const s = par3ActiveClub;
 
@@ -4142,23 +4175,23 @@ document.addEventListener('DOMContentLoaded', () => {
           chipsWrap.className = 'tee-chips';
 
           const recChip = document.createElement('div');
-          recChip.className = 'tee-chip tee-chip-sm' + (!par3ClubOverride ? ' active' : '');
+          recChip.className = 'tee-chip tee-chip-sm' + (!par3Override() ? ' active' : '');
           recChip.textContent = clubMap[par3DefaultClub.key]?.label ?? par3DefaultClub.key;
           recChip.addEventListener('click', () => {
-            par3ClubOverride = null;
+            par3ClubOverrides[_overrideCourseId + "|" + _overrideHoleIdx] = null;
             if (typeof window.calculate === 'function') window.calculate();
           });
           chipsWrap.appendChild(recChip);
 
           // Bag chip
           const bagChip = document.createElement('div');
-          bagChip.className = 'tee-chip tee-chip-sm bag-chip' + (par3ClubOverride ? ' active' : '');
+          bagChip.className = 'tee-chip tee-chip-sm bag-chip' + (par3Override() ? ' active' : '');
           const bagInner = document.createElement('div');
           bagInner.className = 'tee-chip-bag';
           const bagSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
           bagSvg.setAttribute('width','18'); bagSvg.setAttribute('height','27');
           bagSvg.setAttribute('viewBox','0 0 349 518'); bagSvg.setAttribute('fill','none');
-          bagSvg.style.color = par3ClubOverride ? '#1a1a1a' : '#888';
+          bagSvg.style.color = par3Override() ? '#1a1a1a' : '#888';
           bagSvg.innerHTML = `<path d="M319.865 425.637C314.058 433.485 298.865 430.637 298.865 430.637V189.637C298.865 189.637 316.842 186.765 321.865 195.137C324.879 200.16 323.865 210.137 323.865 210.137V412.137C323.865 412.137 324.163 419.829 319.865 425.637Z" fill="currentColor"/><path d="M84.8653 448.637H267.365V189.637L48.8653 287.137V347.637V438.137C48.8653 448.637 84.8653 448.637 84.8653 448.637Z" fill="currentColor"/><path d="M267.365 150.137L198.365 183.637H84.8653V129.637H133.283L129.865 85.6371C129.865 85.6371 64.7881 120.204 28.3653 103.137C20.4185 99.4134 14.8441 97.9927 9.36529 91.1371C3.58296 83.9017 3.45838 77.7611 1.86529 68.6371C0.018102 58.0577 0.0719012 51.7257 1.86529 41.1371C3.44295 31.8222 3.3754 25.4431 9.36529 18.1371C17.3653 8.37935 27.8653 6.63706 35.3653 3.13704C42.8653 -0.362974 80.5689 -1.43121 112.365 6.63708C120.924 8.80888 126.141 9.35914 133.865 13.6371C141.149 17.6706 149.865 23.137 150.365 27.1371C152.425 43.6149 159.915 107.608 162.489 129.637H177.34L243.865 18.1371C243.865 18.1371 252.242 9.10153 259.365 6.63708C267.116 3.95559 272.444 4.5145 280.365 6.63708C287.365 8.51272 338.865 37.137 344.865 49.6371C350.196 60.7433 348.018 69.2824 344.996 81.1235L344.865 81.6371C341.05 96.5988 336.931 106.91 323.865 115.137C315.286 120.539 308.964 123.035 298.865 122.137C291.171 121.453 287.193 118.75 280.365 115.137C261.546 105.179 243.865 74.6371 243.865 74.6371L213.945 129.637H259.365C262.49 129.637 267.365 129.013 267.365 132.137V150.137Z" fill="currentColor"/><path d="M267.365 507.762V489.012C267.365 489.012 268.437 483.743 265.865 481.137C263.259 478.496 257.865 479.637 257.865 479.637H93.3653C93.3653 479.637 89.3245 479.407 86.8653 481.637C84.153 484.096 84.8653 489.012 84.8653 489.012V507.762C84.8653 507.762 84.153 513.178 86.8653 515.637C89.3245 517.867 93.3653 517.137 93.3653 517.137H257.865C257.865 517.137 263.259 518.278 265.865 515.637C268.437 513.031 267.365 507.762 267.365 507.762Z" fill="currentColor"/>`;
           const bagLbl = document.createElement('span');
           bagLbl.className = 'tee-chip-bag-label'; bagLbl.textContent = 'Bag';
@@ -4167,9 +4200,9 @@ document.addEventListener('DOMContentLoaded', () => {
           bagChip.addEventListener('click', () => {
             if (typeof window._openClubPicker === 'function') {
               window._openClubPicker(
-                par3ClubOverride || par3DefaultClub.key,
+                par3Override() || par3DefaultClub.key,
                 (selectedKey) => {
-                  par3ClubOverride = selectedKey !== par3DefaultClub.key ? selectedKey : null;
+                  par3ClubOverrides[_overrideCourseId + "|" + _overrideHoleIdx] = selectedKey !== par3DefaultClub.key ? selectedKey : null;
                   if (typeof window.calculate === 'function') window.calculate();
                 },
                 { type: 'window', defaultKey: par3DefaultClub.key, clubsList, n: 2 }
@@ -4244,11 +4277,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const rollStr = s.roll > 1.00
           ? `${s.carry.toFixed(0)}m carry + ${(s.total - s.carry).toFixed(0)}m roll`
           : `${s.total.toFixed(0)}m carry`;
+        const signedRemaining = hole - s.total;
+        const distDisplay = signedRemaining < 0
+          ? `${Math.round(signedRemaining)}`
+          : `${Math.round(remaining)}`;
+        const distColor = signedRemaining < 0 ? 'color:#854f0b;' : '';
+        const distNote = signedRemaining < 0
+          ? 'Overshoots — spin back or use less club'
+          : 'Aim for the pin';
         appDiv.innerHTML =
-          `<div class="cc-app-label">${completedShots.length > 0 ? 'Approach · adjusted' : 'Remaining to pin'}</div>` +
-          `<div class="cc-app-dist">${remaining.toFixed(0)}<span class="cc-app-dist-unit">m</span></div>` +
+          `<div class="cc-app-label">${completedShots.length > 0 ? 'Approach · adjusted' : 'Distance to pin'}</div>` +
+          `<div class="cc-app-dist" style="${distColor}">${distDisplay}<span class="cc-app-dist-unit">m</span></div>` +
           `<div class="cc-app-club">${lbl} — ${rollStr}</div>` +
-          `<div class="cc-app-note">Aim for the pin</div>`;
+          `<div class="cc-app-note">${distNote}</div>`;
         body.appendChild(appDiv);
 
         // ── Crosswind ────────────────────────────────────────────────────
@@ -4294,29 +4335,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clearOverrides) { Object.keys(teeOverrides).forEach(k => delete teeOverrides[k]); Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
           Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
           Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]); Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
-          Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]); par3ClubOverride = null; }
+          Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]); par3ClubOverrides[_overrideCourseId + "|" + _overrideHoleIdx] = null; }
 
     // ── Par 4 / 5 — tee-club-rank algorithm ──────────────────────────────
     const validTeeClubs = getValidTeeClubs(clubsList, parValue);
 
     if (validTeeClubs.length === 0) {
       output.innerHTML = '<span class="error">No valid clubs for this par. Check bag setup.</span>';
-      return;
-    }
-
-    const STRATEGY_TYPES = ['Max distance', 'Controlled', 'Conservative'];
-    const ordered = [];
-
-    validTeeClubs.slice(0, 3).forEach((teeClub, rank) => {
-      const driverCarry = driverClub ? driverClub.carry : driver;
-      const plan = findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry);
-      if (!plan) return;
-      plan.type = STRATEGY_TYPES[rank];
-      ordered.push(plan);
-    });
-
-    if (ordered.length === 0) {
-      output.innerHTML = '<span class="error">No valid plans found. Check inputs or selected clubs.</span>';
       return;
     }
 
@@ -4358,6 +4383,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     } catch(e) { _holeHcpAdj = null; }
+
+        const STRATEGY_TYPES = ['Max distance', 'Controlled', 'Conservative'];
+    const ordered = [];
+
+    validTeeClubs.slice(0, 3).forEach((teeClub, rank) => {
+      const driverCarry = driverClub ? driverClub.carry : driver;
+      const plan = findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry);
+      if (!plan) return;
+      plan.type = STRATEGY_TYPES[rank];
+      ordered.push(plan);
+    });
+
+    if (ordered.length === 0) {
+      output.innerHTML = '<span class="error">No valid plans found. Check inputs or selected clubs.</span>';
+      return;
+    }
+
+
 
     // Apply personal baseline blend to each plan score
     if (_blCourseId !== null && _blHoleIdx !== null) {
@@ -4490,13 +4533,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const approach = hole - teeShot.total - forced2.total;
       if (approach < 0) return null; // overshoots green
       const driverCarry2 = driverClub ? driverClub.carry : driver;
-      const score = 2 + expectedStrokesRemaining(approach, driverCarry2, _holeStrokeIndex ? { holeStrokeIndex: _holeStrokeIndex } : undefined);
-      return { shots: [teeShot, forced2], approach, score };
+      const rawScore = 2 + expectedStrokesRemaining(approach, driverCarry2);
+      // Apply personal baseline blend for consistency with main plan scores
+      const bl = (_blCourseId && _blHoleIdx !== null)
+        ? blendedScore(rawScore, _blCourseId, _blHoleIdx)
+        : { score: rawScore, blended: false };
+      return { shots: [teeShot, forced2], approach, score: bl.score, blended: bl.blended };
     }
 
     function buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen) {
-      const override    = teeOverrides[basePlan.type];
-      const shot2Key    = shot2Overrides[basePlan.type];
+      const override    = teeOverrides[_hk(basePlan.type)];
+      const shot2Key    = shot2Overrides[_hk(basePlan.type)];
       const basePlanResolved = override ? (solveForced(override) || basePlan) : basePlan;
       const activePlan  = (shot2Key && basePlanResolved.shots?.length >= 2)
         ? (buildPlanWithShot2Override(basePlan, basePlanResolved, shot2Key) || basePlanResolved)
@@ -4608,7 +4655,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // When GPS ball is marked: build fresh plan from actual remaining distance
       let gpsContinuation = null;
       if (gpsActive && gpsRemaining != null) {
-        const gpsOverrideKey = gpsShot2Overrides[basePlan.type] || null;
+        const gpsOverrideKey = gpsShot2Overrides[_hk(basePlan.type)] || null;
         if (gpsOverrideKey) {
           const forcedClub = clubsList.find(c => c.key === gpsOverrideKey);
           if (forcedClub) {
@@ -4682,7 +4729,7 @@ document.addEventListener('DOMContentLoaded', () => {
           if (isCustom) {
             row.querySelector('.cc-custom-clear').addEventListener('click', (e) => {
               e.stopPropagation();
-              teeOverrides[basePlan.type] = null;
+              teeOverrides[_hk(basePlan.type)] = null;
               const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
               newCard.id = 'activeStrategyCard';
               newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight();
@@ -4757,10 +4804,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                   chip.addEventListener('click', () => {
                     if (cand.key === (shot2Key || activePlan.shots[1].key)) {
-                      // Tapping the active chip resets to recommended
-                      shot2Overrides[basePlan.type] = null;
+                      // Already active — do nothing to prevent accidental reset
+                      return;
                     } else {
-                      shot2Overrides[basePlan.type] = cand.key;
+                      shot2Overrides[_hk(basePlan.type)] = cand.key;
                     }
                     const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
                     newCard.id = card.id || 'activeStrategyCard';
@@ -4786,12 +4833,18 @@ document.addEventListener('DOMContentLoaded', () => {
               s2BagInner.appendChild(s2BagSvg); s2BagInner.appendChild(s2BagLbl);
               s2BagChip.appendChild(s2BagInner);
               s2BagChip.addEventListener('click', () => {
-                const curS2Key = shot2Overrides[basePlan.type] || activePlan.shots[1]?.key;
+                const curS2Key = shot2Overrides[_hk(basePlan.type)] || activePlan.shots[1]?.key;
                 if (typeof window._openClubPicker === 'function') {
                   window._openClubPicker(curS2Key, (selectedKey) => {
                     const forced = clubsList.find(c => c.key === selectedKey);
                     const testApp = forced ? hole - activePlan.shots[0].total - forced.total : -1;
-                    if (testApp >= 0) shot2Overrides[basePlan.type] = selectedKey === activePlan.shots[1]?.key ? null : selectedKey;
+                    if (testApp >= 0) {
+                      if (selectedKey === activePlan.shots[1]?.key) {
+                        delete shot2Overrides[_hk(basePlan.type)];
+                      } else {
+                        shot2Overrides[_hk(basePlan.type)] = selectedKey;
+                      }
+                    }
                     const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
                     newCard.id = card.id || 'activeStrategyCard';
                     newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
@@ -4824,7 +4877,7 @@ document.addEventListener('DOMContentLoaded', () => {
           '<div class="cc-shot-right"><div class="cc-shot-dist">—<span class="cc-shot-unit">m</span></div></div>';
         body.appendChild(ghostRow);
         // Real approach club chip row for 1-shot plans
-        const appOverrideKey = approachOverrides[basePlan.type] || null;
+        const appOverrideKey = approachOverrides[_hk(basePlan.type)] || null;
         const recAppClub = approachClub(activePlan.approach);
         // Only show clubs that can actually reach within the runup cap
         // Include clubs reachable within MAX_RUNUP, plus partial-swing zone (carry > approach)
@@ -4851,7 +4904,7 @@ document.addEventListener('DOMContentLoaded', () => {
           recChip.className = 'tee-chip tee-chip-sm' + (!appOverrideKey ? ' active' : '');
           recChip.textContent = clubMap[recAppClub?.key]?.label ?? '—';
           recChip.addEventListener('click', () => {
-            delete approachOverrides[basePlan.type];
+            delete approachOverrides[_hk(basePlan.type)];
             const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
             newCard.id = card.id || 'activeStrategyCard';
             newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
@@ -4865,7 +4918,7 @@ document.addEventListener('DOMContentLoaded', () => {
             chip.className = 'tee-chip tee-chip-sm' + (appOverrideKey === c.key ? ' active' : '');
             chip.textContent = clubMap[c.key]?.label ?? c.key;
             chip.addEventListener('click', () => {
-              approachOverrides[basePlan.type] = c.key;
+              approachOverrides[_hk(basePlan.type)] = c.key;
               const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
               newCard.id = card.id || 'activeStrategyCard';
               newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
@@ -4889,7 +4942,7 @@ document.addEventListener('DOMContentLoaded', () => {
           appBagChip.addEventListener('click', () => {
             if (typeof window._openClubPicker === 'function') {
               window._openClubPicker(appOverrideKey || recAppClub?.key, (selectedKey) => {
-                approachOverrides[basePlan.type] = selectedKey === recAppClub?.key ? null : selectedKey;
+                approachOverrides[_hk(basePlan.type)] = selectedKey === recAppClub?.key ? null : selectedKey;
                 const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
                 newCard.id = card.id || 'activeStrategyCard';
                 newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
@@ -4941,7 +4994,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           // Club chip row for first GPS continuation shot
           if (i === 0) {
-            const gpsOverrideKey = gpsShot2Overrides[basePlan.type] || null;
+            const gpsOverrideKey = gpsShot2Overrides[_hk(basePlan.type)] || null;
             const allCands = clubsList.filter(c => c.key !== 'driver' && (gpsRemaining - c.total) >= 0);
             const recIdx = allCands.findIndex(c => c.key === s.key);
             const chipCands = recIdx >= 0 ? allCands.slice(recIdx, recIdx + 3) : allCands.slice(0, 3);
@@ -4960,7 +5013,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 chip.className = 'tee-chip tee-chip-sm' + (isActive ? ' active' : '');
                 chip.textContent = clubMap[c.key]?.label ?? c.key;
                 chip.addEventListener('click', () => {
-                  gpsShot2Overrides[basePlan.type] = c.key === s.key ? null : c.key;
+                  gpsShot2Overrides[_hk(basePlan.type)] = c.key === s.key ? null : c.key;
                   const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
                   newCard.id = card.id || 'activeStrategyCard';
                   newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
@@ -4978,8 +5031,8 @@ document.addEventListener('DOMContentLoaded', () => {
               bagInner.appendChild(bagSvg); bagInner.appendChild(bagLbl); bagChip.appendChild(bagInner);
               bagChip.addEventListener('click', () => {
                 if (typeof window._openClubPicker === 'function') {
-                  window._openClubPicker(gpsShot2Overrides[basePlan.type] || s.key, (selectedKey) => {
-                    gpsShot2Overrides[basePlan.type] = selectedKey === s.key ? null : selectedKey;
+                  window._openClubPicker(gpsShot2Overrides[_hk(basePlan.type)] || s.key, (selectedKey) => {
+                    gpsShot2Overrides[_hk(basePlan.type)] = selectedKey === s.key ? null : selectedKey;
                     const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
                     newCard.id = card.id || 'activeStrategyCard';
                     newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
@@ -5028,7 +5081,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Approach rec + crosswind (suppress when GPS active — continuation has its own)
       if (!gpsActive) {
-      const _appOverKey = activePlan.shots.length === 1 ? (approachOverrides[basePlan.type] || null) : null;
+      const _appOverKey = activePlan.shots.length === 1 ? (approachOverrides[_hk(basePlan.type)] || null) : null;
       const _appDistForRec = _appOverKey
         ? (() => { const oc = clubsList.find(c => c.key === _appOverKey); return oc ? activePlan.approach : activePlan.approach; })()
         : activePlan.approach;
@@ -5080,10 +5133,10 @@ document.addEventListener('DOMContentLoaded', () => {
       stratFooter.className = 'cc-strat-footer';
       if (!teeMarked) {
         ordered.forEach(plan => {
-          const res = teeOverrides[plan.type] ? (solveForced(teeOverrides[plan.type]) || plan) : plan;
-          const withS2 = (shot2Overrides[plan.type] && res.shots?.length >= 2)
-            ? (buildPlanWithShot2Override(plan, res, shot2Overrides[plan.type]) || res) : res;
-          const teeKey = teeOverrides[plan.type] || plan.shots[0].key;
+          const res = teeOverrides[_hk(plan.type)] ? (solveForced(teeOverrides[_hk(plan.type)]) || plan) : plan;
+          const withS2 = (shot2Overrides[_hk(plan.type)] && res.shots?.length >= 2)
+            ? (buildPlanWithShot2Override(plan, res, shot2Overrides[_hk(plan.type)]) || res) : res;
+          const teeKey = teeOverrides[_hk(plan.type)] || plan.shots[0].key;
           const teeLabel = clubMap[teeKey]?.label ?? teeKey;
           const diff = withS2.score - parValue;
           const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff.toFixed(1) : diff.toFixed(1));
@@ -5093,7 +5146,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const scoreEl = document.createElement('div'); scoreEl.className = 'cc-strat-btn-score'; scoreEl.textContent = withS2.score.toFixed(1) + ' · ' + diffStr;
           btn.appendChild(clubEl); btn.appendChild(scoreEl);
           btn.addEventListener('click', () => {
-            if (teeOverrides[plan.type]) teeOverrides[plan.type] = null;
+            if (teeOverrides[_hk(plan.type)]) teeOverrides[_hk(plan.type)] = null;
             if (typeof window._switchStrategyCard === 'function') window._switchStrategyCard(plan.type);
           });
           stratFooter.appendChild(btn);
@@ -5113,10 +5166,10 @@ document.addEventListener('DOMContentLoaded', () => {
         bagBtnInner.appendChild(bagBtnSvg); bagBtnInner.appendChild(bagBtnLbl);
         bagBtn.appendChild(bagBtnInner);
         bagBtn.addEventListener('click', () => {
-          const currentKey = teeOverrides[basePlan.type] || basePlan.shots[0].key;
+          const currentKey = teeOverrides[_hk(basePlan.type)] || basePlan.shots[0].key;
           if (typeof window._openClubPicker === 'function') {
             window._openClubPicker(currentKey, (selectedKey) => {
-              teeOverrides[basePlan.type] = selectedKey !== basePlan.shots[0].key ? selectedKey : null;
+              teeOverrides[_hk(basePlan.type)] = selectedKey !== basePlan.shots[0].key ? selectedKey : null;
               const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
               newCard.id = 'activeStrategyCard'; newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
             }, { type: 'par', parValue });
@@ -5235,7 +5288,7 @@ document.addEventListener('DOMContentLoaded', () => {
       function getActivePlan(t) {
         const base = ordered.find(p => p.type === t);
         if (!base) return null;
-        const ov = teeOverrides[t];
+        const ov = teeOverrides[_hk(t)];
         if (!ov) return base;
         return solveForced(ov) || base;
       }
@@ -5352,7 +5405,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (_sess2 && shownPlan) {
         const { holeIdx: _hi2 } = JSON.parse(_sess2);
         const _committed2 = getCommittedStrategies();
-        const _teeKey2 = teeOverrides[shownPlan.type] || (shownPlan.shots[0]?.key ?? null);
+        const _teeKey2 = teeOverrides[_hk(shownPlan.type)] || (shownPlan.shots[0]?.key ?? null);
         _committed2[_hi2] = _teeKey2
           ? encodeStrategy(shownPlan.type, _teeKey2)
           : shownPlan.type;
@@ -5414,7 +5467,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const _goType = getCurrentCarouselType();
             if (_goType) {
               const _goPlan = ordered.find(p => p.type === _goType);
-              const _goTeeKey = teeOverrides[_goType] || (_goPlan?.shots[0]?.key ?? null);
+              const _goTeeKey = teeOverrides[_hk(_goType)] || (_goPlan?.shots[0]?.key ?? null);
               committed[holeIdx] = _goTeeKey
                 ? encodeStrategy(_goType, _goTeeKey)
                 : _goType;
@@ -5480,7 +5533,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (sess) {
           const { holeIdx } = JSON.parse(sess);
           const _activePlan = ordered.find(p => p.type === planType);
-          const _teeKey = teeOverrides[planType] || (_activePlan?.shots[0]?.key ?? null);
+          const _teeKey = teeOverrides[_hk(planType)] || (_activePlan?.shots[0]?.key ?? null);
           committed[holeIdx] = _teeKey ? encodeStrategy(planType, _teeKey) : planType;
           setCommittedStrategies(null, committed);
         }
@@ -6538,7 +6591,12 @@ function saveCourses(data) {
 }
 
 function newCourseId() {
-  return 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+  const existing = Object.keys(loadCourses());
+  let id;
+  do {
+    id = String(Math.floor(10000 + Math.random() * 90000)); // 10000–99999
+  } while (existing.includes(id));
+  return id;
 }
 
 // ── Render course list ────────────────────────────────────────────────────
