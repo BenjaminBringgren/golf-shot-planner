@@ -4088,6 +4088,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const driverClub = clubsList.find(c => c.key === 'driver');
     const driverTotal = driverClub ? driverClub.total : driver * getRollFactor('driver');
 
+    // driverCarry for tier lookup — used by par 3, 4, and 5 paths
+    const driverCarry = driverClub ? driverClub.carry : driver;
+
+    // Extract course+hole SI for per-hole HCP adjustment
+    let _holeStrokeIndex = null;
+    let _blCourseId = null, _blHoleIdx = null;
+    _holeHcpAdj = null; // reset each calculate() call — default to flat model
+    try {
+      const _siSess = sessionStorage.getItem('activeCourse');
+      if (_siSess) {
+        const { id: _siId, holeIdx: _siHi } = JSON.parse(_siSess);
+        const _siCourse = loadCourses()[_siId];
+        _holeStrokeIndex = _siCourse?.holes?.[_siHi]?.si || null;
+        _blCourseId = _siId; _blHoleIdx = _siHi;
+
+        // ── Refined WHS per-hole HCP adjustment ──────────────────────────
+        // Requires: handicap index, course rating, slope rating, and all 18 SI values
+        const _prof = JSON.parse(localStorage.getItem('golfProfile_v1') || '{}');
+        const _hcpIdx = parseFloat(_prof.handicap);
+        const _cr  = parseFloat(_siCourse?.courseRating);
+        const _sl  = parseInt(_siCourse?.slopeRating);
+        const _par = (_siCourse?.holes || []).reduce((a, h) => a + (h.par || 4), 0);
+        const _allSI = (_siCourse?.holes || []).map(h => h.si || 0);
+        const _siOk = _allSI.length === 18 && _allSI.every(si => si >= 1 && si <= 18);
+
+        if (!isNaN(_hcpIdx) && _hcpIdx > 0 && _cr > 0 && _sl > 0 && _siOk) {
+          // WHS playing handicap: HCP Index × (Slope/113) + (CR − Par)
+          const _playingHcp = Math.round(_hcpIdx * (_sl / 113) + (_cr - _par));
+          // Distribute strokes to holes in SI order
+          // Full strokes: holes where SI <= _playingHcp get 1 stroke
+          // Extra strokes: if _playingHcp > 18, holes where SI <= (_playingHcp - 18) get 2 strokes
+          const _si = _allSI[_siHi];
+          const _fullRounds = Math.floor(_playingHcp / 18);
+          const _remainder  = _playingHcp % 18;
+          const _strokes = _fullRounds + (_si <= _remainder ? 1 : 0);
+          // Convert stroke allocation to expected strokes adjustment
+          // Each stroke = player is expected to take 1 more shot than scratch on this hole
+          _holeHcpAdj = _strokes;
+        }
+      }
+    } catch(e) { _holeHcpAdj = null; }
+
     // ── Par 3 ──────────────────────────────────────────────────────────
     if (parValue === 3) {
       const result = calcPar3(clubsList, hole);
@@ -4136,6 +4178,11 @@ document.addEventListener('DOMContentLoaded', () => {
           // 1 tee shot + expected strokes from approach distance
           const remaining = Math.max(0, hole - s.total);
           scoreVal3 = 1 + expectedStrokesRemaining(remaining, driverCarry);
+        }
+        // Apply personal baseline blend — same as par 4/5
+        if (_blCourseId && _blHoleIdx !== null) {
+          const bl3 = blendedScore(scoreVal3, _blCourseId, _blHoleIdx);
+          scoreVal3 = bl3.score;
         }
         const diff3 = scoreVal3 - 3;
         const diffStr3 = diff3 === 0 ? 'E' : (diff3 > 0 ? '+' + diff3.toFixed(1) : diff3.toFixed(1));
@@ -4335,10 +4382,13 @@ document.addEventListener('DOMContentLoaded', () => {
     lastParValue = parValue;
 
     // Only reset tee overrides when explicitly triggered by the button press
-    if (clearOverrides) { Object.keys(teeOverrides).forEach(k => delete teeOverrides[k]); Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
-          Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
-          Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]); Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
-          Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]); par3ClubOverrides[_overrideCourseId + "|" + _overrideHoleIdx] = null; }
+    if (clearOverrides) {
+      Object.keys(teeOverrides).forEach(k => delete teeOverrides[k]);
+      Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
+      Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
+      Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]);
+      par3ClubOverrides[_overrideCourseId + '|' + _overrideHoleIdx] = null;
+    }
 
     // ── Par 4 / 5 — tee-club-rank algorithm ──────────────────────────────
     const validTeeClubs = getValidTeeClubs(clubsList, parValue);
@@ -4348,50 +4398,11 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Extract course+hole SI for per-hole HCP adjustment
-    let _holeStrokeIndex = null;
-    let _blCourseId = null, _blHoleIdx = null;
-    _holeHcpAdj = null; // reset each calculate() call — default to flat model
-    try {
-      const _siSess = sessionStorage.getItem('activeCourse');
-      if (_siSess) {
-        const { id: _siId, holeIdx: _siHi } = JSON.parse(_siSess);
-        const _siCourse = loadCourses()[_siId];
-        _holeStrokeIndex = _siCourse?.holes?.[_siHi]?.si || null;
-        _blCourseId = _siId; _blHoleIdx = _siHi;
-
-        // ── Refined WHS per-hole HCP adjustment ──────────────────────────
-        // Requires: handicap index, course rating, slope rating, and all 18 SI values
-        const _prof = JSON.parse(localStorage.getItem('golfProfile_v1') || '{}');
-        const _hcpIdx = parseFloat(_prof.handicap);
-        const _cr  = parseFloat(_siCourse?.courseRating);
-        const _sl  = parseInt(_siCourse?.slopeRating);
-        const _par = (_siCourse?.holes || []).reduce((a, h) => a + (h.par || 4), 0);
-        const _allSI = (_siCourse?.holes || []).map(h => h.si || 0);
-        const _siOk = _allSI.length === 18 && _allSI.every(si => si >= 1 && si <= 18);
-
-        if (!isNaN(_hcpIdx) && _hcpIdx > 0 && _cr > 0 && _sl > 0 && _siOk) {
-          // WHS playing handicap: HCP Index × (Slope/113) + (CR − Par)
-          const _playingHcp = Math.round(_hcpIdx * (_sl / 113) + (_cr - _par));
-          // Distribute strokes to holes in SI order
-          // Full strokes: holes where SI <= _playingHcp get 1 stroke
-          // Extra strokes: if _playingHcp > 18, holes where SI <= (_playingHcp - 18) get 2 strokes
-          const _si = _allSI[_siHi];
-          const _fullRounds = Math.floor(_playingHcp / 18);
-          const _remainder  = _playingHcp % 18;
-          const _strokes = _fullRounds + (_si <= _remainder ? 1 : 0);
-          // Convert stroke allocation to expected strokes adjustment
-          // Each stroke = player is expected to take 1 more shot than scratch on this hole
-          _holeHcpAdj = _strokes;
-        }
-      }
-    } catch(e) { _holeHcpAdj = null; }
 
         const STRATEGY_TYPES = ['Max distance', 'Controlled', 'Conservative'];
     const ordered = [];
 
     validTeeClubs.slice(0, 3).forEach((teeClub, rank) => {
-      const driverCarry = driverClub ? driverClub.carry : driver;
       const plan = findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry);
       if (!plan) return;
       plan.type = STRATEGY_TYPES[rank];
