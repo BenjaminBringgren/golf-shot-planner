@@ -2939,9 +2939,12 @@ function tempCarryFactor() {
 // Wind speed is altitude-corrected to the ball's peak trajectory height before
 // applying the Trackman-derived m/s adjustment factors.
 function applyWind(carry, clubIdx) {
-  // Apply temperature correction first — affects air density independent of wind
+  // Temperature correction comes from the same weather fetch as wind —
+  // skip both when wind is disabled so "wind off" means no weather effects at all.
+  if (!windState.enabled) return carry;
+  // Apply temperature correction — affects air density independent of wind direction
   const tempAdj = carry * tempCarryFactor();
-  if (!windState.active || !windState.enabled) return tempAdj;
+  if (!windState.active) return tempAdj;
   const cat    = windCategory(clubIdx);
   const adj    = WIND_ADJ[cat];
   const altFac = ALT_FACTORS[cat];
