@@ -412,7 +412,7 @@
     /* gps-btn height handled by main rule */
     /* .wind-strip-btn touch target handled in main rule */
     .course-bar-btn { width: 42px; height: 42px; }
-    .hint-collapsed { min-height: 42px; }
+
 
 
 
@@ -518,7 +518,7 @@
     /* Strategy label */
     .sc-strategy            { font-size: 12px; font-weight: 600; color: #a05a5a; }
     .sc-strategy.balanced   { color: #986840; }
-    .sc-strategy.safe       { color: #347a50; } }
+    .sc-strategy.safe       { color: #347a50; }
     /* ── Segmented control ───────────────────────────────────── */
     
     .load-course-btn { margin-top: 10px; }
@@ -702,11 +702,10 @@
     .rc-btn-row { display: flex; gap: 10px; padding: 14px 12px 0; }
     .rc-btn-primary { flex: 1; background: #1a1a1a; color: #fff; border: none; border-radius: 8px; height: 56px; font-size: 15px; font-weight: 700; cursor: pointer; }
     .rc-btn-secondary { flex: 1; background: #f0efeb; color: #333; border: none; border-radius: 8px; height: 56px; font-size: 15px; font-weight: 600; cursor: pointer; }
-    .rc-btn-delete { display: block; width: calc(100% - 24px); margin: 10px 12px 0; background: none; color: #aaa; border: none; border-radius: 8px; height: 44px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.15s, color 0.15s; }
+    .rc-btn-delete { display: flex; align-items: center; justify-content: center; width: calc(100% - 28px); margin: 10px 14px 14px; background: none; color: #c00; border: 0.5px solid rgba(204,0,0,0.25); border-radius: 8px; height: 44px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.12s, color 0.12s; text-align: center; }
+    .rc-btn-delete:active { background: rgba(204,0,0,0.07); transform: scale(0.98); }
     .rc-footnote { text-align: center; font-size: 12px; color: #aaa; padding: 10px 0 4px; }
 
-
-    }
     .score-entry-title {
       font-size: 13px; font-weight: 700; color: #888;
       text-transform: uppercase; letter-spacing: 0.5px;
@@ -1189,43 +1188,26 @@
     .course-bar-last-round .lrh-strategy { color: #888; font-size: 12px; }
     .course-bar-last-round .lrh-expand { margin-left: auto; color: #aaa; font-size: 12px; }
 
-    /* ── Strategy history hint (expanded, in course bar) ─────── */
-    .hint-collapsed {
-      padding: 8px 14px; border-top: none;
-      background: #f5f4f0;
-      display: flex; align-items: center; gap: 8px;
-      cursor: pointer; user-select: none;
+    /* ── Best strategy inline tag (course bar) ────────────────── */
+    .hint-best-row {
+      padding: 0 14px 10px; display: flex; align-items: center; gap: 6px;
     }
-    .hint-collapsed:hover { background: #ebe9e4; }
-    .hint-c-label  { font-size: 12px; color: #666; flex-shrink: 0; }
-    .hint-c-strat  { font-size: 15px; font-weight: 700; }
-    .hint-c-strat.aggressive { color: #a05a5a; }
-    .hint-c-strat.balanced   { color: #986840; }
-    .hint-c-strat.safe       { color: #347a50; }
-    .hint-c-rounds { font-size: 12px; color: #999; }
-    .hint-c-arrow  { margin-left: auto; font-size: 12px; color: #999; }
-    .hint-expanded {
-      padding: 8px 14px 11px; border-top: none;
-      background: #f5f4f0;
+    .hint-best-label { font-size: 12px; color: #888; flex-shrink: 0; }
+    .hint-best-tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 3px 8px 3px 6px; border-radius: 6px;
+      font-size: 12px; font-weight: 600; white-space: nowrap;
     }
-    .hint-exp-title {
-      display: flex; align-items: center; justify-content: space-between;
-      font-size: 13px; font-weight: 700; color: #444;
-      padding-bottom: 6px; cursor: pointer;
-    }
-    .hint-exp-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; }
-    .hint-exp-strat { font-size: 13px; font-weight: 700; min-width: 56px; }
-    .hint-exp-strat.aggressive { color: #a05a5a; }
-    .hint-exp-strat.balanced   { color: #986840; }
-    .hint-exp-strat.safe       { color: #347a50; }
-    .hint-exp-bar-outer { flex: 1; height: 7px; background: #dedad4; border-radius: 4px; overflow: hidden; }
-    .hint-exp-bar-fill  { height: 100%; border-radius: 4px; }
-    .hint-exp-rounds { font-size: 12px; color: #999; min-width: 46px; text-align: right; }
-    .hint-exp-best {
-      font-size: 11px; font-weight: 700; color: #1e7a45;
-      background: #e3f0e3; border: 1px solid #c5ddc0;
-      border-radius: 3px; padding: 1px 5px;
-    }
+    .hint-best-tag.aggressive { background: #f5e8e8; color: #5c2828; }
+    .hint-best-tag.balanced   { background: #f5ede0; color: #5c3810; }
+    .hint-best-tag.safe       { background: #d0ead0; color: #0f5c2e; }
+    .hint-best-tag.par3       { background: #e8e8ec; color: #38383f; }
+    .hint-best-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .hint-best-tag.aggressive .hint-best-dot { background: #a05a5a; }
+    .hint-best-tag.balanced   .hint-best-dot { background: #986840; }
+    .hint-best-tag.safe       .hint-best-dot { background: #347a50; }
+    .hint-best-tag.par3       .hint-best-dot { background: #686870; }
+    .hint-best-rounds { font-size: 12px; color: #aaa; flex-shrink: 0; }
 
     /* ── Strategy plan card (v3 — single card + switcher) ──── */
     .carousel-outer { overflow: visible; margin: 0; padding: 0; background: #fff; border-radius: 12px; border: 0.5px solid rgba(0,0,0,0.07); }
@@ -1662,19 +1644,39 @@
 
     /* ── Saved rounds ──────────────────────────────────────── */
     .rounds-section { border-top: 2px solid #ece9e4; }
+    .round-stat-bar {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      border-bottom: 0.5px solid rgba(0,0,0,0.07);
+      background: #f9f8f6;
+    }
+    .round-stat-cell {
+      text-align: center; padding: 10px 6px 11px;
+      border-right: 0.5px solid rgba(0,0,0,0.07);
+    }
+    .round-stat-cell:last-child { border-right: none; }
+    .round-stat-val { font-size: 22px; font-weight: 700; color: #1a1a1a; line-height: 1; }
+    .round-stat-val.good { color: #1e7a45; }
+    .round-stat-val.info { color: #185fa5; }
+    .round-stat-lbl { font-size: 11px; color: #888; margin-top: 4px; font-weight: 500; letter-spacing: 0.2px; text-transform: uppercase; }
+    .round-meta { font-size: 12px; color: #aaa; margin-top: 2px; }
+    .rh-course-hdr {
+      padding: 13px 14px 10px; background: #fff;
+      border-bottom: 0.5px solid rgba(0,0,0,0.07);
+    }
+    .rh-course-name { font-size: 17px; font-weight: 700; color: #1a1a1a; }
+    .rh-course-meta { font-size: 12px; color: #888; margin-top: 3px; }
     .round-row {
-      display: flex; align-items: center;
-      justify-content: space-between;
-      padding: 11px 14px;
-      border-bottom: 1px solid #ece9e4;
-      cursor: pointer; user-select: none;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 16px; border-bottom: 0.5px solid rgba(0,0,0,0.07);
+      cursor: pointer; user-select: none; background: #fff;
     }
     .round-row:hover { background: #f9f8f6; }
-    .round-date  { font-size: 15px; font-weight: 600; color: #444; }
-    .round-right { display: flex; align-items: center; gap: 10px; }
+    .round-left { flex: 1; min-width: 0; }
+    .round-date  { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+    .round-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
     .round-holes { font-size: 12px; color: #aaa; }
-    .round-score { font-size: 15px; font-weight: 700; }
-    .round-score.over  { color: #c00; }
+    .round-score { font-size: 22px; font-weight: 700; }
+    .round-score.over  { color: #3a6fc4; }
     .round-score.under { color: #1e7a45; }
     .round-score.even  { color: #555; }
     .round-arr   { font-size: 12px; color: #ccc; width: 16px; text-align: right; }
@@ -1702,6 +1704,8 @@
     }
     .sc-table th:first-child { width: 32px; }
     .sc-table th:nth-child(2) { border-right: 0.5px solid rgba(0,0,0,0.08); width: 40px; }
+    .sc-table th:last-child { text-align: left; padding-left: 8px; }
+    .sc-table td:last-child { text-align: left; padding-left: 8px; }
     .sc-table td {
       padding: 9px 4px; text-align: center; vertical-align: middle;
       border-bottom: 0.5px solid rgba(0,0,0,0.06);
@@ -2024,6 +2028,15 @@
     </div>
     <div id="windLockHint" style="display:none;padding:6px 14px 8px;font-size:12px;color:#185fa5;font-weight:500;background:#eef3fb;border-top:0.5px solid rgba(24,95,165,0.15);">
       Point phone toward the hole, then tap the compass again to lock
+    </div>
+
+    <!-- Conditions — shown here when course is active, strip handles it otherwise -->
+    <div id="weatherCondRow" style="display:none;align-items:center;gap:8px;padding:8px 14px 10px;border-top:0.5px solid rgba(0,0,0,0.06);background:#fff;">
+      <span style="font-size:12px;color:#bbb;flex-shrink:0;">Conditions</span>
+      <div class="chip-control-row" id="condChipRowWeather">
+        <button class="chip-control-btn active" data-value="soft" type="button">Soft</button>
+        <button class="chip-control-btn" data-value="firm" type="button">Firm</button>
+      </div>
     </div>
 
     <!-- Expanded body -->
@@ -3117,8 +3130,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const card = document.getElementById('thisHoleCard');
     const bar  = document.getElementById('playCourseBar');
     if (!card) return;
+    const parCondGrid    = document.getElementById('parCondGrid');
+    const weatherCondRow = document.getElementById('weatherCondRow');
     if (bar) {
       card.classList.add('course-active');
+      if (parCondGrid)    parCondGrid.style.display    = 'none';
+      if (weatherCondRow) weatherCondRow.style.display = 'flex';
       const session = JSON.parse(sessionStorage.getItem('activeCourse') || '{}');
       const courses = typeof loadCourses === 'function' ? loadCourses() : {};
       const course  = courses[session.id];
@@ -3139,6 +3156,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } else {
       card.classList.remove('course-active');
+      if (parCondGrid)    parCondGrid.style.display    = '';
+      if (weatherCondRow) weatherCondRow.style.display = 'none';
     }
   }
   window.updateHoleCardMode = updateHoleCardMode;
@@ -3315,7 +3334,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const feelsEl = document.getElementById('wbrFeelsLike');
     if (feelsEl) {
-      const displayTemp = windState.feelsLike != null ? Math.round(windState.feelsLike) : (windState.tempC != null ? Math.round(windState.tempC) : null);
+      const displayTemp = windState.tempC != null ? Math.round(windState.tempC) : null;
       if (displayTemp != null) {
         const factor = tempCarryFactor();
         const carryDelta = Math.round((factor - 1) * 230); // effect on a 230m driver
@@ -5815,6 +5834,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCarryLabels();
     saveBag();
     if (typeof updateHoleCardMode === 'function') updateHoleCardMode();
+    if (typeof window.syncChipRow === 'function') window.syncChipRow('condChipRowWeather', 'conditions');
     const output = document.getElementById('output');
     if (output.querySelector('.carousel-outer, .error') || lastParValue === 3) {
       calculate();
@@ -5855,8 +5875,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.classList.toggle('active', btn.dataset.value === hidden.value);
       });
     };
-    wireChipRow('parChipRow',  'parSelect');
-    wireChipRow('condChipRow', 'conditions');
+    wireChipRow('parChipRow',        'parSelect');
+    wireChipRow('condChipRow',       'conditions');
+    wireChipRow('condChipRowWeather','conditions');
   })();
 
 </script>
@@ -6711,17 +6732,18 @@ function renderSavedRounds() {
   const existing = document.getElementById('savedRoundsSection');
   if (existing) existing.remove();
 
-  const courses   = loadCourses();
+  const courses   = loadCourses ? loadCourses() : {};
   const courseIds = Object.keys(courses);
   if (!courseIds.length) return;
 
   let anyRounds = false;
-  courseIds.forEach(id => { if (loadRounds(id).length > 0) anyRounds = true; });
+  courseIds.forEach(id => { if ((loadRounds ? loadRounds(id) : []).length > 0) anyRounds = true; });
   if (!anyRounds) return;
 
   const section = document.createElement('div');
   section.id = 'savedRoundsSection';
 
+  // ── Helper: strategy pill class ─────────────────────────────────────────
   function stratPillClass(s) {
     if (!s) return 'safe';
     const type = s.includes(' · ') ? s.split(' · ')[0] : s;
@@ -6732,410 +6754,207 @@ function renderSavedRounds() {
     return 'safe';
   }
 
+  // ── Helper: score pill class ────────────────────────────────────────────
+  function scorePillClass(total, par) {
+    const d = total - par;
+    if (total === 1 && par >= 2) return 'sp-hole-in-one';
+    if (d <= -2) return 'sp-eagle';
+    if (d === -1) return 'sp-birdie';
+    if (d === 1)  return 'sp-bogey';
+    if (d >= 2)   return 'sp-double';
+    return 'sp-par';
+  }
+
+  // ── Helper: single scorecard row ────────────────────────────────────────
   function scRowHtml(s, i, course, round) {
     if (!s) return '';
     const par   = course.holes[i]?.par || 4;
     const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
-    const d     = total - par;
-    let spClass = 'sp-par';
-    if (total === 1 && par >= 2) spClass = 'sp-hole-in-one';
-    else if (d <= -2) spClass = 'sp-eagle';
-    else if (d === -1) spClass = 'sp-birdie';
-    else if (d === 1)  spClass = 'sp-bogey';
-    else if (d >= 2)   spClass = 'sp-double';
+    const spCls = scorePillClass(total, par);
     const strat = round.strategies?.[i] || round.strategies?.[String(i)];
     let stratCell = '—';
     if (strat) {
-      const { type: _stratType, club: _stratClub } =
-        typeof window.decodeStrategy === 'function'
-          ? window.decodeStrategy(strat)
-          : { type: strat, club: null };
-      const _displayType = _stratType || strat;
-      stratCell = `<span class="pill ${stratPillClass(strat)}">${_displayType}</span>`
-        + (_stratClub ? ` <span class="strat-club-tag">${_stratClub}</span>` : '');
+      const { type: _t, club: _c } = typeof window.decodeStrategy === 'function'
+        ? window.decodeStrategy(strat)
+        : { type: strat, club: null };
+      const displayType = _t || strat;
+      const shortType = displayType === 'Max distance' ? 'Max dist'
+        : displayType === 'Conservative' ? 'Conserv.' : displayType;
+      stratCell = `<span class="pill ${stratPillClass(strat)}">${escHtml(shortType)}</span>`
+        + (_c ? ` <span class="strat-club-tag">${escHtml(_c)}</span>` : '');
     }
-    const girCell = s.gir === true ? '<span style="color:#1e7a45;font-weight:700;">✓</span>' : '<span style="color:#ccc;">✗</span>';
-    const firCell = par <= 3 ? '<span style="color:#ccc;">—</span>'
-      : s.fir === true ? '<span style="color:#1e7a45;font-weight:700;">✓</span>'
+    const girCell = s.gir === true  ? '<span style="color:#1e7a45;font-weight:700;">✓</span>' : '<span style="color:#ccc;">✗</span>';
+    const firCell = par <= 3
+      ? '<span style="color:#ccc;">—</span>'
+      : s.fir === true  ? '<span style="color:#1e7a45;font-weight:700;">✓</span>'
       : s.fir === false ? '<span style="color:#ccc;">✗</span>'
       : '<span style="color:#ccc;">—</span>';
     return `<tr>
       <td>${i + 1}</td>
       <td>${par}</td>
-      <td><span class="score-pill ${spClass}">${total}</span></td>
-      <td>${stratCell}</td>
+      <td><span class="score-pill ${spCls}">${total}</span></td>
       <td>${s.putts}</td>
       <td style="text-align:center">${girCell}</td>
       <td style="text-align:center">${firCell}</td>
+      <td>${stratCell}</td>
     </tr>`;
   }
 
   courseIds.forEach(courseId => {
-    const rounds = loadRounds(courseId);
+    const rounds = loadRounds ? loadRounds(courseId) : [];
     const course = courses[courseId];
     if (!rounds.length) return;
 
-    const totalRounds = rounds.length;
-
-    // ── Course block ──────────────────────────────────────
+    // ── Course header ──────────────────────────────────────────────────────
     const block = document.createElement('div');
-    block.className = 'course-block';
-    const blockId = 'cb-' + courseId;
-    block.id = blockId;
+    block.style.cssText = 'background:#fff;margin-bottom:10px;';
 
-    // Header
+    const allScores = rounds.flatMap(r => (r.scores || []).map((s, i) => ({ s, i, r })));
+    const played    = allScores.filter(({ s }) => s != null);
+    const girTotal  = played.filter(({ s }) => s.gir === true).length;
+    const girPct    = played.length > 0 ? Math.round(girTotal / played.length * 100) : null;
+    const fullRounds = rounds.filter(r => (r.holesPlayed ?? 0) >= 18);
+    const avgPutts = fullRounds.length > 0
+      ? (fullRounds.reduce((a, r) => a + (r.totalPutts ?? (r.scores||[]).reduce((x,s)=>x+(s?.putts||0),0)), 0) / fullRounds.length).toFixed(1)
+      : null;
+
     const hdr = document.createElement('div');
-    hdr.className = 'course-hdr';
-    hdr.innerHTML =
-      `<div>
-         <div class="course-hdr-name">${escHtml(course.name)} · Statistics</div>
-         <div class="course-hdr-meta" id="${blockId}-meta">${totalRounds} round${totalRounds !== 1 ? 's' : ''} saved · tap a hole to expand</div>
-       </div>
-       <div class="course-hdr-arr" id="${blockId}-arr">▶</div>`;
-    hdr.addEventListener('click', () => {
-      const open = block.classList.toggle('open');
-      document.getElementById(blockId + '-arr').textContent = open ? '▼' : '▶';
-    });
+    hdr.className = 'rh-course-hdr';
+    hdr.innerHTML = `<div class="rh-course-name">${escHtml(course.name)}</div>
+      <div class="rh-course-meta">${rounds.length} round${rounds.length !== 1 ? 's' : ''}${girPct !== null ? ' · GIR ' + girPct + '%' : ''}${avgPutts !== null ? ' · ⛳ ' + avgPutts + ' putts/rnd' : ''}</div>`;
     block.appendChild(hdr);
 
-    // Body
-    const body = document.createElement('div');
-    body.className = 'course-body';
-
-    // ── Strategy history subsection ───────────────────────
-    const stratHdr = document.createElement('div');
-    stratHdr.className = 'subsection-hdr';
-    const stratHdrId = blockId + '-sh';
-    stratHdr.innerHTML =
-      `<span class="subsection-hdr-label">Strategy history</span>
-       <span class="subsection-hdr-arr" id="${stratHdrId}-arr">▶</span>`;
-    const stratBody = document.createElement('div');
-    stratBody.className = 'strat-body collapsed';
-    stratBody.id = stratHdrId + '-body';
-    stratHdr.addEventListener('click', () => {
-      const collapsed = stratBody.classList.toggle('collapsed');
-      document.getElementById(stratHdrId + '-arr').textContent = collapsed ? '▶' : '▼';
-    });
-    // ── Historical aggregation ────────────────────────────────────────────
-    const allScores = rounds.flatMap(r => (r.scores || []).map((s, i) => ({ s, i, r })));
-    const playedScores = allScores.filter(({ s }) => s != null);
-    const histPuttsTotal = playedScores.reduce((a, { s }) => a + (s.putts || 0), 0);
-    const histGIRTotal   = playedScores.filter(({ s }) => s.gir === true).length;
-    const histHoles      = playedScores.length;
-    const histRoundsComplete = rounds.filter(r => r.holesPlayed >= 9);
-    const avgPuttsRound  = histRoundsComplete.length > 0
-      ? (histRoundsComplete.reduce((a, r) => a + (r.totalPutts ?? (r.scores||[]).reduce((x,s)=>x+(s?.putts||0),0)), 0) / histRoundsComplete.length).toFixed(1)
-      : null;
-    const girPct = histHoles > 0 ? Math.round(histGIRTotal / histHoles * 100) : null;
-
-    // Update course meta line with aggregated stats
-    const metaEl = document.getElementById(blockId + '-meta');
-    if (metaEl && histHoles > 0) {
-      let metaParts = [`${totalRounds} round${totalRounds !== 1 ? 's' : ''}`];
-      if (girPct !== null)       metaParts.push(`GIR ${girPct}%`);
-      if (avgPuttsRound !== null) metaParts.push(`⛳ ${avgPuttsRound} putts/rnd`);
-      metaEl.textContent = metaParts.join(' · ');
-    }
-
-    body.appendChild(stratHdr);
-
-    // Column headers
-    const colHdr = document.createElement('div');
-    colHdr.className = 'col-hdr-row';
-    colHdr.innerHTML =
-      `<span class="ch-strat">Best strategy</span>
-       <span class="ch-avg">Avg</span>
-       <span class="ch-gap"></span>
-       <span class="ch-rnd">Rounds</span>
-       <span class="ch-sp"></span>`;
-    stratBody.appendChild(colHdr);
-
-    // Per-hole strategy aggregation
-    const holeStats = {};
-    rounds.forEach(round => {
-      if (!round.scores) return;
-      round.scores.forEach((s, i) => {
-        if (!s) return;
-        const par   = course.holes[i]?.par || 4;
-        const strat = round.strategies?.[i];
-        if (!strat) return;
-        const { type: stratType, club: stratClub } =
-          typeof window.decodeStrategy === 'function'
-            ? window.decodeStrategy(strat)
-            : { type: strat, club: null };
-        const diff = ((s.fairway || 0) + (s.rough || 0) + (s.putts || 0)) - par;
-        if (!holeStats[i]) holeStats[i] = {};
-        if (!holeStats[i][strat]) {
-          holeStats[i][strat] = {
-            type: stratType, club: stratClub,
-            totalDiff: 0, count: 0, best: Infinity, worst: -Infinity, clubs: {},
-          };
-        }
-        holeStats[i][strat].totalDiff += diff;
-        holeStats[i][strat].count++;
-        holeStats[i][strat].best  = Math.min(holeStats[i][strat].best,  diff);
-        holeStats[i][strat].worst = Math.max(holeStats[i][strat].worst, diff);
-        if (stratClub) holeStats[i][strat].clubs[stratClub] = (holeStats[i][strat].clubs[stratClub] || 0) + 1;
-      });
-    });
-
-    function fmtDiff(d) {
-      if (d === 0) return 'E';
-      return (d > 0 ? '+' : '') + d.toFixed(1);
-    }
-    function diffClass(d) {
-      if (d < 0) return 'dt-good';
-      if (d > 0) return 'dt-bad';
-      return 'dt-even';
-    }
-    function avgClass(d) {
-      if (d < 0) return 'good';
-      if (d > 0) return 'bad';
-      return 'even';
-    }
-
-    // Render holes 1–18
-    [0, 9].forEach((offset, nineIdx) => {
-      const div9 = document.createElement('div');
-      div9.className = 'nine-divider';
-      div9.textContent = nineIdx === 0 ? 'Front 9' : 'Back 9';
-      stratBody.appendChild(div9);
-
-      for (let i = offset; i < offset + 9; i++) {
-        const holeNum   = i + 1;
-        const stats     = holeStats[i];
-        const holeRowId = blockId + '-hole-' + i;
-        const holeDetId = blockId + '-hdet-' + i;
-
-        const row = document.createElement('div');
-
-        if (!stats || !Object.keys(stats).length) {
-          row.className = 'hole-row nodata';
-          row.innerHTML =
-            `<div class="hole-num nd">${holeNum}</div>
-             <div class="hole-pill-wrap" style="padding-left:10px;font-size:13px;color:#bbb;font-style:italic;">no data yet</div>
-             <div class="hole-avg nd">—</div>
-             <div class="ch-gap-data"></div>
-             <div class="hole-rnd">0</div>
-             <div class="hole-arr"></div>`;
-          stratBody.appendChild(row);
-          continue;
-        }
-
-        const sorted = Object.entries(stats)
-          .map(([key, s]) => ({
-            strat: key, type: s.type, club: s.club, clubs: s.clubs || {},
-            avg: s.totalDiff / s.count, count: s.count, best: s.best, worst: s.worst,
-          }))
-          .sort((a, b) => a.avg - b.avg);
-        const best = sorted[0];
-
-        row.className = 'hole-row';
-        row.id = holeRowId;
-        row.innerHTML =
-          `<div class="hole-num">${holeNum}</div>
-           <div class="hole-pill-wrap">
-             <span class="pill ${stratPillClass(best.strat)}">${best.type || best.strat}</span>
-             ${best.club ? `<span class="strat-club-tag">${best.club}</span>` : ''}
-           </div>
-           <div class="hole-avg ${avgClass(best.avg)}">${fmtDiff(best.avg)}</div>
-           <div class="ch-gap-data"></div>
-           <div class="hole-rnd">${best.count}</div>
-           <div class="hole-arr" id="${holeRowId}-arr">▶</div>`;
-
-        const detail = document.createElement('div');
-        detail.className = 'hole-detail';
-        detail.id = holeDetId;
-
-        const rows = sorted.map(s => {
-          const displayType = s.type || s.strat;
-          const mostUsedClub = s.clubs && Object.keys(s.clubs).length > 0
-            ? Object.entries(s.clubs).sort((a, b) => b[1] - a[1])[0][0]
-            : (s.club || null);
-          return `<tr>
-             <td>${escHtml(displayType)}${s === best ? ' <span class="best-badge">best</span>' : ''}${mostUsedClub ? ` <span class="strat-club-tag">${mostUsedClub}</span>` : ''}</td>
-             <td>${s.count}</td>
-             <td class="${diffClass(s.avg)}">${fmtDiff(s.avg)}</td>
-             <td class="${diffClass(s.best)}">${fmtDiff(s.best)}</td>
-             <td class="${diffClass(s.worst)}">${fmtDiff(s.worst)}</td>
-           </tr>`;
-        }).join('');
-        detail.innerHTML =
-          `<table class="detail-table">
-             <thead><tr><th>Strategy</th><th>Rounds</th><th>Avg</th><th>Best</th><th>Worst</th></tr></thead>
-             <tbody>${rows}</tbody>
-           </table>`;
-
-        row.addEventListener('click', () => {
-          const open = detail.classList.toggle('open');
-          document.getElementById(holeRowId + '-arr').textContent = open ? '▼' : '▶';
-        });
-
-        stratBody.appendChild(row);
-        stratBody.appendChild(detail);
-      }
-    });
-
-    body.appendChild(stratBody);
-
-    // ── Saved rounds subsection ───────────────────────────
-    const roundsSection = document.createElement('div');
-    roundsSection.className = 'rounds-section';
-
-    const roundsHdr = document.createElement('div');
-    roundsHdr.className = 'subsection-hdr';
-    const roundsBodyId = blockId + '-rb';
-    roundsHdr.innerHTML =
-      `<span class="subsection-hdr-label">Saved rounds</span>
-       <span class="subsection-hdr-arr" id="${roundsBodyId}-arr">▶</span>`;
-    const roundsBody = document.createElement('div');
-    roundsBody.id = roundsBodyId;
-    roundsBody.style.display = 'none';
-    roundsHdr.addEventListener('click', () => {
-      const hidden = roundsBody.style.display === 'none';
-      roundsBody.style.display = hidden ? 'block' : 'none';
-      document.getElementById(roundsBodyId + '-arr').textContent = hidden ? '▼' : '▶';
-    });
-    roundsSection.appendChild(roundsHdr);
-
-    function buildRoundRow(round, ri) {
-      const roundId    = blockId + '-r' + ri;
-      const roundDetId = roundId + '-det';
-      const diff    = round.totalStrokes - round.totalPar;
-      const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' : '') + diff;
+    // ── Round rows ─────────────────────────────────────────────────────────
+    rounds.forEach((round, ri) => {
+      const rowId = 'rh-' + courseId + '-' + ri;
+      const diff    = (round.totalStrokes || 0) - (round.totalPar || 0);
+      const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : String(diff));
       const diffCls = diff < 0 ? 'under' : diff > 0 ? 'over' : 'even';
+      const rPutts  = round.totalPutts ?? (round.scores||[]).reduce((a,s)=>a+(s?.putts||0),0);
+      const rGIR    = round.totalGIR   ?? (round.scores||[]).filter(s=>s?.gir).length;
+      const rFIR    = (round.scores||[]).filter(s=>s?.fir===true).length;
+      const holesP  = round.holesPlayed || 0;
+      const girPctR = holesP > 0 ? Math.round(rGIR / holesP * 100) : 0;
+      const firPctR = holesP > 0 ? Math.round(rFIR / holesP * 100) : 0;
 
       const rrow = document.createElement('div');
       rrow.className = 'round-row';
-      const rGIR = round.totalGIR ?? (round.scores || []).filter(s => s?.gir).length;
-      const rGIRpct = round.holesPlayed > 0 ? Math.round(rGIR / round.holesPlayed * 100) : 0;
-      const rFIR = (round.scores || []).filter(s => s?.fir === true).length;
-      const rFIRpct = round.holesPlayed > 0 ? Math.round(rFIR / round.holesPlayed * 100) : 0;
-      const rPutts = round.totalPutts ?? (round.scores || []).reduce((a,s)=>a+(s?.putts||0),0);
-      rrow.innerHTML =
-        `<div class="round-date">${escHtml(round.date)}</div>
-         <div class="round-right">
-           <div class="round-holes" style="font-size:12px;color:#888;">${round.holesPlayed}H · ⛳${rPutts} · GIR ${rGIRpct}% · FIR ${rFIRpct}%</div>
-           <div class="round-score ${diffCls}">${diffStr}</div>
-           <div class="round-arr" id="${roundId}-arr">▶</div>
-         </div>`;
+      rrow.innerHTML = `<div class="round-left">
+          <div class="round-date">${escHtml(round.date || '—')}</div>
+          <div class="round-meta">${holesP}H · ⛳${rPutts} · GIR ${girPctR}% · FIR ${firPctR}%</div>
+        </div>
+        <div class="round-right">
+          <div class="round-score ${diffCls}">${diffStr}</div>
+          <div class="round-arr" id="${rowId}-arr">▶</div>
+        </div>`;
 
+      // ── Detail: stat bar + scorecard ────────────────────────────────────
       const rdet = document.createElement('div');
       rdet.className = 'round-detail';
-      rdet.id = roundDetId;
+      rdet.id = rowId + '-det';
 
-      // Calculate front/back subtotals
-      let f9Par=0, f9S=0, f9FW=0, f9P=0, f9G=0, f9n=0;
-      let b9Par=0, b9S=0, b9FW=0, b9P=0, b9G=0, b9n=0;
-      (round.scores || []).forEach((s, i) => {
+      // Stat bar
+      const statBar = document.createElement('div');
+      statBar.className = 'round-stat-bar';
+      statBar.innerHTML = `
+        <div class="round-stat-cell">
+          <div class="round-stat-val">${round.totalStrokes || '—'}</div>
+          <div class="round-stat-lbl">Score</div>
+        </div>
+        <div class="round-stat-cell">
+          <div class="round-stat-val">${rPutts}</div>
+          <div class="round-stat-lbl">Putts</div>
+        </div>
+        <div class="round-stat-cell">
+          <div class="round-stat-val good">${girPctR}%</div>
+          <div class="round-stat-lbl">GIR</div>
+        </div>
+        <div class="round-stat-cell">
+          <div class="round-stat-val info">${firPctR}%</div>
+          <div class="round-stat-lbl">FIR</div>
+        </div>`;
+      rdet.appendChild(statBar);
+
+      // Scorecard
+      let f9Par=0,f9S=0,f9P=0,f9G=0,f9n=0,f9F=0,f9Fa=0;
+      let b9Par=0,b9S=0,b9P=0,b9G=0,b9n=0,b9F=0,b9Fa=0;
+      (round.scores||[]).forEach((s,i) => {
         if (!s) return;
         const par   = course.holes[i]?.par || 4;
-        const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
-        if (i < 9)  { f9Par+=par; f9S+=total; f9FW+=s.fairway; f9P+=s.putts; if(s.gir)f9G++; f9n++; }
-        else        { b9Par+=par; b9S+=total; b9FW+=s.fairway; b9P+=s.putts; if(s.gir)b9G++; b9n++; }
+        const total = (s.fairway||0)+(s.rough||0)+(s.putts||0);
+        const hPar  = course.holes[i]?.par || 4;
+        const fir   = hPar > 3 && s.fir === true;
+        const firApp = hPar > 3;
+        if (i<9) { f9Par+=hPar;f9S+=total;f9P+=s.putts;if(s.gir)f9G++;f9n++;if(fir)f9F++;if(firApp)f9Fa++; }
+        else     { b9Par+=hPar;b9S+=total;b9P+=s.putts;if(s.gir)b9G++;b9n++;if(fir)b9F++;if(firApp)b9Fa++; }
       });
-      const rTotalPar = f9Par + b9Par;
-      const rTotalS   = f9S + b9S;
 
-      rdet.innerHTML =
-        `<table class="sc-table">
-           <thead><tr><th>#</th><th>Par</th><th>Score</th><th>Strat</th><th>Putts</th><th>GIR</th><th>FIR</th></tr></thead>
-           <tbody>
-             <tr class="sc-section"><td></td><td colspan="6">Front 9</td></tr>
-             ${(round.scores || []).slice(0, 9).map((s, i) => scRowHtml(s, i, course, round)).join('')}
-             <tr class="sc-total">
-               <td class="sc-hole">Out</td>
-               <td class="sc-par">${f9Par}</td>
-               <td>${f9n ? f9S : '—'}</td>
-               <td></td>
-               <td>${f9n ? f9P : '—'}</td>
-               <td style="text-align:center;font-size:12px;">${f9n ? f9G+'/'+f9n : '—'}</td>
-               <td></td>
-             </tr>
-             <tr class="sc-section"><td></td><td colspan="6">Back 9</td></tr>
-             ${(round.scores || []).slice(9, 18).map((s, i) => scRowHtml(s, i+9, course, round)).join('')}
-             <tr class="sc-total">
-               <td class="sc-hole">In</td>
-               <td class="sc-par">${b9Par}</td>
-               <td>${b9n ? b9S : '—'}</td>
-               <td></td>
-               <td>${b9n ? b9P : '—'}</td>
-               <td style="text-align:center;font-size:12px;">${b9n ? b9G+'/'+b9n : '—'}</td>
-               <td></td>
-             </tr>
-           </tbody>
-           <tfoot>
-             <tr class="sc-total">
-               <td class="sc-hole">Tot</td>
-               <td class="sc-par">${rTotalPar}</td>
-               <td>${rTotalS || '—'}</td>
-               <td></td>
-               <td>${f9P+b9P || '—'}</td>
-               <td style="text-align:center;font-size:12px;">${(f9n||b9n) ? (f9G+b9G)+'/'+(f9n+b9n) : '—'}</td>
-             </tr>
-           </tfoot>
-         </table>`;
+      const scWrap = document.createElement('div');
+      scWrap.style.overflowX = 'auto';
+      scWrap.innerHTML = `<table class="sc-table">
+        <thead><tr><th>#</th><th>Par</th><th>Score</th><th>Putts</th><th>GIR</th><th>FIR</th><th>Strategy</th></tr></thead>
+        <tbody>
+          <tr class="sc-section"><td colspan="7">Front 9</td></tr>
+          ${(round.scores||[]).slice(0,9).map((s,i)=>scRowHtml(s,i,course,round)).join('')}
+          <tr class="sc-total">
+            <td class="sc-hole">Out</td><td>${f9Par}</td>
+            <td>${f9n?f9S:'—'}</td><td>${f9n?f9P:'—'}</td>
+            <td style="text-align:center">${f9n?f9G+'/'+f9n:'—'}</td>
+            <td style="text-align:center">${f9Fa?f9F+'/'+f9Fa:'—'}</td><td></td>
+          </tr>
+          <tr class="sc-section"><td colspan="7">Back 9</td></tr>
+          ${(round.scores||[]).slice(9,18).map((s,i)=>scRowHtml(s,i+9,course,round)).join('')}
+          <tr class="sc-total">
+            <td class="sc-hole">In</td><td>${b9Par}</td>
+            <td>${b9n?b9S:'—'}</td><td>${b9n?b9P:'—'}</td>
+            <td style="text-align:center">${b9n?b9G+'/'+b9n:'—'}</td>
+            <td style="text-align:center">${b9Fa?b9F+'/'+b9Fa:'—'}</td><td></td>
+          </tr>
+          <tr class="sc-total">
+            <td class="sc-hole">Tot</td><td>${f9Par+b9Par}</td>
+            <td>${f9n+b9n?(f9S+b9S):'—'}</td><td>${f9n+b9n?(f9P+b9P):'—'}</td>
+            <td style="text-align:center">${f9n+b9n?(f9G+b9G)+'/'+(f9n+b9n):'—'}</td>
+            <td style="text-align:center">${f9Fa+b9Fa?(f9F+b9F)+'/'+(f9Fa+b9Fa):'—'}</td><td></td>
+          </tr>
+        </tbody>
+      </table>`;
+      rdet.appendChild(scWrap);
 
-      // Delete button
+      rrow.addEventListener('click', () => {
+        const open = rdet.classList.toggle('open');
+        document.getElementById(rowId + '-arr').textContent = open ? '▼' : '▶';
+      });
+
+      // Delete button inside detail
       const delBtn = document.createElement('button');
-      delBtn.style.cssText = 'margin-top:10px; width:100%; padding:12px; font-size:15px; font-weight:600; background:#fde8e8; border:none; border-radius:7px; color:#a32d2d; cursor:pointer;';
       delBtn.textContent = 'Delete round';
-      delBtn.addEventListener('click', () => {
-        if (!confirm('Delete this round? This cannot be undone.')) return;
-        deleteRound(courseId, ri);
-        if (rdet.parentNode) rdet.remove();
-        if (rrow.parentNode) rrow.remove();
-        delBtn.remove();
-        // Show empty state if no rounds remain
-        const remainingRows = roundsBody.querySelectorAll('.round-row');
-        if (!remainingRows.length) {
-          const empty = document.createElement('div');
-          empty.style.cssText = 'padding:12px 14px; font-size:15px; color:#aaa; font-style:italic;';
-          empty.textContent = 'No saved rounds.';
-          roundsBody.appendChild(empty);
+      delBtn.className = 'rc-btn-delete';
+      delBtn.type = 'button';
+      let delConfirm = false;
+      delBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        if (!delConfirm) {
+          delConfirm = true;
+          delBtn.textContent = 'Tap again to confirm delete';
+          delBtn.style.background = '#c00';
+          delBtn.style.color = '#fff';
+          setTimeout(() => {
+            delConfirm = false;
+            delBtn.textContent = 'Delete round';
+            delBtn.style.background = '';
+            delBtn.style.color = '';
+          }, 3000);
+        } else {
+          deleteRound(courseId, ri);
+          if (typeof renderSavedRounds === 'function') renderSavedRounds();
         }
       });
       rdet.appendChild(delBtn);
 
-      rrow.addEventListener('click', () => {
-        const open = rdet.classList.toggle('open');
-        document.getElementById(roundId + '-arr').textContent = open ? '▼' : '▶';
-      });
-
-      return { rrow, rdet };
-    }
-
-    // Group rounds by month
-    const grouped = {};
-    rounds.forEach((round, ri) => {
-      const month = round.date?.slice(0, 7) ?? 'Unknown';
-      if (!grouped[month]) grouped[month] = [];
-      grouped[month].push({ round, ri });
+      block.appendChild(rrow);
+      block.appendChild(rdet);
     });
 
-    function monthLabel(ym) {
-      if (!ym || ym === 'Unknown') return 'Unknown';
-      const [y, m] = ym.split('-');
-      const d = new Date(Number(y), Number(m) - 1, 1);
-      return d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-    }
-
-    Object.keys(grouped).forEach(ym => {
-      const divider = document.createElement('div');
-      divider.style.cssText = 'padding:6px 14px 4px; font-size:12px; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:0.05em; background:#f9f8f6; border-bottom:1px solid #ece9e4;';
-      divider.textContent = monthLabel(ym);
-      roundsBody.appendChild(divider);
-
-      grouped[ym].forEach(({ round, ri }) => {
-        const { rrow, rdet } = buildRoundRow(round, ri);
-        roundsBody.appendChild(rrow);
-        roundsBody.appendChild(rdet);
-      });
-    });
-
-    roundsSection.appendChild(roundsBody);
-    body.appendChild(roundsSection);
-    block.appendChild(body);
     section.appendChild(block);
   });
 
@@ -7144,7 +6963,6 @@ function renderSavedRounds() {
   if (existingSection) existingSection.replaceWith(section);
   else if (targetPane) targetPane.appendChild(section);
 }
-
 
 function escHtml(str) {
   if (!str) return '';
@@ -7569,7 +7387,7 @@ function renderPlayCourseBar(courseId) {
     }
 
     // Insert gridWrap after header
-    header.insertAdjacentElement('afterend', gridWrap);
+    lastRoundHint.insertAdjacentElement('afterend', gridWrap);
 
     // ── Last round hint ────────────────────────────────────
     renderLastRoundHint(holeIdx);
@@ -7752,10 +7570,10 @@ function renderPlayCourseBar(courseId) {
     rounds.forEach(round => {
       const holeScore = round.scores?.[idx];
       if (!holeScore) return;
-      const par   = c.holes[idx]?.par || 4;
+      const par  = c.holes[idx]?.par || 4;
       const strat = round.strategies?.[idx];
       if (!strat) return;
-      const diff  = ((holeScore.fairway || 0) + (holeScore.rough || 0) + (holeScore.putts || 0)) - par;
+      const diff = ((holeScore.fairway || 0) + (holeScore.rough || 0) + (holeScore.putts || 0)) - par;
       if (!stratStats[strat]) stratStats[strat] = { totalDiff: 0, count: 0 };
       stratStats[strat].totalDiff += diff;
       stratStats[strat].count++;
@@ -7763,56 +7581,29 @@ function renderPlayCourseBar(courseId) {
 
     if (!Object.keys(stratStats).length) return;
 
-    const sorted = Object.entries(stratStats)
+    const best = Object.entries(stratStats)
       .map(([type, s]) => ({ type, avg: s.totalDiff / s.count, count: s.count }))
-      .sort((a, b) => a.avg - b.avg);
+      .sort((a, b) => a.avg - b.avg)[0];
 
-    const best = sorted[0];
-    const maxCount = Math.max(...sorted.map(s => s.count));
-    let isExpanded = false;
+    const { type: stratType, club: stratClub } = typeof window.decodeStrategy === 'function'
+      ? window.decodeStrategy(best.type)
+      : { type: best.type, club: null };
 
-    function render() {
-      lastRoundHint.innerHTML = '';
-      if (!isExpanded) {
-        const collapsed = document.createElement('div');
-        collapsed.className = 'hint-collapsed';
-        collapsed.innerHTML =
-          `<span class="hint-c-label">Best strategy:</span>` +
-          `<span class="hint-c-strat ${best.type.toLowerCase()}">${window.strategyDisplayName ? window.strategyDisplayName(best.type) : best.type}</span>` +
-          `<span class="hint-c-rounds">${best.count} round${best.count > 1 ? 's' : ''}</span>` +
-          `<span class="hint-c-arrow">History ▸</span>`;
-        collapsed.addEventListener('click', () => { isExpanded = true; render(); });
-        lastRoundHint.appendChild(collapsed);
-      } else {
-        const expanded = document.createElement('div');
-        expanded.className = 'hint-expanded';
-        const title = document.createElement('div');
-        title.className = 'hint-exp-title';
-        title.innerHTML = `<span>Hole ${idx + 1} · strategy history</span><span>▴ collapse</span>`;
-        title.addEventListener('click', () => { isExpanded = false; render(); });
-        expanded.appendChild(title);
-        const barColors = {
-      'Max distance': '#a05a5a', 'Controlled': '#986840', 'Conservative': '#347a50',
-      'Custom': '#686870',
-      'Aggressive': '#a05a5a', 'Balanced': '#986840', 'Safe': '#347a50',
-      'Long': '#347a50', 'Medium': '#986840', 'Short': '#a05a5a',
-    };
-        sorted.forEach((s, i) => {
-          const row = document.createElement('div');
-          row.className = 'hint-exp-row';
-          const barWidth = Math.round((s.count / maxCount) * 100);
-          const isBest = i === 0;
-          row.innerHTML =
-            `<span class="hint-exp-strat ${s.type.toLowerCase()}">${window.strategyDisplayName ? window.strategyDisplayName(s.type) : s.type}</span>` +
-            `<div class="hint-exp-bar-outer"><div class="hint-exp-bar-fill" style="width:${barWidth}%;background:${barColors[s.type] || (s.type?.startsWith('Par 3') ? '#686870' : '#888')};opacity:0.5;"></div></div>` +
-            `<span class="hint-exp-rounds">${s.count} round${s.count > 1 ? 's' : ''}</span>` +
-            (isBest ? `<span class="hint-exp-best">best</span>` : '');
-          expanded.appendChild(row);
-        });
-        lastRoundHint.appendChild(expanded);
-      }
-    }
-    render();
+    const tagClass = stratType?.startsWith('Par 3') ? 'par3'
+      : (stratType === 'Max distance' || stratType === 'Aggressive' || stratType === 'Long') ? 'aggressive'
+      : (stratType === 'Controlled'   || stratType === 'Balanced'   || stratType === 'Medium') ? 'balanced'
+      : 'safe';
+
+    const displayName = stratType || best.type;
+    const clubPart = stratClub ? ` · ${stratClub}` : '';
+
+    const row = document.createElement('div');
+    row.className = 'hint-best-row';
+    row.innerHTML =
+      `<span class="hint-best-label">Best here:</span>` +
+      `<span class="hint-best-tag ${tagClass}"><span class="hint-best-dot"></span>${displayName}${clubPart}</span>` +
+      `<span class="hint-best-rounds">${best.count} round${best.count > 1 ? 's' : ''}</span>`;
+    lastRoundHint.appendChild(row);
   }
 
   function updateSession() {
