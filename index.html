@@ -3052,8 +3052,8 @@ function haversine(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-// Take N GPS readings over ~2s and return the averaged position + worst accuracy
-function averagedPosition(n = 4) {
+// Take N GPS readings over ~3s and return an inverse-variance weighted position + combined accuracy estimate
+function averagedPosition(n = 6) {
   return new Promise((resolve, reject) => {
     const readings = [];
     let attempts  = 0;
@@ -3066,10 +3066,19 @@ function averagedPosition(n = 4) {
         if (attempts < n) {
           setTimeout(take, 500);
         } else {
-          const avgLat = readings.reduce((s,p) => s + p.coords.latitude,  0) / n;
-          const avgLon = readings.reduce((s,p) => s + p.coords.longitude, 0) / n;
-          const maxAcc = Math.max(...readings.map(p => p.coords.accuracy));
-          resolve({ lat: avgLat, lon: avgLon, accuracy: maxAcc });
+          // Discard readings >3× worse than the best; fall back to all if too few survive
+          const bestAcc  = Math.min(...readings.map(p => p.coords.accuracy));
+          const filtered = readings.filter(p => p.coords.accuracy <= bestAcc * 3);
+          const pool     = filtered.length >= 2 ? filtered : readings;
+
+          // Inverse-variance weighting: more accurate fixes contribute more
+          const weights  = pool.map(p => 1 / (p.coords.accuracy ** 2));
+          const totalW   = weights.reduce((s, w) => s + w, 0);
+          const avgLat   = pool.reduce((s, p, i) => s + p.coords.latitude  * weights[i], 0) / totalW;
+          const avgLon   = pool.reduce((s, p, i) => s + p.coords.longitude * weights[i], 0) / totalW;
+          const combinedAcc = 1 / Math.sqrt(totalW);
+
+          resolve({ lat: avgLat, lon: avgLon, accuracy: combinedAcc });
         }
       }, reject, opts);
     }
