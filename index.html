@@ -5651,40 +5651,68 @@ document.addEventListener('DOMContentLoaded', () => {
       overlay.onclick = closeClubPicker;
 
       // ── Swipe down to dismiss ─────────────────────────────────
-      const cpHandle = document.getElementById('clubPickerSheet').querySelector('.club-picker-handle-area');
+      // Attach to the full sheet so the handle area doesn't need to be precise
       let cpDragY = null;
+      let cpDragging = false;
       function cpDragStart(e) {
-        cpDragY = (e.touches ? e.touches[0].clientY : e.clientY);
+        // Only start drag if touch begins in the top 60px of the sheet (handle zone)
+        const rect = sheet.getBoundingClientRect();
+        const touchY = e.touches ? e.touches[0].clientY : e.clientY;
+        if (touchY - rect.top > 60) return;
+        cpDragY = touchY;
+        cpDragging = false;
         sheet.style.transition = 'none';
       }
       function cpDragMove(e) {
         if (cpDragY === null) return;
-        const delta = Math.max(0, (e.touches ? e.touches[0].clientY : e.clientY) - cpDragY);
-        sheet.style.transform = `translateY(${delta}px)`;
+        const y = e.touches ? e.touches[0].clientY : e.clientY;
+        const delta = Math.max(0, y - cpDragY);
+        if (delta > 5) cpDragging = true;
+        if (cpDragging) {
+          sheet.style.transform = `translateY(${delta}px)`;
+          if (e.cancelable) e.preventDefault();
+        }
       }
       function cpDragEnd(e) {
         if (cpDragY === null) return;
-        const delta = Math.max(0, (e.changedTouches ? e.changedTouches[0].clientY : e.clientY) - cpDragY);
+        const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+        const delta = Math.max(0, y - cpDragY);
         cpDragY = null;
+        cpDragging = false;
         sheet.style.transition = '';
-        if (delta > 80) { closeClubPicker(); }
-        else { sheet.style.transform = 'translateY(0)'; }
+        if (delta > 80) {
+          // Animate off screen then close
+          sheet.style.transform = 'translateY(100%)';
+          setTimeout(() => closeClubPicker(), 280);
+        } else {
+          // Snap back
+          sheet.style.transform = '';
+        }
       }
-      if (cpHandle) {
-        cpHandle.addEventListener('touchstart', cpDragStart, { passive: true });
-        cpHandle.addEventListener('touchmove',  cpDragMove, { passive: true });
-        cpHandle.addEventListener('touchend',   cpDragEnd);
-        cpHandle.addEventListener('mousedown',  cpDragStart);
-        window.addEventListener('mousemove',   cpDragMove);
-        window.addEventListener('mouseup',     cpDragEnd);
+      function cpDragCleanup() {
+        sheet.removeEventListener('touchstart', cpDragStart);
+        sheet.removeEventListener('touchmove',  cpDragMove);
+        sheet.removeEventListener('touchend',   cpDragEnd);
+        sheet.removeEventListener('mousedown',  cpDragStart);
+        window.removeEventListener('mousemove', cpDragMove);
+        window.removeEventListener('mouseup',   cpDragEnd);
       }
+      window._cpDragCleanup = cpDragCleanup;
+      sheet.addEventListener('touchstart', cpDragStart, { passive: true });
+      sheet.addEventListener('touchmove',  cpDragMove,  { passive: false });
+      sheet.addEventListener('touchend',   cpDragEnd);
+      sheet.addEventListener('mousedown',  cpDragStart);
+      window.addEventListener('mousemove', cpDragMove);
+      window.addEventListener('mouseup',   cpDragEnd);
     };
 
     function closeClubPicker() {
       const overlay = document.getElementById('clubPickerOverlay');
       const sheet   = document.getElementById('clubPickerSheet');
       if (!overlay || !sheet) return;
+      if (typeof window._cpDragCleanup === 'function') { window._cpDragCleanup(); window._cpDragCleanup = null; }
       sheet.style.transition = '';
+      sheet.style.transform  = '';  // clear any inline drag transform
       sheet.classList.remove('open');
       overlay.classList.remove('open');
       document.body.style.overflow = '';
