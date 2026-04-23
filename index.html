@@ -1899,6 +1899,56 @@
       white-space: nowrap;
     }
 
+
+  /* ── First-run splash overlay ───────────────────────────────────────── */
+  #splashOverlay {
+    position: fixed; inset: 0; z-index: 3000;
+    background: #fffffe;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  #splashOverlay.hidden { display: none; }
+  #splashImg {
+    width: 100%; height: 42vh; object-fit: cover;
+    object-position: center; flex-shrink: 0; display: block;
+  }
+  #splashBody {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 28px 24px; gap: 14px;
+  }
+  #splashTitle { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+  #splashLabel { font-size: 15px; color: #555; text-align: center; }
+  #splashInputRow { display: flex; align-items: center; gap: 8px; }
+  #splashDriverInput {
+    font-size: 22px; width: 110px; text-align: center;
+    border: 1.5px solid #ccc; border-radius: 10px; padding: 10px 8px;
+    -moz-appearance: textfield; appearance: textfield;
+  }
+  #splashDriverInput::-webkit-inner-spin-button,
+  #splashDriverInput::-webkit-outer-spin-button { -webkit-appearance: none; }
+  #splashInputRow span { font-size: 17px; color: #555; }
+  #splashStartBtn {
+    width: 100%; max-width: 280px; padding: 16px;
+    background: #2a6e3f; color: #fff; border: none; border-radius: 12px;
+    font-size: 17px; font-weight: 600; cursor: pointer;
+  }
+  #splashStartBtn:disabled { opacity: 0.4; }
+  #splashHint { font-size: 13px; color: #999; text-align: center; }
+
+  /* ── Bag completion hint (Play tab) ─────────────────────────────────── */
+  #bagCompleteHint {
+    margin: 0 0 8px; padding: 10px 14px;
+    background: #f0efeb; border-radius: 10px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 13px; color: #555;
+  }
+  #bagCompleteHintBtn {
+    background: none; border: none; font-size: 13px;
+    color: #2a6e3f; font-weight: 600; padding: 0; cursor: pointer;
+    white-space: nowrap; margin-left: 8px;
+  }
+
   </style>
 </head>
 <body>
@@ -2274,6 +2324,10 @@
   </div>
 
   <!-- ── Calculate + output ────────────────────────────────────────────── -->
+  <div id="bagCompleteHint" style="display:none;">
+    <span>Complete your bag for better accuracy</span>
+    <button type="button" id="bagCompleteHintBtn">My Golf › Bag →</button>
+  </div>
   <button id="calcButton">Calculate Shot Plan</button>
   <div id="playBodyPad">
     <div class="result" id="output" style="background:transparent;border:none;padding:0;margin:0;"></div>
@@ -2504,6 +2558,21 @@
     </div>
 
   </div><!-- /panePrepare -->
+
+  <!-- ── First-run splash overlay ──────────────────────────────────────── -->
+  <div id="splashOverlay">
+    <img src="assets/images/start_splash2.png" id="splashImg" alt="" />
+    <div id="splashBody">
+      <div id="splashTitle">Golf Shot Planner</div>
+      <div id="splashLabel">How far do you carry your driver?</div>
+      <div id="splashInputRow">
+        <input type="number" id="splashDriverInput" placeholder="e.g. 230" min="50" max="350" inputmode="numeric" />
+        <span>m</span>
+      </div>
+      <button id="splashStartBtn" type="button" disabled>Get started →</button>
+      <div id="splashHint">Add 7-iron &amp; PW distances later for better accuracy</div>
+    </div>
+  </div>
 
 </div><!-- /appShell -->
 
@@ -3202,10 +3271,53 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById(id).addEventListener('input', () => {
       updateCarryLabels();
       saveBag();
+      if (id === 'i7Carry' || id === 'pwCarry') updateBagCompleteHint();
     });
   });
 
   updateCarryLabels();
+  updateBagCompleteHint();
+
+  function updateBagCompleteHint() {
+    const hint = document.getElementById('bagCompleteHint');
+    if (!hint) return;
+    const i7 = Number(document.getElementById('i7Carry').value);
+    const pw = Number(document.getElementById('pwCarry').value);
+    hint.style.display = (i7 >= 50 && pw >= 50) ? 'none' : 'flex';
+  }
+  window.updateBagCompleteHint = updateBagCompleteHint;
+
+  document.getElementById('bagCompleteHintBtn')?.addEventListener('click', () => {
+    window.switchTab('prepare');
+    if (typeof window.showMgSub === 'function') window.showMgSub('mgSubBag');
+  });
+
+  // ── First-run splash ──────────────────────────────────────────────────
+  (function() {
+    const overlay = document.getElementById('splashOverlay');
+    const input   = document.getElementById('splashDriverInput');
+    const btn     = document.getElementById('splashStartBtn');
+    if (!overlay || !input || !btn) return;
+
+    try {
+      const bagSaved = JSON.parse(localStorage.getItem('golfBag_v2') || '{}');
+      if (Number(bagSaved.driver) >= 50) { overlay.classList.add('hidden'); return; }
+    } catch(e) {}
+
+    input.addEventListener('input', () => {
+      const v = Number(input.value);
+      btn.disabled = !(v >= 50 && v <= 350);
+    });
+
+    btn.addEventListener('click', () => {
+      const val = Number(input.value);
+      if (val < 50 || val > 350) return;
+      document.getElementById('driverCarry').value = val;
+      saveBag();
+      overlay.classList.add('hidden');
+      updateBagCompleteHint();
+    });
+  })();
 
   // ── Collapsible sections ──────────────────────────────────────────────
   function initCollapsible(sectionId, toggleId, openByDefault) {
