@@ -1149,20 +1149,21 @@
       transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
       touch-action: none;
       max-width: 520px; margin: 0 auto;
+      height: min(640px, 90vh); display: flex; flex-direction: column; overflow: hidden;
     }
     .score-drawer.open { transform: translateY(0); }
 
     .score-drawer-handle-area {
-      width: 100%; padding: 16px 0 8px;
+      width: 100%; padding: 12px 0 6px;
       display: flex; align-items: center; justify-content: center;
-      cursor: grab; touch-action: none;
+      cursor: grab; touch-action: none; flex-shrink: 0;
     }
     .score-drawer-handle {
-      width: 36px; height: 4px; border-radius: 2px;
-      background: #ece9e4; pointer-events: none;
+      width: 36px; height: 4px; border-radius: 99px;
+      background: rgba(0,0,0,0.1); pointer-events: none;
     }
     .score-drawer-inner {
-      padding: 12px 20px 0;
+      padding: 0; flex: 1; display: flex; flex-direction: column; min-height: 0;
     }
     .score-drawer-title {
       font-size: 15px; font-weight: 700; color: #888;
@@ -1941,34 +1942,37 @@
   .score-mode-btn { flex:1; padding:10px; background:none; border:none; font-size:14px; color:#555; cursor:pointer; }
   .score-mode-btn.active { background:#1a1a1a; color:#fff; font-weight:600; }
 
-  /* ── Shot sequence (score drawer) ───────────────────────────────────── */
-  /* Shot timeline */
-  @keyframes slideInRight { from { transform:translateX(20px); opacity:0; } to { transform:translateX(0); opacity:1; } }
-  @keyframes slideUp { from { transform:translateY(100%); opacity:0; } to { transform:translateY(0); opacity:1; } }
+  /* ── Score drawer — Direction 2.1 tile grid ──────────────────────────── */
+  @keyframes popIn { 0% { transform:scale(0.82);opacity:0; } 70% { transform:scale(1.06); } 100% { transform:scale(1);opacity:1; } }
+  @keyframes d2SlideUp { from { transform:translateY(36px);opacity:0; } to { transform:translateY(0);opacity:1; } }
   @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-  .sc-shot-row { position:relative; overflow:hidden; margin-bottom:10px; -webkit-tap-highlight-color:transparent; }
-  .sc-shot-row-inner { display:flex; align-items:center; background:#fff; cursor:pointer; will-change:transform; -webkit-tap-highlight-color:transparent; }
-  .sc-shot-delete-zone { position:absolute; right:0; top:0; bottom:0; width:80px; background:#e74c3c; display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:600; }
-  .sc-shot-badge-col { display:flex; flex-direction:column; align-items:center; margin-right:14px; }
-  .sc-shot-badge { width:36px; height:36px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; flex-shrink:0; border:2px solid; }
-  .sc-shot-connector { width:2px; height:10px; background:#f0f0f0; margin-top:1px; }
-  .sc-shot-info { flex:1; }
-  .sc-shot-label { font-size:15px; font-weight:600; color:#222; }
-  .sc-shot-sublabel { font-size:12px; font-weight:500; }
-  .sc-shot-chevron { font-size:16px; color:#ccc; padding:0 4px; }
-  .sc-add-btn { display:flex; align-items:center; gap:12px; background:none; border:2px dashed #ddd; border-radius:14px; padding:10px 16px; cursor:pointer; width:100%; margin-top:4px; -webkit-tap-highlight-color:transparent; }
-  .sc-add-btn-circle { width:36px; height:36px; border-radius:999px; background:#f5f5f5; display:flex; align-items:center; justify-content:center; font-size:22px; color:#bbb; flex-shrink:0; line-height:1; }
-  .sc-add-btn-label { font-size:15px; color:#bbb; font-weight:500; }
-  .sc-lie-sheet-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.3); border-radius:28px 28px 0 0; display:flex; flex-direction:column; justify-content:flex-end; animation:fadeIn 0.15s ease; z-index:10; }
-  .sc-lie-sheet { background:#fff; border-radius:24px 24px 0 0; padding:20px 20px 32px; animation:slideUp 0.25s ease; }
-  .sc-lie-sheet-handle { width:36px; height:4px; background:#ddd; border-radius:99px; margin:0 auto 20px; }
-  .sc-lie-header { font-size:13px; font-weight:700; letter-spacing:0.08em; color:#aaa; margin-bottom:16px; text-transform:uppercase; }
-  .sc-lie-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  .sc-lie-option { padding:14px 16px; border-radius:14px; text-align:left; cursor:pointer; border:1.5px solid; }
-  .sc-lie-option-label { font-size:15px; font-weight:700; }
-  .sc-lie-option-sub { font-size:11px; opacity:0.7; margin-top:2px; }
-  .sc-remove-btn { width:100%; margin-top:14px; padding:12px; border-radius:14px; background:#fdeaea; border:1.5px solid #f0b8b8; color:#a03030; font-weight:600; font-size:14px; cursor:pointer; }
-  .sc-cancel-btn { width:100%; margin-top:12px; padding:12px; border-radius:14px; background:#f5f5f5; border:none; color:#888; font-weight:600; font-size:14px; cursor:pointer; }
+  .d2-header { padding:12px 18px 0; display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-shrink:0; }
+  .d2-header-text { font-size:11px; font-weight:700; letter-spacing:0.09em; color:#c0bab3; text-transform:uppercase; }
+  .d2-badges { display:flex; gap:6px; min-height:28px; align-items:center; flex-wrap:wrap; padding:0 18px 10px; flex-shrink:0; }
+  .d2-badge { height:26px; padding:0 9px; border-radius:999px; border:none; font-size:11px; font-weight:700; display:flex; align-items:center; gap:3px; cursor:pointer; -webkit-tap-highlight-color:transparent; width:auto; margin:0; }
+  .d2-badge-short { font-size:9px; opacity:0.5; }
+  .d2-tile-area { flex:1; padding:0 14px 10px; display:flex; flex-direction:column; gap:7px; min-height:0; }
+  .d2-tile-row { flex:1; display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+  .d2-tile { margin:0; border-radius:20px; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; padding:0 0 14px 16px; transition:background 0.13s; overflow:hidden; -webkit-tap-highlight-color:transparent; }
+  .d2-tile-label { font-size:23px; font-weight:800; letter-spacing:-0.02em; line-height:1; transition:color 0.13s; }
+  .d2-putts-tile { margin:0; border-radius:20px; background:#ece8e2; display:grid; grid-template-columns:1fr auto 1fr; overflow:hidden; align-items:center; }
+  .d2-putts-btn { height:100%; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:300; color:#aaa; cursor:pointer; transition:background 0.12s; -webkit-tap-highlight-color:transparent; border:none; background:transparent; margin:0; padding:0; }
+  .d2-putts-btn.flash { background:rgba(0,0,0,0.08); }
+  .d2-putts-center { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; pointer-events:none; padding:0 6px; }
+  .d2-putts-count { font-size:30px; font-weight:800; letter-spacing:-0.03em; line-height:1; color:#2a2420; }
+  .d2-putts-sublabel { font-size:9px; font-weight:700; letter-spacing:0.07em; color:#b0a898; }
+  .d2-footer { padding:10px 20px 16px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
+  .d2-footer-total { font-size:13px; font-weight:600; color:#a09890; }
+  .d2-footer-score { font-size:13px; font-weight:700; }
+  .d2-footer-running { font-size:12px; color:#c0bab3; }
+  .d2-edit-scrim { position:absolute; inset:0; background:rgba(0,0,0,0.38); border-radius:inherit; display:flex; flex-direction:column; justify-content:flex-end; z-index:10; animation:fadeIn 0.15s ease; }
+  .d2-edit-sheet { background:#fffffe; border-radius:22px 22px 0 0; padding:16px 16px 28px; animation:d2SlideUp 0.2s ease; }
+  .d2-edit-handle { width:34px; height:4px; border-radius:99px; background:rgba(0,0,0,0.12); margin:0 auto 14px; }
+  .d2-edit-header { font-size:11px; font-weight:700; letter-spacing:0.09em; color:#bbb; text-transform:uppercase; margin-bottom:10px; }
+  .d2-edit-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+  .d2-edit-option { padding:14px; border-radius:16px; border:none; cursor:pointer; font-size:18px; font-weight:800; letter-spacing:-0.02em; width:100%; text-align:left; transition:background 0.13s; }
+  .d2-edit-remove { width:100%; padding:13px; border-radius:14px; background:#e8b8b8; border:none; color:#9a1a1a; font-weight:700; font-size:15px; cursor:pointer; margin-bottom:8px; }
+  .d2-edit-cancel { width:100%; padding:13px; border-radius:14px; background:rgba(0,0,0,0.06); border:none; color:#888; font-weight:600; font-size:14px; cursor:pointer; }
 
   /* ── Bag completion hint (Play tab) ─────────────────────────────────── */
   #bagCompleteHint {
@@ -7981,11 +7985,11 @@ function renderScoreEntry(courseId, holeIdx, scores) {
 
   // ── Lie config ─────────────────────────────────────────────────────────
   const LIE_CFG = {
-    tee:     { label: 'Tee',     short: 'TEE', bg: '#e8f4ff', color: '#2a6496', border: '#b8d8f0' },
-    fw:      { label: 'Fairway', short: 'FW',  bg: '#e2f0e8', color: '#3a7055', border: '#b4d8c1' },
-    rgh:     { label: 'Rough',   short: 'RGH', bg: '#f5edda', color: '#8a6030', border: '#dfc898' },
-    sand:    { label: 'Sand',    short: 'SND', bg: '#fdf3e0', color: '#a07020', border: '#f0d898' },
-    penalty: { label: 'Penalty', short: 'PEN', bg: '#fdeaea', color: '#a03030', border: '#f0b8b8' },
+    tee:     { label: 'Tee',     short: 'TEE', bg: '#cde3f5', color: '#0d3d5c', activeBg: '#1a6090' },
+    fw:      { label: 'Fairway', short: 'FW',  bg: '#bddece', color: '#0d3d22', activeBg: '#1a6040' },
+    rgh:     { label: 'Rough',   short: 'RGH', bg: '#ddd0aa', color: '#3d2a08', activeBg: '#7a5510' },
+    sand:    { label: 'Sand',    short: 'SND', bg: '#edddb8', color: '#3d2e08', activeBg: '#9a7010' },
+    penalty: { label: 'Penalty', short: 'PEN', bg: '#e8b8b8', color: '#3d0d0d', activeBg: '#9a1a1a' },
   };
   const LIE_ORDER = ['tee', 'fw', 'rgh', 'sand', 'penalty'];
   const ROUGH_LIES = new Set(['rgh', 'sand', 'penalty']);
@@ -8132,13 +8136,12 @@ function renderScoreEntry(courseId, holeIdx, scores) {
 
   // ── Total row ──────────────────────────────────────────────────────────
   const totalRow = document.createElement('div');
-  totalRow.className = 'score-total-row';
 
   function renderTotal() {
     const total = getScoringMode() === 'simple' ? simpleTotal : shots.length + putts;
     const diff  = total - par;
     const diffLabel = diff === 0 ? 'E' : (diff > 0 ? `+${diff}` : `${diff}`);
-    const cls = diff < 0 ? 'under' : diff > 0 ? 'over' : 'even';
+    const scoreColor = diff < 0 ? '#1a6040' : diff > 0 ? '#9a1a1a' : '#888';
     const allScores = loadScores(courseId);
     let runTotal = 0, runPar = 0;
     allScores.forEach((s, i) => {
@@ -8147,10 +8150,11 @@ function renderScoreEntry(courseId, holeIdx, scores) {
     runTotal += total; runPar += par;
     const runDiff = runTotal - runPar;
     const runLabel = runDiff === 0 ? 'E' : (runDiff > 0 ? `+${runDiff}` : `${runDiff}`);
+    totalRow.className = 'd2-footer';
     totalRow.innerHTML =
-      `<span>Total: <span class="score-total-val">${total}</span></span>` +
-      `<span class="score-vs-par ${cls}">${diffLabel}</span>` +
-      `<span style="font-size:13px;color:#888;">Running: ${runLabel}</span>`;
+      `<span class="d2-footer-total">Total ${total}</span>` +
+      `<span class="d2-footer-score" style="color:${scoreColor}">${diffLabel}</span>` +
+      `<span class="d2-footer-running">Running ${runLabel}</span>`;
   }
 
   // ── saveAndRefresh ─────────────────────────────────────────────────────
@@ -8217,17 +8221,44 @@ function renderScoreEntry(courseId, holeIdx, scores) {
   // ── Simple mode content ────────────────────────────────────────────────
   function buildSimpleContent() {
     inner.innerHTML = '';
-    const title = document.createElement('div');
-    title.className = 'score-drawer-title';
-    title.textContent = `Hole ${holeIdx + 1}  ·  Par ${par}`;
-    inner.appendChild(title);
 
-    const { row } = makeStepperRow('🏌️ Shots', () => simpleTotal, v => { simpleTotal = v; }, 0);
-    inner.appendChild(row);
+    const hdr = document.createElement('div');
+    hdr.className = 'd2-header';
+    hdr.innerHTML = `<span class="d2-header-text">HOLE ${holeIdx + 1} · PAR ${par}</span><span class="d2-header-text">SIMPLE</span>`;
+    inner.appendChild(hdr);
 
-    totalRow.innerHTML = '';
-    renderTotal();
-    inner.appendChild(totalRow);
+    const tileArea = document.createElement('div');
+    tileArea.className = 'd2-tile-area';
+
+    const shotsTile = document.createElement('div');
+    shotsTile.className = 'd2-putts-tile';
+    shotsTile.style.cssText = 'width:180px;height:180px;margin:16px auto;';
+
+    const minusZone = document.createElement('button');
+    minusZone.type = 'button'; minusZone.className = 'd2-putts-btn'; minusZone.textContent = '−';
+    minusZone.addEventListener('click', () => {
+      if (simpleTotal > 0) { simpleTotal--; countEl.textContent = simpleTotal; minusZone.classList.add('flash'); setTimeout(() => minusZone.classList.remove('flash'), 220); saveAndRefresh(); }
+    });
+
+    const center = document.createElement('div');
+    center.className = 'd2-putts-center';
+    const countEl = document.createElement('div');
+    countEl.className = 'd2-putts-count'; countEl.textContent = simpleTotal;
+    const sublbl = document.createElement('div');
+    sublbl.className = 'd2-putts-sublabel'; sublbl.textContent = 'SHOTS';
+    center.appendChild(countEl); center.appendChild(sublbl);
+
+    const plusZone = document.createElement('button');
+    plusZone.type = 'button'; plusZone.className = 'd2-putts-btn'; plusZone.textContent = '+';
+    plusZone.addEventListener('click', () => {
+      simpleTotal++; countEl.textContent = simpleTotal; plusZone.classList.add('flash'); setTimeout(() => plusZone.classList.remove('flash'), 220); saveAndRefresh();
+    });
+
+    shotsTile.appendChild(minusZone); shotsTile.appendChild(center); shotsTile.appendChild(plusZone);
+    tileArea.appendChild(shotsTile);
+    inner.appendChild(tileArea);
+
+    totalRow.innerHTML = ''; renderTotal(); inner.appendChild(totalRow);
   }
 
   function rebuildContent() { buildDrawerContent(); }
@@ -8248,244 +8279,153 @@ function renderScoreEntry(courseId, holeIdx, scores) {
       shots = buildShots(lieArr);
     }
 
-    const title = document.createElement('div');
-    title.className = 'score-drawer-title';
-    title.textContent = `Hole ${holeIdx + 1}  ·  Par ${par}`;
-    inner.appendChild(title);
+    // ── Header row ───────────────────────────────────────────────────────
+    const hdr = document.createElement('div');
+    hdr.className = 'd2-header';
+    const holeLabel = document.createElement('span');
+    holeLabel.className = 'd2-header-text';
+    holeLabel.textContent = `HOLE ${holeIdx + 1} · PAR ${par}`;
+    const shotLabel = document.createElement('span');
+    shotLabel.className = 'd2-header-text';
+    shotLabel.textContent = `SHOT ${shots.length + 1}`;
+    hdr.appendChild(holeLabel); hdr.appendChild(shotLabel);
+    inner.appendChild(hdr);
 
-    // ── Shot timeline ────────────────────────────────────────────────────
-    const listWrap = document.createElement('div');
-    listWrap.style.cssText = 'padding:0 20px;display:flex;flex-direction:column;';
-
-    let resetSwipe = null;  // snaps back the currently-open swipe row
-
+    // ── Shot badges row ──────────────────────────────────────────────────
+    const badgesRow = document.createElement('div');
+    badgesRow.className = 'd2-badges';
     shots.forEach((shot, idx) => {
       const cfg = LIE_CFG[shot.lie] || LIE_CFG.fw;
-      const row = document.createElement('div');
-      row.className = 'sc-shot-row';
-
-      // Delete zone revealed by swipe
-      const deleteZone = document.createElement('div');
-      deleteZone.className = 'sc-shot-delete-zone';
-      deleteZone.textContent = 'Delete';
-      row.appendChild(deleteZone);
-
-      // Translatable content wrapper
-      const rowInner = document.createElement('div');
-      rowInner.className = 'sc-shot-row-inner';
-
-      const badgeCol = document.createElement('div');
-      badgeCol.className = 'sc-shot-badge-col';
-      const badge = document.createElement('div');
-      badge.className = 'sc-shot-badge';
-      badge.style.cssText = `background:${cfg.bg};color:${cfg.color};border-color:${cfg.border};`;
-      badge.textContent = shot.num;
-      badgeCol.appendChild(badge);
-      if (idx < shots.length - 1) {
-        const connector = document.createElement('div');
-        connector.className = 'sc-shot-connector';
-        badgeCol.appendChild(connector);
-      }
-      rowInner.appendChild(badgeCol);
-
-      const info = document.createElement('div');
-      info.className = 'sc-shot-info';
-      const lbl = document.createElement('div');
-      lbl.className = 'sc-shot-label';
-      lbl.textContent = `Shot ${shot.num}`;
-      const sublbl = document.createElement('div');
-      sublbl.className = 'sc-shot-sublabel';
-      sublbl.style.color = cfg.color;
-      sublbl.textContent = cfg.label;
-      info.appendChild(lbl);
-      info.appendChild(sublbl);
-      rowInner.appendChild(info);
-
-      const chev = document.createElement('span');
-      chev.className = 'sc-shot-chevron';
-      chev.textContent = '›';
-      rowInner.appendChild(chev);
-
-      // ── Swipe-to-delete ───────────────────────────────────────────────
-      let startX = null, startY = null, swipeDx = 0, isHSwipe = false, justSwiped = false;
-      const SWIPE_MAX = 80, SWIPE_THRESH = 60;
-
-      function snapBack() {
-        rowInner.style.transition = 'transform 0.2s ease';
-        rowInner.style.transform = 'translateX(0)';
-        isHSwipe = false;
-        swipeDx = 0;
-      }
-
-      rowInner.addEventListener('touchstart', (e) => {
-        if (resetSwipe) resetSwipe();
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-        swipeDx = 0; isHSwipe = false; justSwiped = false;
-        rowInner.style.transition = 'none';
-      }, { passive: true });
-
-      rowInner.addEventListener('touchmove', (e) => {
-        if (startX === null) return;
-        const dx = e.touches[0].clientX - startX;
-        const dy = e.touches[0].clientY - startY;
-        if (!isHSwipe && Math.abs(dy) > Math.abs(dx) + 5) { startX = null; return; }
-        if (dx < 0) {
-          isHSwipe = true;
-          swipeDx = Math.max(dx, -SWIPE_MAX);
-          rowInner.style.transform = `translateX(${swipeDx}px)`;
-          resetSwipe = snapBack;
-        }
-      }, { passive: true });
-
-      rowInner.addEventListener('touchend', () => {
-        if (!isHSwipe) return;
-        justSwiped = true;
-        if (Math.abs(swipeDx) >= SWIPE_THRESH) {
-          rowInner.style.transition = 'transform 0.15s ease';
-          rowInner.style.transform = 'translateX(-100%)';
-          setTimeout(() => {
-            shots.splice(idx, 1);
-            shots.forEach((s, i) => { s.num = i + 1; });
-            saveAndRefresh();
-            rebuildContent();
-          }, 150);
-        } else {
-          snapBack();
-        }
-        startX = null;
-      });
-
-      rowInner.addEventListener('click', () => {
-        if (justSwiped) { justSwiped = false; return; }
-        openLiePicker('edit', idx);
-      });
-
-      row.appendChild(rowInner);
-      listWrap.appendChild(row);
+      const badge = document.createElement('button');
+      badge.type = 'button'; badge.className = 'd2-badge';
+      badge.style.cssText = `background:${cfg.bg};color:${cfg.color};`;
+      if (idx === shots.length - 1) badge.style.animation = 'popIn 0.2s ease';
+      badge.innerHTML = `<span class="d2-badge-num">${shot.num}</span><span class="d2-badge-short">${cfg.short}</span>`;
+      badge.addEventListener('click', () => openEditSheet(idx));
+      badgesRow.appendChild(badge);
     });
+    inner.appendChild(badgesRow);
 
-    // ── Add shot button (hidden once putts entered) ──────────────────────
-    if (putts === 0) {
-      const addBtn = document.createElement('button');
-      addBtn.type = 'button';
-      addBtn.className = 'sc-add-btn';
-      const circle = document.createElement('div');
-      circle.className = 'sc-add-btn-circle';
-      circle.textContent = '+';
-      const addLbl = document.createElement('span');
-      addLbl.className = 'sc-add-btn-label';
-      addLbl.textContent = `Add shot ${shots.length + 1}`;
-      addBtn.appendChild(circle);
-      addBtn.appendChild(addLbl);
-      addBtn.addEventListener('click', () => openLiePicker('add', shots.length));
-      listWrap.appendChild(addBtn);
+    // ── Tile grid ─────────────────────────────────────────────────────────
+    const tileArea = document.createElement('div');
+    tileArea.className = 'd2-tile-area';
+
+    function makeLieTile(lie) {
+      const cfg = LIE_CFG[lie];
+      const disabled = lie === 'tee' && shots.length > 0;
+      const tile = document.createElement('button');
+      tile.type = 'button'; tile.className = 'd2-tile';
+      tile.style.background = disabled ? '#e8e4df' : cfg.bg;
+      tile.disabled = disabled;
+      if (disabled) tile.style.opacity = '0.4';
+      const tileLbl = document.createElement('div');
+      tileLbl.className = 'd2-tile-label';
+      tileLbl.style.color = disabled ? '#c0bab3' : cfg.color;
+      tileLbl.textContent = cfg.label;
+      tile.appendChild(tileLbl);
+      if (!disabled) {
+        tile.addEventListener('click', () => {
+          shots.push({ num: shots.length + 1, lie });
+          tile.style.background = cfg.activeBg; tileLbl.style.color = '#fff';
+          setTimeout(() => { saveAndRefresh(); rebuildContent(); }, 240);
+        });
+      }
+      return tile;
     }
 
-    inner.appendChild(listWrap);
+    function makePuttsTile() {
+      const tile = document.createElement('div');
+      tile.className = 'd2-putts-tile';
+      const minusZone = document.createElement('button');
+      minusZone.type = 'button'; minusZone.className = 'd2-putts-btn'; minusZone.textContent = '−';
+      minusZone.addEventListener('click', () => {
+        if (putts > 0) { putts--; countEl.textContent = putts; minusZone.classList.add('flash'); setTimeout(() => minusZone.classList.remove('flash'), 220); saveAndRefresh(); }
+      });
+      const center = document.createElement('div');
+      center.className = 'd2-putts-center';
+      const countEl = document.createElement('div');
+      countEl.className = 'd2-putts-count'; countEl.textContent = putts;
+      const pLbl = document.createElement('div');
+      pLbl.className = 'd2-putts-sublabel'; pLbl.textContent = 'PUTTS';
+      center.appendChild(countEl); center.appendChild(pLbl);
+      const plusZone = document.createElement('button');
+      plusZone.type = 'button'; plusZone.className = 'd2-putts-btn'; plusZone.textContent = '+';
+      plusZone.addEventListener('click', () => {
+        putts++; countEl.textContent = putts; plusZone.classList.add('flash'); setTimeout(() => plusZone.classList.remove('flash'), 220); saveAndRefresh();
+      });
+      tile.appendChild(minusZone); tile.appendChild(center); tile.appendChild(plusZone);
+      return tile;
+    }
 
-    // ── Putts stepper ────────────────────────────────────────────────────
-    const { row: puttRow } = makeStepperRow('⛳ Putts', () => putts, v => { putts = v; }, 0, rebuildContent);
-    inner.appendChild(puttRow);
+    [['tee','fw'], ['rgh','sand'], ['penalty','_putts']].forEach(([left, right]) => {
+      const tileRow = document.createElement('div');
+      tileRow.className = 'd2-tile-row';
+      tileRow.appendChild(makeLieTile(left));
+      tileRow.appendChild(right === '_putts' ? makePuttsTile() : makeLieTile(right));
+      tileArea.appendChild(tileRow);
+    });
 
-    totalRow.innerHTML = '';
-    renderTotal();
-    inner.appendChild(totalRow);
+    inner.appendChild(tileArea);
+    totalRow.innerHTML = ''; renderTotal(); inner.appendChild(totalRow);
   }
 
-  // ── Lie picker sub-sheet ─────────────────────────────────────────────
-  function openLiePicker(mode, shotIdx) {
-    const isAdd   = mode === 'add';
-    const shotNum = isAdd ? shots.length + 1 : shots[shotIdx].num;
-    const isFirst = shotIdx === 0;
-    const currentLie = isAdd ? (isFirst ? 'tee' : 'fw') : shots[shotIdx].lie;
+  // ── Edit sheet (badge tap) ───────────────────────────────────────────
+  function openEditSheet(shotIdx) {
+    const shot = shots[shotIdx];
 
-    const overlay2 = document.createElement('div');
-    overlay2.className = 'sc-lie-sheet-overlay';
+    const scrim = document.createElement('div');
+    scrim.className = 'd2-edit-scrim';
 
     const sheet = document.createElement('div');
-    sheet.className = 'sc-lie-sheet';
+    sheet.className = 'd2-edit-sheet';
 
-    const sheetHandle = document.createElement('div');
-    sheetHandle.className = 'sc-lie-sheet-handle';
-    sheet.appendChild(sheetHandle);
+    const handle = document.createElement('div');
+    handle.className = 'd2-edit-handle';
+    sheet.appendChild(handle);
 
     const hdr = document.createElement('div');
-    hdr.className = 'sc-lie-header';
-    hdr.textContent = isAdd ? `Log shot ${shotNum}` : `Edit shot ${shotNum}`;
+    hdr.className = 'd2-edit-header';
+    hdr.textContent = `EDIT SHOT ${shot.num}`;
     sheet.appendChild(hdr);
 
     const grid = document.createElement('div');
-    grid.className = 'sc-lie-grid';
+    grid.className = 'd2-edit-grid';
 
-    const availableLies = isFirst ? LIE_ORDER : LIE_ORDER.filter(l => l !== 'tee');
-
+    const availableLies = LIE_ORDER;
     availableLies.forEach(lie => {
       const cfg = LIE_CFG[lie];
       const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'sc-lie-option';
-      const isSelected = !isAdd && lie === currentLie;
-      if (isSelected) {
-        btn.style.cssText = `background:${cfg.color};border-color:${cfg.color};`;
-      } else {
-        btn.style.cssText = `background:${cfg.bg};border-color:${cfg.border};`;
-      }
-      const lblEl = document.createElement('div');
-      lblEl.className = 'sc-lie-option-label';
-      lblEl.style.color = isSelected ? '#fff' : cfg.color;
-      lblEl.textContent = cfg.label;
-      const subEl = document.createElement('div');
-      subEl.className = 'sc-lie-option-sub';
-      subEl.style.color = isSelected ? 'rgba(255,255,255,0.7)' : cfg.color;
-      subEl.textContent = cfg.short;
-      btn.appendChild(lblEl);
-      btn.appendChild(subEl);
+      btn.type = 'button'; btn.className = 'd2-edit-option';
+      const isSelected = lie === shot.lie;
+      btn.style.cssText = isSelected ? `background:${cfg.activeBg};color:#fff;` : `background:${cfg.bg};color:${cfg.color};`;
+      btn.textContent = cfg.label;
       btn.addEventListener('click', () => {
-        if (isAdd) {
-          shots.push({ num: shots.length + 1, lie });
-        } else {
-          shots[shotIdx] = { num: shots[shotIdx].num, lie };
-        }
-        overlay2.remove();
-        saveAndRefresh();
-        rebuildContent();
-        if (isAdd) {
-          setTimeout(() => {
-            const rows = inner.querySelectorAll('.sc-shot-row');
-            if (rows.length) rows[rows.length - 1].style.animation = 'slideInRight 0.2s ease';
-          }, 10);
-        }
+        shots[shotIdx] = { num: shot.num, lie };
+        scrim.remove(); saveAndRefresh(); rebuildContent();
       });
       grid.appendChild(btn);
     });
     sheet.appendChild(grid);
 
-    if (!isAdd) {
-      const removeBtn = document.createElement('button');
-      removeBtn.type = 'button';
-      removeBtn.className = 'sc-remove-btn';
-      removeBtn.textContent = `Remove shot ${shotNum}`;
-      removeBtn.addEventListener('click', () => {
-        shots.splice(shotIdx, 1);
-        shots.forEach((s, i) => { s.num = i + 1; });
-        overlay2.remove();
-        saveAndRefresh();
-        rebuildContent();
-      });
-      sheet.appendChild(removeBtn);
-    }
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button'; removeBtn.className = 'd2-edit-remove';
+    removeBtn.textContent = `Remove shot ${shot.num}`;
+    removeBtn.addEventListener('click', () => {
+      shots.splice(shotIdx, 1);
+      shots.forEach((s, i) => { s.num = i + 1; });
+      scrim.remove(); saveAndRefresh(); rebuildContent();
+    });
+    sheet.appendChild(removeBtn);
 
     const cancelBtn = document.createElement('button');
-    cancelBtn.type = 'button';
-    cancelBtn.className = 'sc-cancel-btn';
+    cancelBtn.type = 'button'; cancelBtn.className = 'd2-edit-cancel';
     cancelBtn.textContent = 'Cancel';
-    cancelBtn.addEventListener('click', () => overlay2.remove());
+    cancelBtn.addEventListener('click', () => scrim.remove());
     sheet.appendChild(cancelBtn);
 
-    overlay2.appendChild(sheet);
-    overlay2.addEventListener('click', (e) => { if (e.target === overlay2) overlay2.remove(); });
-    drawer.appendChild(overlay2);
+    scrim.appendChild(sheet);
+    scrim.addEventListener('click', (e) => { if (e.target === scrim) scrim.remove(); });
+    drawer.appendChild(scrim);
   }
 }
 
