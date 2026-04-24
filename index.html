@@ -1962,7 +1962,6 @@ document.addEventListener('DOMContentLoaded', () => {
   wireChipRow('parChipRow',        'parSelect');
   wireChipRow('condChipRow',       'conditions');
   wireChipRow('condChipRowWeather','conditions');
-  wireCoursePickerEvents();
 
 </script>
 
@@ -3247,6 +3246,7 @@ document.getElementById('newCourseBtn').addEventListener('click', () => {
   if (typeof window.updateLoadCourseBtn === 'function') window.updateLoadCourseBtn();
 })();
 
+wireCoursePickerEvents();
 
 </script>
   <!-- ── Score FAB ─────────────────────────────────────────────────────── -->
