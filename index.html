@@ -650,6 +650,12 @@ import {
   loadCourses, loadScores, loadProfile,
   loadCollapseState, saveCollapseState,
 } from './src/storage/storage.js';
+import {
+  teeMarked, completedShots,
+  clearGpsState, markTeePosition, recordShot, restoreGpsState, getGpsSnapshot,
+  averagedPosition,
+} from './src/platform/gps.js';
+import { fetchWind, fetchLocationName } from './src/platform/weather.js';
 
 
 // ── Club data ──────────────────────────────────────────────────────────────
@@ -942,11 +948,6 @@ function windCategory(idx) {
   return 'wedge';
 }
 
-// wind state — filled by fetchWind(), used by calculate()
-// Tracks whether the user has pressed Mark Tee — used to grey out Shot 1
-// and lock the tee selector in results. Set by GPS tracker, read by calculate().
-let teeMarked = false;
-
 // Per-hole HCP adjustment — set by calculate() using refined WHS model when
 // course has CR/Slope/SI and player has handicap index. Falls back to flat model.
 let _holeHcpAdj = null; // null = use flat model inside expectedStrokesRemaining
@@ -1131,24 +1132,6 @@ function windAdjustedRoll(baseRoll, clubIdx, windState) {
   return Math.max(1.0, Math.min(1.6, adjusted));
 }
 
-// Fetch wind from Open-Meteo (no API key needed)
-// Requests sustained wind, gusts, and direction in one call.
-async function fetchWind(lat, lon) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-    `&current=wind_speed_10m,wind_gusts_10m,wind_direction_10m,temperature_2m,apparent_temperature,precipitation_probability&wind_speed_unit=ms&forecast_days=1`;
-  const resp = await fetch(url);
-  if (!resp.ok) throw new Error('Weather fetch failed');
-  const data = await resp.json();
-  return {
-    speedMs:   data.current.wind_speed_10m,
-    gustMs:    data.current.wind_gusts_10m,
-    dirDeg:    data.current.wind_direction_10m,
-    tempC:     data.current.temperature_2m,
-    feelsLike: data.current.apparent_temperature,
-    rainPct:   data.current.precipitation_probability,
-  };
-}
-
 // Returns 'left', 'right', or 'none' relative to the hole playing direction.
 // Wind FROM dirDeg blowing INTO holeDeg. Cross component = sin(wind-hole).
 // Positive sin → wind pushes ball rightward (cross from left); negative → from right.
@@ -1169,52 +1152,6 @@ function bearingLabel(deg) {
 function windDirectionLabel(fromDeg) {
   // Wind FROM direction — e.g. "from SW" means wind is blowing NE
   return bearingLabel((fromDeg + 180) % 360);
-}
-
-// ── GPS Distance Tracker ──────────────────────────────────────────────────
-// Haversine formula — returns distance in metres between two lat/lon points
-function haversine(lat1, lon1, lat2, lon2) {
-  const R = 6371000; // Earth radius in metres
-  const toRad = d => d * Math.PI / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat/2)**2 +
-            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-// Take N GPS readings over ~3s and return an inverse-variance weighted position + combined accuracy estimate
-function averagedPosition(n = 6) {
-  return new Promise((resolve, reject) => {
-    const readings = [];
-    let attempts  = 0;
-    const opts = { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 };
-
-    function take() {
-      navigator.geolocation.getCurrentPosition(pos => {
-        readings.push(pos);
-        attempts++;
-        if (attempts < n) {
-          setTimeout(take, 500);
-        } else {
-          // Discard readings >3× worse than the best; fall back to all if too few survive
-          const bestAcc  = Math.min(...readings.map(p => p.coords.accuracy));
-          const filtered = readings.filter(p => p.coords.accuracy <= bestAcc * 3);
-          const pool     = filtered.length >= 2 ? filtered : readings;
-
-          // Inverse-variance weighting: more accurate fixes contribute more
-          const weights  = pool.map(p => 1 / (p.coords.accuracy ** 2));
-          const totalW   = weights.reduce((s, w) => s + w, 0);
-          const avgLat   = pool.reduce((s, p, i) => s + p.coords.latitude  * weights[i], 0) / totalW;
-          const avgLon   = pool.reduce((s, p, i) => s + p.coords.longitude * weights[i], 0) / totalW;
-          const combinedAcc = 1 / Math.sqrt(totalW);
-
-          resolve({ lat: avgLat, lon: avgLon, accuracy: combinedAcc });
-        }
-      }, reject, opts);
-    }
-    take();
-  });
 }
 
 // Format elapsed time since a timestamp
@@ -1990,24 +1927,10 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         windText.textContent = '⏳ Fetching wind…';
 
-        // Reverse geocode via OSM Nominatim (free, no key) — optional, fails silently
-        let locationName = `${lat.toFixed(3)}°, ${lon.toFixed(3)}°`;
-        try {
-          const geoResp = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`,
-            { headers: { 'Accept-Language': 'en' }, signal: AbortSignal.timeout(4000) }
-          );
-          if (geoResp.ok) {
-            const geoData = await geoResp.json();
-            const addr = geoData.address || {};
-            locationName = addr.golf || addr.leisure ||
-              [addr.suburb || addr.village || addr.town, addr.city || addr.county]
-              .filter(Boolean).join(', ')
-              || locationName;
-          }
-        } catch(_) {} // geocode failure is non-fatal
-
-        const w = await fetchWind(lat, lon);
+        const [locationName, w] = await Promise.all([
+          fetchLocationName(lat, lon),
+          fetchWind(lat, lon),
+        ]);
         applyWindData(w.speedMs, w.gustMs, w.dirDeg, locationName, w.tempC, w.feelsLike, w.rainPct);
 
       } catch(e) {
@@ -2072,30 +1995,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const gpsReset      = document.getElementById('gpsReset');
   const gpsWarning    = document.getElementById('gpsWarning');
 
-  // GPS state — persists across shots within a hole
-  let teeMark      = null;   // current position mark {lat,lon,accuracy,timestamp}
-  let shotNumber   = 0;      // how many shots have been marked this hole
-  let remainingDist = null;  // remaining distance after last mark (null = use holeLength)
-  let completedShots = [];   // [{shotNum, dist, remaining}] for the result display
-  // ── Persistence ───────────────────────────────────────────────────────
-  function loadGpsState() {
-    return loadTeeState();
-  }
-
-  function saveGpsState() {
-    _saveTeeState({ teeMark, shotNumber, remainingDist, completedShots });
-  }
-
-  function clearGpsState() {
-    teeMark = null; shotNumber = 0; remainingDist = null; completedShots = [];
-    teeMarked = false;
-    window.completedShots = completedShots;
-    window.teeMarked = teeMarked;
-    Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]);
-    clearTeeState();
-  }
-  window.clearGpsState = clearGpsState;
-
   // ── Timestamp ticker ──────────────────────────────────────────────────
   // ── Result display ────────────────────────────────────────────────────
   function renderGpsResult() {
@@ -2107,13 +2006,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Restore state on load ─────────────────────────────────────────────
   function applyRestoredState(saved) {
-    teeMark        = saved.teeMark;
-    shotNumber     = saved.shotNumber    ?? 0;
-    remainingDist  = saved.remainingDist ?? null;
-    completedShots = saved.completedShots ?? [];
-    teeMarked = true;
-    window.completedShots = completedShots;
-    window.teeMarked = teeMarked;
+    restoreGpsState(saved);
 
     gpsTeeSetState('set');
     gpsBallSetState('ready', null, completedShots.length);
@@ -2127,7 +2020,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderGpsResult();
   }
 
-  const savedGps = loadGpsState();
+  const savedGps = loadTeeState();
   if (savedGps?.teeMark) applyRestoredState(savedGps);
 
   // ── Mark Tee ──────────────────────────────────────────────────────────
@@ -2144,14 +2037,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const pos = await averagedPosition(4);
 
       clearGpsState();
-      teeMark       = { lat: pos.lat, lon: pos.lon, accuracy: pos.accuracy, timestamp: Date.now() };
-      shotNumber    = 0;
-      remainingDist = null;
-      completedShots = [];
-      teeMarked     = true;
-      window.completedShots = completedShots;
-      window.teeMarked = teeMarked;
-      saveGpsState();
+      Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]);
+      clearTeeState();
+      markTeePosition(pos);
+      _saveTeeState(getGpsSnapshot());
 
       gpsTeeSetState('set');
       gpsBallSetState('ready', null, 0);
@@ -2176,29 +2065,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Mark Ball ─────────────────────────────────────────────────────────
   gpsBallBtn.addEventListener('click', async () => {
-    if (!teeMark) return;
+    if (!teeMarked) return;
     gpsBallSetState('loading', null, 0);
     gpsWarning.style.display = 'none';
 
     try {
-      const pos      = await averagedPosition(4);
-      const shotDist = Math.round(haversine(teeMark.lat, teeMark.lon, pos.lat, pos.lon));
-      shotNumber++;
-
-      const holeLen        = Number(document.getElementById('holeLength').value) || 0;
-      const prevRemaining  = remainingDist ?? holeLen;
-      const newRemaining   = Math.max(0, Math.round(prevRemaining - shotDist));
-      remainingDist        = newRemaining;
-
-      completedShots.push({
-        shotNum:   shotNumber,
-        dist:      shotDist,
-        remaining: holeLen ? newRemaining : null,
-      });
-      window.completedShots = completedShots;
-
-      teeMark = { lat: pos.lat, lon: pos.lon, accuracy: pos.accuracy, timestamp: Date.now() };
-      saveGpsState();
+      const pos     = await averagedPosition(4);
+      const holeLen = Number(document.getElementById('holeLength').value) || 0;
+      const { shotDist } = recordShot(pos, holeLen);
+      _saveTeeState(getGpsSnapshot());
 
       gpsBallSetState('set', shotDist, completedShots.length);
       gpsBallSetState('ready', null, completedShots.length);
@@ -2220,6 +2095,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ── Reset GPS ─────────────────────────────────────────────────────────
   gpsReset.addEventListener('click', () => {
     clearGpsState();
+    Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]);
+    clearTeeState();
 
     try {
       const session   = loadActiveCourse();
@@ -2255,10 +2132,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // fragile innerHTML string checks.
   // Exposed on window so the prepare-module can also read it.
   let lastParValue = null;
-  Object.defineProperty(window, 'lastParValue', {
-    get: () => lastParValue,
-    set: v => { lastParValue = v; },
-  });
+  window.lastParValue = null;
 
 
   function readInputsFromDOM() {
@@ -2372,7 +2246,7 @@ document.addEventListener('DOMContentLoaded', () => {
         scoreVal3 = bl3.score;
       }
       const diff3 = scoreVal3 - 3;
-      lastParValue = 3;
+      lastParValue = 3; window.lastParValue = lastParValue;
       try {
         if (sessionHoleIdx !== null) {
           const _committed = getCommittedStrategies();
@@ -2392,7 +2266,7 @@ document.addEventListener('DOMContentLoaded', () => {
       };
     }
 
-    lastParValue = parValue;
+    lastParValue = parValue; window.lastParValue = lastParValue;
     if (clearOverrides) {
       Object.keys(teeOverrides).forEach(k => delete teeOverrides[k]);
       Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
@@ -2797,16 +2671,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const windStr        = windSummaryStr();
       const activeTeeLabel = clubMap[activePlan.shots[0].key]?.label ?? activePlan.shots[0].key;
       // Score: use GPS-actual if tee shot is done, otherwise pre-shot model
-      const gpsLastShot = (window.completedShots?.length > 0)
-        ? window.completedShots[window.completedShots.length - 1]
+      const gpsLastShot = (completedShots?.length > 0)
+        ? completedShots[completedShots.length - 1]
         : null;
       const gpsRemaining = gpsLastShot?.remaining ?? null;
-      const gpsActive    = window.teeMarked && gpsRemaining != null;
+      const gpsActive    = teeMarked && gpsRemaining != null;
 
       let scoreVal, scoreSuffix;
       if (gpsActive) {
         // Shots taken so far + expected strokes from actual GPS position
-        const shotsTaken = window.completedShots.length;
+        const shotsTaken = completedShots.length;
         scoreVal   = shotsTaken + expectedStrokesRemaining(gpsRemaining, driverCarry, handicap, inRough, windState);
         scoreSuffix = ' GPS';
       } else {
@@ -3974,10 +3848,6 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   window.calculate = calculate;
-  // Sync GPS state to window so prepare-module can read current values
-  // Updated explicitly after each GPS state change (safer than defineProperty in Safari)
-  window.completedShots = completedShots;
-  window.teeMarked = teeMarked;
   document.getElementById('calcButton').addEventListener('click', () => calculate(true));
 
   // ── Recalc link (shown instead of button when course is active) ───────
@@ -4101,6 +3971,7 @@ import {
   loadActiveCourse, saveActiveCourse, clearActiveCourse, getActiveCourseId,
   clearTeeState,
 } from './src/storage/storage.js';
+import { teeMarked, completedShots, clearGpsState } from './src/platform/gps.js';
 
 // ── Tab switching (shared, placed in module for clean removal) ────────────
 window.switchTab = function(name) {
@@ -5306,7 +5177,8 @@ function renderPlayCourseBar(courseId) {
     if (typeof window.updateHoleCardMode === 'function') window.updateHoleCardMode();
 
     // Reset GPS state for new hole
-    if (typeof window.clearGpsState === 'function') window.clearGpsState();
+    clearGpsState(); clearTeeState();
+    try { Object.keys(window.gpsShot2Overrides).forEach(k => delete window.gpsShot2Overrides[k]); } catch(e) {}
     const _teeBtn  = document.getElementById('gpsTeeBtn');
     const _ballBtn = document.getElementById('gpsBallBtn');
     if (typeof window.gpsTeeSetState === 'function') window.gpsTeeSetState('idle');
@@ -5446,7 +5318,7 @@ function renderPlayCourseBar(courseId) {
           Object.keys(window.gpsShot2Overrides).forEach(k => delete window.gpsShot2Overrides[k]);
         } catch(e) {}
         // Reset GPS state + button UI
-        if (typeof window.clearGpsState === 'function') window.clearGpsState();
+        clearGpsState();
         const _teeBtn  = document.getElementById('gpsTeeBtn');
         const _ballBtn = document.getElementById('gpsBallBtn');
         const _resetBtn = document.getElementById('gpsReset');
@@ -5930,8 +5802,8 @@ function renderScoreEntry(courseId, holeIdx, scores) {
   const hole = course.holes[holeIdx];
   const par  = hole?.par || 4;
 
-  const gpsShots  = (typeof window.completedShots !== 'undefined') ? window.completedShots.length : 0;
-  const gpsActive = gpsShots > 0 || (typeof window.teeMarked !== 'undefined' && window.teeMarked);
+  const gpsShots  = completedShots.length;
+  const gpsActive = gpsShots > 0 || teeMarked;
 
   const existing_score = scores[holeIdx];
 
@@ -6221,8 +6093,8 @@ function renderScoreEntry(courseId, holeIdx, scores) {
     inner.innerHTML = '';
 
     // Re-read GPS state fresh each time drawer opens
-    const curGpsShots  = (typeof window.completedShots !== 'undefined') ? window.completedShots.length : 0;
-    const curGpsActive = curGpsShots > 0 || (typeof window.teeMarked !== 'undefined' && window.teeMarked);
+    const curGpsShots  = completedShots.length;
+    const curGpsActive = curGpsShots > 0 || teeMarked;
 
     // GPS pre-fill on first open if no existing score and shots not yet started
     if (!scores[holeIdx] && curGpsActive && curGpsShots > 0 && shots.length === 0) {
@@ -6593,7 +6465,7 @@ function _dismissRoundComplete(courseId) {
     Object.keys(window.teeOverrides).forEach(k => delete window.teeOverrides[k]);
     removeCommittedStrategies(null);
   } catch(e) {}
-  if (typeof window.clearGpsState === 'function') window.clearGpsState();
+  clearGpsState();
   clearTeeState();
   const resetBtn = document.getElementById('gpsReset');
   const gpsWarn  = document.getElementById('gpsWarning');
