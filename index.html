@@ -656,71 +656,17 @@ import {
   averagedPosition,
 } from './src/platform/gps.js';
 import { fetchWind, fetchLocationName } from './src/platform/weather.js';
+import {
+  clubs, clubOrder, idx7, idxPW, clubMap, getRollFactor,
+} from './src/engine/clubs.js';
+import {
+  WIND_ADJ, ALT_FACTORS, EXPECTED_STROKES,
+  windCategory, windAdjustedRoll, applyWind, tempCarryFactor,
+  interpolate, expectedStrokesRemaining,
+  getValidTeeClubs, findBestContinuation, calcPar3,
+  decodeStrategy, strategyDisplayName,
+} from './src/engine/calculations.js';
 
-
-// ── Club data ──────────────────────────────────────────────────────────────
-// relCarry: carry as a fraction of driver carry, based on Trackman amateur averages.
-// These are NON-UNIFORM — the gap from driver→FW3 is much larger than 8i→9i.
-// This replaces the old "equal steps" assumption.
-//
-// Typical amateur gaps (carry only, ~230m driver baseline):
-//   Driver 230 → FW3 215 → FW5 205 → FW7 195 → U2 190 → U3 185 → U4 180
-//   → 4i 175 → 5i 168 → 6i 160 → 7i 152 → 8i 143 → 9i 133 → PW 122
-//   → 50° 115 → 52° 110 → 54° 105 → 56° 100 → 58° 93 → 60° 87
-//
-// relCarry = club_carry / driver_carry, so interpolation scales correctly
-// for any driver distance the user enters.
-//
-// Roll factors (soft vs firm):
-//   Soft  — ball plugs on landing, minimal run. Closer to carry = total.
-//   Firm  — summer conditions, ball lands and runs. Driver +15%, FWs +10%, etc.
-//   Source: Trackman data, R&A distance reports, PGA/DP World Tour shot-tracking.
-//
-// Note: wedges always stop quickly regardless of conditions (steep descent angle,
-// high spin), so both factors are 1.00–1.01 even on firm ground.
-
-const clubs = [
-  // key      label    relCarry  rollSoft  rollFirm  checked
-  // rollFirm calibrated to Trackman/R&A amateur data on firm summer fairways.
-  // Driver +15% (264m from 230 carry) sits mid-range for firm conditions.
-  // FWs and irons revised upward from previous values which were 5-15m short.
-  // Wedges unchanged — steep descent angle means minimal run regardless of conditions.
-  {key:'driver', label:'Driver', relCarry:1.000, rollSoft:1.06, rollFirm:1.15, checked:true},
-  {key:'fw3',    label:'FW3',    relCarry:0.935, rollSoft:1.06, rollFirm:1.13},
-  {key:'fw5',    label:'FW5',    relCarry:0.891, rollSoft:1.05, rollFirm:1.12, checked:true},
-  {key:'fw7',    label:'FW7',    relCarry:0.848, rollSoft:1.04, rollFirm:1.11},
-  {key:'u2',     label:'U2',     relCarry:0.826, rollSoft:1.04, rollFirm:1.10},
-  {key:'u3',     label:'U3',     relCarry:0.804, rollSoft:1.03, rollFirm:1.10},
-  {key:'u4',     label:'U4',     relCarry:0.783, rollSoft:1.03, rollFirm:1.09, checked:true},
-  {key:'4i',     label:'4i',     relCarry:0.761, rollSoft:1.03, rollFirm:1.09},
-  {key:'5i',     label:'5i',     relCarry:0.730, rollSoft:1.02, rollFirm:1.08, checked:true},
-  {key:'6i',     label:'6i',     relCarry:0.696, rollSoft:1.02, rollFirm:1.07, checked:true},
-  {key:'7i',     label:'7i',     relCarry:0.661, rollSoft:1.01, rollFirm:1.06, checked:true},
-  {key:'8i',     label:'8i',     relCarry:0.622, rollSoft:1.01, rollFirm:1.05, checked:true},
-  {key:'9i',     label:'9i',     relCarry:0.578, rollSoft:1.00, rollFirm:1.04, checked:true},
-  {key:'pw',     label:'PW',     relCarry:0.530, rollSoft:1.00, rollFirm:1.03, checked:true},
-  {key:'50',     label:'50°',    relCarry:0.500, rollSoft:1.00, rollFirm:1.02},
-  {key:'52',     label:'52°',    relCarry:0.478, rollSoft:1.00, rollFirm:1.02, checked:true},
-  {key:'54',     label:'54°',    relCarry:0.457, rollSoft:1.00, rollFirm:1.00},
-  {key:'56',     label:'56°',    relCarry:0.435, rollSoft:1.00, rollFirm:1.00, checked:true},
-  {key:'58',     label:'58°',    relCarry:0.404, rollSoft:1.00, rollFirm:1.00},
-  {key:'60',     label:'60°',    relCarry:0.378, rollSoft:1.00, rollFirm:1.00},
-];
-
-window.clubs = clubs;
-const clubOrder = clubs.map(c => c.key);
-const idx7      = clubOrder.indexOf('7i');
-const idxPW     = clubOrder.indexOf('pw');
-
-// Build lookup maps from key → club object for fast access
-const clubMap = clubs.reduce((acc, c) => { acc[c.key] = c; return acc; }, {});
-
-// ── Conditions ─────────────────────────────────────────────────────────────
-function getRollFactor(key) {
-  const cond = document.getElementById('conditions').value;
-  const c = clubMap[key];
-  return cond === 'firm' ? c.rollFirm : c.rollSoft;
-}
 
 // ── Persistence ────────────────────────────────────────────────────────────
 function saveBag() {
@@ -736,55 +682,6 @@ function saveBag() {
 }
 
 
-// ── Interpolation (non-uniform spacing via relCarry) ───────────────────────
-//
-// Strategy: interpolate in "relCarry space" rather than index space.
-// Each club has a relCarry (fraction of driver). When the user provides anchor
-// distances (driver, 7i, PW), we compute a scale factor at each anchor and
-// linearly blend between them in relCarry space. This respects the real-world
-// non-uniform gaps between clubs.
-//
-// Example: user enters driver=230, 7i=155.
-//   driver relCarry = 1.000 → actual = 230  → scale = 230/230 = 1.000
-//   7i     relCarry = 0.661 → actual = 155  → scale = 155/(230×0.661) = 1.019
-//   For a club between driver and 7i, we blend the scale linearly by relCarry.
-
-function interpolate(driverDist, i7Dist, pwDist, key) {
-  const c   = clubMap[key];
-  const rel = c.relCarry;
-
-  const driverRel = clubMap['driver'].relCarry; // 1.0
-  const i7Rel     = clubMap['7i'].relCarry;     // 0.661
-  const pwRel     = clubMap['pw'].relCarry;     // 0.530
-
-  // Default (no anchors): pure relCarry scale from driver
-  const rawCarry = driverDist * rel;
-
-  if (!i7Dist && !pwDist) return rawCarry;
-
-  // Build anchor list: always include driver, plus whichever the user provided
-  const anchors = [{ rel: driverRel, actual: driverDist }];
-  if (i7Dist) anchors.push({ rel: i7Rel, actual: i7Dist });
-  if (pwDist) anchors.push({ rel: pwRel, actual: pwDist });
-  anchors.sort((a, b) => b.rel - a.rel); // descending (driver first)
-
-  // Find the two anchors that bracket this club's relCarry
-  for (let i = 0; i < anchors.length - 1; i++) {
-    const hi = anchors[i];
-    const lo = anchors[i + 1];
-    if (rel <= hi.rel && rel >= lo.rel) {
-      const t = (hi.rel - rel) / (hi.rel - lo.rel); // 0 at hi, 1 at lo
-      return hi.actual + t * (lo.actual - hi.actual);
-    }
-  }
-
-  // Extrapolate beyond the lowest anchor (e.g. wedges when only driver+7i known)
-  const lo = anchors[anchors.length - 1];
-  const hi = anchors[anchors.length - 2];
-  const slope = (lo.actual - hi.actual) / (lo.rel - hi.rel);
-  return lo.actual + slope * (rel - lo.rel);
-}
-
 // ── Club list UI ───────────────────────────────────────────────────────────
 function getCarryInputs() {
   return {
@@ -796,12 +693,13 @@ function getCarryInputs() {
 
 function updateCarryLabels() {
   const { driver, i7, pw } = getCarryInputs();
+  const cond = document.getElementById('conditions').value;
   clubs.forEach(c => {
     const span = document.getElementById('carry_' + c.key);
     if (!span) return;
     if (!driver) { span.textContent = ''; return; }
     const carry = interpolate(driver, i7, pw, c.key);
-    const baseRoll = getRollFactor(c.key);
+    const baseRoll = getRollFactor(c.key, cond);
     const roll  = windAdjustedRoll(baseRoll, clubOrder.indexOf(c.key), windState);
     const total = carry * roll;
     span.textContent = isFinite(carry) && carry > 0
@@ -844,6 +742,7 @@ function buildClubUI(saved) {
 
 // ── Club selection for planning ────────────────────────────────────────────
 function getClubs(driver, i7, pw, windState) {
+  const cond = document.getElementById('conditions').value;
   return [...document.querySelectorAll('#clubContainer input:checked')]
     .map(cb => {
       const key = cb.value;
@@ -852,284 +751,12 @@ function getClubs(driver, i7, pw, windState) {
       if (!isFinite(baseCarry) || baseCarry <= 0) return null;
       const idx   = clubOrder.indexOf(key);
       const carry    = applyWind(baseCarry, idx, windState);   // wind-adjusted carry
-      const baseRoll = getRollFactor(key);
+      const baseRoll = getRollFactor(key, cond);
       const roll     = windAdjustedRoll(baseRoll, idx, windState);
       return { key, carry, baseCarry, total: carry * roll, roll, idx };
     })
     .filter(Boolean)
     .sort((a, b) => b.total - a.total);
-}
-
-// ── Validation ─────────────────────────────────────────────────────────────
-// Returns valid tee clubs for this par, sorted longest-to-shortest.
-// Par 5: long clubs only (driver through U4 — U4 intentionally included)
-// Par 4: any club up to and including 7i (no wedges/short irons off tee)
-// Par 3: handled separately — all clubs valid
-function getValidTeeClubs(clubsList, parValue) {
-  let filtered;
-  if (parValue === 5) {
-    const longClubs = ['driver','fw3','fw5','fw7','u2','u3','u4'];
-    filtered = clubsList.filter(c => longClubs.includes(c.key));
-  } else {
-    filtered = clubsList.filter(c => c.idx <= idx7);
-  }
-  return filtered.sort((a, b) => b.total - a.total);
-}
-
-// ── Scoring ────────────────────────────────────────────────────────────────
-// Find the best plan for a given tee club.
-// Type is assigned by caller based on tee club rank.
-// Returns { shots, approach, score } or null if no valid plan found.
-function findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState) {
-  // Only enforce maximum approach distance (no overshoot)
-  // Minimum approach = 0 (any club that carries to the green is valid)
-  const maxApproach = driverTotal * 0.92;
-
-  const singleApproach = hole - teeClub.total;
-
-  // Longest total distance of any non-driver approach club
-  const approachClubs = clubsList.filter(c => c.key !== 'driver');
-  const longestApproachTotal = approachClubs.length > 0
-    ? Math.max(...approachClubs.map(c => c.total))
-    : 0;
-
-  // Single-shot plan: tee club leaves an approach the longest club can actually reach
-  if (singleApproach >= 0 && singleApproach <= maxApproach && singleApproach <= longestApproachTotal) {
-    const score = 1 + expectedStrokesRemaining(singleApproach, driverCarry, handicap, inRough, windState);
-    return { shots: [teeClub], approach: singleApproach, score };
-  }
-
-  // Two-shot plan: find best second club
-  // Any non-driver club is a valid candidate — the approach distance filter handles validity.
-  // Wedges are explicitly included for short par-5s or long par-4s where the 2nd shot is a layup.
-  const candidates = clubsList.filter(c =>
-    c.total < teeClub.total && c.key !== 'driver'
-  );
-
-  let best = null;
-  candidates.forEach(second => {
-    const approach = hole - teeClub.total - second.total;
-    if (approach < 0 || approach > maxApproach) return;
-    const score = 2 + expectedStrokesRemaining(approach, driverCarry, handicap, inRough, windState);
-    if (!best || score < best.score) {
-      best = { shots: [teeClub, second], approach, score };
-    }
-  });
-
-  return best;
-}
-// ── Wind adjustment (Trackman-derived, metres per m/s) ────────────────────
-// Source: Trackman wind study data, tour caddie practice.
-// Headwind reduces carry more than tailwind adds (aerodynamic asymmetry).
-// High-lofted clubs are affected MORE (longer air time, more spin interaction).
-// Applied to carry only — roll is calculated after on the adjusted carry.
-//
-// Categories map to club index ranges in clubOrder:
-//   driver/fw  : idx 0–3
-//   hybrid/long: idx 4–7   (u2–4i)
-//   mid iron   : idx 8–10  (5i–7i)
-//   short iron : idx 11–13 (8i–PW)
-//   wedge      : idx 14+   (50°–60°)
-
-const WIND_ADJ = {
-  //              headwind  tailwind   (metres per m/s of component)
-  driver_fw:    { head: 2.5, tail: 1.2 },
-  hybrid_long:  { head: 2.2, tail: 1.0 },
-  mid_iron:     { head: 2.0, tail: 0.9 },
-  short_iron:   { head: 1.8, tail: 0.8 },
-  wedge:        { head: 1.5, tail: 0.5 },
-};
-
-function windCategory(idx) {
-  if (idx <= 3)  return 'driver_fw';
-  if (idx <= 7)  return 'hybrid_long';
-  if (idx <= 10) return 'mid_iron';
-  if (idx <= 13) return 'short_iron';
-  return 'wedge';
-}
-
-// Per-hole HCP adjustment — set by calculate() using refined WHS model when
-// course has CR/Slope/SI and player has handicap index. Falls back to flat model.
-let _holeHcpAdj = null; // null = use flat model inside expectedStrokesRemaining
-// Rough lie flag — set true when GPS ball mark is in rough, adds penalty to expected strokes
-let _inRough = false;
-window._inRough = false; // exposed for score drawer cross-scope access
-
-const teeOverrides = {};
-const shot2Overrides = {}; // user-selected second-shot club per strategy type
-const approachOverrides = {}; // user-selected approach club per strategy type (1-shot plans)
-const gpsShot2Overrides = {}; // user-selected next club after GPS ball mark
-window.teeOverrides = teeOverrides;
-window.shot2Overrides = shot2Overrides;
-window.approachOverrides = approachOverrides;
-window.gpsShot2Overrides = gpsShot2Overrides;
-const par3ClubOverrides = {}; // keyed by holeIdx
-function par3Override() { return par3ClubOverrides[_overrideCourseId + "|" + _overrideHoleIdx] ?? null; }
-
-// Course+hole namespace for overrides — set by calculate() each call
-let _overrideHoleIdx = 0;
-let _overrideCourseId = '';
-// Initialise from session immediately so first calculate() call has correct namespace
-(function() {
-  const _s = loadActiveCourse();
-  if (_s.id) { _overrideHoleIdx = _s.holeIdx ?? 0; _overrideCourseId = _s.id ?? ''; }
-})();
-// Namespace key: course|hole|strategyType — prevents cross-course/cross-hole bleed
-function _hk(type) { return _overrideCourseId + '|' + _overrideHoleIdx + '|' + type; }
-
-// ── Expected strokes remaining lookup ─────────────────────────────────────
-const EXPECTED_STROKES = {
-  bands:  [60, 100, 130, 160, 190, Infinity],
-  tiers:  [195, 220, 250, Infinity],
-  values: [
-    [2.95, 2.80, 2.65, 2.55],
-    [3.10, 2.95, 2.75, 2.60],
-    [3.30, 3.10, 2.90, 2.70],
-    [3.55, 3.30, 3.10, 2.85],
-    [3.80, 3.55, 3.30, 3.00],
-    [4.05, 3.80, 3.55, 3.20],
-  ],
-};
-// expectedStrokesRemaining(approachDist, driverCarry, handicap, inRough, windState, applyWindAdj)
-// Wind adjustment: headwind raises difficulty of approach shots, tailwind lowers it.
-// Uses the same altitude-corrected headwind as carry adjustment but for mid-iron height
-// (approach shots). Effect: ~0.04 strokes per m/s of effective headwind.
-// Cap: −0.15 max benefit (tailwind can't make it too easy), +0.25 max penalty.
-function expectedStrokesRemaining(approachDist, driverCarry, handicap, inRough, windState, applyWindAdj) {
-  // Tier lookup uses raw driver carry — reflects player ability, not per-shot conditions
-  const ti = EXPECTED_STROKES.tiers.findIndex(t => driverCarry < t);
-  const bi = EXPECTED_STROKES.bands.findIndex(b => approachDist <= b);
-  const base = EXPECTED_STROKES.values[bi === -1 ? 5 : bi][ti === -1 ? 3 : ti];
-
-  // Handicap adjustment — refined WHS per-hole model when available,
-  // flat Broadie model as fallback.
-  let hcpAdj = 0;
-  if (_holeHcpAdj !== null) {
-    // Refined: playing handicap strokes allocated by SI — 0 or 1 on this hole
-    hcpAdj = _holeHcpAdj;
-  } else if (handicap != null && handicap > 0) {
-    hcpAdj = Math.min(handicap * 0.056, 3.0);
-  }
-
-  // Wind adjustment — only when wind is active and enabled
-  const useWind = applyWindAdj !== false && !(typeof applyWindAdj === 'object' && applyWindAdj?.noWind);
-  let windAdj = 0;
-  if (useWind && windState && windState.active && windState.enabled) {
-    // Altitude-correct to mid-iron trajectory height (~22m)
-    const altFac = ALT_FACTORS ? (ALT_FACTORS['mid_iron'] ?? 1.12) : 1.12;
-    const hw = windState.headwind * altFac; // + = headwind, − = tailwind
-    const penalty = hw * 0.04;
-    windAdj = Math.max(-0.15, Math.min(0.25, penalty));
-  }
-
-  // Rough lie penalty — ~0.35 strokes based on Broadie amateur rough data
-  const roughAdj = inRough ? 0.35 : 0;
-  return base + hcpAdj + windAdj + roughAdj;
-}
-
-
-let windState = {
-  speedMs:    null,   // sustained wind speed m/s (10-min average at 10m height)
-  gustMs:     null,   // gust speed m/s (max 10-min gust at 10m height)
-  dirDeg:     null,   // wind FROM direction in degrees (met convention)
-  holeDeg:    null,   // hole playing direction in degrees (where ball travels)
-  headwind:   null,   // computed headwind component at 10m (+head, -tail)
-  crosswind:  null,   // computed crosswind component (magnitude)
-  active:     false,  // true when wind data + hole direction both set
-  enabled:    true,   // user toggle — false disables all wind adjustments
-  tempC:      null,   // air temperature °C from weather API
-};
-
-// ── Altitude correction factors ────────────────────────────────────────────
-// Wind speed increases with height following the power law: V(z) = V(10) * (z/10)^α
-// where α ≈ 0.143 for open terrain (standard meteorological value).
-// Golf ball peak trajectory heights (approx):
-//   driver/fw : ~35m  → factor = (35/10)^0.143 = 1.20
-//   hybrid/long: ~28m → factor = (28/10)^0.143 = 1.16
-//   mid iron   : ~22m → factor = (22/10)^0.143 = 1.12
-//   short iron : ~16m → factor = (16/10)^0.143 = 1.07
-//   wedge      : ~12m → factor = (12/10)^0.143 = 1.03
-// Source: atmospheric boundary layer wind profile, USGA/R&A aerodynamics research.
-const ALT_FACTORS = {
-  driver_fw:   1.20,
-  hybrid_long: 1.16,
-  mid_iron:    1.12,
-  short_iron:  1.07,
-  wedge:       1.03,
-};
-
-// Compute headwind and crosswind components from current windState
-function computeWindComponents() {
-  if (windState.speedMs === null || windState.holeDeg === null) return;
-  // angle between wind-from and hole direction
-  // wind FROM 270° (westerly) blowing into hole playing EAST (90°) = headwind
-  const angleDeg = windState.dirDeg - windState.holeDeg;
-  const angleRad = angleDeg * Math.PI / 180;
-  windState.headwind  = windState.speedMs * Math.cos(angleRad); // + = headwind
-  windState.crosswind = Math.abs(windState.speedMs * Math.sin(angleRad));
-  windState.active    = true;
-}
-
-// Temperature carry adjustment factor.
-// Warmer air = less dense = less drag = more carry.
-// Calibrated to TrackMan data: ~1.5m per 5°C on a 230m driver.
-// Formula: standard temp = 15°C; density ratio = (288.15) / (273.15 + tempC)
-// Carry multiplier = 1 - (densityRatio - 1) * 0.55  (0.55 = empirical scaling for golf ball)
-// Result: +~1.3% at 28°C, -~1.2% at 4°C vs 15°C baseline.
-function tempCarryFactor(windState) {
-  const tempC = windState.tempC;
-  if (tempC == null || isNaN(tempC)) return 1.0;
-  const densityRatio = 288.15 / (273.15 + tempC); // >1 when cold, <1 when warm
-  return 1 - (densityRatio - 1) * 0.55;
-}
-
-// Apply wind carry adjustment to a base carry distance for a given club idx
-// Wind speed is altitude-corrected to the ball's peak trajectory height before
-// applying the Trackman-derived m/s adjustment factors.
-function applyWind(carry, clubIdx, windState) {
-  // Temperature correction comes from the same weather fetch as wind —
-  // skip both when wind is disabled so "wind off" means no weather effects at all.
-  if (!windState.enabled) return carry;
-  // Apply temperature correction — affects air density independent of wind direction
-  const tempAdj = carry * tempCarryFactor(windState);
-  if (!windState.active) return tempAdj;
-  const cat    = windCategory(clubIdx);
-  const adj    = WIND_ADJ[cat];
-  const altFac = ALT_FACTORS[cat];
-  // Scale the measured 10m headwind component to peak trajectory altitude
-  const hw = windState.headwind * altFac;
-  if (hw >= 0) {
-    return tempAdj - hw * adj.head;
-  } else {
-    return tempAdj + Math.abs(hw) * adj.tail;
-  }
-}
-
-// Apply wind effect to roll factor — asymmetric split-coefficient model.
-// Physical basis: wind changes landing angle; each degree flatter → ~1.5 units more roll.
-// Headwind steepens descent → less roll; tailwind flattens → more roll + higher landing speed.
-// Asymmetric: headwind penalises ~2× more than tailwind helps (Trackman data).
-//
-// rollFactor = baseRoll * (1 - η_hw * |hw|)   [headwind]
-//            = baseRoll * (1 + η_tw * hw)      [tailwind]
-//
-// η_hw = 0.022  (mid-range of 0.020–0.025, headwind)
-// η_tw = 0.011  (mid-range of 0.010–0.013, tailwind ≈ η_hw / 2)
-// hw in m/s, altitude-corrected to ball trajectory height (+ = headwind, − = tailwind)
-// Floor: 1.0 (ball can't roll backwards); ceiling: 1.6 (avoids runaway tailwind values)
-function windAdjustedRoll(baseRoll, clubIdx, windState) {
-  if (!windState.active || !windState.enabled) return baseRoll;
-  const altFac = ALT_FACTORS[windCategory(clubIdx)];
-  const hw = windState.headwind * altFac;  // altitude-corrected (+head, −tail)
-  let adjusted;
-  if (hw >= 0) {
-    // Headwind: steeper landing angle, less roll
-    adjusted = baseRoll * (1 - 0.022 * hw);
-  } else {
-    // Tailwind: shallower angle + higher landing speed, more roll
-    adjusted = baseRoll * (1 + 0.011 * Math.abs(hw));
-  }
-  return Math.max(1.0, Math.min(1.6, adjusted));
 }
 
 // Returns 'left', 'right', or 'none' relative to the hole playing direction.
@@ -1162,44 +789,6 @@ function timeAgo(ts) {
   return `${Math.floor(sec/3600)}h ago`;
 }
 
-
-// ── Combinations ───────────────────────────────────────────────────────────
-function generateCombinations(arr, n) {
-  if (n === 1) return arr.map(x => [x]);
-  const combos = [];
-  for (let i = 0; i < arr.length; i++) {
-    generateCombinations(arr.slice(i + 1), n - 1).forEach(tail => {
-      combos.push([arr[i], ...tail]);
-    });
-  }
-  return combos;
-}
-
-// ── Par 3 ──────────────────────────────────────────────────────────────────
-function calcPar3(clubsList, hole) {
-  // Find the club that gets closest to the hole.
-  // Clubs that fall short: remaining = hole - total (positive, smaller is better).
-  // Clubs that overshoot: penalise heavily — only used if nothing reaches.
-  // Among clubs that reach (overshoot or exact), prefer the shortest one (least overshoot).
-  let bestShort = null;   // best club that falls short
-  let bestOver  = null;   // best club that reaches/overshoots (shortest total)
-
-  clubsList.forEach(c => {
-    const remaining = hole - c.total;
-    if (remaining >= 0) {
-      // Falls short — smaller remaining is better
-      if (!bestShort || remaining < bestShort.diff) bestShort = { club: c, diff: remaining };
-    } else {
-      // Overshoots — smaller overshoot (less negative) is better
-      if (!bestOver || remaining > bestOver.diff) bestOver = { club: c, diff: remaining };
-    }
-  });
-
-  // Prefer the club that falls shortest — if it lands close enough
-  // If nothing falls short, use the club that overshoots least
-  if (bestShort) return bestShort;
-  return bestOver;
-}
 
 // ── Main ───────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
@@ -2217,7 +1806,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clubsList.length === 0) return { isError: true, msg: 'No clubs selected.' };
 
     const driverClub = clubsList.find(c => c.key === 'driver');
-    const driverTotal = driverClub ? driverClub.total : driver * getRollFactor('driver');
+    const driverTotal = driverClub ? driverClub.total : driver * getRollFactor('driver', conditions);
     const driverCarry = driverClub ? driverClub.carry : driver;
     const isFirm = conditions === 'firm';
 
@@ -2236,10 +1825,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (gpsActive3) {
         const shotsTaken = completedShots.length;
         const rem = completedShots[completedShots.length - 1].remaining;
-        scoreVal3 = shotsTaken + expectedStrokesRemaining(rem, driverCarry, handicap, inRough, windState);
+        scoreVal3 = shotsTaken + expectedStrokesRemaining(rem, driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj);
       } else {
         const remaining = Math.max(0, hole - s.total);
-        scoreVal3 = 1 + expectedStrokesRemaining(remaining, driverCarry, handicap, inRough, windState);
+        scoreVal3 = 1 + expectedStrokesRemaining(remaining, driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj);
       }
       if (_blCourseId && _blHoleIdx !== null) {
         const bl3 = blendedScore(scoreVal3, _blCourseId, _blHoleIdx);
@@ -2281,7 +1870,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const STRATEGY_TYPES = ['Max distance', 'Controlled', 'Conservative'];
     const ordered = [];
     validTeeClubs.slice(0, 3).forEach((teeClub, rank) => {
-      const p = findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState);
+      const p = findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj);
       if (!p) return;
       p.type = STRATEGY_TYPES[rank];
       ordered.push(p);
@@ -2589,21 +2178,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return cw >= 2 ? `${hwLabel} · ${cw.toFixed(1)} m/s cross` : hwLabel;
     }
 
-    function strategyDisplayName(type) { return type; }
-    window.strategyDisplayName = strategyDisplayName;
-
     function encodeStrategy(type, teeClubKey) {
       const clubLabel = clubMap[teeClubKey]?.label ?? teeClubKey;
       return `${type} · ${clubLabel}`;
     }
-
-    function decodeStrategy(stored) {
-      if (!stored) return { type: null, club: null };
-      const parts = stored.split(' · ');
-      if (parts.length >= 2) return { type: parts[0], club: parts.slice(1).join(' · ') };
-      return { type: stored, club: null };
-    }
-    window.decodeStrategy = decodeStrategy;
 
     function strategyShortName(type) {
       if (type === 'Max distance') return 'Max';
@@ -2623,7 +2201,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!longClubs.includes(teeClub.key)) return null;
       }
       const driverCarry = driverClub ? driverClub.carry : driver;
-      return findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState);
+      return findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj);
     }
 
     // Build a modified plan using a user-forced second club.
@@ -2636,7 +2214,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const approach = hole - teeShot.total - forced2.total;
       if (approach < 0) return null; // overshoots green
       const driverCarry2 = driverClub ? driverClub.carry : driver;
-      const rawScore = 2 + expectedStrokesRemaining(approach, driverCarry2, handicap, inRough, windState);
+      const rawScore = 2 + expectedStrokesRemaining(approach, driverCarry2, handicap, inRough, windState, undefined, _holeHcpAdj);
       // Apply personal baseline blend for consistency with main plan scores
       const bl = (_blCourseId && _blHoleIdx !== null)
         ? blendedScore(rawScore, _blCourseId, _blHoleIdx)
@@ -2681,7 +2259,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (gpsActive) {
         // Shots taken so far + expected strokes from actual GPS position
         const shotsTaken = completedShots.length;
-        scoreVal   = shotsTaken + expectedStrokesRemaining(gpsRemaining, driverCarry, handicap, inRough, windState);
+        scoreVal   = shotsTaken + expectedStrokesRemaining(gpsRemaining, driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj);
         scoreSuffix = ' GPS';
       } else {
         scoreVal   = activePlan.score;
@@ -2764,8 +2342,8 @@ document.addEventListener('DOMContentLoaded', () => {
           if (forcedClub) {
             const approach = gpsRemaining - forcedClub.total;
             gpsContinuation = approach >= 0
-              ? { shots: [forcedClub], approach, score: 1 + expectedStrokesRemaining(approach, driverCarry, handicap, inRough, windState) }
-              : findBestContinuation(forcedClub, gpsRemaining, driverTotal, clubsList, driverCarry, handicap, inRough, windState);
+              ? { shots: [forcedClub], approach, score: 1 + expectedStrokesRemaining(approach, driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj) }
+              : findBestContinuation(forcedClub, gpsRemaining, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj);
           }
         }
         if (!gpsContinuation) {
@@ -2773,10 +2351,10 @@ document.addEventListener('DOMContentLoaded', () => {
             clubsList.reduce((best, c) => {
               const app = gpsRemaining - c.total;
               if (c.key === 'driver') return best;
-              const score = 1 + expectedStrokesRemaining(Math.max(0, app), driverCarry, handicap, inRough, windState);
+              const score = 1 + expectedStrokesRemaining(Math.max(0, app), driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj);
               return (!best || score < best.score) ? { club: c, score } : best;
             }, null)?.club || clubsList.find(c => c.key !== 'driver') || clubsList[0],
-            gpsRemaining, driverTotal, clubsList, driverCarry, handicap, inRough, windState
+            gpsRemaining, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj
           );
         }
       }
@@ -3972,6 +3550,8 @@ import {
   clearTeeState,
 } from './src/storage/storage.js';
 import { teeMarked, completedShots, clearGpsState } from './src/platform/gps.js';
+import { clubs } from './src/engine/clubs.js';
+import { decodeStrategy, interpolate } from './src/engine/calculations.js';
 
 // ── Tab switching (shared, placed in module for clean removal) ────────────
 window.switchTab = function(name) {
@@ -4657,16 +4237,16 @@ function renderMgCarryBars() {
   const driver = parseFloat(saved?.driver) || 0;
   const i7     = parseFloat(saved?.i7)     || 0;
   const pw     = parseFloat(saved?.pw)     || 0;
-  if (!driver || !window.clubs) {
+  if (!driver || !clubs.length) {
     el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:15px;">Enter driver carry to see distances.</div>';
     return;
   }
   const activeKeys = new Set(
     saved.checked
-      ? window.clubs.filter((c, i) => saved.checked[i]).map(c => c.key)
-      : window.clubs.map(c => c.key)
+      ? clubs.filter((c, i) => saved.checked[i]).map(c => c.key)
+      : clubs.map(c => c.key)
   );
-  const rows = window.clubs.filter(c => activeKeys.has(c.key)).map(c => {
+  const rows = clubs.filter(c => activeKeys.has(c.key)).map(c => {
     const carry = Math.round(interpolate(driver, i7, pw, c.key));
     const pct = Math.round((carry / driver) * 100);
     return '<div class="mg-carry-row"><div class="mg-carry-name">' + c.label + '</div>' +
@@ -4727,9 +4307,6 @@ document.getElementById('mgProfileSaveBtn')?.addEventListener('click', () => {
 
 // Profile: pre-fill when sub-page opens (wired in showMgSub)
 
-// Expose clubs for renderMgCarryBars (called before clubs is in scope otherwise)
-// clubs is defined in the prepare-module script block — expose after that runs
-window.addEventListener('load', () => { if (typeof clubs !== 'undefined') window.clubs = clubs; });
 
 // ── Course/strategy storage imported from src/storage/storage.js ──────────
 
@@ -4838,9 +4415,7 @@ function renderSavedRounds() {
     const strat = round.strategies?.[i] || round.strategies?.[String(i)];
     let stratCell = '—';
     if (strat) {
-      const { type: _t, club: _c } = typeof window.decodeStrategy === 'function'
-        ? window.decodeStrategy(strat)
-        : { type: strat, club: null };
+      const { type: _t, club: _c } = decodeStrategy(strat);
       const displayType = _t || strat;
       const shortType = displayType === 'Max distance' ? 'Max dist'
         : displayType === 'Conservative' ? 'Conserv.' : displayType;
@@ -5603,9 +5178,7 @@ function renderPlayCourseBar(courseId) {
       .map(([type, s]) => ({ type, avg: s.totalDiff / s.count, count: s.count }))
       .sort((a, b) => a.avg - b.avg)[0];
 
-    const { type: stratType, club: stratClub } = typeof window.decodeStrategy === 'function'
-      ? window.decodeStrategy(best.type)
-      : { type: best.type, club: null };
+    const { type: stratType, club: stratClub } = decodeStrategy(best.type);
 
     const tagClass = stratType?.startsWith('Par 3') ? 'par3'
       : (stratType === 'Max distance' || stratType === 'Aggressive' || stratType === 'Long') ? 'aggressive'

@@ -1,5 +1,20 @@
 # Changelog
 
+## [Refactor] Phase 4 — Engine extraction
+Date: 2026-04-24
+
+src/engine/clubs.js: relCarry table, rollSoft/rollFirm, clubOrder, idx7,
+idxPW, clubMap, getRollFactor(key, conditions) — pure, conditions passed as arg.
+
+src/engine/calculations.js: WIND_ADJ, ALT_FACTORS, EXPECTED_STROKES,
+windCategory, tempCarryFactor, applyWind, windAdjustedRoll, interpolate,
+expectedStrokesRemaining (holeHcpAdj added as 7th param — was module-scoped var),
+getValidTeeClubs, findBestContinuation (holeHcpAdj added as 9th param),
+calcPar3, decodeStrategy, strategyDisplayName. Imports from clubs.js only.
+
+Both scripts now import directly from engine. No window.clubs, window.decodeStrategy,
+window.strategyDisplayName remain. getRollFactor callers pass conditions explicitly.
+
 ## [Refactor] Phase 3 — Platform extraction
 Date: 2026-04-24
 
