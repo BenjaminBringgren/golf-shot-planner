@@ -1,5 +1,17 @@
 # Changelog
 
+## [Refactor] Phase 3 — Platform extraction
+Date: 2026-04-24
+
+src/platform/gps.js created: exports teeMarked, completedShots (live bindings),
+haversine, averagedPosition, clearGpsState, markTeePosition, recordShot,
+restoreGpsState, getGpsSnapshot. Both script blocks import directly — no window.*
+for GPS state. Object.defineProperty on window.lastParValue removed (Safari rule);
+replaced with explicit window.lastParValue sync after each assignment.
+
+src/platform/weather.js created: exports fetchWind (Open-Meteo) and
+fetchLocationName (Nominatim). windRefresh handler simplified to Promise.all.
+
 ## [Fix] Post-Phase-2 module isolation bugs
 Date: 2026-04-24
 
