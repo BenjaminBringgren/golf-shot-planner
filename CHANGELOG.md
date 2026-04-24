@@ -4,6 +4,15 @@ Format: `[file affected] description`
 
 ---
 
+## 2026-04-24
+
+### Refactor — preparatory in-place changes (Sub-steps A, B, C)
+- `[index.html]` **Sub-step A:** `calculate()` split into `readInputsFromDOM()` / `computePlan(inputs)` / `renderPlan(_result)` / thin `calculate()` shell. `computePlan` has zero DOM refs and zero direct storage calls in its own body. Wrapper at L5932 preserved unchanged.
+- `[index.html]` **Sub-step B:** `expectedStrokesRemaining` now takes explicit `handicap` and `inRough` parameters. `readInputsFromDOM()` reads `handicap` from `golfProfile_v1` and passes it via inputs. Eliminated implicit `localStorage.getItem('golfProfile_v1')` and `window._inRough` reads inside the function. All 8 call sites updated (through `findBestContinuation` and direct).
+- `[index.html]` **Sub-step C:** `windState` made an explicit parameter to all engine functions: `tempCarryFactor`, `applyWind`, `windAdjustedRoll`, `crosswindSide`, `getClubs`, `findBestContinuation`, `expectedStrokesRemaining`. Callers pass the module-level `windState` reference explicitly. All 26 call sites updated.
+
+---
+
 ## 2026-04-23
 
 ### Calculation engine
