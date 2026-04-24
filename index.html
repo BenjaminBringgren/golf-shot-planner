@@ -790,6 +790,58 @@ function timeAgo(ts) {
 }
 
 
+// ── App state ──────────────────────────────────────────────────────────────
+// Per-hole HCP adjustment — set by calculate() using refined WHS model when
+// course has CR/Slope/SI and player has handicap index. Falls back to flat model.
+let _holeHcpAdj = null; // null = use flat model inside expectedStrokesRemaining
+// Rough lie flag — set true when GPS ball mark is in rough, adds penalty to expected strokes
+let _inRough = false;
+window._inRough = false; // exposed for score drawer cross-scope access
+
+const teeOverrides = {};
+const shot2Overrides = {}; // user-selected second-shot club per strategy type
+const approachOverrides = {}; // user-selected approach club per strategy type (1-shot plans)
+const gpsShot2Overrides = {}; // user-selected next club after GPS ball mark
+window.teeOverrides = teeOverrides;
+window.shot2Overrides = shot2Overrides;
+window.approachOverrides = approachOverrides;
+window.gpsShot2Overrides = gpsShot2Overrides;
+const par3ClubOverrides = {}; // keyed by holeIdx
+function par3Override() { return par3ClubOverrides[_overrideCourseId + "|" + _overrideHoleIdx] ?? null; }
+
+// Course+hole namespace for overrides — set by calculate() each call
+let _overrideHoleIdx = 0;
+let _overrideCourseId = '';
+// Initialise from session immediately so first calculate() call has correct namespace
+(function() {
+  const _s = loadActiveCourse();
+  if (_s.id) { _overrideHoleIdx = _s.holeIdx ?? 0; _overrideCourseId = _s.id ?? ''; }
+})();
+// Namespace key: course|hole|strategyType — prevents cross-course/cross-hole bleed
+function _hk(type) { return _overrideCourseId + '|' + _overrideHoleIdx + '|' + type; }
+
+let windState = {
+  speedMs:    null,   // sustained wind speed m/s (10-min average at 10m height)
+  gustMs:     null,   // gust speed m/s (max 10-min gust at 10m height)
+  dirDeg:     null,   // wind FROM direction in degrees (met convention)
+  holeDeg:    null,   // hole playing direction in degrees (where ball travels)
+  headwind:   null,   // computed headwind component at 10m (+head, -tail)
+  crosswind:  null,   // computed crosswind component (magnitude)
+  active:     false,  // true when wind data + hole direction both set
+  enabled:    true,   // user toggle — false disables all wind adjustments
+  tempC:      null,   // air temperature °C from weather API
+};
+
+// Compute headwind and crosswind components from current windState
+function computeWindComponents() {
+  if (windState.speedMs === null || windState.holeDeg === null) return;
+  const angleDeg = windState.dirDeg - windState.holeDeg;
+  const angleRad = angleDeg * Math.PI / 180;
+  windState.headwind  = windState.speedMs * Math.cos(angleRad); // + = headwind
+  windState.crosswind = Math.abs(windState.speedMs * Math.sin(angleRad));
+  windState.active    = true;
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
 
