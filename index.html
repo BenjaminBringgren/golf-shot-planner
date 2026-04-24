@@ -1652,7 +1652,6 @@ document.addEventListener('DOMContentLoaded', () => {
     computeWindComponents();
     updateWindEffectNote();
     updateWindStripText();
-    console.log('[wind] endDrag fired, holeDeg=', windState.holeDeg);
     saveWindPrefs();
     const out = document.getElementById('output');
     if (out.querySelector('.carousel-outer, .error')) calculate();
@@ -1667,7 +1666,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Restore saved hole direction ───────────────────────────────────────
   const savedWind = loadWindPrefs();
-  console.log('[wind] loadWindPrefs on init:', savedWind, 'raw:', localStorage.getItem('golfWind_v1'));
   if (savedWind.holeDeg != null) {
     windState.holeDeg = savedWind.holeDeg;
     setCompassAngle(windState.holeDeg);
@@ -1676,9 +1674,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function saveWindPrefs() {
-    console.log('[wind] saveWindPrefs called, holeDeg=', windState.holeDeg, ', _saveWindPrefs=', typeof _saveWindPrefs);
+    if (windState.holeDeg == null || !isFinite(windState.holeDeg)) return;
     _saveWindPrefs(windState.holeDeg);
-    console.log('[wind] after save, golfWind_v1=', localStorage.getItem('golfWind_v1'));
   }
 
   function updateWindEffectNote() {
