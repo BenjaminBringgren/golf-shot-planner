@@ -1,5 +1,19 @@
 # Changelog
 
+## [Fix] Post-Phase-2 module isolation bugs
+Date: 2026-04-24
+
+Bug 2: blendedScore and computeHoleBaseline defined in Script 1 module scope
+were called bare from Script 0's computePlan/renderPlan. ES module isolation
+means they are not globally accessible — caused silent ReferenceError preventing
+strategy cards from rendering after course load. Fix: window.blendedScore and
+window.computeHoleBaseline exposed from Script 1.
+
+Bug 9: endDrag fired on tap-without-drag (touchstart+touchend, no touchmove),
+saving windState.holeDeg=null via saveWindPrefs. JSON.stringify serialises null
+as null, overwriting any previously persisted compass direction. Fix: saveWindPrefs
+guards against null/non-finite holeDeg and skips the write.
+
 ## [Refactor] Phase 2 — Storage extraction
 Date: 2026-04-24
 
