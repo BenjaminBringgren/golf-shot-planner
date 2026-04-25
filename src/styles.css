@@ -2001,9 +2001,10 @@
     --sh-ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  /* Expanded drawer for shot sheet */
+  /* Expanded drawer for shot sheet — full page */
   .score-drawer.sh-expanded {
-    height: min(92vh, 820px);
+    height: 100dvh;
+    border-radius: 0;
   }
 
   /* ── Shot sheet keyframes ────────────────────────────────────────────────── */

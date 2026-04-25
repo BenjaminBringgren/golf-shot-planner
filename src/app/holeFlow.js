@@ -71,6 +71,19 @@ export function initHole(courseId, holeIdx, par, gpsShotCount) {
     return;
   }
 
+  // Restore a hole that was already completed this round
+  const roundScores = loadScores(courseId);
+  const done = roundScores[holeIdx];
+  if (done?.scoringMode === 'advanced' && Array.isArray(done.shots)) {
+    _stage        = STAGE_RESULT;
+    _shots        = [...done.shots];
+    _putts        = done.putts ?? 0;
+    _holedFromLie = done.holedFromLie ?? 'green';
+    _milestones   = done.milestones ?? [];
+    _notify();
+    return;
+  }
+
   // Fresh hole — auto-log Tee as shot 1
   _stage        = STAGE_SHOTS;
   _holedFromLie = null;
@@ -151,7 +164,8 @@ function _commitHole(scores) {
 export function commitShot(lie) {
   if (_stage !== STAGE_SHOTS) return;
   if (lie === 'green') {
-    _shots.push('green');
+    // 'green' is the destination of the last shot, not a shot played from green.
+    // Don't append to _shots — it would inflate the stroke count.
     _stage = STAGE_PUTTS;
   } else {
     _shots.push(lie);
@@ -241,7 +255,7 @@ export function undoLastShot() {
 
 // ── State snapshot ────────────────────────────────────────────────────────────
 export function getState() {
-  const totalShotsCount = _shots.length + (_stage === STAGE_RESULT ? _putts : 0);
+  const totalShotsCount = _shots.length + (_stage === STAGE_PUTTS || _stage === STAGE_RESULT ? _putts : 0);
   const inRough = _inRough();
 
   // Expected strokes — requires hole length from calling context;

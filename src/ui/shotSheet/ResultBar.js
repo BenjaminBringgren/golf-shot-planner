@@ -85,13 +85,15 @@ function _renderSlim({ tier, shots, putts, par, totalShots, gir, fw, milestones,
   left.appendChild(meta);
   el.appendChild(left);
 
-  // Inline next-hole button (slim only)
-  const nextBtn = document.createElement('button');
-  nextBtn.className = 'sh-result-next';
-  nextBtn.type = 'button';
-  nextBtn.innerHTML = `${nextLabel} ${ARROW_SVG}`;
-  nextBtn.addEventListener('click', onNext);
-  el.appendChild(nextBtn);
+  // Inline next-hole button (slim only) — omitted when ConfirmRow handles navigation
+  if (onNext) {
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'sh-result-next';
+    nextBtn.type = 'button';
+    nextBtn.innerHTML = `${nextLabel} ${ARROW_SVG}`;
+    nextBtn.addEventListener('click', onNext);
+    el.appendChild(nextBtn);
+  }
 
   return el;
 }

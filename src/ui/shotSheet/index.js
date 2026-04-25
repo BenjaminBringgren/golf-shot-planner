@@ -98,8 +98,8 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
       const total = (s.fairway ?? 0) + (s.rough ?? 0) + (s.putts ?? 0);
       runDiff += total - (course.holes[i]?.par ?? 4);
     });
-    // Add current hole contribution in result stage
-    if (state.stage === STAGE_RESULT) {
+    // Add current hole contribution in putts and result stages
+    if (state.stage === STAGE_PUTTS || state.stage === STAGE_RESULT) {
       runDiff += state.totalShots - holePar;
     }
 
@@ -171,6 +171,7 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
         },
         onEdit: null, onNext: null,
       }));
+      inner.appendChild(renderStatsBar({ vsExpected: null, roundScore: runDiff, animate: false }));
 
     } else if (state.stage === STAGE_RESULT) {
       inner.appendChild(renderResultBar({
@@ -182,20 +183,22 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
         milestones:    state.milestones,
         isFirstOfType: state.isFirstOfType,
         isLastHole,
-        onNext: () => _handleNext(state, isLastHole, courseId, holeIdx, callbacks),
+        onNext: null, // Next is always in ConfirmRow below
       }));
 
-      // Celebration tiers get a separate confirm row (Edit + Next)
+      // Haptic only for celebrations
       if (['celebration_birdie','celebration_eagle','celebration_hio'].includes(state.tier)) {
         hapticSuccess();
-        inner.appendChild(renderConfirmRow({
-          stage: STAGE_RESULT,
-          holeIdx, totalHoles, isLastHole,
-          onBack: null, onFinish: null,
-          onEdit: () => callbacks.editHole?.(),
-          onNext: () => _handleNext(state, isLastHole, courseId, holeIdx, callbacks),
-        }));
       }
+
+      // Always show Edit + Next in result stage
+      inner.appendChild(renderConfirmRow({
+        stage: STAGE_RESULT,
+        holeIdx, totalHoles, isLastHole,
+        onBack: null, onFinish: null,
+        onEdit: () => callbacks.editHole?.(),
+        onNext: () => _handleNext(state, isLastHole, courseId, holeIdx, callbacks),
+      }));
 
       inner.appendChild(renderStatsBar({ vsExpected, roundScore: runDiff, animate: true }));
     }
@@ -247,32 +250,39 @@ function _updateFab(fab, courseId, holeIdx) {
   }
 }
 
-// ── Swipe-down to close (drawer handle area) ─────────────────────────────────
+// ── Swipe-down to close (entire drawer surface) ──────────────────────────────
+// Uses AbortController so re-mounting a new hole doesn't stack listeners.
+let _swipeController = null;
+
 function _wireSwipeDown(drawer, close) {
-  const handle = document.getElementById('scoreDrawerHandle');
-  if (!handle) return;
+  if (_swipeController) _swipeController.abort();
+  _swipeController = new AbortController();
+  const signal = _swipeController.signal;
 
-  const newHandle = handle.cloneNode(true);
-  handle.parentNode.replaceChild(newHandle, handle);
+  let startY = null, cur = 0, active = false;
 
-  let startY = null, cur = 0;
+  drawer.addEventListener('touchstart', (e) => {
+    // Don't intercept taps on interactive controls
+    if (e.target.closest('button, input, select')) return;
+    startY = e.touches[0].clientY;
+    cur = 0; active = false;
+  }, { passive: true, signal });
 
-  newHandle.addEventListener('touchstart', e => {
-    startY = e.touches[0].clientY; cur = 0;
-    drawer.style.transition = 'none';
-  }, { passive: true });
-
-  newHandle.addEventListener('touchmove', e => {
+  drawer.addEventListener('touchmove', (e) => {
     if (startY === null) return;
-    cur = Math.max(0, e.touches[0].clientY - startY);
+    const dy = e.touches[0].clientY - startY;
+    // Require a clear downward intent before committing the gesture
+    if (!active && dy > 10) { active = true; drawer.style.transition = 'none'; }
+    if (!active) return;
+    cur = Math.max(0, dy);
     drawer.style.transform = `translateY(${cur}px)`;
-  }, { passive: true });
+  }, { passive: true, signal });
 
-  newHandle.addEventListener('touchend', () => {
+  drawer.addEventListener('touchend', () => {
     if (startY === null) return;
-    startY = null;
-    drawer.style.transition = '';
+    startY = null; drawer.style.transition = '';
     if (cur > 80) { close(); drawer.style.transform = ''; }
     else drawer.style.transform = '';
-  });
+    active = false; cur = 0;
+  }, { signal });
 }
