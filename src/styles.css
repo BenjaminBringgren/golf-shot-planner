@@ -2154,7 +2154,7 @@
     display: flex; flex-direction: column; align-items: center;
   }
   .sh-shot-count {
-    font-size: 64px; font-weight: 700; letter-spacing: -0.03em; line-height: 1;
+    font-size: 80px; font-weight: 700; letter-spacing: -0.03em; line-height: 1;
     color: #000;
   }
   .sh-prompt-hint {
@@ -2218,7 +2218,7 @@
     box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.04);
   }
   .sh-putts-number {
-    font-size: 80px; font-weight: 800; line-height: 1;
+    font-size: 64px; font-weight: 800; line-height: 1;
     letter-spacing: -0.06em; font-variant-numeric: tabular-nums; color: #000;
     transition: none;
   }

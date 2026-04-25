@@ -17,5 +17,10 @@ export function renderShotCountDisplay({ shots, putts }) {
   numEl.textContent = shots + putts;
   el.appendChild(numEl);
 
+  const lbl = document.createElement('span');
+  lbl.className = 'sh-prompt-hint';
+  lbl.textContent = 'Total';
+  el.appendChild(lbl);
+
   return el;
 }
