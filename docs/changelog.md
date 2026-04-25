@@ -1,5 +1,40 @@
 # Changelog
 
+## [Refactor] Phase 6.2 — App extraction: rounds.js
+Date: 2026-04-25
+
+src/app/rounds.js created (843 lines): showMgSub, showMgHub, refreshMgHub,
+renderMgStatTiles, renderMgScoreBreakdown, renderMgBaseline,
+renderMgAvgStrokesBreakdown, renderMgPuttsBreakdown, renderMgRoundsHistory,
+renderMgRecentRounds, renderMgCarryBars, renderSavedRounds.
+Imports from storage, engine, and intra-app import of renderCourseList
+from courses.js (same layer, no circular dependency).
+
+index.html Script 1: added import from rounds.js; removed 13 function bodies
+and escHtml; added window.showMgSub exposure (Script 0 reads it at line 925);
+removed loadBag, loadRounds, deleteRound, clubs, interpolate, decodeStrategy
+imports (now owned by rounds.js).
+
+index.html reduced from 3067 to 2164 lines.
+
+## [Refactor] Phase 6.1 — App extraction: courses.js
+Date: 2026-04-25
+
+src/app/courses.js created (220 lines): computeHoleBaseline, blendedScore,
+applyHoleToPlay, loadCourseIntoPlay, deleteCourse, renderCourseList, openEditor.
+Imports from storage only. Cross-layer UI calls use window.* reads (transitional):
+window.syncChipRow, window.renderPlayCourseBar, window.renderScoreEntry,
+window.switchTab, window.calculate, window.updateCalcButtonVisibility,
+window.renderSavedRounds.
+
+index.html Script 1: added import from courses.js; removed 8 function bodies;
+stripped unused storage imports (saveCourses, deleteAllRoundsForCourse,
+saveActiveCourse, saveRound, saveScores, clearScores, getCommittedStrategies,
+setCommittedStrategies, removeCommittedStrategies, clearActiveCourse, clearTeeState);
+added window.syncChipRow and window.renderPlayCourseBar exposures.
+
+index.html reduced from ~3291 to 3067 lines.
+
 ## [Refactor] Phase 5 — UI extraction
 Date: 2026-04-24
 
