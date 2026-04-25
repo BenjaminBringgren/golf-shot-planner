@@ -1,0 +1,681 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Shot counter · v3</title>
+<style>
+  :root {
+    --bg: #f2f2f7;
+    --card: #ffffff;
+    --ink: #000000;
+    --ink-2: #3c3c43;
+    --ink-3: #8e8e93;
+    --ink-4: #c7c7cc;
+    --sep: rgba(60,60,67,0.12);
+    --sep-strong: rgba(60,60,67,0.29);
+
+    --tee: #d6e5f5;
+    --tee-ink: #1a4a7c;
+    --fw: #c7e4cb;
+    --fw-ink: #1a5530;
+    --rough: #e6d7a3;
+    --rough-ink: #5a4410;
+    --sand: #f0e2bd;
+    --sand-ink: #6a5520;
+    --green: #b8d9bc;
+    --green-ink: #1a5530;
+    --penalty: #f0c8c8;
+    --penalty-ink: #7a1f1f;
+    --holed: #1c1c1e;
+
+    --accent: #30a14e;
+    --accent-bad: #ff3b30;
+
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04), 0 0 1px rgba(0,0,0,0.06);
+    --shadow-md: 0 8px 24px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+    --shadow-lg: 0 20px 50px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #dedfe3;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
+  .page {
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 20px 14px 60px;
+  }
+  .intro {
+    font-size: 13px;
+    color: var(--ink-3);
+    line-height: 1.45;
+    margin: 0 4px 16px;
+  }
+  .intro strong { color: var(--ink-2); }
+
+  /* Phone frame */
+  .phone {
+    background: var(--card);
+    border-radius: 32px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    margin-bottom: 28px;
+    position: relative;
+  }
+
+  /* Live-activity style header bar */
+  .activity-bar {
+    background: #000;
+    color: #fff;
+    margin: 10px 10px 0;
+    border-radius: 20px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .activity-bar .left { display: flex; align-items: center; gap: 8px; }
+  .activity-bar .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+  .activity-bar .right { display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,0.7); font-variant-numeric: tabular-nums; }
+  .activity-bar .score {
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .activity-bar .score.good { color: #34c759; }
+  .activity-bar .score.bad { color: #ff453a; }
+
+  /* Hole header */
+  .hole-header {
+    padding: 18px 20px 8px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .hole-title {
+    font-family: "SF Pro Display", -apple-system, sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .hole-title .sub { color: var(--ink-3); font-weight: 500; font-size: 17px; margin-left: 6px; }
+  .shot-counter {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-3);
+    letter-spacing: -0.01em;
+  }
+  .shot-counter .num {
+    color: var(--ink);
+    font-size: 15px;
+  }
+
+  /* Shot history chips */
+  .history {
+    padding: 4px 20px 14px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .history::-webkit-scrollbar { display: none; }
+  .chip {
+    flex-shrink: 0;
+    height: 30px;
+    padding: 0 11px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    animation: chipIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    position: relative;
+    cursor: pointer;
+  }
+  @keyframes chipIn {
+    0% { transform: scale(0.6) translateY(-4px); opacity: 0; }
+    100% { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  .chip.tee { background: var(--tee); color: var(--tee-ink); }
+  .chip.fw { background: var(--fw); color: var(--fw-ink); }
+  .chip.rough { background: var(--rough); color: var(--rough-ink); }
+  .chip.sand { background: var(--sand); color: var(--sand-ink); }
+  .chip.penalty { background: var(--penalty); color: var(--penalty-ink); }
+  .chip.green { background: var(--green); color: var(--green-ink); }
+  .chip .num {
+    opacity: 0.55;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .chip.last::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 17px;
+    border: 2px solid rgba(0,0,0,0.08);
+  }
+  .chip-hint {
+    font-size: 11px;
+    color: var(--ink-4);
+    padding-left: 4px;
+    letter-spacing: -0.01em;
+  }
+
+  /* Prompt */
+  .prompt {
+    padding: 0 20px 14px;
+    font-family: "SF Pro Display", -apple-system, sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .prompt .hint {
+    display: block;
+    font-size: 13px;
+    color: var(--ink-3);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin-top: 2px;
+  }
+
+  /* Lie grid */
+  .lies {
+    padding: 0 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .lie {
+    aspect-ratio: 1 / 0.78;
+    border-radius: 20px;
+    border: none;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .lie:active { transform: scale(0.96); }
+  .lie .icon {
+    width: 24px;
+    height: 24px;
+    opacity: 0.55;
+  }
+  .lie .label {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .lie.fw { background: var(--fw); color: var(--fw-ink); }
+  .lie.rough { background: var(--rough); color: var(--rough-ink); }
+  .lie.sand { background: var(--sand); color: var(--sand-ink); }
+  .lie.green { background: var(--green); color: var(--green-ink); }
+  .lie.green .label::after {
+    content: "";
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    margin-left: 8px;
+    vertical-align: middle;
+    opacity: 0.5;
+  }
+
+  /* Ripple on tap */
+  .lie .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.5);
+    transform: scale(0);
+    pointer-events: none;
+  }
+  .lie.committed .ripple {
+    animation: ripple 0.6s ease-out forwards;
+  }
+  @keyframes ripple {
+    to { transform: scale(4); opacity: 0; }
+  }
+
+  /* Secondary actions row */
+  .secondary {
+    padding: 12px 14px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .secondary-btn {
+    height: 52px;
+    border-radius: 16px;
+    border: none;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .secondary-btn:active { transform: scale(0.97); }
+  .secondary-btn.penalty {
+    background: var(--penalty);
+    color: var(--penalty-ink);
+  }
+  .secondary-btn.holed {
+    background: var(--holed);
+    color: #fff;
+  }
+  .secondary-btn svg {
+    width: 18px; height: 18px;
+  }
+
+  /* Bottom stats bar */
+  .stats-bar {
+    margin-top: 16px;
+    padding: 14px 20px 18px;
+    border-top: 0.5px solid var(--sep);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat.center { align-items: center; }
+  .stat.right { align-items: flex-end; }
+  .stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  .stat-value {
+    font-family: "SF Pro Display", -apple-system, sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-value.good { color: var(--accent); }
+  .stat-value.bad { color: var(--accent-bad); }
+
+  /* ============ PUTTS STAGE ============ */
+  .putts-view {
+    padding: 0 20px;
+  }
+  .putts-card {
+    background: linear-gradient(180deg, #f7f7fa 0%, #eef0f3 100%);
+    border-radius: 24px;
+    padding: 28px 24px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.04);
+  }
+  .putts-number {
+    font-family: "SF Pro Display", -apple-system, sans-serif;
+    font-size: 88px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.06em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .putts-sub {
+    font-size: 13px;
+    color: var(--ink-3);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin-top: -8px;
+  }
+  .putts-controls {
+    display: flex;
+    gap: 18px;
+    margin-top: 4px;
+  }
+  .putts-pill {
+    width: 64px; height: 48px;
+    border-radius: 24px;
+    background: #fff;
+    border: 0.5px solid var(--sep);
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--ink);
+    cursor: pointer;
+    font-family: inherit;
+    line-height: 1;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: transform 0.1s ease;
+  }
+  .putts-pill:active { transform: scale(0.92); background: #f2f2f7; }
+  .quick-putts {
+    display: flex;
+    gap: 6px;
+    margin-top: 14px;
+  }
+  .quick-putt {
+    flex: 1;
+    height: 36px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.04);
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink-2);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .quick-putt.active {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  .confirm-row {
+    padding: 16px 14px 0;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 8px;
+  }
+  .btn-sec {
+    height: 52px;
+    border-radius: 16px;
+    border: none;
+    background: rgba(0,0,0,0.05);
+    color: var(--ink-2);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+  }
+  .btn-primary {
+    height: 52px;
+    border-radius: 16px;
+    border: none;
+    background: var(--ink);
+    color: #fff;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-primary svg { width: 16px; height: 16px; }
+
+  /* Intro tag */
+  .tag {
+    display: inline-block;
+    background: #111;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin: 0 4px 10px;
+  }
+  .note {
+    font-size: 12px;
+    color: var(--ink-3);
+    line-height: 1.5;
+    margin: 8px 4px 0;
+  }
+  .note strong { color: var(--ink-2); }
+
+</style>
+</head>
+<body>
+<div class="page">
+
+  <p class="intro"><strong>Three states of the same flow.</strong> Scroll through to see how it plays out during a hole.</p>
+
+  <!-- STATE 1: mid-hole, 2 shots logged -->
+  <span class="tag">① Mid-hole</span>
+  <div class="phone">
+    <div class="activity-bar">
+      <div class="left">
+        <span class="dot"></span>
+        <span>Eslövs GK · Round active</span>
+      </div>
+      <div class="right">
+        <span>15/18</span>
+        <span class="score good">−3</span>
+      </div>
+    </div>
+
+    <div class="hole-header">
+      <div class="hole-title">Hole 6 <span class="sub">· Par 4</span></div>
+      <div class="shot-counter">Shot <span class="num">3</span></div>
+    </div>
+
+    <div class="history">
+      <div class="chip tee"><span class="num">1</span>Tee</div>
+      <div class="chip rough last"><span class="num">2</span>Rough</div>
+      <span class="chip-hint">← swipe to undo</span>
+    </div>
+
+    <div class="prompt">
+      Where did it land?
+      <span class="hint">Tap to log · tap Green when on the putting surface</span>
+    </div>
+
+    <div class="lies">
+      <button class="lie fw">
+        <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2 L22 20 L2 20 Z" opacity="0.3"/><path d="M12 6 L19 19 L5 19 Z"/></svg>
+        <span class="label">Fairway</span>
+      </button>
+      <button class="lie rough">
+        <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20 L3 14 M7 20 L7 10 M11 20 L11 12 M15 20 L15 9 M19 20 L19 13" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/></svg>
+        <span class="label">Rough</span>
+      </button>
+      <button class="lie sand">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12 Q7 8, 12 12 T 21 12"/><path d="M3 17 Q7 13, 12 17 T 21 17"/></svg>
+        <span class="label">Sand</span>
+      </button>
+      <button class="lie green">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 21 V4 L15 8 L5 12"/><circle cx="17" cy="18" r="2" fill="currentColor"/></svg>
+        <span class="label">Green</span>
+      </button>
+    </div>
+
+    <div class="secondary">
+      <button class="secondary-btn penalty">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 C 12 2, 5 10, 5 15 A 7 7 0 0 0 19 15 C 19 10, 12 2, 12 2 Z"/></svg>
+        Penalty
+      </button>
+      <button class="secondary-btn holed">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21 V3 L17 7 L5 11"/><circle cx="5" cy="21" r="1.5" fill="currentColor"/></svg>
+        Holed out
+      </button>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-label">Shots</span>
+        <span class="stat-value">2</span>
+      </div>
+      <div class="stat center">
+        <span class="stat-label">Expected</span>
+        <span class="stat-value">4.1</span>
+      </div>
+      <div class="stat right">
+        <span class="stat-label">Round</span>
+        <span class="stat-value good">−3</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="note"><strong>Key moves:</strong> Live-activity header with round context · Shot chips double as undo targets (swipe-left on the last one) · Four most-common lies as big tiles · Tee auto-logged on shot 1 · Penalty & Holed as secondary actions below.</p>
+
+  <!-- STATE 2: putts stage -->
+  <span class="tag">② On the green</span>
+  <div class="phone">
+    <div class="activity-bar">
+      <div class="left">
+        <span class="dot"></span>
+        <span>Eslövs GK · Round active</span>
+      </div>
+      <div class="right">
+        <span>15/18</span>
+        <span class="score good">−3</span>
+      </div>
+    </div>
+
+    <div class="hole-header">
+      <div class="hole-title">Hole 6 <span class="sub">· Par 4</span></div>
+      <div class="shot-counter">Putts</div>
+    </div>
+
+    <div class="history">
+      <div class="chip tee"><span class="num">1</span>Tee</div>
+      <div class="chip rough"><span class="num">2</span>Rough</div>
+      <div class="chip fw"><span class="num">3</span>FW</div>
+      <div class="chip green last"><span class="num">4</span>Green</div>
+    </div>
+
+    <div class="putts-view">
+      <div class="putts-card">
+        <div class="putts-number">2</div>
+        <div class="putts-sub">putts on the green</div>
+        <div class="putts-controls">
+          <button class="putts-pill">−</button>
+          <button class="putts-pill">+</button>
+        </div>
+        <div class="quick-putts">
+          <button class="quick-putt">1</button>
+          <button class="quick-putt active">2</button>
+          <button class="quick-putt">3</button>
+          <button class="quick-putt">4+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="confirm-row">
+      <button class="btn-sec">Back</button>
+      <button class="btn-primary">
+        Finish hole
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12 H19 M13 6 L19 12 L13 18"/></svg>
+      </button>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-label">Shots</span>
+        <span class="stat-value">6</span>
+      </div>
+      <div class="stat center">
+        <span class="stat-label">Expected</span>
+        <span class="stat-value">4.1</span>
+      </div>
+      <div class="stat right">
+        <span class="stat-label">Round</span>
+        <span class="stat-value bad">−1</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="note"><strong>Putts stage:</strong> Auto-triggered by tapping Green · Big numeral as the focal point · ± for edge cases, but quick-picks (1/2/3/4+) cover 98% of real putts in one tap · Stats update live as you adjust.</p>
+
+  <!-- STATE 3: just holed out -->
+  <span class="tag">③ Holed out · celebration state</span>
+  <div class="phone">
+    <div class="activity-bar">
+      <div class="left">
+        <span class="dot"></span>
+        <span>Eslövs GK · Round active</span>
+      </div>
+      <div class="right">
+        <span>15/18</span>
+        <span class="score good">−2</span>
+      </div>
+    </div>
+
+    <div class="hole-header">
+      <div class="hole-title">Hole 6 <span class="sub">· Par 4</span></div>
+      <div class="shot-counter">Complete</div>
+    </div>
+
+    <div class="history">
+      <div class="chip tee"><span class="num">1</span>Tee</div>
+      <div class="chip rough"><span class="num">2</span>Rough</div>
+      <div class="chip fw"><span class="num">3</span>FW</div>
+      <div class="chip green"><span class="num">4</span>Green</div>
+    </div>
+
+    <div style="padding: 8px 20px 0;">
+      <div style="background: linear-gradient(135deg, #1a5530 0%, #2a7a48 100%); border-radius: 24px; padding: 28px 24px; color: #fff; text-align: center; box-shadow: 0 10px 30px rgba(26,85,48,0.25);">
+        <div style="font-size: 13px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.8; margin-bottom: 8px;">Hole 6 result</div>
+        <div style="font-family: 'SF Pro Display', -apple-system, sans-serif; font-size: 54px; font-weight: 800; letter-spacing: -0.04em; line-height: 1;">Par</div>
+        <div style="font-size: 15px; font-weight: 500; opacity: 0.85; margin-top: 6px;">4 shots · 2 putts</div>
+        <div style="display: flex; gap: 8px; justify-content: center; margin-top: 14px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em;">
+          <span style="background: rgba(255,255,255,0.18); padding: 4px 10px; border-radius: 10px;">FAIRWAY HIT</span>
+          <span style="background: rgba(255,255,255,0.18); padding: 4px 10px; border-radius: 10px;">GIR</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="confirm-row">
+      <button class="btn-sec">Edit</button>
+      <button class="btn-primary">
+        Hole 7
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12 H19 M13 6 L19 12 L13 18"/></svg>
+      </button>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-label">Shots</span>
+        <span class="stat-value">4</span>
+      </div>
+      <div class="stat center">
+        <span class="stat-label">vs Expected</span>
+        <span class="stat-value good">−0.1</span>
+      </div>
+      <div class="stat right">
+        <span class="stat-label">Round</span>
+        <span class="stat-value good">−2</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="note"><strong>Hole complete:</strong> A brief, celebratory result card before advancing · Earned badges (Fairway Hit, GIR) as micro-reward · Round score updates with a gentle flip animation · "Hole 7" primary action, "Edit" escape hatch.</p>
+
+</div>
+</body>
+</html>

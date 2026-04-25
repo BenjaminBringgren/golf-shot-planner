@@ -250,7 +250,6 @@ window.switchTab = function(name) {
 
 
 
-window.getScoringMode = getScoringMode;
 
 
 // Wire sub-page nav after DOM ready (buttons exist at this point)
@@ -306,17 +305,13 @@ document.getElementById('mgProfileSaveBtn')?.addEventListener('click', () => {
 
 
 
-// ── Expose to Script 0 and UI modules (window reads, not assignments in app modules) ─
-window.blendedScore        = blendedScore;
-window.computeHoleBaseline = computeHoleBaseline;
+// ── Expose to UI modules (window reads, not assignments in app modules) ─
 window.renderScoreEntry    = renderScoreEntry;
-window.showRoundCompleteOverlay = showRoundCompleteOverlay;
 window.applyHoleToPlay     = applyHoleToPlay;
 window.renderSavedRounds   = renderSavedRounds;
 window.loadCourseIntoPlay  = loadCourseIntoPlay;
 window.syncChipRow         = syncChipRow;
 window.renderPlayCourseBar = renderPlayCourseBar;
-window.showMgSub           = showMgSub;
 
 // ── New course button ─────────────────────────────────────────────────────
 document.getElementById('newCourseBtn').addEventListener('click', () => {
@@ -425,11 +420,10 @@ wireCoursePickerEvents();
     const pw = Number(document.getElementById('pwCarry').value);
     hint.style.display = (i7 >= 50 && pw >= 50) ? 'none' : 'flex';
   }
-  window.updateBagCompleteHint = updateBagCompleteHint;
 
   document.getElementById('bagCompleteHintBtn')?.addEventListener('click', () => {
     window.switchTab('prepare');
-    if (typeof window.showMgSub === 'function') window.showMgSub('mgSubBag');
+    showMgSub('mgSubBag');
   });
 
   // ── First-run splash ──────────────────────────────────────────────────
@@ -478,15 +472,16 @@ wireCoursePickerEvents();
     });
   }
 
-  // Wind panel: always start closed, expose global toggle
-  window.toggleWindPanel = function(e) {
+  // Wind panel toggle
+  function toggleWindPanel(e) {
     if (e && e.target) {
       var t = e.target;
       if (t.closest && (t.closest('#windRefresh') || t.closest('#windLockStrip') || t.closest('#windToggleWrap'))) return;
     }
     var section = document.getElementById('windSection');
     if (section) section.classList.toggle('open');
-  };
+  }
+  document.getElementById('windToggle')?.addEventListener('click', toggleWindPanel);
   (function() {
     var section = document.getElementById('windSection');
     if (section) section.classList.remove('open');
@@ -549,6 +544,7 @@ wireCoursePickerEvents();
   // Live orientation tracking state
   let liveOrientationActive = false;
   let orientationHandler    = null;
+  let _absOrientFired       = false;
 
   // ── Compass rotation helpers ───────────────────────────────────────────
   // The SVG arrow points UP (0° = North). To show hole direction D,
@@ -669,7 +665,7 @@ wireCoursePickerEvents();
       orientationHandler = null;
     }
     liveOrientationActive = false;
-    window._absOrientFired = false;
+    _absOrientFired = false;
     compassLiveBadge.classList.remove('active');
   }
 
@@ -731,12 +727,12 @@ wireCoursePickerEvents();
       }
     };
 
-    const _absWrapper1 = (e) => { window._absOrientFired = true; orientationHandler(e); };
+    const _absWrapper1 = (e) => { _absOrientFired = true; orientationHandler(e); };
     window.addEventListener('deviceorientationabsolute', _absWrapper1);
     orientationHandler._absWrapper = _absWrapper1;
     // Small delay before attaching standard fallback to avoid double-fire
     setTimeout(() => {
-      if (liveOrientationActive && !window._absOrientFired) {
+      if (liveOrientationActive && !_absOrientFired) {
         window.addEventListener('deviceorientation', orientationHandler);
       }
     }, 300);
@@ -848,11 +844,11 @@ wireCoursePickerEvents();
       const icon = document.getElementById('windLockIcon');
       if (icon) icon.style.transform = `rotate(${Math.round(heading)}deg)`;
     };
-    const _absWrapper2 = (e) => { window._absOrientFired = true; orientationHandler(e); };
+    const _absWrapper2 = (e) => { _absOrientFired = true; orientationHandler(e); };
     window.addEventListener('deviceorientationabsolute', _absWrapper2);
     orientationHandler._absWrapper = _absWrapper2;
     setTimeout(() => {
-      if (liveOrientationActive && !window._absOrientFired)
+      if (liveOrientationActive && !_absOrientFired)
         window.addEventListener('deviceorientation', orientationHandler);
     }, 300);
     setTimeout(() => {
@@ -1149,7 +1145,6 @@ wireCoursePickerEvents();
   // fragile innerHTML string checks.
   // Exposed on window so the prepare-module can also read it.
   let lastParValue = null;
-  window.lastParValue = null;
 
 
   function readInputsFromDOM() {
@@ -1263,7 +1258,7 @@ wireCoursePickerEvents();
         scoreVal3 = bl3.score;
       }
       const diff3 = scoreVal3 - 3;
-      lastParValue = 3; window.lastParValue = lastParValue;
+      lastParValue = 3;
       try {
         if (sessionHoleIdx !== null) {
           const _committed = getCommittedStrategies();
@@ -1283,7 +1278,7 @@ wireCoursePickerEvents();
       };
     }
 
-    lastParValue = parValue; window.lastParValue = lastParValue;
+    lastParValue = parValue;
     if (clearOverrides) {
       Object.keys(teeOverrides).forEach(k => delete teeOverrides[k]);
       Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
@@ -1348,8 +1343,8 @@ wireCoursePickerEvents();
       windState, _holeHcpAdj, _overrideCourseId, _overrideHoleIdx,
       par3ClubOverrides, teeOverrides, shot2Overrides, approachOverrides, gpsShot2Overrides,
       par3Override, _hk,
-      blendedScore:        (s, c, h) => window.blendedScore ? window.blendedScore(s, c, h) : { score: s, blended: false },
-      computeHoleBaseline: (...a) => window.computeHoleBaseline?.(...a) ?? null,
+      blendedScore:        (s, c, h) => blendedScore(s, c, h),
+      computeHoleBaseline: (...a) => computeHoleBaseline(...a),
       calculate,
       openClubPicker:      (...a) => openClubPicker(...a),
       updateCalcButtonVisibility,
@@ -1426,7 +1421,7 @@ wireCoursePickerEvents();
       if (!c) return;
       if (holeIdx === 17) {
         // Last hole — show round complete overlay instead of wrapping
-        window.showRoundCompleteOverlay(id, holeIdx);
+        showRoundCompleteOverlay(id, holeIdx);
         return;
       }
       const nextIdx = holeIdx + 1;
