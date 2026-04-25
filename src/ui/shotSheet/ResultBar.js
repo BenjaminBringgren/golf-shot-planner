@@ -9,19 +9,22 @@ const ARROW_SVG = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 </svg>`;
 
 const TIER_EMOJI = {
-  celebration_hio:    '⛳',
-  celebration_eagle:  '🦅',
-  celebration_birdie: '🐦',
+  celebration_hio:        '⛳',
+  celebration_albatross:  '🦆',
+  celebration_eagle:      '🦅',
+  celebration_birdie:     '🐦',
 };
 const TIER_NAME = {
-  celebration_hio:    'Hole in one',
-  celebration_eagle:  'Eagle',
-  celebration_birdie: 'Birdie',
+  celebration_hio:        'Hole in one',
+  celebration_albatross:  'Albatross',
+  celebration_eagle:      'Eagle',
+  celebration_birdie:     'Birdie',
 };
 const TIER_CSS = {
-  celebration_hio:    'hio',
-  celebration_eagle:  'eagle',
-  celebration_birdie: 'birdie',
+  celebration_hio:        'hio',
+  celebration_albatross:  'albatross',
+  celebration_eagle:      'eagle',
+  celebration_birdie:     'birdie',
 };
 
 function _autoGir(shots, par) {

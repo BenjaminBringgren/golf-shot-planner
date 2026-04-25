@@ -17,7 +17,8 @@ export function classifyHoleResult(hole) {
     return 'celebration_hio';
   }
 
-  if (score <= -2) return 'celebration_eagle';
+  if (score <= -3) return 'celebration_albatross';
+  if (score === -2) return 'celebration_eagle';
   if (score === -1) return 'celebration_birdie';
 
   // Par, bogey, double — check for milestones before defaulting to slim

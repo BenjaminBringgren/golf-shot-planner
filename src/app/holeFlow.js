@@ -239,15 +239,21 @@ export function nextHole(currentScores) {
   return nextIdx;
 }
 
-/** Undo the last shot in STAGE_SHOTS. Re-auto-logs Tee if history empties. */
+/** Undo the last shot. Works from STAGE_SHOTS and STAGE_PUTTS. */
 export function undoLastShot() {
+  if (_stage === STAGE_PUTTS) {
+    // Pop the last approach shot and return to shot entry
+    if (_shots.length > 1) _shots.pop();
+    _stage = STAGE_SHOTS;
+    _persist();
+    _notify();
+    return;
+  }
   if (_stage !== STAGE_SHOTS) return;
   if (_shots.length <= 1) {
-    // Only Tee remains — re-auto-log it (Tee is always shot 1)
     _shots = ['tee'];
   } else {
     _shots.pop();
-    // If we just removed Green back out of putts, we're still in STAGE_SHOTS
   }
   _persist();
   _notify();
@@ -276,7 +282,7 @@ export function getState() {
     ? classifyHoleResult(holeRecord)
     : null;
 
-  const isFirst = (_courseId && tier && ['celebration_birdie','celebration_eagle','celebration_hio'].includes(tier))
+  const isFirst = (_courseId && tier && ['celebration_birdie','celebration_eagle','celebration_albatross','celebration_hio'].includes(tier))
     ? (() => {
         try {
           const scores = loadScores(_courseId);

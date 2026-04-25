@@ -11,6 +11,7 @@ import { renderPrompt }           from './Prompt.js';
 import { renderLieGrid }          from './LieGrid.js';
 import { renderSecondaryActions } from './SecondaryActions.js';
 import { renderPuttsCard }        from './PuttsCard.js';
+import { renderShotCountDisplay } from './ShotCountDisplay.js';
 import { renderConfirmRow }       from './ConfirmRow.js';
 import { renderResultBar }        from './ResultBar.js';
 import { renderStatsBar }         from './StatsBar.js';
@@ -130,8 +131,6 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
     inner.appendChild(renderHoleHeader({
       holeIdx,
       par: holePar,
-      stage: state.stage,
-      shotCount: state.shots.length,
     }));
 
     // ── Shot chips ──────────────────────────────────────────────────────
@@ -143,7 +142,7 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
 
     // ── Stage-specific content ──────────────────────────────────────────
     if (state.stage === STAGE_SHOTS) {
-      inner.appendChild(renderPrompt({ stage: STAGE_SHOTS }));
+      inner.appendChild(renderPrompt({ stage: STAGE_SHOTS, shotCount: state.shots.length }));
       inner.appendChild(renderLieGrid({
         onLie: (lie) => {
           callbacks.commitShot?.(lie);
@@ -157,6 +156,7 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
       inner.appendChild(renderStatsBar({ vsExpected, roundScore: runDiff, animate: false }));
 
     } else if (state.stage === STAGE_PUTTS) {
+      inner.appendChild(renderShotCountDisplay({ shots: state.shots.length, putts: state.putts }));
       inner.appendChild(renderPuttsCard({
         putts: state.putts,
         onChange: (n) => callbacks.setPutts?.(n),
@@ -187,7 +187,7 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
       }));
 
       // Haptic only for celebrations
-      if (['celebration_birdie','celebration_eagle','celebration_hio'].includes(state.tier)) {
+      if (['celebration_birdie','celebration_eagle','celebration_albatross','celebration_hio'].includes(state.tier)) {
         hapticSuccess();
       }
 
