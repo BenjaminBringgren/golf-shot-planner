@@ -1,5 +1,26 @@
 # Changelog
 
+## [Refactor] Phase 5 — UI extraction
+Date: 2026-04-24
+
+src/ui/carousel.js: renderPlan (ctx pattern — all module-level state passed as ctx object),
+updateWindSectionStatus, updateWindBreakdown, syncChipRow, wireChipRow, crosswindSide.
+window._switchStrategyCard and window._carouselGoToCard fully retired (now local refs).
+
+src/ui/scorecard.js: renderPlayCourseBar, renderScoreEntry, showRoundCompleteOverlay,
+_dismissRoundComplete (private), hideScorefab, scoreCssClass (private).
+window.applyHoleToPlay, window.renderSavedRounds, window.loadCourseIntoPlay,
+window.renderScoreEntry, window.showRoundCompleteOverlay exposed from Script 1.
+
+src/ui/sheets.js: openClubPicker, closeClubPicker, openCoursePicker, closeCoursePicker,
+wireCoursePickerEvents. _cpDragCleanup moved from window.* to module-level let.
+window._openClubPicker, window._closeClubPicker, window._cpDragCleanup fully retired.
+
+Bug during extraction: wireCoursePickerEvents() was placed in Script 0 body (does not
+import it) instead of Script 1 — course picker was silent. Fixed by moving call to Script 1.
+
+index.html reduced from ~8300 lines to ~3290 lines across all phases.
+
 ## [Refactor] Phase 4 — Engine extraction
 Date: 2026-04-24
 

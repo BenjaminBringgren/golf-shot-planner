@@ -1975,12 +1975,10 @@ document.addEventListener('DOMContentLoaded', () => {
 import {
   loadBag,
   loadProfile, saveProfile, getScoringMode,
-  loadCourses, saveCourses,
-  loadRounds, saveRound, deleteRound, deleteAllRoundsForCourse,
-  loadScores, saveScores, clearScores,
-  getCommittedStrategies, setCommittedStrategies, removeCommittedStrategies,
-  loadActiveCourse, saveActiveCourse, clearActiveCourse, getActiveCourseId,
-  clearTeeState,
+  loadCourses,
+  loadRounds, deleteRound,
+  loadScores,
+  loadActiveCourse, getActiveCourseId,
 } from './src/storage/storage.js';
 import { teeMarked, completedShots, clearGpsState } from './src/platform/gps.js';
 import { clubs } from './src/engine/clubs.js';
@@ -1988,6 +1986,11 @@ import { syncChipRow } from './src/ui/carousel.js';
 import { renderPlayCourseBar, renderScoreEntry, showRoundCompleteOverlay, hideScorefab } from './src/ui/scorecard.js';
 import { openCoursePicker, closeCoursePicker, wireCoursePickerEvents } from './src/ui/sheets.js';
 import { decodeStrategy, interpolate } from './src/engine/calculations.js';
+import {
+  computeHoleBaseline, blendedScore,
+  applyHoleToPlay, loadCourseIntoPlay,
+  deleteCourse, renderCourseList, openEditor,
+} from './src/app/courses.js';
 
 // ── Tab switching (shared, placed in module for clean removal) ────────────
 window.switchTab = function(name) {
@@ -2744,66 +2747,6 @@ document.getElementById('mgProfileSaveBtn')?.addEventListener('click', () => {
 // Profile: pre-fill when sub-page opens (wired in showMgSub)
 
 
-// ── Course/strategy storage imported from src/storage/storage.js ──────────
-
-function newCourseId() {
-  const existing = Object.keys(loadCourses());
-  let id;
-  do {
-    id = String(Math.floor(10000 + Math.random() * 90000)); // 10000–99999
-  } while (existing.includes(id));
-  return id;
-}
-
-// ── Render course list ────────────────────────────────────────────────────
-function renderCourseList() {
-  const courses = loadCourses();
-  const list    = document.getElementById('courseList');
-  list.innerHTML = '';
-
-  const ids = Object.keys(courses);
-  if (ids.length === 0) {
-    list.innerHTML = '<div style="color:#aaa;font-size:15px;padding:8px 0;">No courses yet — add one below.</div>';
-    return;
-  }
-
-  ids.forEach(id => {
-    const c = courses[id];
-    const filledHoles = c.holes.filter(h => h.length > 0).length;
-    const totalPar    = c.holes.reduce((s, h) => s + (h.par || 0), 0);
-
-    const item = document.createElement('div');
-    item.className = 'course-item';
-
-    item.innerHTML = `
-      <div class="course-item-info">
-        <div class="course-item-name">${escHtml(c.name)}</div>
-        <div class="course-item-meta">${filledHoles}/18 holes · Par ${totalPar || '—'}</div>
-      </div>
-      <div class="course-item-actions">
-        <button class="course-action-btn" data-id="${id}" data-action="edit">Edit</button>
-        <button class="course-action-btn" data-id="${id}" data-action="load">▶ Play</button>
-        <button class="course-action-btn danger" data-id="${id}" data-action="delete">✕</button>
-      </div>`;
-
-    item.querySelectorAll('[data-action]').forEach(btn => {
-      btn.addEventListener('click', e => {
-        e.stopPropagation();
-        const action = btn.dataset.action;
-        if (action === 'edit')   openEditor(id);
-        if (action === 'load')   loadCourseIntoPlay(id);
-        if (action === 'delete') deleteCourse(id);
-      });
-    });
-
-    // Tap the green info area to edit
-    item.querySelector('.course-item-info').addEventListener('click', () => openEditor(id));
-    list.appendChild(item);
-  });
-
-  // ── Saved rounds per course ──────────────────────────────────────────
-  renderSavedRounds();
-}
 
 function renderSavedRounds() {
   const existing = document.getElementById('savedRoundsSection');
@@ -3044,183 +2987,17 @@ function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── Delete course ─────────────────────────────────────────────────────────
-function deleteCourse(id) {
-  if (!confirm('Delete this course?')) return;
-  const courses = loadCourses();
-  delete courses[id];
-  saveCourses(courses);
-  deleteAllRoundsForCourse(id);
-  // Hide editor if it was showing this course
-  if (document.getElementById('courseEditor').dataset.editingId === id) {
-    document.getElementById('courseEditor').style.display = 'none';
-  }
-  renderCourseList();
-}
-
-// ── Load course into Play tab ─────────────────────────────────────────────
-// Loads hole 1 by default and switches to Play tab.
-// Sets up a hole navigator if the course has multiple holes.
-function loadCourseIntoPlay(id) {
-  const courses = loadCourses();
-  const c = courses[id];
-  if (!c) return;
-
-  saveActiveCourse(id, 0);
-
-  applyHoleToPlay(c, 0);
-  switchTab('play');
-  renderPlayCourseBar(id);
-  if (typeof window.updateCalcButtonVisibility === 'function') window.updateCalcButtonVisibility();
-
-  // Show FAB immediately without waiting for calculate()
-  const scores = loadScores(id);
-  if (typeof renderScoreEntry === 'function') renderScoreEntry(id, 0, scores);
-
-  // Auto-calculate on load so strategy shows immediately
-  setTimeout(() => {
-    if (typeof window.calculate === 'function') window.calculate();
-  }, 0);
-}
-
-function applyHoleToPlay(course, holeIdx) {
-  const hole = course.holes[holeIdx];
-  if (!hole) return;
-  document.getElementById('holeLength').value = hole.length || '';
-  const parSel = document.getElementById('parSelect');
-  if (hole.par >= 3 && hole.par <= 5) {
-    parSel.value = String(hole.par);
-    syncChipRow('parChipRow', 'parSelect');
-  }
-}
-
-// ── Round/score storage imported from src/storage/storage.js ──────────────
-
-// ── Personal baseline helpers ─────────────────────────────────────────────
-// Returns { avgScore, avgDiff, rounds } for a course+hole, or null if <3 rounds.
-function computeHoleBaseline(courseId, holeIdx) {
-  const rounds = loadRounds(courseId);
-  const courses = loadCourses();
-  const par = courses[courseId]?.holes?.[holeIdx]?.par || 4;
-  const data = rounds.reduce((acc, r) => {
-    const s = r.scores?.[holeIdx];
-    if (!s) return acc;
-    const strokes = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
-    if (!strokes) return acc;
-    acc.total += strokes;
-    acc.count++;
-    return acc;
-  }, { total: 0, count: 0 });
-  if (data.count < 5) return null;
-  const avgScore = data.total / data.count;
-  return { avgScore, avgDiff: avgScore - par, rounds: data.count, par };
-}
-
-// Blends model score with personal baseline.
-// Weight ramps from 0→1 as rounds go from 5→12+.
-function blendedScore(modelScore, courseId, holeIdx) {
-  const bl = computeHoleBaseline(courseId, holeIdx);
-  if (!bl) return { score: modelScore, blended: false };
-  const weight = Math.min(1, (bl.rounds - 5) / 7); // 0 at 5 rounds, 1 at 12+
-  const score = modelScore * (1 - weight) + bl.avgScore * weight;
-  return { score, blended: true, rounds: bl.rounds, weight };
-}
-// Expose to Script 0 — module scope is not shared between <script type="module"> blocks
-window.blendedScore = blendedScore;
+// ── Expose to Script 0 and UI modules (window reads, not assignments from courses.js) ─
+window.blendedScore        = blendedScore;
 window.computeHoleBaseline = computeHoleBaseline;
-window.renderScoreEntry = renderScoreEntry;
+window.renderScoreEntry    = renderScoreEntry;
 window.showRoundCompleteOverlay = showRoundCompleteOverlay;
-window.applyHoleToPlay = applyHoleToPlay;
-window.renderSavedRounds = renderSavedRounds;
-window.loadCourseIntoPlay = loadCourseIntoPlay;
+window.applyHoleToPlay     = applyHoleToPlay;
+window.renderSavedRounds   = renderSavedRounds;
+window.loadCourseIntoPlay  = loadCourseIntoPlay;
+window.syncChipRow         = syncChipRow;
+window.renderPlayCourseBar = renderPlayCourseBar;
 
-
-
-
-// ── Course editor ─────────────────────────────────────────────────────────
-function openEditor(id) {
-  const courses  = loadCourses();
-  const courseId = id || newCourseId();
-  const course   = courses[courseId] || {
-    name: '',
-    holes: Array.from({length:18}, () => ({ par: 4, length: '', note: '' }))
-  };
-
-  const editor = document.getElementById('courseEditor');
-  editor.style.display = 'block';
-  editor.dataset.editingId = courseId;
-
-  document.getElementById('courseNameInput').value    = course.name;
-  document.getElementById('courseRatingInput').value  = course.courseRating || '';
-  document.getElementById('slopeRatingInput').value   = course.slopeRating  || '';
-  // Build scorecard rows
-  const tbody = document.getElementById('scorecardBody');
-  tbody.innerHTML = '';
-
-  [0, 9].forEach(start => {
-    const secRow = document.createElement('tr');
-    secRow.className = 'sc-section';
-    secRow.innerHTML =
-      `<td class="sc-hole"></td>` +
-      `<td colspan="3">${start === 0 ? 'Front 9' : 'Back 9'}</td>`;
-    tbody.appendChild(secRow);
-
-    for (let i = start; i < start + 9; i++) {
-      const h   = course.holes[i];
-      const row = document.createElement('tr');
-      row.innerHTML =
-        `<td class="sc-hole">${i + 1}</td>` +
-        `<td class="sc-par">
-          <select class="hole-par" data-hole="${i}">
-            <option value="3" ${h.par==3?'selected':''}>3</option>
-            <option value="4" ${(h.par==4||!h.par)?'selected':''}>4</option>
-            <option value="5" ${h.par==5?'selected':''}>5</option>
-          </select>
-        </td>` +
-        `<td><input type="number" class="hole-si" data-hole="${i}"
-             value="${h.si||''}" placeholder="—" min="1" max="18" style="width:38px;"/></td>` +
-        `<td><input type="number" class="hole-length" data-hole="${i}"
-             value="${h.length||''}" placeholder="—" min="50" max="700"/></td>` +
-        `<td><input type="text" class="note-input hole-note" data-hole="${i}"
-             value="${escHtml(h.note||'')}" placeholder="Optional note…"/></td>`;
-      tbody.appendChild(row);
-    }
-  });
-
-  // Save handler
-  document.getElementById('courseEditorSave').onclick = () => {
-    const name = document.getElementById('courseNameInput').value.trim();
-    if (!name) { alert('Please enter a course name.'); return; }
-
-    const holes = Array.from({length:18}, (_, i) => ({
-      par:    Number(tbody.querySelector(`.hole-par[data-hole="${i}"]`).value),
-      si:     Number(tbody.querySelector(`.hole-si[data-hole="${i}"]`).value) || 0,
-      length: Number(tbody.querySelector(`.hole-length[data-hole="${i}"]`).value) || 0,
-      note:   tbody.querySelector(`.hole-note[data-hole="${i}"]`).value.trim(),
-    }));
-    const courseRating = parseFloat(document.getElementById('courseRatingInput').value) || 0;
-    const slopeRating  = parseInt(document.getElementById('slopeRatingInput').value) || 0;
-
-    const updated = loadCourses();
-    updated[courseId] = { name, holes, ...(courseRating ? { courseRating } : {}), ...(slopeRating ? { slopeRating } : {}) };
-    saveCourses(updated);
-
-    editor.style.display = 'none';
-    editor.dataset.editingId = '';
-    renderCourseList();
-  };
-
-  document.getElementById('courseEditorCancel').onclick = () => {
-    editor.style.display = 'none';
-    editor.dataset.editingId = '';
-  };
-
-  // Scroll editor into view
-  editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-
-// ── New course button ─────────────────────────────────────────────────────
 // ── New course button ─────────────────────────────────────────────────────
 document.getElementById('newCourseBtn').addEventListener('click', () => {
   openEditor(null);
