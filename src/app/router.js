@@ -208,7 +208,7 @@ function buildCallbacks() {
     updateLoadCourseBtn,
     updateCalcButtonVisibility,
   };
-} // keyed by holeIdx
+}
 function par3Override() { return par3ClubOverrides[_overrideCourseId + "|" + _overrideHoleIdx] ?? null; }
 
 // Course+hole namespace for overrides — set by calculate() each call
@@ -281,7 +281,8 @@ function switchTab(name) {
   if (overlay) overlay.classList.remove('visible');
 }
 
-
+document.getElementById('tabPlay')?.addEventListener('click', () => switchTab('play'));
+document.getElementById('tabPrepare')?.addEventListener('click', () => switchTab('prepare'));
 
 
 
@@ -1448,7 +1449,7 @@ initServices({
       if (!c) return;
       if (holeIdx === 17) {
         // Last hole — show round complete overlay instead of wrapping
-        showRoundCompleteOverlay(id, holeIdx, { clearAllOverrides });
+        showRoundCompleteOverlay(id, holeIdx, buildCallbacks());
         return;
       }
       const nextIdx = holeIdx + 1;
