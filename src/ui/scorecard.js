@@ -143,6 +143,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     summaryBtn.textContent = '⊞';
     summaryBtn.title = 'Round summary';
     summaryBtn.addEventListener('click', () => {
+      summaryBtn.blur();
       openScorecardPage();
     });
     actionsRow.appendChild(summaryBtn);
@@ -354,7 +355,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           <tr>
             <td class="sc-hole">${h.hole}</td>
             <td class="sc-par">${h.par}</td>
-            <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td>
+            <td>—</td><td>—</td><td>—</td><td>—</td>
           </tr>`;
         const diff = h.total - h.par;
         const girVal = h.gir !== null ? h.gir : ((h.fairway + (h.rough || 0)) <= (h.par - 2));
@@ -363,7 +364,6 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           <tr>
             <td class="sc-hole">${h.hole}</td>
             <td class="sc-par">${h.par}</td>
-            <td>${h.fairway}</td>
             <td>${h.putts}</td>
             <td style="text-align:center">${girMark}</td>
             <td>${pillHtml(h.total, h.par)}</td>
@@ -380,26 +380,24 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
         <thead><tr>
           <th class="sc-th-hole">#</th>
           <th class="sc-th-par">Par</th>
-          <th>🏌️</th><th>⛳</th><th>GIR</th><th>Total</th><th>+/−</th>
+          <th>⛳</th><th>GIR</th><th>Total</th><th>+/−</th>
         </tr></thead>
         <tbody>
-          <tr class="sc-section"><td class="sc-hole"></td><td colspan="6">Front 9</td></tr>
+          <tr class="sc-section"><td class="sc-hole"></td><td colspan="5">Front 9</td></tr>
           ${sectionRows(0, 9)}
           <tr class="sc-total">
             <td class="sc-hole">Out</td>
             <td class="sc-par">${front9Par}</td>
-            <td>${front9Played ? front9FW : '—'}</td>
             <td>${front9Played ? front9Putts : '—'}</td>
             <td>${front9Played ? front9GIR + '/9' : '—'}</td>
             <td>${front9Played ? pillHtml(front9Strokes, front9Par) : '—'}</td>
             <td>${front9Played ? diffHtml(front9Strokes - front9Par) : '—'}</td>
           </tr>
-          <tr class="sc-section"><td class="sc-hole"></td><td colspan="6">Back 9</td></tr>
+          <tr class="sc-section"><td class="sc-hole"></td><td colspan="5">Back 9</td></tr>
           ${sectionRows(9, 18)}
           <tr class="sc-total">
             <td class="sc-hole">In</td>
             <td class="sc-par">${back9Par}</td>
-            <td>${back9Played ? back9FW : '—'}</td>
             <td>${back9Played ? back9Putts : '—'}</td>
             <td>${back9Played ? back9GIR + '/' + back9Played : '—'}</td>
             <td>${back9Played ? pillHtml(back9Strokes, back9Par) : '—'}</td>
@@ -410,7 +408,6 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           <tr class="sc-total">
             <td class="sc-hole">Total</td>
             <td class="sc-par">${(front9Played || back9Played) ? front9Par + back9Par : '—'}</td>
-            <td>${(front9Played + back9Played) ? totalFW : '—'}</td>
             <td>${(front9Played + back9Played) ? totalPutts : '—'}</td>
             <td>${(front9Played + back9Played) ? totalGIR + '/' + holesPlayed + ' <span style="color:#888;font-weight:400;font-size:11px;">(' + Math.round(totalGIR/holesPlayed*100) + '%)</span>' : '—'}</td>
             <td>${(front9Played + back9Played) ? pillHtml(front9Strokes + back9Strokes, front9Par + back9Par) : '—'}</td>
@@ -494,8 +491,9 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     // Overlay tap to close
     pageOverlay.onclick = closeScorecardPage;
 
-    // ── Swipe down to dismiss ─────────────────────────────
+    // ── Swipe down to dismiss (handle area + header) ──────
     const pageHandle = document.getElementById('scorecardPageHandle');
+    const pageHeader = page.querySelector('.scorecard-page-header');
     if (!pageHandle) return;
 
     let dragStartY  = null;
@@ -530,6 +528,13 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     freshHandle.addEventListener('touchstart', onDragStart, { passive: true });
     freshHandle.addEventListener('touchmove',  onDragMove,  { passive: true });
     freshHandle.addEventListener('touchend',   onDragEnd);
+
+    // Also wire header — larger drag target, no scroll conflict
+    if (pageHeader) {
+      pageHeader.addEventListener('touchstart', onDragStart, { passive: true });
+      pageHeader.addEventListener('touchmove',  onDragMove,  { passive: true });
+      pageHeader.addEventListener('touchend',   onDragEnd);
+    }
   }
 
   function closeScorecardPage() {
