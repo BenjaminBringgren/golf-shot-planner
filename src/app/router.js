@@ -345,7 +345,6 @@ document.getElementById('newCourseBtn').addEventListener('click', () => {
 
 wireCoursePickerEvents();
 
-</script>
 
 // ── Play tab bootstrap (formerly Script 0 DOMContentLoaded body) ────────────
 
@@ -1471,4 +1470,3 @@ wireCoursePickerEvents();
   wireChipRow('condChipRow',       'conditions');
   wireChipRow('condChipRowWeather','conditions');
 
-</script>
