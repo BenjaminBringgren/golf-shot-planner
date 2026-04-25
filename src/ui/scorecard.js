@@ -425,7 +425,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
       saveBtn.className = 'save-round-btn';
       saveBtn.type = 'button';
       saveBtn.style.cssText = 'margin-top:16px; font-size:15px; padding:17px 14px; background:#fff; color:#111; border:none; border-radius:10px; width:100%; cursor:pointer; font-weight:600;';
-      saveBtn.textContent = '💾 Save Round';
+      saveBtn.textContent = 'Save Round';
       saveBtn.addEventListener('click', () => {
         const committedStrategies = getCommittedStrategies();
         const roundScores = loadScores(courseId);
@@ -491,28 +491,31 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     // Overlay tap to close
     pageOverlay.onclick = closeScorecardPage;
 
-    // ── Swipe down to dismiss (handle area + header) ──────
+    // ── Swipe down to dismiss ─────────────────────────────
     const pageHandle = document.getElementById('scorecardPageHandle');
     const pageHeader = page.querySelector('.scorecard-page-header');
+    const pageInner  = document.getElementById('scorecardPageInner');
     if (!pageHandle) return;
 
-    let dragStartY  = null;
+    let dragStartY   = null;
     let dragCurrentY = 0;
+    let dismissMode  = false; // true when inner-scroll gesture is hijacked
 
-    function onDragStart(e) {
-      dragStartY   = (e.touches ? e.touches[0].clientY : e.clientY);
+    function startDismiss(e) {
+      dragStartY   = e.touches[0].clientY;
       dragCurrentY = 0;
+      dismissMode  = true;
       page.style.transition = 'none';
     }
-    function onDragMove(e) {
-      if (dragStartY === null) return;
-      const y = (e.touches ? e.touches[0].clientY : e.clientY);
-      dragCurrentY = Math.max(0, y - dragStartY);
+    function moveDismiss(e) {
+      if (!dismissMode || dragStartY === null) return;
+      dragCurrentY = Math.max(0, e.touches[0].clientY - dragStartY);
       page.style.transform = `translateY(${dragCurrentY}px)`;
     }
-    function onDragEnd() {
-      if (dragStartY === null) return;
-      dragStartY = null;
+    function endDismiss() {
+      if (!dismissMode || dragStartY === null) return;
+      dragStartY  = null;
+      dismissMode = false;
       page.style.transition = '';
       if (dragCurrentY > 80) {
         page.style.transform = '';
@@ -525,15 +528,42 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     // Clone handle to remove any previous listeners
     const freshHandle = pageHandle.cloneNode(true);
     pageHandle.parentNode.replaceChild(freshHandle, pageHandle);
-    freshHandle.addEventListener('touchstart', onDragStart, { passive: true });
-    freshHandle.addEventListener('touchmove',  onDragMove,  { passive: true });
-    freshHandle.addEventListener('touchend',   onDragEnd);
+    freshHandle.addEventListener('touchstart', startDismiss, { passive: true });
+    freshHandle.addEventListener('touchmove',  moveDismiss,  { passive: true });
+    freshHandle.addEventListener('touchend',   endDismiss);
 
-    // Also wire header — larger drag target, no scroll conflict
+    // Header — large non-scrolling target
     if (pageHeader) {
-      pageHeader.addEventListener('touchstart', onDragStart, { passive: true });
-      pageHeader.addEventListener('touchmove',  onDragMove,  { passive: true });
-      pageHeader.addEventListener('touchend',   onDragEnd);
+      pageHeader.addEventListener('touchstart', startDismiss, { passive: true });
+      pageHeader.addEventListener('touchmove',  moveDismiss,  { passive: true });
+      pageHeader.addEventListener('touchend',   endDismiss);
+    }
+
+    // Inner scroll area — hijack when already at the top and pulling down
+    if (pageInner) {
+      pageInner.addEventListener('touchstart', (e) => {
+        dragStartY   = e.touches[0].clientY;
+        dragCurrentY = 0;
+        dismissMode  = false;
+      }, { passive: true });
+
+      pageInner.addEventListener('touchmove', (e) => {
+        if (dragStartY === null) return;
+        const delta = e.touches[0].clientY - dragStartY;
+        if (!dismissMode) {
+          if (pageInner.scrollTop === 0 && delta > 0) {
+            dismissMode = true;
+            page.style.transition = 'none';
+          } else {
+            return; // normal scroll
+          }
+        }
+        e.preventDefault();
+        dragCurrentY = Math.max(0, delta);
+        page.style.transform = `translateY(${dragCurrentY}px)`;
+      }, { passive: false });
+
+      pageInner.addEventListener('touchend', endDismiss);
     }
   }
 
