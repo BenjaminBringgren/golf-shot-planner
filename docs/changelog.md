@@ -1,5 +1,23 @@
 # Changelog
 
+## [Fix] Post-window-retirement bugs
+Date: 2026-04-25
+
+Three bugs found during iPhone Safari verification after window.* retirement:
+
+1. Tab switching broken: index.html tab buttons used inline onclick="switchTab('play')"
+   which worked when script was inline but fails for ES module scope. Fixed by removing
+   onclick attributes and wiring addEventListener in router.js.
+
+2. Delete round after round complete left Play tab in half-torn-down state (only
+   #thisHoleCard visible, GPS tiles not reset, Load Course button not shown).
+   Root cause: showRoundCompleteOverlay called with { clearAllOverrides } only instead
+   of buildCallbacks(), so all other callbacks were silent no-ops in _dismissRoundComplete.
+   Fixed by passing buildCallbacks() at the wireActionRow call site.
+
+3. window.* retirement introduced inline onclick="window.toggleWindPanel(event)" removal
+   from windToggle (done in Category C) but tab buttons were missed. Confirmed clean.
+
 ## [Refactor] window.* fully retired — Category A cleanup
 Date: 2026-04-25
 
