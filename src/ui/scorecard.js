@@ -17,6 +17,9 @@ import { mountShotSheet } from './shotSheet/index.js';
 
 // ── Rough-lie state (read by router.js via getInRough) ────────────────────────
 let _inRough = false;
+
+// ── Scorecard page swipe: one AbortController per course bar mount ────────────
+let _scorecardSwipeAC = null;
 export function getInRough()  { return _inRough; }
 export function resetInRough() { _inRough = false; }
 
@@ -488,83 +491,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     page.classList.add('open');
     document.body.style.overflow = 'hidden';
 
-    // Overlay tap to close
     pageOverlay.onclick = closeScorecardPage;
-
-    // ── Swipe down to dismiss ─────────────────────────────
-    const pageHandle = document.getElementById('scorecardPageHandle');
-    const pageHeader = page.querySelector('.scorecard-page-header');
-    const pageInner  = document.getElementById('scorecardPageInner');
-    if (!pageHandle) return;
-
-    let dragStartY   = null;
-    let dragCurrentY = 0;
-    let dismissMode  = false; // true when inner-scroll gesture is hijacked
-
-    function startDismiss(e) {
-      dragStartY   = e.touches[0].clientY;
-      dragCurrentY = 0;
-      dismissMode  = true;
-      page.style.transition = 'none';
-    }
-    function moveDismiss(e) {
-      if (!dismissMode || dragStartY === null) return;
-      dragCurrentY = Math.max(0, e.touches[0].clientY - dragStartY);
-      page.style.transform = `translateY(${dragCurrentY}px)`;
-    }
-    function endDismiss() {
-      if (!dismissMode || dragStartY === null) return;
-      dragStartY  = null;
-      dismissMode = false;
-      page.style.transition = '';
-      if (dragCurrentY > 80) {
-        page.style.transform = '';
-        closeScorecardPage();
-      } else {
-        page.style.transform = '';
-      }
-    }
-
-    // Clone handle to remove any previous listeners
-    const freshHandle = pageHandle.cloneNode(true);
-    pageHandle.parentNode.replaceChild(freshHandle, pageHandle);
-    freshHandle.addEventListener('touchstart', startDismiss, { passive: true });
-    freshHandle.addEventListener('touchmove',  moveDismiss,  { passive: true });
-    freshHandle.addEventListener('touchend',   endDismiss);
-
-    // Header — large non-scrolling target
-    if (pageHeader) {
-      pageHeader.addEventListener('touchstart', startDismiss, { passive: true });
-      pageHeader.addEventListener('touchmove',  moveDismiss,  { passive: true });
-      pageHeader.addEventListener('touchend',   endDismiss);
-    }
-
-    // Inner scroll area — hijack when already at the top and pulling down
-    if (pageInner) {
-      pageInner.addEventListener('touchstart', (e) => {
-        dragStartY   = e.touches[0].clientY;
-        dragCurrentY = 0;
-        dismissMode  = false;
-      }, { passive: true });
-
-      pageInner.addEventListener('touchmove', (e) => {
-        if (dragStartY === null) return;
-        const delta = e.touches[0].clientY - dragStartY;
-        if (!dismissMode) {
-          if (pageInner.scrollTop === 0 && delta > 0) {
-            dismissMode = true;
-            page.style.transition = 'none';
-          } else {
-            return; // normal scroll
-          }
-        }
-        e.preventDefault();
-        dragCurrentY = Math.max(0, delta);
-        page.style.transform = `translateY(${dragCurrentY}px)`;
-      }, { passive: false });
-
-      pageInner.addEventListener('touchend', endDismiss);
-    }
   }
 
   function closeScorecardPage() {
@@ -629,6 +556,84 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
   };
 
   updateBar();
+
+  // ── Scorecard page swipe — wired once per course bar mount ───────────────
+  if (_scorecardSwipeAC) _scorecardSwipeAC.abort();
+  _scorecardSwipeAC = new AbortController();
+  const { signal } = _scorecardSwipeAC;
+
+  const _swipePage   = document.getElementById('scorecardPage');
+  const _swipeHandle = document.getElementById('scorecardPageHandle');
+  const _swipeHeader = document.querySelector('.scorecard-page-header');
+  const _swipeInner  = document.getElementById('scorecardPageInner');
+
+  if (_swipePage && _swipeHandle) {
+    let dragStartY   = null;
+    let dragCurrentY = 0;
+    let dismissMode  = false;
+
+    function startDismiss(e) {
+      if (!_swipePage.classList.contains('open')) return;
+      dragStartY   = e.touches[0].clientY;
+      dragCurrentY = 0;
+      dismissMode  = true;
+      _swipePage.style.transition = 'none';
+    }
+    function moveDismiss(e) {
+      if (!dismissMode || dragStartY === null) return;
+      dragCurrentY = Math.max(0, e.touches[0].clientY - dragStartY);
+      _swipePage.style.transform = `translateY(${dragCurrentY}px)`;
+    }
+    function endDismiss() {
+      if (!dismissMode || dragStartY === null) return;
+      dragStartY  = null;
+      dismissMode = false;
+      _swipePage.style.transition = '';
+      if (dragCurrentY > 80) {
+        _swipePage.style.transform = '';
+        closeScorecardPage();
+      } else {
+        _swipePage.style.transform = '';
+      }
+    }
+
+    _swipeHandle.addEventListener('touchstart', startDismiss, { passive: true, signal });
+    _swipeHandle.addEventListener('touchmove',  moveDismiss,  { passive: true, signal });
+    _swipeHandle.addEventListener('touchend',   endDismiss,   { signal });
+
+    if (_swipeHeader) {
+      _swipeHeader.addEventListener('touchstart', startDismiss, { passive: true, signal });
+      _swipeHeader.addEventListener('touchmove',  moveDismiss,  { passive: true, signal });
+      _swipeHeader.addEventListener('touchend',   endDismiss,   { signal });
+    }
+
+    if (_swipeInner) {
+      _swipeInner.addEventListener('touchstart', (e) => {
+        if (!_swipePage.classList.contains('open')) return;
+        dragStartY   = e.touches[0].clientY;
+        dragCurrentY = 0;
+        dismissMode  = false;
+      }, { passive: true, signal });
+
+      _swipeInner.addEventListener('touchmove', (e) => {
+        if (dragStartY === null) return;
+        const delta = e.touches[0].clientY - dragStartY;
+        if (!dismissMode) {
+          if (_swipeInner.scrollTop === 0 && delta > 0) {
+            dismissMode = true;
+            _swipePage.style.transition = 'none';
+          } else {
+            return;
+          }
+        }
+        e.preventDefault();
+        dragCurrentY = Math.max(0, delta);
+        _swipePage.style.transform = `translateY(${dragCurrentY}px)`;
+      }, { passive: false, signal });
+
+      _swipeInner.addEventListener('touchend', endDismiss, { signal });
+    }
+  }
 
   const playPane = document.getElementById('panePlay');
   playPane.insertBefore(bar, playPane.firstChild);
