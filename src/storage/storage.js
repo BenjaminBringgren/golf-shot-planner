@@ -5,14 +5,30 @@
 // All other modules call these functions; none write to storage directly.
 
 // ── Key constants ─────────────────────────────────────────────────────────────
-export const KEY_BAG           = 'golfBag_v2';
-export const KEY_TEE           = 'golfTee_v1';
-export const KEY_PROFILE       = 'golfProfile_v1';
-export const KEY_COURSES       = 'golfCourses_v1';
-export const KEY_ROUNDS        = 'golfRounds_v1';
-export const KEY_WIND          = 'golfWind_v1';
-export const KEY_WIND_ENABLED  = 'windEnabled';
-export const KEY_ACTIVE_COURSE = 'activeCourse'; // sessionStorage
+export const KEY_BAG              = 'golfBag_v2';
+export const KEY_TEE              = 'golfTee_v1';
+export const KEY_PROFILE          = 'golfProfile_v1';
+export const KEY_COURSES          = 'golfCourses_v1';
+export const KEY_ROUNDS           = 'golfRounds_v1';
+export const KEY_WIND             = 'golfWind_v1';
+export const KEY_WIND_ENABLED     = 'windEnabled';
+export const KEY_ACTIVE_COURSE    = 'activeCourse';     // sessionStorage
+export const KEY_HOLE_FLOW_STATE  = 'holeFlowState';    // localStorage — mid-hole resume
+
+// ── Per-hole record shape (extended) ─────────────────────────────────────────
+// Backward-compat: new fields default safely on read for older saved rounds.
+// {
+//   hole: number,        // 1-based hole number
+//   par: number,
+//   shots: string[],     // lie per shot: 'tee'|'fw'|'rough'|'sand'|'green'|'penalty'
+//   putts: number,
+//   penalties: number,   // count of penalty-lie shots
+//   holedFromLie: string,// lie of the shot that holed out
+//   milestones: string[],// ['first_gir', 'first_fw', 'first_one_putt']
+//   completedAt: number, // Date.now() timestamp
+//   // Legacy fields kept for backward compat:
+//   fairway: number, rough: number, gir: boolean, fir: boolean|null, scoringMode: string
+// }
 
 // ── Private key builders ──────────────────────────────────────────────────────
 function _csKey(courseId)      { return 'committedStrategies_' + courseId; }
@@ -139,6 +155,20 @@ export function saveTeeState(data) {
 }
 export function clearTeeState() {
   try { localStorage.removeItem(KEY_TEE); } catch(e) {}
+}
+
+// ── Hole flow state (mid-hole resume) ────────────────────────────────────────
+// Keyed by courseId|holeIdx so switching holes never bleeds state.
+function _hfsKey(courseId, holeIdx) { return KEY_HOLE_FLOW_STATE + '_' + courseId + '_' + holeIdx; }
+
+export function loadHoleFlowState(courseId, holeIdx) {
+  try { const r = localStorage.getItem(_hfsKey(courseId, holeIdx)); return r ? JSON.parse(r) : null; } catch(e) { return null; }
+}
+export function saveHoleFlowState(courseId, holeIdx, state) {
+  try { localStorage.setItem(_hfsKey(courseId, holeIdx), JSON.stringify(state)); } catch(e) {}
+}
+export function clearHoleFlowState(courseId, holeIdx) {
+  try { localStorage.removeItem(_hfsKey(courseId, holeIdx)); } catch(e) {}
 }
 
 // ── Collapsible section state ─────────────────────────────────────────────────

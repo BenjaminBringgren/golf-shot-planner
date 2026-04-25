@@ -45,6 +45,12 @@ import {
   showMgSub, showMgHub, refreshMgHub,
   renderMgStatTiles, renderMgCarryBars, renderSavedRounds,
 } from './rounds.js';
+import {
+  initHoleFlowServices,
+  commitShot, holeOut, penaltyShot, setPutts, finishHole,
+  back as _flowBack, edit as _flowEdit, nextHole, undoLastShot,
+  getState as getHoleFlowState, subscribe as subscribeHoleFlow,
+} from './holeFlow.js';
 
 // ── Persistence ────────────────────────────────────────────────────────────
 function saveBag() {
@@ -207,8 +213,42 @@ function buildCallbacks() {
     renderSavedRounds,
     updateLoadCourseBtn,
     updateCalcButtonVisibility,
+    // Shot-sheet / hole-flow callbacks
+    commitShot:        (lie)    => commitShot(lie),
+    holeOut:           ()       => holeOut(),
+    penaltyShot:       ()       => penaltyShot(),
+    setPutts:          (n)      => setPutts(n),
+    finishHole:        ()       => finishHole(),
+    backToPutts:       ()       => _flowBack(),
+    editHole:          ()       => _flowEdit(),
+    nextHole:          (scores) => nextHole(scores),
+    undoLastShot:      ()       => undoLastShot(),
+    getHoleFlowState:  ()       => getHoleFlowState(),
+    subscribeHoleFlow: (fn)     => subscribeHoleFlow(fn),
+    showRoundComplete: (cId, hIdx) => showRoundCompleteOverlay(cId, hIdx, buildCallbacks()),
   };
 }
+// Expected strokes callback — reads live inputs at call time, injected into holeFlow.
+function _getExpectedStrokes(remaining, inRoughFlag) {
+  try {
+    const driver = Number(document.getElementById('driverCarry').value) || 0;
+    if (!driver) return null;
+    const i7 = Number(document.getElementById('i7Carry').value) || 0;
+    const pw = Number(document.getElementById('pwCarry').value) || 0;
+    const clubsList = getClubs(driver, i7, pw, windState);
+    const dc = clubsList.find(c => c.key === 'driver');
+    const driverCarry = dc ? dc.carry : driver;
+    let handicap = null;
+    try {
+      const _ph = loadProfile();
+      const _hv = parseFloat(_ph.handicap);
+      if (!isNaN(_hv) && _hv > 0) handicap = _hv;
+    } catch(e) {}
+    return expectedStrokesRemaining(remaining, driverCarry, handicap, inRoughFlag, windState, undefined, _holeHcpAdj);
+  } catch(e) { return null; }
+}
+initHoleFlowServices({ getExpectedStrokes: _getExpectedStrokes });
+
 function par3Override() { return par3ClubOverrides[_overrideCourseId + "|" + _overrideHoleIdx] ?? null; }
 
 // Course+hole namespace for overrides — set by calculate() each call

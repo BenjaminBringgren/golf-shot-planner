@@ -361,47 +361,36 @@
     font-weight: 500;
     letter-spacing: -0.01em;
     margin-top: -8px;
+    margin-bottom: 8px;
   }
-  .putts-controls {
-    display: flex;
-    gap: 18px;
-    margin-top: 4px;
-  }
-  .putts-pill {
-    width: 64px; height: 48px;
-    border-radius: 24px;
-    background: #fff;
-    border: 0.5px solid var(--sep);
-    font-size: 26px;
-    font-weight: 400;
-    color: var(--ink);
-    cursor: pointer;
-    font-family: inherit;
-    line-height: 1;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    transition: transform 0.1s ease;
-  }
-  .putts-pill:active { transform: scale(0.92); background: #f2f2f7; }
   .quick-putts {
     display: flex;
-    gap: 6px;
-    margin-top: 14px;
+    gap: 8px;
+    margin-top: 8px;
+    width: 100%;
   }
   .quick-putt {
     flex: 1;
-    height: 36px;
-    border-radius: 12px;
-    background: rgba(0,0,0,0.04);
-    border: none;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--ink-2);
+    height: 56px;
+    border-radius: 16px;
+    background: #fff;
+    border: 0.5px solid var(--sep);
+    font-family: "SF Pro Display", -apple-system, sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
     cursor: pointer;
-    font-family: inherit;
+    font-variant-numeric: tabular-nums;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s ease, color 0.15s ease;
   }
+  .quick-putt:active { transform: scale(0.94); }
   .quick-putt.active {
     background: var(--ink);
     color: #fff;
+    border-color: var(--ink);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
   }
 
   .confirm-row {
@@ -573,10 +562,6 @@
       <div class="putts-card">
         <div class="putts-number">2</div>
         <div class="putts-sub">putts on the green</div>
-        <div class="putts-controls">
-          <button class="putts-pill">−</button>
-          <button class="putts-pill">+</button>
-        </div>
         <div class="quick-putts">
           <button class="quick-putt">1</button>
           <button class="quick-putt active">2</button>
@@ -610,7 +595,7 @@
     </div>
   </div>
 
-  <p class="note"><strong>Putts stage:</strong> Auto-triggered by tapping Green · Big numeral as the focal point · ± for edge cases, but quick-picks (1/2/3/4+) cover 98% of real putts in one tap · Stats update live as you adjust.</p>
+  <p class="note"><strong>Putts stage:</strong> Auto-triggered by tapping Green · Big numeral as the focal point · Four quick-picks (1/2/3/4+) cover virtually every real putt count in a single tap · Stats update live as you tap.</p>
 
   <!-- STATE 3: just holed out -->
   <span class="tag">③ Holed out · celebration state</span>
