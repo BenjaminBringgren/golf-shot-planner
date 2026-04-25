@@ -444,14 +444,16 @@ wireCoursePickerEvents();
       if (Number(bagSaved.driver) >= 50) { overlay.classList.add('hidden'); return; }
     } catch(e) {}
 
-    input.addEventListener('input', () => {
-      const v = Number(input.value);
+    function checkSplashInput() {
+      const v = parseInt(input.value, 10);
       btn.disabled = !(v >= 50 && v <= 350);
-    });
+    }
+    input.addEventListener('input',  checkSplashInput);
+    input.addEventListener('change', checkSplashInput);
 
     btn.addEventListener('click', () => {
-      const val = Number(input.value);
-      if (val < 50 || val > 350) return;
+      const val = parseInt(input.value, 10);
+      if (!(val >= 50 && val <= 350)) return;
       document.getElementById('driverCarry').value = val;
       saveBag();
       overlay.classList.add('hidden');
