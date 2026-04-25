@@ -1,5 +1,19 @@
 # Changelog
 
+## [Refactor] Phase 6.3 — App extraction: router.js
+Date: 2026-04-25
+
+src/app/router.js created (1474 lines): merges Script 0 (DOMContentLoaded
+closure) and Script 1 (prepare-module) from index.html into a single ES module.
+Contains all override state, wind/GPS handlers, calculate(), buildClubUI,
+compass/drag, switchTab, wireMgNav, profile/course/restore IIFEs, and all
+window.* bridge assignments. DOMContentLoaded wrapper removed — ES module
+deferred execution makes it unnecessary.
+
+index.html reduced from 2164 to 683 lines. Sole remaining script tag:
+<script type="module" src="src/app/router.js"></script>
+Zero function bodies remain in index.html.
+
 ## [Refactor] Phase 6.2 — App extraction: rounds.js
 Date: 2026-04-25
 
