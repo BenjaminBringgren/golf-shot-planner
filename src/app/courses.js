@@ -1,13 +1,15 @@
 /* Copyright © 2025 Benjamin Bringgren. All rights reserved.
    Unauthorised copying or distribution is prohibited. */
 // LAYER 2 — app — course CRUD, course editor, personal baseline.
-// No imports from src/ui/. Cross-layer UI calls use window.* reads (transitional).
 
 import {
   loadCourses, saveCourses,
   loadRounds, deleteAllRoundsForCourse,
   loadScores, saveActiveCourse,
 } from '../storage/storage.js';
+
+let _svc = {};
+export function initServices(svc) { _svc = svc; }
 
 function escHtml(str) {
   if (!str) return '';
@@ -58,7 +60,7 @@ export function applyHoleToPlay(course, holeIdx) {
   const parSel = document.getElementById('parSelect');
   if (hole.par >= 3 && hole.par <= 5) {
     parSel.value = String(hole.par);
-    window.syncChipRow?.('parChipRow', 'parSelect');
+    _svc.syncChipRow?.('parChipRow', 'parSelect');
   }
 }
 
@@ -68,12 +70,12 @@ export function loadCourseIntoPlay(id) {
   if (!c) return;
   saveActiveCourse(id, 0);
   applyHoleToPlay(c, 0);
-  window.switchTab?.('play');
-  window.renderPlayCourseBar?.(id);
-  window.updateCalcButtonVisibility?.();
+  _svc.switchTab?.('play');
+  _svc.renderPlayCourseBar?.(id);
+  _svc.updateCalcButtonVisibility?.();
   const scores = loadScores(id);
-  window.renderScoreEntry?.(id, 0, scores);
-  setTimeout(() => window.calculate?.(), 0);
+  _svc.renderScoreEntry?.(id, 0, scores);
+  setTimeout(() => _svc.calculate?.(), 0);
 }
 
 // ── Course CRUD ───────────────────────────────────────────────────────────────
@@ -132,7 +134,7 @@ export function renderCourseList() {
     list.appendChild(item);
   });
 
-  window.renderSavedRounds?.();
+  _svc.renderSavedRounds?.();
 }
 
 // ── Course editor ─────────────────────────────────────────────────────────────

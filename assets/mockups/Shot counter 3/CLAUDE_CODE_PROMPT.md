@@ -1,6 +1,6 @@
 # Claude Code Implementation Prompt — Shot Counter Redesign
 
-> Paste this entire document to Claude Code as the task brief. The accompanying file `shot-counter-v4-reference.html` is the visual source of truth for the redesign and should be opened alongside this prompt.
+> Paste this entire document to Claude Code as the task brief. The accompanying file `shot-counter-v4-reference.html` and `shot-counter-v3.html` is the visual source of truth for the redesign and should be opened alongside this prompt.
 
 ---
 
@@ -52,7 +52,7 @@ If existing code violates these boundaries, fix the violation as part of this ta
 
 ### Tokens — reuse, don't invent
 
-The reference mockup `shot-counter-v4-reference.html` uses specific colors (`#d6e5f5`, `#c7e4cb`, etc.) and radii (20px, 16px, etc.). **These are illustrative only.** Use the app's existing tokens from `styles.css` and `UI-patterns.md`. If a needed token genuinely doesn't exist (e.g. celebration gradients), add it to `styles.css` in the existing scale, and document it in `UI-patterns.md`.
+The reference mockup `shot-counter-v4-reference.html` and `shot-counter-v3` uses specific colors (`#d6e5f5`, `#c7e4cb`, etc.) and radii (20px, 16px, etc.). **These are illustrative only.** Use the app's existing tokens from `styles.css` and `UI-patterns.md`. If a needed token genuinely doesn't exist (e.g. celebration gradients), add it to `styles.css` in the existing scale, and document it in `UI-patterns.md`.
 
 The lie color system is the most likely place for existing tokens. Look for variables like `--lie-fairway`, `--surface-fairway`, or similar before introducing new ones.
 
@@ -62,10 +62,6 @@ The lie color system is the most likely place for existing tokens. Look for vari
 - Avoid `Object.defineProperty` on `window` (Safari quirk noted in project history).
 - Test gestures (swipe-to-undo) on touch; provide pointer-event fallbacks.
 - Respect `prefers-reduced-motion` via `platform/` helper.
-
-### Copyright
-
-The single-file `golf-shot-planner.html` previously required a copyright header at the top. With this modular structure, the equivalent is a `LICENSE` notice. Confirm with `CLAUDE.md` what the current convention is (top-of-file comment in `index.html`, header in each source file, or a separate LICENSE file). Match the project convention.
 
 ---
 
@@ -236,16 +232,6 @@ Fire `tap()` on quick-putt selection, `commit()` on lie tile commit, `success()`
 
 ---
 
-## Cross-Boundary Function Exposure
-
-Project history notes a recurring bug: functions used across the two-script-block boundary (main `DOMContentLoaded` block + `prepare-module` block) need explicit `window.fnName = fn` exposure. With this modular refactor, **the goal is to eliminate that pattern, not preserve it.** Anything called from multiple places should be a proper ES module export.
-
-If you find yourself reaching for `window.x = ...`, stop. That's a smell that means a module boundary is missing. Fix the architecture instead.
-
-If `CLAUDE.md` documents this exact rule, follow it. If not, add a note about the resolution to `CLAUDE.md` as part of this task.
-
----
-
 ## Definition of Done
 
 - [ ] Plan reviewed and confirmed in chat before any code written
@@ -271,7 +257,7 @@ If `CLAUDE.md` documents this exact rule, follow it. If not, add a note about th
 
 ## Reference Files
 
-- `shot-counter-v4-reference.html` — visual reference; layout, copy, animations, tier system. Open in browser. Use the *structure*, not the literal colors/radii/fonts (those come from the app's existing tokens).
+- `shot-counter-v4-reference.html` and `shot-counter-v3.html`— visual reference; layout, copy, animations, tier system. Open in browser. Use the *structure*, not the literal colors/radii/fonts (those come from the app's existing tokens).
 
 ---
 

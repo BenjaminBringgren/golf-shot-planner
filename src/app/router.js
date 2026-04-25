@@ -39,6 +39,7 @@ import {
   computeHoleBaseline, blendedScore,
   applyHoleToPlay, loadCourseIntoPlay,
   deleteCourse, renderCourseList, openEditor,
+  initServices,
 } from './courses.js';
 import {
   showMgSub, showMgHub, refreshMgHub,
@@ -171,11 +172,43 @@ const teeOverrides = {};
 const shot2Overrides = {}; // user-selected second-shot club per strategy type
 const approachOverrides = {}; // user-selected approach club per strategy type (1-shot plans)
 const gpsShot2Overrides = {}; // user-selected next club after GPS ball mark
-window.teeOverrides = teeOverrides;
-window.shot2Overrides = shot2Overrides;
-window.approachOverrides = approachOverrides;
-window.gpsShot2Overrides = gpsShot2Overrides;
-const par3ClubOverrides = {}; // keyed by holeIdx
+
+function clearAllOverrides() {
+  Object.keys(teeOverrides).forEach(k => delete teeOverrides[k]);
+  Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
+  Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
+  Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]);
+}
+function clearRoundOverrides() {
+  Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
+  Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
+  Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]);
+}
+function clearGpsOverrides() {
+  Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]);
+}
+const par3ClubOverrides = {};
+
+// ── Callbacks factory ─────────────────────────────────────────────────────
+// Builds the callbacks object passed to UI functions. calculate is wrapped in
+// an arrow so the closure captures the variable binding, not the initial value
+// (calculate is reassigned to a wrapped version later in this module).
+function buildCallbacks() {
+  return {
+    clearGpsOverrides,
+    clearRoundOverrides,
+    clearAllOverrides,
+    applyHoleToPlay,
+    renderScoreEntry,
+    updateHoleCardMode,
+    gpsTeeSetState,
+    gpsBallSetState,
+    calculate:                () => calculate(),
+    renderSavedRounds,
+    updateLoadCourseBtn,
+    updateCalcButtonVisibility,
+  };
+} // keyed by holeIdx
 function par3Override() { return par3ClubOverrides[_overrideCourseId + "|" + _overrideHoleIdx] ?? null; }
 
 // Course+hole namespace for overrides — set by calculate() each call
@@ -215,8 +248,8 @@ function computeWindComponents() {
 
 // ── My Golf bootstrap (formerly Script 1) ───────────────────────────────────
 
-// ── Tab switching (shared, placed in module for clean removal) ────────────
-window.switchTab = function(name) {
+// ── Tab switching ─────────────────────────────────────────────────────────
+function switchTab(name) {
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   const pane = document.getElementById('pane' + name.charAt(0).toUpperCase() + name.slice(1));
@@ -227,7 +260,7 @@ window.switchTab = function(name) {
   window.scrollTo(0, 0);
   if (pane) pane.scrollTop = 0;
   if (name === 'play') {
-    if (typeof window.updateLoadCourseBtn === 'function') window.updateLoadCourseBtn();
+    updateLoadCourseBtn();
   }
   if (name === 'prepare') {
     // Always return to My Golf hub when switching to My Golf tab
@@ -246,7 +279,7 @@ window.switchTab = function(name) {
   if (drawer) drawer.classList.remove('open');
   const overlay = document.getElementById('scoreDrawerOverlay');
   if (overlay) overlay.classList.remove('visible');
-};
+}
 
 
 
@@ -305,14 +338,6 @@ document.getElementById('mgProfileSaveBtn')?.addEventListener('click', () => {
 
 
 
-// ── Expose to UI modules (window reads, not assignments in app modules) ─
-window.renderScoreEntry    = renderScoreEntry;
-window.applyHoleToPlay     = applyHoleToPlay;
-window.renderSavedRounds   = renderSavedRounds;
-window.loadCourseIntoPlay  = loadCourseIntoPlay;
-window.syncChipRow         = syncChipRow;
-window.renderPlayCourseBar = renderPlayCourseBar;
-
 // ── New course button ─────────────────────────────────────────────────────
 document.getElementById('newCourseBtn').addEventListener('click', () => {
   openEditor(null);
@@ -326,19 +351,31 @@ document.getElementById('newCourseBtn').addEventListener('click', () => {
     const { id, holeIdx } = session;
     const courses = loadCourses();
     if (!courses[id]) return;
-    renderPlayCourseBar(id);
+    renderPlayCourseBar(id, buildCallbacks());
     // Restore FAB immediately on page load
     const scores = loadScores(id);
-    if (typeof window.renderScoreEntry === 'function') window.renderScoreEntry(id, holeIdx ?? 0, scores);
-    setTimeout(() => {
-      if (typeof window.updateCalcButtonVisibility === 'function') window.updateCalcButtonVisibility();
-    }, 0);
+    renderScoreEntry(id, holeIdx ?? 0, scores, buildCallbacks());
+    setTimeout(() => updateCalcButtonVisibility(), 0);
   } catch(e) {}
   // Sync button visibility after potential course restore
-  if (typeof window.updateLoadCourseBtn === 'function') window.updateLoadCourseBtn();
+  updateLoadCourseBtn();
 })();
 
-wireCoursePickerEvents();
+wireCoursePickerEvents(loadCourseIntoPlay);
+
+// Inject app-layer services into courses.js so it can call back into the app.
+// calculate is wrapped in an arrow to capture the final (wrapped) binding.
+initServices({
+  syncChipRow,
+  switchTab,
+  renderPlayCourseBar: (id) => renderPlayCourseBar(id, buildCallbacks()),
+  updateCalcButtonVisibility,
+  renderScoreEntry:    (id, holeIdx, scores) => renderScoreEntry(id, holeIdx, scores, buildCallbacks()),
+  clearRoundOverrides,
+  clearGpsOverrides,
+  calculate:           () => calculate(),
+  renderSavedRounds,
+});
 
 
 // ── Play tab bootstrap (formerly Script 0 DOMContentLoaded body) ────────────
@@ -378,8 +415,6 @@ wireCoursePickerEvents();
       if (weatherCondRow) weatherCondRow.style.display = 'none';
     }
   }
-  window.updateHoleCardMode = updateHoleCardMode;
-
   // Show load-course button only when no course is active
   function updateLoadCourseBtn() {
     const btn = document.getElementById('loadCourseBtn');
@@ -387,7 +422,6 @@ wireCoursePickerEvents();
     const courseActive = !!getActiveCourseId();
     btn.classList.toggle('visible', !courseActive);
   }
-  window.updateLoadCourseBtn = updateLoadCourseBtn;
 
   const saved = loadBag();
   buildClubUI(saved);
@@ -422,7 +456,7 @@ wireCoursePickerEvents();
   }
 
   document.getElementById('bagCompleteHintBtn')?.addEventListener('click', () => {
-    window.switchTab('prepare');
+    switchTab('prepare');
     showMgSub('mgSubBag');
   });
 
@@ -1003,8 +1037,6 @@ wireCoursePickerEvents();
     else if (state === 'set') { tile.style.opacity = '1'; tile.style.pointerEvents = 'auto'; if (ind) ind.className = 'gps-tile-indicator set'; if (st) { st.textContent = `Shot ${shotN}`; st.className = 'gps-tile-status ready'; } if (dEl && dist) { dEl.innerHTML = dist + '<span class="gps-tile-dist-unit">m</span>'; dEl.style.display = 'block'; } }
     else if (state === 'error') { if (st) { st.textContent = 'Try again'; st.className = 'gps-tile-status'; } }
   }
-  window.gpsTeeSetState = gpsTeeSetState;
-  window.gpsBallSetState = gpsBallSetState;
   const gpsReset      = document.getElementById('gpsReset');
   const gpsWarning    = document.getElementById('gpsWarning');
 
@@ -1124,13 +1156,13 @@ wireCoursePickerEvents();
     gpsReset.style.display = 'none';
     gpsWarning.style.display = 'none';
 
-    if (typeof window.renderScoreEntry !== 'undefined') {
+    {
       const _sess2 = loadActiveCourse();
       if (_sess2.id) {
         try {
           const { id, holeIdx } = _sess2;
           const courses = loadCourses();
-          if (courses[id]) window.renderScoreEntry(id, holeIdx, loadScores(id));
+          if (courses[id]) renderScoreEntry(id, holeIdx, loadScores(id), buildCallbacks());
         } catch(e) {}
       }
     }
@@ -1225,7 +1257,6 @@ wireCoursePickerEvents();
     if (!driver || driver < 50) return { isError: true, msg: 'Please enter your driver carry distance.' };
 
     const clubsList = getClubs(driver, i7, pw, windState);
-    window._lastClubsList = clubsList;
     if (clubsList.length === 0) return { isError: true, msg: 'No clubs selected.' };
 
     const driverClub = clubsList.find(c => c.key === 'driver');
@@ -1346,7 +1377,7 @@ wireCoursePickerEvents();
       blendedScore:        (s, c, h) => blendedScore(s, c, h),
       computeHoleBaseline: (...a) => computeHoleBaseline(...a),
       calculate,
-      openClubPicker:      (...a) => openClubPicker(...a),
+      openClubPicker:      (key, onSelect, constraints) => openClubPicker(key, onSelect, constraints, plan.clubsList),
       updateCalcButtonVisibility,
     });
   }
@@ -1370,7 +1401,6 @@ wireCoursePickerEvents();
       } catch(e) {}
     }
     _origCalculate(clearOverrides);
-    if (typeof window.renderScoreEntry === 'undefined') return;
     const session = loadActiveCourse();
     if (!session.id) return;
     try {
@@ -1378,13 +1408,12 @@ wireCoursePickerEvents();
       const courses = loadCourses();
       if (!courses[id]) return;
       const scores = loadScores(id);
-      window.renderScoreEntry(id, holeIdx, scores);
+      renderScoreEntry(id, holeIdx, scores, buildCallbacks());
     } catch(e) {}
-    if (typeof updateCalcButtonVisibility === 'function') updateCalcButtonVisibility();
-  if (typeof window.updateLoadCourseBtn === 'function') window.updateLoadCourseBtn();
+    updateCalcButtonVisibility();
+    updateLoadCourseBtn();
   };
 
-  window.calculate = calculate;
   document.getElementById('calcButton').addEventListener('click', () => calculate(true));
 
   // ── Recalc link (shown instead of button when course is active) ───────
@@ -1404,8 +1433,6 @@ wireCoursePickerEvents();
     const actionRow = document.getElementById('playActionRow');
     if (actionRow) actionRow.style.display = (courseActive && hasResult) ? 'flex' : 'none';
   }
-  window.updateCalcButtonVisibility = updateCalcButtonVisibility;
-
   // ── Wire action row buttons ─────────────────────────────────────────────
   (function wireActionRow() {
     const nextBtn = document.getElementById('playNextBtn');
@@ -1421,7 +1448,7 @@ wireCoursePickerEvents();
       if (!c) return;
       if (holeIdx === 17) {
         // Last hole — show round complete overlay instead of wrapping
-        showRoundCompleteOverlay(id, holeIdx);
+        showRoundCompleteOverlay(id, holeIdx, { clearAllOverrides });
         return;
       }
       const nextIdx = holeIdx + 1;

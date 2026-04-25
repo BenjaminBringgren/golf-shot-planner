@@ -15,7 +15,7 @@ function escHtml(str) {
 }
 
 // ── Club picker modal ─────────────────────────────────────────────────────────
-export function openClubPicker(currentKey, onSelect, constraints) {
+export function openClubPicker(currentKey, onSelect, constraints, clubsList = []) {
   const overlay = document.getElementById('clubPickerOverlay');
   const sheet   = document.getElementById('clubPickerSheet');
   const list    = document.getElementById('clubPickerList');
@@ -54,7 +54,7 @@ export function openClubPicker(currentKey, onSelect, constraints) {
   const reason = notRecommendedReason();
 
   list.innerHTML = '';
-  const _clubs = window._lastClubsList || [];
+  const _clubs = clubsList;
   _clubs.forEach(club => {
     const lbl     = clubMap[club.key]?.label ?? club.key;
     const enabled = isEnabled(club);
@@ -159,7 +159,7 @@ export function closeClubPicker() {
 }
 
 // ── Course picker bottom sheet ────────────────────────────────────────────────
-export function openCoursePicker() {
+export function openCoursePicker(onCourseSelect) {
   const overlay = document.getElementById('coursePickerOverlay');
   const list    = document.getElementById('coursePickerList');
   if (!overlay || !list) return;
@@ -199,7 +199,7 @@ export function openCoursePicker() {
         '<button class="course-picker-play" type="button">Play</button>';
       row.querySelector('.course-picker-play').addEventListener('click', () => {
         closeCoursePicker();
-        window.loadCourseIntoPlay?.(id);
+        onCourseSelect?.(id);
       });
       list.appendChild(row);
     });
@@ -215,8 +215,8 @@ export function closeCoursePicker() {
   document.body.style.overflow = '';
 }
 
-export function wireCoursePickerEvents() {
-  document.getElementById('loadCourseBtn')?.addEventListener('click', openCoursePicker);
+export function wireCoursePickerEvents(onCourseSelect) {
+  document.getElementById('loadCourseBtn')?.addEventListener('click', () => openCoursePicker(onCourseSelect));
   document.getElementById('coursePickerCancel')?.addEventListener('click', closeCoursePicker);
   document.getElementById('coursePickerOverlay')?.addEventListener('click', e => {
     if (e.target === document.getElementById('coursePickerOverlay')) closeCoursePicker();

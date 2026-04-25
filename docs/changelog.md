@@ -1,5 +1,56 @@
 # Changelog
 
+## [Refactor] window.* fully retired — Category A cleanup
+Date: 2026-04-25
+
+All remaining window.* assignments and reads removed from the codebase.
+Final count: 0 assignments, 0 reads (excluding native browser APIs like window.scrollTo).
+
+A3 — Override objects: exported clearAllOverrides / clearRoundOverrides / clearGpsOverrides
+from router.js. Passed as callbacks to renderPlayCourseBar, renderScoreEntry,
+showRoundCompleteOverlay / _dismissRoundComplete. scorecard.js uses callbacks.clearXxx?.()
+instead of mutating override objects via window.*.
+
+A4 — window._lastClubsList: removed. openClubPicker gains a 4th clubsList param.
+router.js renderPlan ctx binds plan.clubsList in the openClubPicker wrapper.
+
+A2 — window.loadCourseIntoPlay in sheets.js: removed. wireCoursePickerEvents now
+accepts an onCourseSelect callback (loadCourseIntoPlay passed from router.js).
+
+A1 — All remaining bridge items (12 callbacks):
+- courses.js: initServices(svc) injected from router.js. _svc.syncChipRow,
+  _svc.switchTab, _svc.renderPlayCourseBar, _svc.renderScoreEntry,
+  _svc.updateCalcButtonVisibility, _svc.calculate, _svc.renderSavedRounds
+  replace window.* reads.
+- scorecard.js: all window.gpsTeeSetState, window.gpsBallSetState,
+  window.calculate, window.renderSavedRounds, window.updateHoleCardMode,
+  window.updateLoadCourseBtn, window.updateCalcButtonVisibility,
+  window.applyHoleToPlay, window.renderScoreEntry reads replaced with
+  callbacks.*?.() using the extended callbacks object.
+- window.switchTab converted from window assignment to named function.
+- buildCallbacks() factory function in router.js provides a consistent
+  callbacks object to all UI function call sites.
+
+## [Refactor] Category C window.* cleanup
+Date: 2026-04-25
+
+Removed 9 self-referential window.* assignments from router.js that had no
+external readers (all callers were within router.js itself):
+
+- window.getScoringMode — removed; getScoringMode called directly
+- window.lastParValue — removed (init + 2 update sites); lastParValue local var used directly
+- window.blendedScore, window.computeHoleBaseline — removed; renderPlan ctx now
+  passes the functions directly instead of via window
+- window.showRoundCompleteOverlay — removed; called directly in wireActionRow
+- window.showMgSub — removed; bagCompleteHintBtn listener calls showMgSub directly
+- window.updateBagCompleteHint — removed; unused externally
+- window.toggleWindPanel — converted from window assignment + inline onclick to a
+  named function wired with addEventListener. onclick="window.toggleWindPanel(event)"
+  removed from index.html windToggle element.
+
+window.* assignments: 40 → 16. Zero window.* in onclick attributes.
+Verified on iPhone Safari: wind panel, bag hint, round complete overlay, calculate.
+
 ## [Audit] Phase 6 completion audit
 Date: 2026-04-25
 

@@ -31,7 +31,7 @@ function scoreCssClass(strokes, par) {
 }
 
 // ── Play tab course bar — hole grid + score tracking ──────────────────────
-export function renderPlayCourseBar(courseId) {
+export function renderPlayCourseBar(courseId, callbacks = {}) {
   const existing = document.getElementById('playCourseBar');
   if (existing) existing.remove();
 
@@ -69,18 +69,18 @@ export function renderPlayCourseBar(courseId) {
 
   function navigateTo(idx) {
     holeIdx = idx;
-    window.applyHoleToPlay?.(c, holeIdx);
+    callbacks.applyHoleToPlay?.(c, holeIdx);
     updateSession();
     updateBar();
-    if (typeof window.updateHoleCardMode === 'function') window.updateHoleCardMode();
+    callbacks.updateHoleCardMode?.();
 
     // Reset GPS state for new hole
     clearGpsState(); clearTeeState();
-    try { Object.keys(window.gpsShot2Overrides).forEach(k => delete window.gpsShot2Overrides[k]); } catch(e) {}
+    callbacks.clearGpsOverrides?.();
     const _teeBtn  = document.getElementById('gpsTeeBtn');
     const _ballBtn = document.getElementById('gpsBallBtn');
-    if (typeof window.gpsTeeSetState === 'function') window.gpsTeeSetState('idle');
-    if (typeof window.gpsBallSetState === 'function') window.gpsBallSetState('locked', null, 0);
+    callbacks.gpsTeeSetState?.('idle');
+    callbacks.gpsBallSetState?.('locked', null, 0);
     const _gpsReset  = document.getElementById('gpsReset');
     const _gpsStatus = document.getElementById('gpsStatus');
     const _gpsResult = document.getElementById('gpsResult');
@@ -91,17 +91,16 @@ export function renderPlayCourseBar(courseId) {
     if (_gpsWarning) _gpsWarning.style.display = 'none';
 
     scores = loadScores(courseId);
-    if (typeof window.renderScoreEntry === 'function') window.renderScoreEntry(courseId, holeIdx, scores);
+    callbacks.renderScoreEntry?.(courseId, holeIdx, scores, callbacks);
 
     setTimeout(() => {
-      if (typeof window.calculate !== 'function') return;
       const holeLen = Number(document.getElementById('holeLength').value);
       const driver  = Number(document.getElementById('driverCarry').value);
       if (holeLen >= 50 && driver >= 50) {
-        window.calculate();
+        callbacks.calculate?.();
       } else {
-        window.applyHoleToPlay?.(c, holeIdx);
-        setTimeout(() => window.calculate(), 50);
+        callbacks.applyHoleToPlay?.(c, holeIdx);
+        setTimeout(() => callbacks.calculate?.(), 50);
       }
     }, 50);
   }
@@ -211,9 +210,7 @@ export function renderPlayCourseBar(courseId) {
         try {
           clearScores(courseId);
           removeCommittedStrategies(courseId);
-          Object.keys(window.shot2Overrides).forEach(k => delete window.shot2Overrides[k]);
-          Object.keys(window.approachOverrides).forEach(k => delete window.approachOverrides[k]);
-          Object.keys(window.gpsShot2Overrides).forEach(k => delete window.gpsShot2Overrides[k]);
+          callbacks.clearRoundOverrides?.();
         } catch(e) {}
         // Reset GPS state + button UI
         clearGpsState();
@@ -221,8 +218,8 @@ export function renderPlayCourseBar(courseId) {
         const _ballBtn = document.getElementById('gpsBallBtn');
         const _resetBtn = document.getElementById('gpsReset');
         const _gpsWarn  = document.getElementById('gpsWarning');
-        if (typeof window.gpsTeeSetState === 'function') window.gpsTeeSetState('idle');
-        if (typeof window.gpsBallSetState === 'function') window.gpsBallSetState('locked', null, 0);
+        callbacks.gpsTeeSetState?.('idle');
+        callbacks.gpsBallSetState?.('locked', null, 0);
         clearTeeState();
         if (_resetBtn) _resetBtn.style.display = 'none';
         if (_gpsWarn)  _gpsWarn.style.display  = 'none';
@@ -237,9 +234,9 @@ export function renderPlayCourseBar(courseId) {
         const _actionRow = document.getElementById('playActionRow');
         if (_actionRow) _actionRow.style.display = 'none';
         hideScorefab();
-        if (typeof window.updateLoadCourseBtn === 'function') window.updateLoadCourseBtn();
-        if (typeof window.updateHoleCardMode === 'function') window.updateHoleCardMode();
-        if (typeof window.updateCalcButtonVisibility === 'function') window.updateCalcButtonVisibility();
+        callbacks.updateLoadCourseBtn?.();
+        callbacks.updateHoleCardMode?.();
+        callbacks.updateCalcButtonVisibility?.();
       };
 
       document.getElementById('cancelRoundAbort').onclick = () => {
@@ -471,7 +468,7 @@ export function renderPlayCourseBar(courseId) {
         } catch(e) {}
 
         // Refresh Courses tab so round appears there
-        window.renderSavedRounds?.();
+        callbacks.renderSavedRounds?.();
       });
       summary.appendChild(saveBtn);
     }
@@ -535,11 +532,11 @@ export function renderPlayCourseBar(courseId) {
 
   const playPane = document.getElementById('panePlay');
   playPane.insertBefore(bar, playPane.firstChild);
-  if (typeof window.updateHoleCardMode === 'function') window.updateHoleCardMode();
+  callbacks.updateHoleCardMode?.();
 }
 
 // ── Score FAB + drawer ────────────────────────────────────────────────────
-export function renderScoreEntry(courseId, holeIdx, scores) {
+export function renderScoreEntry(courseId, holeIdx, scores, callbacks = {}) {
   const courses = loadCourses();
   const course  = courses[courseId];
   if (!course) return;
@@ -640,7 +637,7 @@ export function renderScoreEntry(courseId, holeIdx, scores) {
   function closeDrawer() {
     drawer.classList.remove('open');
     overlay.classList.remove('visible');
-    if (typeof window.calculate === 'function') window.calculate();
+    callbacks.calculate?.();
   }
 
   // Remove old fab listener by replacing the node
@@ -1004,7 +1001,7 @@ export function renderScoreEntry(courseId, holeIdx, scores) {
 
 // ── Round complete overlay ─────────────────────────────────────────────────
 // ── Round complete overlay ───────────────────────────────────────────
-export function showRoundCompleteOverlay(courseId, fromHoleIdx) {
+export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) {
   const backHoleIdx = (fromHoleIdx != null) ? fromHoleIdx : 17;
   const courses = loadCourses();
   const c = courses[courseId];
@@ -1157,10 +1154,10 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx) {
       removeCommittedStrategies(courseId);
     } catch(e) {}
 
-    window.renderSavedRounds?.();
+    callbacks.renderSavedRounds?.();
 
     // Auto-dismiss and clean up after short delay
-    setTimeout(() => _dismissRoundComplete(courseId), 700);
+    setTimeout(() => _dismissRoundComplete(courseId, callbacks), 700);
   });
 
   // Wire back to round button
@@ -1195,22 +1192,19 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx) {
       clearScores(courseId);
       removeCommittedStrategies(courseId);
     } catch(e) {}
-    _dismissRoundComplete(courseId);
+    _dismissRoundComplete(courseId, callbacks);
   });
 
   el.style.display = 'flex';
 }
 
-function _dismissRoundComplete(courseId) {
+function _dismissRoundComplete(courseId, callbacks = {}) {
   const el = document.getElementById('roundCompleteOverlay');
   el.style.display = 'none';
   // Full round teardown (same as quit round)
   clearActiveCourse();
   try {
-    Object.keys(window.shot2Overrides).forEach(k => delete window.shot2Overrides[k]);
-    Object.keys(window.approachOverrides).forEach(k => delete window.approachOverrides[k]);
-    Object.keys(window.gpsShot2Overrides).forEach(k => delete window.gpsShot2Overrides[k]);
-    Object.keys(window.teeOverrides).forEach(k => delete window.teeOverrides[k]);
+    callbacks.clearAllOverrides?.();
     removeCommittedStrategies(null);
   } catch(e) {}
   clearGpsState();
@@ -1219,8 +1213,8 @@ function _dismissRoundComplete(courseId) {
   const gpsWarn  = document.getElementById('gpsWarning');
   if (resetBtn) resetBtn.style.display = 'none';
   if (gpsWarn)  gpsWarn.style.display  = 'none';
-  if (typeof window.gpsTeeSetState === 'function') window.gpsTeeSetState('idle');
-  if (typeof window.gpsBallSetState === 'function') window.gpsBallSetState('locked', null, 0);
+  callbacks.gpsTeeSetState?.('idle');
+  callbacks.gpsBallSetState?.('locked', null, 0);
   const bar2 = document.getElementById('playCourseBar');
   if (bar2) bar2.remove();
   const se = document.getElementById('scoreEntry');
@@ -1232,9 +1226,9 @@ function _dismissRoundComplete(courseId) {
   const actionRow = document.getElementById('playActionRow');
   if (actionRow) actionRow.style.display = 'none';
   hideScorefab();
-  if (typeof window.updateLoadCourseBtn === 'function') window.updateLoadCourseBtn();
-  if (typeof window.updateHoleCardMode === 'function') window.updateHoleCardMode();
-  if (typeof window.updateCalcButtonVisibility === 'function') window.updateCalcButtonVisibility();
+  callbacks.updateLoadCourseBtn?.();
+  callbacks.updateHoleCardMode?.();
+  callbacks.updateCalcButtonVisibility?.();
 }
 
 // ── Hide FAB when no course is active ─────────────────────────────────────

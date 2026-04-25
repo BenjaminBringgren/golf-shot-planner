@@ -56,19 +56,15 @@ Note: src/ui/ may import from src/app/ for data types but never for calling app-
 
 ## window.* Bridge Pattern
 
-`window.*` is not fully retired. It is used in two ways:
+`window.*` is fully retired — zero assignments, zero reads in any source module (excluding native browser APIs such as `window.scrollTo` and `window.removeEventListener`).
 
-**Intentional bridge (router.js only):** router.js is the app entry point and assigns functions to window so that UI modules, which cannot import upward from app layer, can call app-layer functions:
-```js
-window.calculate            = calculate;
-window.switchTab            = switchTab;
-window.updateHoleCardMode   = updateHoleCardMode;
-window.gpsTeeSetState       = gpsTeeSetState;
-// etc.
-```
-These are window READS in UI modules, window ASSIGNMENTS only in router.js.
+Cross-layer calls use two explicit patterns instead:
 
-**Known debt (scorecard.js lines 733, 740):** `window._inRough` is written from a UI module. This should be refactored to pass `_inRough` as a parameter. Do not add new window.* writes to any file other than router.js.
+**Callbacks (router.js → scorecard.js):** `router.js` calls `buildCallbacks()` and passes the result to `renderPlayCourseBar`, `renderScoreEntry`, and `showRoundCompleteOverlay`. UI functions call `callbacks.calculate?.()`, `callbacks.gpsTeeSetState?.('idle')` etc. — always with optional chaining so missing callbacks are silent no-ops.
+
+**Service injection (router.js → courses.js):** `courses.js` exports `initServices(svc)`. `router.js` calls it once at startup with all app-layer functions courses.js needs (`switchTab`, `renderPlayCourseBar`, `renderScoreEntry`, `calculate`, etc.). courses.js stores these in a module-level `_svc` object.
+
+Do not add any new `window.*` reads or assignments to any module.
 
 ## Safari Rule
 

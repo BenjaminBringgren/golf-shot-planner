@@ -34,18 +34,18 @@ The five-layer ES module refactor is complete. index.html is
   <script type="module" src="src/app/router.js"></script>
 
 ## window.* status
-window.* is used in two places:
+window.* is fully retired. Zero assignments, zero reads anywhere
+in src/ (excluding native browser APIs like window.scrollTo,
+window.removeEventListener).
 
-1. src/app/router.js — intentional bridge. As the entry point,
-   router.js assigns window.calculate, window.switchTab, etc.
-   so that UI modules (which cannot import upward) can call
-   app-layer functions. These are reads in the UI, assignments
-   only in router.js.
+Cross-layer calls use two patterns instead:
+1. Callbacks: router.js passes a buildCallbacks() object to
+   renderPlayCourseBar, renderScoreEntry, showRoundCompleteOverlay.
+   UI functions call callbacks.calculate?.() etc.
+2. Service injection: courses.js exposes initServices(svc) which
+   router.js calls once at startup with app-layer functions.
 
-2. src/ui/scorecard.js lines 733 and 740 — known debt.
-   window._inRough is written from a UI module, which violates
-   the layer rule. Should be refactored to pass _inRough as a
-   parameter. Do not add any new window.* writes.
+Do not add new window.* writes or reads to any module.
 
 Never use Object.defineProperty on window (Safari bug).
 

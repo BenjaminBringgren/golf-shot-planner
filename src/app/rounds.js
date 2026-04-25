@@ -1,7 +1,6 @@
 /* Copyright © 2025 Benjamin Bringgren. All rights reserved.
    Unauthorised copying or distribution is prohibited. */
 // LAYER 2 — app — My Golf stats, rounds history, carry bars, sub-page navigation.
-// No imports from src/ui/. Cross-layer UI calls use window.* reads (transitional).
 
 import {
   loadCourses, loadRounds, deleteRound,
