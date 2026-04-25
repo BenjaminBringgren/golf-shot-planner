@@ -44,7 +44,6 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
   const session = loadActiveCourse();
   let holeIdx = session.holeIdx ?? 0;
   let scores  = loadScores(courseId);
-  let summaryVisible = false;
 
   const bar = document.createElement('div');
   bar.id = 'playCourseBar';
@@ -61,11 +60,6 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
   const lastRoundHint = document.createElement('div');
   lastRoundHint.id = 'lastRoundHint';
   bar.appendChild(lastRoundHint);
-
-  // ── Round summary (collapsible) ───────────────────────────
-  const summary = document.createElement('div');
-  summary.className = 'round-summary';
-  bar.appendChild(summary);
 
   bar._navigateTo = (idx) => navigateTo(idx);
 
@@ -149,12 +143,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     summaryBtn.textContent = '⊞';
     summaryBtn.title = 'Round summary';
     summaryBtn.addEventListener('click', () => {
-      summaryVisible = !summaryVisible;
-      summary.classList.toggle('visible', summaryVisible);
-      if (summaryVisible) {
-        scores = loadScores(courseId);
-        renderSummary();
-      }
+      openScorecardPage();
     });
     actionsRow.appendChild(summaryBtn);
 
@@ -307,8 +296,6 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     // ── Last round hint ────────────────────────────────────
     renderLastRoundHint(holeIdx);
 
-    // ── Summary ────────────────────────────────────────────
-    if (summaryVisible) renderSummary();
   }
 
   function pillHtml(total, par) {
@@ -347,8 +334,6 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
         holesPlayed++;
       }
     });
-    const vsPar = totalStrokes - totalPar;
-
     // Front 9 subtotals
     let front9Par = 0, front9Strokes = 0, front9FW = 0, front9Putts = 0, front9GIR = 0, front9Played = 0;
     played.slice(0, 9).forEach(h => {
@@ -387,7 +372,10 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
       }).join('');
     }
 
-    summary.innerHTML = `
+    const pageInner = document.getElementById('scorecardPageInner');
+    if (!pageInner) return;
+
+    pageInner.innerHTML = `
       <table class="scorecard">
         <thead><tr>
           <th class="sc-th-hole">#</th>
@@ -432,22 +420,20 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
       </table>`;
 
     // Save round button — only show if at least 1 hole is scored
-    const existingSaveBtn = summary.querySelector('.save-round-btn');
+    const existingSaveBtn = pageInner.querySelector('.save-round-btn');
     if (existingSaveBtn) existingSaveBtn.remove();
 
     if (holesPlayed > 0) {
       const saveBtn = document.createElement('button');
       saveBtn.className = 'save-round-btn';
       saveBtn.type = 'button';
-      saveBtn.style.cssText = 'margin-top:10px; font-size:15px; padding:17px 14px; background:#1a1a1a; color:#fff; border:none; border-radius:7px; width:100%; cursor:pointer; font-weight:600;';
+      saveBtn.style.cssText = 'margin-top:16px; font-size:15px; padding:17px 14px; background:#fff; color:#111; border:none; border-radius:10px; width:100%; cursor:pointer; font-weight:600;';
       saveBtn.textContent = '💾 Save Round';
       saveBtn.addEventListener('click', () => {
-        // Collect committed strategies per hole from sessionStorage
         const committedStrategies = getCommittedStrategies();
-
         const roundScores = loadScores(courseId);
         const roundData = {
-          date: new Date().toLocaleDateString('sv-SE'), // YYYY-MM-DD
+          date: new Date().toLocaleDateString('sv-SE'),
           scores: roundScores,
           strategies: committedStrategies,
           holesPlayed,
@@ -458,22 +444,100 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
         };
         saveRound(courseId, roundData);
 
-        // Update button immediately
         saveBtn.textContent = '✓ Saved!';
         saveBtn.disabled = true;
-        saveBtn.style.background = '#888';
+        saveBtn.style.background = '#555';
+        saveBtn.style.color = '#fff';
 
-        // Clear session scores after saving so next load starts fresh
         try {
           clearScores(courseId);
           removeCommittedStrategies(courseId);
         } catch(e) {}
 
-        // Refresh Courses tab so round appears there
         callbacks.renderSavedRounds?.();
       });
-      summary.appendChild(saveBtn);
+      pageInner.appendChild(saveBtn);
     }
+  }
+
+  function openScorecardPage() {
+    scores = loadScores(courseId);
+
+    // Compute score summary for the subtitle
+    let totalStrokes = 0, totalPar = 0, holesPlayed = 0;
+    scores.forEach((s, i) => {
+      if (!s) return;
+      totalStrokes += (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
+      totalPar     += c.holes[i]?.par || 4;
+      holesPlayed++;
+    });
+    const scoreDiff = holesPlayed ? totalStrokes - totalPar : null;
+    const scoreTxt  = scoreDiff === null ? '' : scoreDiff === 0 ? 'E' : (scoreDiff > 0 ? `+${scoreDiff}` : `${scoreDiff}`);
+
+    const titleEl    = document.getElementById('scorecardPageTitle');
+    const subtitleEl = document.getElementById('scorecardPageSubtitle');
+    if (titleEl)    titleEl.textContent    = c.name;
+    if (subtitleEl) subtitleEl.textContent = holesPlayed
+      ? `${scoreTxt}  ·  ${holesPlayed} of 18 holes`
+      : 'No holes scored yet';
+
+    renderSummary();
+
+    const pageOverlay = document.getElementById('scorecardOverlay');
+    const page        = document.getElementById('scorecardPage');
+    if (!page || !pageOverlay) return;
+
+    pageOverlay.classList.add('visible');
+    page.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    // Overlay tap to close
+    pageOverlay.onclick = closeScorecardPage;
+
+    // ── Swipe down to dismiss ─────────────────────────────
+    const pageHandle = document.getElementById('scorecardPageHandle');
+    if (!pageHandle) return;
+
+    let dragStartY  = null;
+    let dragCurrentY = 0;
+
+    function onDragStart(e) {
+      dragStartY   = (e.touches ? e.touches[0].clientY : e.clientY);
+      dragCurrentY = 0;
+      page.style.transition = 'none';
+    }
+    function onDragMove(e) {
+      if (dragStartY === null) return;
+      const y = (e.touches ? e.touches[0].clientY : e.clientY);
+      dragCurrentY = Math.max(0, y - dragStartY);
+      page.style.transform = `translateY(${dragCurrentY}px)`;
+    }
+    function onDragEnd() {
+      if (dragStartY === null) return;
+      dragStartY = null;
+      page.style.transition = '';
+      if (dragCurrentY > 80) {
+        page.style.transform = '';
+        closeScorecardPage();
+      } else {
+        page.style.transform = '';
+      }
+    }
+
+    // Clone handle to remove any previous listeners
+    const freshHandle = pageHandle.cloneNode(true);
+    pageHandle.parentNode.replaceChild(freshHandle, pageHandle);
+    freshHandle.addEventListener('touchstart', onDragStart, { passive: true });
+    freshHandle.addEventListener('touchmove',  onDragMove,  { passive: true });
+    freshHandle.addEventListener('touchend',   onDragEnd);
+  }
+
+  function closeScorecardPage() {
+    const page        = document.getElementById('scorecardPage');
+    const pageOverlay = document.getElementById('scorecardOverlay');
+    if (page)        page.classList.remove('open');
+    if (pageOverlay) pageOverlay.classList.remove('visible');
+    document.body.style.overflow = '';
   }
 
   function renderLastRoundHint(idx) {
@@ -527,7 +591,6 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
   bar._refreshGrid = () => {
     scores = loadScores(courseId);
     updateBar();
-    if (summaryVisible) renderSummary();
   };
 
   updateBar();

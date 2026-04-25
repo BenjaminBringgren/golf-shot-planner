@@ -319,6 +319,10 @@ function switchTab(name) {
   if (drawer) drawer.classList.remove('open');
   const overlay = document.getElementById('scoreDrawerOverlay');
   if (overlay) overlay.classList.remove('visible');
+  // Close scorecard page when switching tabs
+  document.getElementById('scorecardPage')?.classList.remove('open');
+  document.getElementById('scorecardOverlay')?.classList.remove('visible');
+  document.body.style.overflow = '';
 }
 
 document.getElementById('tabPlay')?.addEventListener('click', () => switchTab('play'));
