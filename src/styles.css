@@ -2107,7 +2107,7 @@
     display: flex; flex-direction: column; align-items: center;
   }
   .sh-shot-count {
-    font-size: 45px; font-weight: 700; letter-spacing: -0.03em; line-height: 1;
+    font-size: 64px; font-weight: 700; letter-spacing: -0.03em; line-height: 1;
     color: #000;
   }
   .sh-prompt-hint {
@@ -2115,29 +2115,6 @@
     font-weight: 500; letter-spacing: -0.01em; margin-top: 4px;
   }
 
-  /* ── Shot count display (STAGE_PUTTS) ────────────────────────────────────── */
-  .sh-shot-count-display {
-    padding: 4px 20px 16px; flex-shrink: 0;
-    display: flex; align-items: flex-end; justify-content: center; gap: 8px;
-  }
-  .sh-scd-col {
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-  }
-  .sh-scd-num {
-    font-size: 28px; font-weight: 600; letter-spacing: -0.03em; line-height: 1;
-    color: var(--sh-ink-2);
-  }
-  .sh-scd-col.total .sh-scd-num {
-    font-size: 45px; font-weight: 700; color: #000;
-  }
-  .sh-scd-label {
-    font-size: 11px; font-weight: 500; color: var(--sh-ink-4);
-    letter-spacing: 0.02em; text-transform: uppercase;
-  }
-  .sh-scd-op {
-    font-size: 20px; font-weight: 400; color: var(--sh-ink-4);
-    padding-bottom: 6px;
-  }
 
   /* ── Lie grid ────────────────────────────────────────────────────────────── */
   .sh-lies {
