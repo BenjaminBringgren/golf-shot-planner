@@ -1,9 +1,40 @@
 # Changelog
 
+## [Audit] Phase 6 completion audit
+Date: 2026-04-25
+
+Layer integrity verified post-refactor:
+- src/engine/: zero DOM, zero storage, zero network — PASS
+- src/storage/: zero imports — PASS
+- src/platform/: zero imports — PASS
+- Object.defineProperty: zero — PASS
+- Raw storage key strings outside storage.js: zero — PASS
+- Import statements missing .js extensions: zero — PASS
+- window.* assignments: router.js only (40, intentional bridge) — PASS
+  Exception: scorecard.js lines 733/740 write window._inRough — known debt
+
+Deviations from REFACTOR.md discovered during refactor:
+1. window.* not fully retired. router.js uses 40 window.* assignments as a
+   bridge layer (UI modules read window.calculate, window.switchTab etc. since
+   they cannot import upward from app layer). scorecard.js has 2 remaining
+   window._inRough writes. Documented as known debt; REFACTOR.md target of
+   full retirement is a future milestone.
+2. roundScores_<courseId> uses localStorage (not sessionStorage). The prior
+   docs/localStorage.md described it as sessionStorage — corrected.
+3. Splash input type="number" with min/max is not safe on iOS. iOS clears the
+   value for intermediate inputs below min (e.g. "2" while typing "230"),
+   breaking the input event. Changed to type="text" inputmode="numeric".
+4. ES module files must not contain </script> tags even if extracted from
+   inline script blocks — two stray tags caused a SyntaxError at parse time.
+
+All checks verified on iPhone Safari: tab switching, calculate, carousel,
+wind fetch/apply, GPS mark/reset on hole switch, score drawer, course load,
+hole navigation, saved rounds.
+
 ## [Refactor] Phase 6.3 — App extraction: router.js
 Date: 2026-04-25
 
-src/app/router.js created (1474 lines): merges Script 0 (DOMContentLoaded
+src/app/router.js created (1475 lines): merges Script 0 (DOMContentLoaded
 closure) and Script 1 (prepare-module) from index.html into a single ES module.
 Contains all override state, wind/GPS handlers, calculate(), buildClubUI,
 compass/drag, switchTab, wireMgNav, profile/course/restore IIFEs, and all
@@ -13,6 +44,19 @@ deferred execution makes it unnecessary.
 index.html reduced from 2164 to 683 lines. Sole remaining script tag:
 <script type="module" src="src/app/router.js"></script>
 Zero function bodies remain in index.html.
+
+Two bugs fixed during extraction:
+1. Two stray </script> tags from the original inline script blocks were left
+   in router.js, causing a JavaScript SyntaxError that prevented the module
+   from loading entirely.
+2. Splash input was type="number" min="50" max="350" — iOS Safari clears the
+   value for intermediate inputs below min (e.g. "2" while typing "230"),
+   making parseInt return NaN and the enable-button listener never fire.
+   Fixed by changing to type="text" inputmode="numeric" pattern="[0-9]*" and
+   adding a change event listener alongside input.
+
+Verified on iPhone Safari: tab switching, calculate, carousel, wind fetch,
+GPS mark/reset, score drawer, course load, hole navigation, saved rounds.
 
 ## [Refactor] Phase 6.2 — App extraction: rounds.js
 Date: 2026-04-25

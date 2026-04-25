@@ -13,6 +13,11 @@ import {
 import { teeMarked, completedShots, clearGpsState } from '../platform/gps.js';
 import { decodeStrategy } from '../engine/calculations.js';
 
+// ── Rough-lie state (read by router.js via getInRough) ────────────────────────
+let _inRough = false;
+export function getInRough()  { return _inRough; }
+export function resetInRough() { _inRough = false; }
+
 // ── Score CSS class helper ────────────────────────────────────────────────────
 function scoreCssClass(strokes, par) {
   if (strokes == null) return '';
@@ -730,14 +735,14 @@ export function renderScoreEntry(courseId, holeIdx, scores) {
     const mode = getScoringMode();
     if (mode === 'simple') {
       scores[holeIdx] = { fairway: simpleTotal, rough: 0, putts: 0, gir: null, fir: null, scoringMode: 'simple' };
-      window._inRough = false;
+      _inRough = false;
     } else {
       scores[holeIdx] = {
         fairway: derivedFairway(), rough: derivedRough(),
         putts, gir: autoGir(), fir: autoFir(), scoringMode: 'advanced',
         shots: shots.map(s => s.lie)
       };
-      window._inRough = derivedRough() > 0;
+      _inRough = derivedRough() > 0;
     }
     saveScores(courseId, scores);
     const bar = document.getElementById('playCourseBar');

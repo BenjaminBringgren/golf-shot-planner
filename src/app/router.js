@@ -33,7 +33,8 @@ import { renderPlan, updateWindSectionStatus as _uwss, updateWindBreakdown as _u
          syncChipRow, wireChipRow, crosswindSide } from '../ui/carousel.js';
 import { openClubPicker, closeClubPicker,
          openCoursePicker, closeCoursePicker, wireCoursePickerEvents } from '../ui/sheets.js';
-import { renderPlayCourseBar, renderScoreEntry, showRoundCompleteOverlay, hideScorefab } from '../ui/scorecard.js';
+import { renderPlayCourseBar, renderScoreEntry, showRoundCompleteOverlay, hideScorefab,
+         getInRough, resetInRough } from '../ui/scorecard.js';
 import {
   computeHoleBaseline, blendedScore,
   applyHoleToPlay, loadCourseIntoPlay,
@@ -164,8 +165,7 @@ function timeAgo(ts) {
 // course has CR/Slope/SI and player has handicap index. Falls back to flat model.
 let _holeHcpAdj = null; // null = use flat model inside expectedStrokesRemaining
 // Rough lie flag — set true when GPS ball mark is in rough, adds penalty to expected strokes
-let _inRough = false;
-window._inRough = false; // exposed for score drawer cross-scope access
+// _inRough is owned by scorecard.js; read via getInRough(), reset via resetInRough()
 
 const teeOverrides = {};
 const shot2Overrides = {}; // user-selected second-shot club per strategy type
@@ -1210,7 +1210,7 @@ wireCoursePickerEvents();
 
     return {
       hole, parValue, driver, i7, pw, conditions,
-      teeMarked, completedShots, inRough: _inRough,
+      teeMarked, completedShots, inRough: getInRough(),
       sessionCourseId, sessionHoleIdx,
       _blCourseId, _blHoleIdx, _hcpAdjComputed,
       committedStrategyStr, handicap,
@@ -1432,7 +1432,7 @@ wireCoursePickerEvents();
       const nextIdx = holeIdx + 1;
       saveActiveCourse(id, nextIdx);
       // Reset rough flag for new hole
-      if (typeof window._inRough !== 'undefined') window._inRough = false;
+      resetInRough();
       // Trigger bar refresh
       const bar = document.getElementById('playCourseBar');
       if (bar?._navigateTo) bar._navigateTo(nextIdx);
