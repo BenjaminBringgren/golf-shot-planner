@@ -301,6 +301,12 @@ function switchTab(name) {
   if (pane) pane.scrollTop = 0;
   if (name === 'play') {
     updateLoadCourseBtn();
+    const _sess = loadActiveCourse();
+    if (_sess.id) {
+      try {
+        renderScoreEntry(_sess.id, _sess.holeIdx ?? 0, loadScores(_sess.id), buildCallbacks());
+      } catch(e) {}
+    }
   }
   if (name === 'prepare') {
     // Always return to My Golf hub when switching to My Golf tab
