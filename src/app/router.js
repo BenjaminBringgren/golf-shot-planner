@@ -378,7 +378,7 @@ document.getElementById('mgProfileSaveBtn')?.addEventListener('click', () => {
     return;
   }
   if (hcpEl) hcpEl.style.borderColor = '';
-  saveProfile({ name, handicap: hcpVal, homeCourse: home });
+  saveProfile({ ...loadProfile(), name, handicap: hcpVal, homeCourse: home });
   const btn = document.getElementById('mgProfileSaveBtn');
   btn.textContent = 'Saved ✓';
   btn.style.background = '#888';
