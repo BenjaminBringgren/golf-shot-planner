@@ -2323,9 +2323,31 @@
   .sh-stepper-val { font-size: 22px; font-weight: 700; min-width: 32px; text-align: center; }
 
   /* ── Confirm row ─────────────────────────────────────────────────────────── */
+  /* ── Simple counter ──────────────────────────────────────────────────────── */
+  .sh-simple-counter {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 32px;
+  }
+  .sh-simple-btn-row {
+    display: flex; gap: 24px; align-items: center;
+  }
+  .sh-simple-btn {
+    width: 80px; height: 80px; border-radius: 40px; border: none;
+    background: rgba(0,0,0,0.06); color: #000;
+    font-size: 36px; font-weight: 300; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s;
+  }
+  .sh-simple-btn:active { background: rgba(0,0,0,0.14); }
+  .sh-simple-btn:disabled { opacity: 0.25; pointer-events: none; }
+
   .sh-confirm-row {
     padding: 12px 14px 0; display: grid;
     grid-template-columns: 1fr 2fr; gap: 8px; flex-shrink: 0;
+  }
+  .sh-confirm-row--single {
+    grid-template-columns: 1fr;
   }
   .sh-btn-sec {
     height: 50px; border-radius: 16px; border: none;

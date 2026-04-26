@@ -13,7 +13,8 @@ import {
 import { teeMarked, completedShots, clearGpsState } from '../platform/gps.js';
 import { decodeStrategy } from '../engine/calculations.js';
 import { initHole } from '../app/holeFlow.js';
-import { mountShotSheet } from './shotSheet/index.js';
+import { mountShotSheet }    from './shotSheet/index.js';
+import { mountSimpleCounter } from './shotSheet/SimpleCounter.js';
 
 // ── Rough-lie state (read by router.js via getInRough) ────────────────────────
 let _inRough = false;
@@ -666,12 +667,16 @@ export function renderScoreEntry(courseId, holeIdx, scores, callbacks = {}) {
   const hole = course.holes[holeIdx];
   const par  = hole?.par || 4;
 
-  // Advanced mode — delegate to shot sheet
-  if (getScoringMode() !== 'simple') {
-    initHole(courseId, holeIdx, par, completedShots.length);
-    mountShotSheet({ courseId, holeIdx, callbacks });
+  // Simple mode — delegate to simple counter
+  if (getScoringMode() === 'simple') {
+    mountSimpleCounter({ courseId, holeIdx, par, callbacks });
     return;
   }
+
+  // Advanced mode — delegate to shot sheet
+  initHole(courseId, holeIdx, par, completedShots.length);
+  mountShotSheet({ courseId, holeIdx, callbacks });
+  return;
 
   const gpsShots  = completedShots.length;
   const gpsActive = gpsShots > 0 || teeMarked;
