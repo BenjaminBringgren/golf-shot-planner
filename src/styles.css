@@ -528,8 +528,8 @@
     }
     .course-bar-name-wrap { flex: 1; min-width: 0; }
     .course-bar-name {
-      font-size: 13px; font-weight: 600; color: #888;
-      letter-spacing: 0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      font-size: 1.35rem; font-weight: 700; color: #111;
+      letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .course-bar-hole-num {
       font-size: 34px; font-weight: 700; color: #1a1a1a;
