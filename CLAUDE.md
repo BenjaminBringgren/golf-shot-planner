@@ -80,6 +80,28 @@ Phase 3 (if it grows): Expo / React Native native rebuild
 | `src/platform/gps.js` | platform | Geolocation, shot tracking — only file that changes for Capacitor |
 | `src/platform/weather.js` | platform | Open-Meteo wind fetch, Nominatim reverse geocode |
 
+## Typography
+All font sizes must use Apple's Large (Default) Dynamic Type scale.
+No other values are permitted.
+
+| Role        | Size |
+|-------------|------|
+| Large Title | 34px |
+| Title 1     | 28px |
+| Title 2     | 22px |
+| Title 3     | 20px |
+| Headline    | 17px |
+| Body        | 17px |
+| Callout     | 16px |
+| Subhead     | 15px |
+| Footnote    | 13px |
+| Caption 1   | 12px |
+| Caption 2   | 11px |
+
+Minimum size is 11px (Caption 2). Never go below it.
+Off-scale values like 9, 14, 18, 23, or 30px are not allowed —
+round to the nearest step in the table above.
+
 ## Safari compatibility
 Hard requirement. Tested on Brave and Safari on iPhone.
 Never use Object.defineProperty on window.

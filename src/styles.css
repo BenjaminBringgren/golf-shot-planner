@@ -2053,7 +2053,7 @@
 
   /* ── Score entry mode toggle (Profile) ──────────────────────────────── */
   .score-mode-toggle { display:flex; border:1.5px solid #ddd; border-radius:10px; overflow:hidden; }
-  .score-mode-btn { flex:1; padding:10px; background:none; border:none; font-size:14px; color:#555; cursor:pointer; }
+  .score-mode-btn { flex:1; padding:10px; background:none; border:none; font-size:15px; color:#555; cursor:pointer; }
   .score-mode-btn.active { background:#1a1a1a; color:#fff; font-weight:600; }
 
   /* ── Score drawer — Direction 2.1 tile grid ──────────────────────────── */
@@ -2064,17 +2064,17 @@
   .d2-header-text { font-size:11px; font-weight:700; letter-spacing:0.09em; color:#c0bab3; text-transform:uppercase; }
   .d2-badges { display:flex; gap:6px; min-height:28px; align-items:center; flex-wrap:wrap; padding:0 18px 10px; flex-shrink:0; }
   .d2-badge { height:26px; padding:0 9px; border-radius:999px; border:none; font-size:11px; font-weight:700; display:flex; align-items:center; gap:3px; cursor:pointer; -webkit-tap-highlight-color:transparent; width:auto; margin:0; }
-  .d2-badge-short { font-size:9px; opacity:0.5; }
+  .d2-badge-short { font-size:11px; opacity:0.5; }
   .d2-tile-area { flex:1; padding:0 14px 10px; display:flex; flex-direction:column; gap:7px; min-height:0; }
   .d2-tile-row { flex:1; display:grid; grid-template-columns:1fr 1fr; gap:7px; }
   .d2-tile { margin:0; border-radius:20px; border:none; cursor:pointer; display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; padding:0 0 14px 16px; transition:background 0.13s; overflow:hidden; -webkit-tap-highlight-color:transparent; }
-  .d2-tile-label { font-size:23px; font-weight:800; letter-spacing:-0.02em; line-height:1; transition:color 0.13s; }
+  .d2-tile-label { font-size:22px; font-weight:800; letter-spacing:-0.02em; line-height:1; transition:color 0.13s; }
   .d2-putts-tile { margin:0; border-radius:20px; background:#ece8e2; display:grid; grid-template-columns:1fr auto 1fr; overflow:hidden; align-items:center; }
   .d2-putts-btn { height:100%; display:flex; align-items:center; justify-content:center; font-size:22px; font-weight:300; color:#aaa; cursor:pointer; transition:background 0.12s; -webkit-tap-highlight-color:transparent; border:none; background:transparent; margin:0; padding:0; }
   .d2-putts-btn.flash { background:rgba(0,0,0,0.08); }
   .d2-putts-center { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; pointer-events:none; padding:0 6px; }
-  .d2-putts-count { font-size:30px; font-weight:800; letter-spacing:-0.03em; line-height:1; color:#2a2420; }
-  .d2-putts-sublabel { font-size:9px; font-weight:700; letter-spacing:0.07em; color:#b0a898; }
+  .d2-putts-count { font-size:28px; font-weight:800; letter-spacing:-0.03em; line-height:1; color:#2a2420; }
+  .d2-putts-sublabel { font-size:11px; font-weight:700; letter-spacing:0.07em; color:#b0a898; }
   .d2-footer { padding:10px 20px 16px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
   .d2-footer-total { font-size:13px; font-weight:600; color:#a09890; }
   .d2-footer-score { font-size:13px; font-weight:700; }
@@ -2084,9 +2084,9 @@
   .d2-edit-handle { width:34px; height:4px; border-radius:99px; background:rgba(0,0,0,0.12); margin:0 auto 14px; }
   .d2-edit-header { font-size:11px; font-weight:700; letter-spacing:0.09em; color:#bbb; text-transform:uppercase; margin-bottom:10px; }
   .d2-edit-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
-  .d2-edit-option { padding:14px; border-radius:16px; border:none; cursor:pointer; font-size:18px; font-weight:800; letter-spacing:-0.02em; width:100%; text-align:left; transition:background 0.13s; }
+  .d2-edit-option { padding:14px; border-radius:16px; border:none; cursor:pointer; font-size:17px; font-weight:800; letter-spacing:-0.02em; width:100%; text-align:left; transition:background 0.13s; }
   .d2-edit-remove { width:100%; padding:13px; border-radius:14px; background:#e8b8b8; border:none; color:#9a1a1a; font-weight:700; font-size:15px; cursor:pointer; margin-bottom:8px; }
-  .d2-edit-cancel { width:100%; padding:13px; border-radius:14px; background:rgba(0,0,0,0.06); border:none; color:#888; font-weight:600; font-size:14px; cursor:pointer; }
+  .d2-edit-cancel { width:100%; padding:13px; border-radius:14px; background:rgba(0,0,0,0.06); border:none; color:#888; font-weight:600; font-size:15px; cursor:pointer; }
 
   /* ── Bag completion hint (Play tab) ─────────────────────────────────── */
   #bagCompleteHint {
