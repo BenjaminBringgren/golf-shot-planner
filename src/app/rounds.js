@@ -150,7 +150,7 @@ export function renderMgStatTiles() {
   })();
   let bestRound = null;
   allRounds.forEach(r => {
-    if (!r.holesPlayed) return;
+    if ((r.holesPlayed ?? 0) < 18) return;
     const diff = (r.totalStrokes ?? 0) - (r.totalPar ?? 0);
     if (bestRound === null || diff < bestRound.diff) bestRound = { diff, r };
   });
