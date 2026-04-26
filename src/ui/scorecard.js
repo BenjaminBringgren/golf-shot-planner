@@ -412,10 +412,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
                 <span class="sc2-sub-gir-lbl">GIR</span>
                 <span class="sc2-sub-gir-val">${subPlayed ? subGIR + '/' + subGIRDenom : '—'}</span>
               </div>
-              <div class="sc2-sub-right">
-                <span class="sc2-sub-score">${subPlayed ? subStrokes : '—'}</span>
-                <span class="sc2-sub-diff">${d}</span>
-              </div>
+              <span class="sc2-sub-diff">${subPlayed ? d : '—'}</span>
             </div>
           </div>
         </div>`;
@@ -443,10 +440,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
             <span class="sc2-sub-gir-lbl">GIR</span>
             <span class="sc2-sub-gir-val">${holesPlayed ? totalGIR + '/' + holesPlayed : '—'}</span>
           </div>
-          <div class="sc2-sub-right">
-            <span class="sc2-sub-score">${holesPlayed ? totalStrokes : '—'}</span>
-            <span class="sc2-sub-diff">${holesPlayed ? subDiff(totalStrokes - totalPar) : '—'}</span>
-          </div>
+          <span class="sc2-sub-diff">${holesPlayed ? subDiff(totalStrokes - totalPar) : '—'}</span>
         </div>
       </div>`;
 

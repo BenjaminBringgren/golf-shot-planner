@@ -1282,15 +1282,11 @@
     .sc2-sub--total .sc2-sub-gir-lbl { color: #818a9d; }
     .sc2-sub--total .sc2-sub-gir-val { color: #fff; }
 
-    .sc2-sub-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
-    .sc2-sub-score { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
-    .sc2-sub-diff  { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; }
-    .sc2-sub--out   .sc2-sub-score { color: #fff; }
-    .sc2-sub--out   .sc2-sub-diff  { color: #b1f0ce; }
-    .sc2-sub--in    .sc2-sub-score { color: #040d1b; }
-    .sc2-sub--in    .sc2-sub-diff  { color: #45474c; }
-    .sc2-sub--total .sc2-sub-score { color: #fff; }
-    .sc2-sub--total .sc2-sub-diff  { color: #b1f0ce; }
+    .sc2-sub > *:last-child { text-align: right; }
+    .sc2-sub-diff { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
+    .sc2-sub--out   .sc2-sub-diff { color: #fff; }
+    .sc2-sub--in    .sc2-sub-diff { color: #040d1b; }
+    .sc2-sub--total .sc2-sub-diff { color: #fff; }
 
     .sc2-total-card { border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
 
