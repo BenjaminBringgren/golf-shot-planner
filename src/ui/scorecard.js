@@ -384,6 +384,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
             <div class="sc2-par">${h.par}</div>
             <div class="sc2-score">${badgeHtml(h.total, h.par)}</div>
             <div class="sc2-gir">${girDot(isPlayed ? girVal : null)}</div>
+            <div class="sc2-putts">${isPlayed ? h.putts : '—'}</div>
             <div>${runTotalHtml(runningTotals[from + idx])}</div>
           </div>`;
       }).join('');
@@ -401,17 +402,15 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           </div>
           <div class="sc2-card">
             <div class="sc2-col-hdr">
-              <span>Hole</span><span>Par</span><span>Putts</span><span>GIR</span><span>Total</span>
+              <span>Hole</span><span>Par</span><span>Strokes</span><span>GIR</span><span>Putts</span><span>Total</span>
             </div>
             ${rowsHtml}
             <div class="sc2-sub sc2-sub--${subCls}">
               <span class="sc2-sub-lbl">${subLbl}</span>
               <span class="sc2-sub-num">${subPlayed ? subPar : '—'}</span>
+              <span class="sc2-sub-num">${subPlayed ? subStrokes : '—'}</span>
+              <span class="sc2-sub-num">${subPlayed ? subGIR + '/' + subGIRDenom : '—'}</span>
               <span class="sc2-sub-num">${subPlayed ? subPutts : '—'}</span>
-              <div class="sc2-sub-gir">
-                <span class="sc2-sub-gir-lbl">GIR</span>
-                <span class="sc2-sub-gir-val">${subPlayed ? subGIR + '/' + subGIRDenom : '—'}</span>
-              </div>
               <span class="sc2-sub-diff">${subPlayed ? d : '—'}</span>
             </div>
           </div>
@@ -435,11 +434,9 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
         <div class="sc2-sub sc2-sub--total">
           <span class="sc2-sub-lbl">Total</span>
           <span class="sc2-sub-num">${anyPlayed ? front9Par + back9Par : '—'}</span>
-          <span class="sc2-sub-num">${anyPlayed ? totalPutts : '—'}</span>
-          <div class="sc2-sub-gir">
-            <span class="sc2-sub-gir-lbl">GIR</span>
-            <span class="sc2-sub-gir-val">${holesPlayed ? totalGIR + '/' + holesPlayed : '—'}</span>
-          </div>
+          <span class="sc2-sub-num">${holesPlayed ? totalStrokes : '—'}</span>
+          <span class="sc2-sub-num">${holesPlayed ? totalGIR + '/' + holesPlayed : '—'}</span>
+          <span class="sc2-sub-num">${holesPlayed ? totalPutts : '—'}</span>
           <span class="sc2-sub-diff">${holesPlayed ? subDiff(totalStrokes - totalPar) : '—'}</span>
         </div>
       </div>`;
