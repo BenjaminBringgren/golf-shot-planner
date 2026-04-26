@@ -302,132 +302,159 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
 
   }
 
-  function pillHtml(total, par) {
-    if (total == null) return '—';
-    const diff = total - par;
-    let cls;
-    if (total === 1 && par >= 2) cls = 'hole-in-one';
-    else if (diff <= -2) cls = 'eagle';
-    else if (diff === -1) cls = 'birdie';
-    else if (diff === 0) cls = 'par';
-    else if (diff === 1) cls = 'bogey';
-    else cls = 'double';
-    return `<span class="sc-pill ${cls}">${total}</span>`;
-  }
-
-  function diffHtml(diff) {
-    const lbl = diff === 0 ? 'E' : (diff > 0 ? `+${diff}` : `${diff}`);
-    const color = diff < 0 ? '#1e7a45' : diff > 0 ? '#a32d2d' : '#555';
-    return `<span style="font-weight:700;color:${color}">${lbl}</span>`;
-  }
-
   function renderSummary() {
     scores = loadScores(courseId);
     const played = scores.map((s, i) => ({
       hole: i + 1, par: c.holes[i]?.par || 4,
       total: s ? (s.fairway || 0) + (s.rough || 0) + (s.putts || 0) : null,
-      fairway: s?.fairway ?? null, rough: s?.rough ?? null, putts: s?.putts ?? null, gir: s?.gir ?? null, fir: s?.fir ?? null,
+      fairway: s?.fairway ?? null, rough: s?.rough ?? null, putts: s?.putts ?? null,
+      gir: s?.gir ?? null,
     }));
 
-    let totalStrokes = 0, totalPar = 0, totalFW = 0, totalPutts = 0, totalGIR = 0, holesPlayed = 0;
+    let totalStrokes = 0, totalPar = 0, totalPutts = 0, totalGIR = 0, holesPlayed = 0;
     played.forEach(h => {
       if (h.total != null) {
         totalStrokes += h.total; totalPar += h.par;
-        totalFW += h.fairway; totalPutts += h.putts;
+        totalPutts += h.putts;
         if (h.gir === true) totalGIR++;
         holesPlayed++;
       }
     });
-    // Front 9 subtotals
-    let front9Par = 0, front9Strokes = 0, front9FW = 0, front9Putts = 0, front9GIR = 0, front9Played = 0;
+
+    let front9Par = 0, front9Strokes = 0, front9Putts = 0, front9GIR = 0, front9Played = 0;
     played.slice(0, 9).forEach(h => {
       front9Par += h.par;
-      if (h.total != null) { front9Strokes += h.total; front9FW += h.fairway; front9Putts += h.putts; if (h.gir === true) front9GIR++; front9Played++; }
+      if (h.total != null) { front9Strokes += h.total; front9Putts += h.putts; if (h.gir === true) front9GIR++; front9Played++; }
     });
 
-    // Back 9 subtotals
-    let back9Par = 0, back9Strokes = 0, back9FW = 0, back9Putts = 0, back9GIR = 0, back9Played = 0;
+    let back9Par = 0, back9Strokes = 0, back9Putts = 0, back9GIR = 0, back9Played = 0;
     played.slice(9, 18).forEach(h => {
       back9Par += h.par;
-      if (h.total != null) { back9Strokes += h.total; back9FW += h.fairway; back9Putts += h.putts; if (h.gir === true) back9GIR++; back9Played++; }
+      if (h.total != null) { back9Strokes += h.total; back9Putts += h.putts; if (h.gir === true) back9GIR++; back9Played++; }
     });
 
+    // Running cumulative diff per hole
+    let runAcc = 0;
+    const runningTotals = played.map(h => {
+      if (h.total == null) return null;
+      runAcc += h.total - h.par;
+      return runAcc;
+    });
+
+    function badgeHtml(total, par) {
+      if (total == null) return '<span class="sc2-score-dash">—</span>';
+      const diff = total - par;
+      let cls;
+      if (total === 1 && par >= 2) cls = 'ace';
+      else if (diff <= -2) cls = 'eagle';
+      else if (diff === -1) cls = 'birdie';
+      else if (diff === 0)  cls = 'par';
+      else if (diff === 1)  cls = 'bogey';
+      else                   cls = 'double';
+      return `<span class="sc2-badge sc2-badge--${cls}">${total}</span>`;
+    }
+
+    function girDot(gir) {
+      if (gir === null) return '<span class="sc2-dot sc2-dot--none"></span>';
+      return gir ? '<span class="sc2-dot sc2-dot--made"></span>'
+                 : '<span class="sc2-dot sc2-dot--miss"></span>';
+    }
+
+    function runTotalHtml(diff) {
+      if (diff === null) return '<span class="sc2-total sc2-total--none">—</span>';
+      const lbl = diff === 0 ? 'E' : (diff > 0 ? `+${diff}` : `${diff}`);
+      const cls = diff < 0 ? 'under' : diff > 0 ? 'over' : 'even';
+      return `<span class="sc2-total sc2-total--${cls}">${lbl}</span>`;
+    }
+
+    function subDiff(diff) {
+      if (diff === null) return '—';
+      return diff === 0 ? 'E' : (diff > 0 ? `+${diff}` : `${diff}`);
+    }
+
     function sectionRows(from, to) {
-      return played.slice(from, to).map(h => {
-        if (h.total == null) return `
-          <tr>
-            <td class="sc-hole">${h.hole}</td>
-            <td class="sc-par">${h.par}</td>
-            <td>—</td><td>—</td><td>—</td><td>—</td>
-          </tr>`;
-        const diff = h.total - h.par;
-        const girVal = h.gir !== null ? h.gir : ((h.fairway + (h.rough || 0)) <= (h.par - 2));
-        const girMark = girVal ? '<span style="color:#1e7a45;font-weight:700;">✓</span>' : '<span style="color:#ccc;">✗</span>';
+      return played.slice(from, to).map((h, idx) => {
+        const isPlayed = h.total != null;
+        const holeCls  = isPlayed ? 'sc2-hole--played' : 'sc2-hole--unplayed';
+        const girVal   = h.gir !== null ? h.gir
+          : (isPlayed ? ((h.fairway + (h.rough || 0)) <= (h.par - 2)) : null);
         return `
-          <tr>
-            <td class="sc-hole">${h.hole}</td>
-            <td class="sc-par">${h.par}</td>
-            <td>${h.putts}</td>
-            <td style="text-align:center">${girMark}</td>
-            <td>${pillHtml(h.total, h.par)}</td>
-            <td>${diffHtml(diff)}</td>
-          </tr>`;
+          <div class="sc2-row">
+            <div><span class="sc2-hole ${holeCls}">${h.hole}</span></div>
+            <div class="sc2-par">${h.par}</div>
+            <div class="sc2-score">${badgeHtml(h.total, h.par)}</div>
+            <div class="sc2-gir">${girDot(isPlayed ? girVal : null)}</div>
+            <div>${runTotalHtml(runningTotals[from + idx])}</div>
+          </div>`;
       }).join('');
+    }
+
+    function sectionHtml(title, chip, subCls, subLbl, rowsHtml,
+                         subPar, subPutts, subPlayed, subGIR, subGIRDenom,
+                         subStrokes, subDiffVal) {
+      const d = subPlayed ? subDiff(subDiffVal) : '—';
+      return `
+        <div class="sc2-section">
+          <div class="sc2-section-header">
+            <span class="sc2-section-title">${title}</span>
+            <span class="sc2-section-chip">${chip}</span>
+          </div>
+          <div class="sc2-card">
+            <div class="sc2-col-hdr">
+              <span>Hole</span><span>Par</span><span>Putts</span><span>GIR</span><span>Total</span>
+            </div>
+            ${rowsHtml}
+            <div class="sc2-sub sc2-sub--${subCls}">
+              <span class="sc2-sub-lbl">${subLbl}</span>
+              <span class="sc2-sub-num">${subPlayed ? subPar : '—'}</span>
+              <span class="sc2-sub-num">${subPlayed ? subPutts : '—'}</span>
+              <div class="sc2-sub-gir">
+                <span class="sc2-sub-gir-lbl">GIR</span>
+                <span class="sc2-sub-gir-val">${subPlayed ? subGIR + '/' + subGIRDenom : '—'}</span>
+              </div>
+              <div class="sc2-sub-right">
+                <span class="sc2-sub-score">${subPlayed ? subStrokes : '—'}</span>
+                <span class="sc2-sub-diff">${d}</span>
+              </div>
+            </div>
+          </div>
+        </div>`;
     }
 
     const pageInner = document.getElementById('scorecardPageInner');
     if (!pageInner) return;
 
-    pageInner.innerHTML = `
-      <table class="scorecard">
-        <thead><tr>
-          <th class="sc-th-hole">#</th>
-          <th class="sc-th-par">Par</th>
-          <th>⛳</th><th>GIR</th><th>Total</th><th>+/−</th>
-        </tr></thead>
-        <tbody>
-          <tr class="sc-section"><td class="sc-hole"></td><td colspan="5">Front 9</td></tr>
-          ${sectionRows(0, 9)}
-          <tr class="sc-total">
-            <td class="sc-hole">Out</td>
-            <td class="sc-par">${front9Par}</td>
-            <td>${front9Played ? front9Putts : '—'}</td>
-            <td>${front9Played ? front9GIR + '/9' : '—'}</td>
-            <td>${front9Played ? pillHtml(front9Strokes, front9Par) : '—'}</td>
-            <td>${front9Played ? diffHtml(front9Strokes - front9Par) : '—'}</td>
-          </tr>
-          <tr class="sc-section"><td class="sc-hole"></td><td colspan="5">Back 9</td></tr>
-          ${sectionRows(9, 18)}
-          <tr class="sc-total">
-            <td class="sc-hole">In</td>
-            <td class="sc-par">${back9Par}</td>
-            <td>${back9Played ? back9Putts : '—'}</td>
-            <td>${back9Played ? back9GIR + '/' + back9Played : '—'}</td>
-            <td>${back9Played ? pillHtml(back9Strokes, back9Par) : '—'}</td>
-            <td>${back9Played ? diffHtml(back9Strokes - back9Par) : '—'}</td>
-          </tr>
-        </tbody>
-        <tfoot>
-          <tr class="sc-total">
-            <td class="sc-hole">Total</td>
-            <td class="sc-par">${(front9Played || back9Played) ? front9Par + back9Par : '—'}</td>
-            <td>${(front9Played + back9Played) ? totalPutts : '—'}</td>
-            <td>${(front9Played + back9Played) ? totalGIR + '/' + holesPlayed + ' <span style="color:#888;font-weight:400;font-size:11px;">(' + Math.round(totalGIR/holesPlayed*100) + '%)</span>' : '—'}</td>
-            <td>${(front9Played + back9Played) ? pillHtml(front9Strokes + back9Strokes, front9Par + back9Par) : '—'}</td>
-            <td>${(front9Played + back9Played) ? diffHtml((front9Strokes + back9Strokes) - (front9Par + back9Par)) : '—'}</td>
-          </tr>
-        </tfoot>
-      </table>`;
+    const anyPlayed = front9Played || back9Played;
+    pageInner.innerHTML =
+      sectionHtml('Front 9', 'Out', 'out', 'OUT',
+        sectionRows(0, 9),
+        front9Par, front9Putts, front9Played, front9GIR, 9,
+        front9Strokes, front9Played ? front9Strokes - front9Par : null) +
+      sectionHtml('Back 9', 'In', 'in', 'IN',
+        sectionRows(9, 18),
+        back9Par, back9Putts, back9Played, back9GIR, back9Played,
+        back9Strokes, back9Played ? back9Strokes - back9Par : null) +
+      `<div class="sc2-card sc2-total-card">
+        <div class="sc2-sub sc2-sub--total">
+          <span class="sc2-sub-lbl">Total</span>
+          <span class="sc2-sub-num">${anyPlayed ? front9Par + back9Par : '—'}</span>
+          <span class="sc2-sub-num">${anyPlayed ? totalPutts : '—'}</span>
+          <div class="sc2-sub-gir">
+            <span class="sc2-sub-gir-lbl">GIR</span>
+            <span class="sc2-sub-gir-val">${holesPlayed ? totalGIR + '/' + holesPlayed : '—'}</span>
+          </div>
+          <div class="sc2-sub-right">
+            <span class="sc2-sub-score">${holesPlayed ? totalStrokes : '—'}</span>
+            <span class="sc2-sub-diff">${holesPlayed ? subDiff(totalStrokes - totalPar) : '—'}</span>
+          </div>
+        </div>
+      </div>`;
 
-    // Save round button — only show if at least 1 hole is scored
-    const existingSaveBtn = pageInner.querySelector('.save-round-btn');
-    if (existingSaveBtn) existingSaveBtn.remove();
-
+    // Save round button
     if (holesPlayed > 0) {
       const saveBtn = document.createElement('button');
-      saveBtn.className = 'save-round-btn';
+      saveBtn.className = 'sc2-save-btn';
       saveBtn.type = 'button';
-      saveBtn.style.cssText = 'margin-top:16px; font-size:15px; padding:17px 14px; background:#fff; color:#111; border:none; border-radius:10px; width:100%; cursor:pointer; font-weight:600;';
       saveBtn.textContent = 'Save Round';
       saveBtn.addEventListener('click', () => {
         const committedStrategies = getCommittedStrategies();
@@ -443,17 +470,12 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           totalGIR:     holesPlayed ? totalGIR     : 0,
         };
         saveRound(courseId, roundData);
-
         saveBtn.textContent = '✓ Saved!';
         saveBtn.disabled = true;
-        saveBtn.style.background = '#555';
-        saveBtn.style.color = '#fff';
-
         try {
           clearScores(courseId);
           removeCommittedStrategies(courseId);
         } catch(e) {}
-
         callbacks.renderSavedRounds?.();
       });
       pageInner.appendChild(saveBtn);
@@ -478,7 +500,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     const subtitleEl = document.getElementById('scorecardPageSubtitle');
     if (titleEl)    titleEl.textContent    = c.name;
     if (subtitleEl) subtitleEl.textContent = holesPlayed
-      ? `${scoreTxt}  ·  ${holesPlayed} of 18 holes`
+      ? `Thru ${holesPlayed}  ·  ${scoreTxt}`
       : 'No holes scored yet';
 
     renderSummary();

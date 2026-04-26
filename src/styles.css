@@ -1173,7 +1173,7 @@
 
     .scorecard-page {
       position: fixed; inset: 0; z-index: 1100;
-      background: #f5f4f0;
+      background: #f8f9fa;
       transform: translateY(100%);
       transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
       display: flex; flex-direction: column;
@@ -1208,9 +1208,93 @@
 
     .scorecard-page-inner {
       flex: 1; overflow-y: auto;
-      padding: 16px 14px 40px;
+      padding: 20px 12px 40px;
       -webkit-overflow-scrolling: touch;
     }
+
+    /* ── Scorecard v2 design system (sc2-*) ──────────────────── */
+    .sc2-section { margin-bottom: 24px; }
+    .sc2-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .sc2-section-title { font-size: 17px; font-weight: 700; color: #040d1b; letter-spacing: -0.01em; }
+    .sc2-section-chip { font-size: 11px; font-weight: 700; color: #45474c; background: #e7e8e9; border-radius: 6px; padding: 3px 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+
+    .sc2-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(26,35,50,0.06); overflow: hidden; border: 1px solid rgba(197,198,204,0.35); }
+
+    .sc2-col-hdr { display: grid; grid-template-columns: 44px 1fr 1fr 1fr 1.4fr; padding: 9px 14px; background: #f3f4f5; border-bottom: 1px solid #e1e3e4; }
+    .sc2-col-hdr > span { font-size: 10px; font-weight: 700; color: #45474c; letter-spacing: 0.06em; text-transform: uppercase; }
+    .sc2-col-hdr > span:not(:first-child) { text-align: center; }
+    .sc2-col-hdr > span:last-child { text-align: right; }
+
+    .sc2-row { display: grid; grid-template-columns: 44px 1fr 1fr 1fr 1.4fr; padding: 0 14px; height: 52px; align-items: center; border-bottom: 1px solid #e7e8e9; }
+    .sc2-row:last-of-type { border-bottom: none; }
+
+    .sc2-hole { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
+    .sc2-hole--played   { background: #1a2332; color: #fff; }
+    .sc2-hole--unplayed { background: #e7e8e9; color: #3e4758; }
+
+    .sc2-par { text-align: center; font-size: 15px; font-weight: 500; color: #191c1d; }
+
+    .sc2-score { display: flex; justify-content: center; align-items: center; }
+    .sc2-score-dash { font-size: 15px; color: #818a9d; }
+    .sc2-badge { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+    .sc2-badge--ace    { border-radius: 50%; background: #f5c400; color: #7a5800; }
+    .sc2-badge--eagle  { border-radius: 50%; background: #f07020; color: #fff; }
+    .sc2-badge--birdie { border-radius: 50%; background: #c0392b; color: #fff; }
+    .sc2-badge--par    { color: #444; font-weight: 500; }
+    .sc2-badge--bogey  { border-radius: 5px; background: #3a6fc4; color: #fff; }
+    .sc2-badge--double { border-radius: 5px; background: #1a3a7a; color: #fff; }
+
+    .sc2-gir { display: flex; justify-content: center; align-items: center; }
+    .sc2-dot { width: 12px; height: 12px; border-radius: 50%; }
+    .sc2-dot--made { background: #2c694e; }
+    .sc2-dot--miss { border: 2px solid #c5c6cc; }
+    .sc2-dot--none { border: 2px solid #e1e3e4; }
+
+    .sc2-total { text-align: right; font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
+    .sc2-total--under { color: #2c694e; }
+    .sc2-total--over  { color: #e95a59; }
+    .sc2-total--even  { color: #191c1d; }
+    .sc2-total--none  { color: #818a9d; }
+
+    .sc2-sub { display: grid; grid-template-columns: 44px 1fr 1fr 1fr 1.4fr; padding: 13px 14px; align-items: center; }
+    .sc2-sub--out   { background: #1a2332; }
+    .sc2-sub--in    { background: #e7e8e9; }
+    .sc2-sub--total { background: #040d1b; }
+
+    .sc2-sub-lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .sc2-sub--out   .sc2-sub-lbl { color: #818a9d; }
+    .sc2-sub--in    .sc2-sub-lbl { color: #45474c; }
+    .sc2-sub--total .sc2-sub-lbl { color: #818a9d; }
+
+    .sc2-sub-num { text-align: center; font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+    .sc2-sub--out   .sc2-sub-num { color: #fff; }
+    .sc2-sub--in    .sc2-sub-num { color: #040d1b; }
+    .sc2-sub--total .sc2-sub-num { color: #fff; }
+
+    .sc2-sub-gir { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+    .sc2-sub-gir-lbl { font-size: 9px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .sc2-sub-gir-val { font-size: 14px; font-weight: 600; }
+    .sc2-sub--out   .sc2-sub-gir-lbl { color: #818a9d; }
+    .sc2-sub--out   .sc2-sub-gir-val { color: #fff; }
+    .sc2-sub--in    .sc2-sub-gir-lbl { color: #45474c; }
+    .sc2-sub--in    .sc2-sub-gir-val { color: #040d1b; }
+    .sc2-sub--total .sc2-sub-gir-lbl { color: #818a9d; }
+    .sc2-sub--total .sc2-sub-gir-val { color: #fff; }
+
+    .sc2-sub-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+    .sc2-sub-score { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+    .sc2-sub-diff  { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; }
+    .sc2-sub--out   .sc2-sub-score { color: #fff; }
+    .sc2-sub--out   .sc2-sub-diff  { color: #b1f0ce; }
+    .sc2-sub--in    .sc2-sub-score { color: #040d1b; }
+    .sc2-sub--in    .sc2-sub-diff  { color: #45474c; }
+    .sc2-sub--total .sc2-sub-score { color: #fff; }
+    .sc2-sub--total .sc2-sub-diff  { color: #b1f0ce; }
+
+    .sc2-total-card { border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+
+    .sc2-save-btn { width: 100%; margin-top: 20px; padding: 16px; font-size: 15px; font-weight: 600; background: #040d1b; color: #fff; border: none; border-radius: 10px; cursor: pointer; letter-spacing: 0.01em; }
+    .sc2-save-btn:disabled { background: #818a9d; color: #fff; cursor: default; }
 
     /* ── Last round hint in course bar ──────────────────────── */
     .course-bar-last-round {

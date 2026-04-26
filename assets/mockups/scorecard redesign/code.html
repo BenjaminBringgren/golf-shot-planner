@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pebble Beach Scorecard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "secondary-fixed": "#b1f0ce",
+                        "on-secondary-container": "#316e52",
+                        "on-primary-container": "#818a9d",
+                        "surface-bright": "#f8f9fa",
+                        "on-primary-fixed-variant": "#3e4758",
+                        "surface-variant": "#e1e3e4",
+                        "primary-fixed-dim": "#bec7db",
+                        "surface-container-high": "#e7e8e9",
+                        "secondary-fixed-dim": "#95d4b3",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#0e5138",
+                        "on-background": "#191c1d",
+                        primary: "#040d1b",
+                        "inverse-surface": "#2e3132",
+                        "on-tertiary-container": "#e95a59",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-highest": "#e1e3e4",
+                        "outline-variant": "#c5c6cc",
+                        "surface-tint": "#565f70",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary-fixed": "#410005",
+                        "on-surface-variant": "#45474c",
+                        "on-surface": "#191c1d",
+                        "tertiary-container": "#4e0008",
+                        "primary-fixed": "#dae3f7",
+                        "tertiary-fixed-dim": "#ffb3af",
+                        surface: "#f8f9fa",
+                        "secondary-container": "#aeeecb",
+                        "on-error-container": "#93000a",
+                        "on-secondary-fixed": "#002114",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container": "#edeeef",
+                        "on-primary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "inverse-primary": "#bec7db",
+                        "surface-container-low": "#f3f4f5",
+                        "inverse-on-surface": "#f0f1f2",
+                        tertiary: "#240002",
+                        "on-tertiary-fixed-variant": "#8d141e",
+                        "surface-dim": "#d9dadb",
+                        secondary: "#2c694e",
+                        "primary-container": "#1a2332",
+                        outline: "#75777d",
+                        error: "#ba1a1a",
+                        "tertiary-fixed": "#ffdad7",
+                        background: "#f8f9fa",
+                        "on-primary-fixed": "#131c2a"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    },
+                    spacing: {
+                        "space-lg": "24px",
+                        "row-height": "56px",
+                        "container-padding": "12px",
+                        "space-xs": "4px",
+                        "space-sm": "8px",
+                        "space-md": "16px"
+                    },
+                    fontFamily: {
+                        "body-md": ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
+                        "score-display": ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
+                        h2: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
+                        "body-lg": ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
+                        "label-caps": ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
+                        h1: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
+                        headline: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
+                        display: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
+                        body: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"],
+                        label: ["-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif"]
+                    },
+                    fontSize: {
+                        "body-md": ["14px", {lineHeight: "20px", fontWeight: "400"}],
+                        "score-display": ["20px", {lineHeight: "1", letterSpacing: "-0.02em", fontWeight: "600"}],
+                        h2: ["18px", {lineHeight: "24px", fontWeight: "600"}],
+                        "body-lg": ["16px", {lineHeight: "24px", fontWeight: "500"}],
+                        "label-caps": ["11px", {lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "700"}],
+                        h1: ["24px", {lineHeight: "32px", fontWeight: "600"}]
+                    }
+                }
+            }
+        };
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background font-body-md text-on-surface antialiased">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-4 h-14 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+<div class="flex items-center">
+<span class="material-symbols-outlined text-[#1A2332] cursor-pointer p-2 hover:bg-slate-100 rounded-full transition-colors duration-200" data-icon="menu">menu</span>
+</div>
+<h1 class="font-semibold text-lg tracking-tight text-[#1A2332] font-display">Pebble Beach · Rd 1</h1>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-[#1A2332] cursor-pointer p-2 hover:bg-slate-100 rounded-full transition-colors duration-200" data-icon="more_vert">more_vert</span>
+</div>
+</header>
+<main class="pt-20 pb-12 px-container-padding max-w-md mx-auto">
+<!-- Progress Summary -->
+<div class="flex justify-between items-center mb-space-lg">
+<div class="flex flex-col">
+<span class="font-label-caps text-label-caps text-on-primary-container">CURRENT STATUS</span>
+<div class="flex items-center gap-2">
+<span class="font-h1 text-h1 text-primary">Thru 9</span>
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full font-label-caps text-[10px]">-33</span>
+</div>
+</div>
+</div>
+<!-- FRONT 9 SECTION -->
+<div class="flex items-center justify-between mb-space-md">
+<h2 class="font-h2 text-h2 text-primary">FRONT 9</h2>
+<span class="font-label-caps text-label-caps text-on-primary-container bg-surface-container-high px-3 py-1 rounded-lg">OUT</span>
+</div>
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(26,35,50,0.06)] overflow-hidden border border-outline-variant/30 mb-8">
+<div class="grid grid-cols-12 px-4 py-3 border-b border-surface-variant bg-surface-container-low">
+<div class="col-span-2 font-label-caps text-label-caps text-on-surface-variant">HOLE</div>
+<div class="col-span-2 font-label-caps text-label-caps text-on-surface-variant text-center">PAR</div>
+<div class="col-span-3 font-label-caps text-label-caps text-on-surface-variant text-center">STROKES</div>
+<div class="col-span-2 font-label-caps text-label-caps text-on-surface-variant text-center">GIR</div>
+<div class="col-span-3 font-label-caps text-label-caps text-on-surface-variant text-right">TOTAL +/-</div>
+</div>
+<!-- Hole 1 -->
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center"><span class="font-score-display text-white text-[14px]">1</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">4</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<!-- Hole 2 -->
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high bg-secondary-fixed/10 transition-colors hover:bg-secondary-fixed/20">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center"><span class="font-score-display text-white text-[14px]">2</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">4</div>
+<div class="col-span-3 flex justify-center">
+<div class="w-9 h-9 rounded-full border-2 border-on-tertiary-container flex items-center justify-center bg-tertiary-fixed shadow-sm">
+<span class="font-score-display text-score-display text-on-tertiary-container">2</span>
+</div>
+</div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-secondary text-[20px]" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span></div>
+<div class="col-span-3 text-right font-score-display text-score-display text-primary">-1</div>
+</div>
+<!-- Holes 3-9 -->
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">3</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">4</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">4</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">4</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">5</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">3</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">6</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">5</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">7</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">3</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">8</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">4</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">9</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">4</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<!-- Footer "OUT" Totals -->
+<div class="grid grid-cols-12 px-4 py-4 bg-primary-container text-white">
+<div class="col-span-2 font-label-caps text-label-caps text-on-primary-container self-center">OUT</div>
+<div class="col-span-2 text-center font-score-display text-score-display self-center">36</div>
+<div class="col-span-3 text-center font-score-display text-score-display self-center">2</div>
+<div class="col-span-2 text-center flex flex-col items-center justify-center">
+<span class="font-label-caps text-[9px] text-on-primary-container">GIR</span>
+<span class="font-score-display text-[16px]">1/9</span>
+</div>
+<div class="col-span-3 text-right flex flex-col items-end justify-center">
+<span class="font-score-display text-score-display">3</span>
+<span class="font-label-caps text-[10px] text-secondary-fixed">-33</span>
+</div>
+</div>
+</div>
+<!-- BACK 9 SECTION -->
+<div class="flex items-center justify-between mb-space-md">
+<h2 class="font-h2 text-h2 text-primary">BACK 9</h2>
+<span class="font-label-caps text-label-caps text-on-primary-container bg-surface-container-high px-3 py-1 rounded-lg">IN</span>
+</div>
+<div class="bg-surface-container-lowest rounded-xl shadow-[0_4px_20px_rgba(26,35,50,0.06)] overflow-hidden border border-outline-variant/30 mb-8">
+<div class="grid grid-cols-12 px-4 py-3 border-b border-surface-variant bg-surface-container-low">
+<div class="col-span-2 font-label-caps text-label-caps text-on-surface-variant">HOLE</div>
+<div class="col-span-2 font-label-caps text-label-caps text-on-surface-variant text-center">PAR</div>
+<div class="col-span-3 font-label-caps text-label-caps text-on-surface-variant text-center">STROKES</div>
+<div class="col-span-2 font-label-caps text-label-caps text-on-surface-variant text-center">GIR</div>
+<div class="col-span-3 font-label-caps text-label-caps text-on-surface-variant text-right">TOTAL +/-</div>
+</div>
+<!-- Holes 10-18 -->
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">10</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">4</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">11</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">4</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">12</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">3</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">13</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">4</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">14</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">5</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">15</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">4</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">16</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">4</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">17</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">3</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<div class="grid grid-cols-12 px-4 h-row-height items-center border-b border-surface-container-high transition-colors hover:bg-surface-container-low">
+<div class="col-span-2"><div class="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center"><span class="font-score-display text-on-primary-fixed-variant text-[14px]">18</span></div></div>
+<div class="col-span-2 text-center font-body-lg text-body-lg text-on-surface">5</div>
+<div class="col-span-3 flex justify-center"><span class="font-body-lg text-body-lg text-on-primary-container">-</span></div>
+<div class="col-span-2 flex justify-center"><span class="material-symbols-outlined text-outline-variant text-[20px]" data-icon="check_circle">check_circle</span></div>
+<div class="col-span-3 text-right font-body-lg text-body-lg text-on-primary-container">-</div>
+</div>
+<!-- Footer "IN" Totals -->
+<div class="grid grid-cols-12 px-4 py-4 bg-surface-container-high text-primary border-t border-outline-variant/30">
+<div class="col-span-2 font-label-caps text-label-caps text-on-primary-container self-center">IN</div>
+<div class="col-span-2 text-center font-score-display text-score-display self-center">36</div>
+<div class="col-span-3 text-center font-score-display text-score-display self-center">-</div>
+<div class="col-span-2 text-center flex flex-col items-center justify-center">
+<span class="font-label-caps text-[9px] text-on-primary-container">GIR</span>
+<span class="font-score-display text-[16px]">0/9</span>
+</div>
+<div class="col-span-3 text-right flex flex-col items-end justify-center">
+<span class="font-score-display text-score-display text-on-primary-container">-</span>
+<span class="font-label-caps text-[10px] text-on-primary-container">E</span>
+</div>
+</div>
+<!-- FINAL TOTAL ROW -->
+<div class="grid grid-cols-12 px-4 py-5 bg-primary text-white">
+<div class="col-span-2 font-label-caps text-label-caps text-primary-fixed self-center">TOTAL</div>
+<div class="col-span-2 text-center font-score-display text-score-display self-center">72</div>
+<div class="col-span-3 text-center font-score-display text-score-display self-center">2</div>
+<div class="col-span-2 text-center flex flex-col items-center justify-center">
+<span class="font-label-caps text-[9px] text-primary-fixed">TOT GIR</span>
+<span class="font-score-display text-[16px]">1/18</span>
+</div>
+<div class="col-span-3 text-right flex flex-col items-end justify-center">
+<span class="font-score-display text-score-display">2</span>
+<span class="font-label-caps text-[10px] text-secondary-fixed">-34</span>
+</div>
+</div>
+</div>
+</main>
+</body></html>
