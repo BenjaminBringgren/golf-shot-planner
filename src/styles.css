@@ -1250,7 +1250,8 @@
     .sc2-dot--miss { border: 2px solid #c5c6cc; }
     .sc2-dot--none { border: 2px solid #e1e3e4; }
 
-    .sc2-total { text-align: right; font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
+    .sc2-row > div:last-child { text-align: right; }
+    .sc2-total { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
     .sc2-total--under { color: #2c694e; }
     .sc2-total--over  { color: #e95a59; }
     .sc2-total--even  { color: #191c1d; }
