@@ -1561,6 +1561,51 @@ initServices({
     'assets/images/Top4.webp',
   ];
 
+  const HERO_QUOTES = [
+    { text: '"Grip it and rip it."',                                          attrib: '— John Daly' },
+    { text: '"I don\'t think I\'ve ever tried to be anything I\'m not."',     attrib: '— John Daly' },
+    { text: '"I hit the ball as hard as I can. If I can find it, I hit it again."', attrib: '— John Daly' },
+    { text: '"Golf is a game you can never really conquer."',                  attrib: '— Ben Hogan' },
+    { text: '"Confidence is the most important single factor in this game."',  attrib: '— Jack Nicklaus' },
+    { text: '"Focus on remedies, not faults."',                               attrib: '— Jack Nicklaus' },
+    { text: '"Tempo is everything."',                                         attrib: '— Fred Couples' },
+    { text: '"You don\'t have to swing hard to hit it far."',                 attrib: '— Fred Couples' },
+    { text: '"When it feels right, it usually is."',                          attrib: '— Fred Couples' },
+    { text: '"Patience is key out there."',                                   attrib: '— Nelly Korda' },
+    { text: '"You can\'t get ahead of yourself in golf."',                    attrib: '— Nelly Korda' },
+    { text: '"The more I practice, the luckier I get."',                      attrib: '— Annika Sörenstam' },
+    { text: '"It\'s about controlling what you can control."',                attrib: '— Annika Sörenstam' },
+    { text: '"Consistency is what separates the best from the rest."',        attrib: '— Annika Sörenstam' },
+    { text: '"Keep it simple."',                                              attrib: '— Ernie Els' },
+    { text: '"A good swing is about rhythm and balance."',                    attrib: '— Ernie Els' },
+    { text: '"You\'ve got to stay patient and trust your swing."',            attrib: '— Ernie Els' },
+    { text: '"Golf is not a game of perfect."',                               attrib: '— Nick Faldo' },
+    { text: '"You build a swing by understanding cause and effect."',         attrib: '— Nick Faldo' },
+    { text: '"Pressure is what you feel when you don\'t know what you\'re doing."', attrib: '— Nick Faldo' },
+    { text: '"Talent is only a small part of it — hard work beats talent."',  attrib: '— Rory McIlroy' },
+    { text: '"You have to be comfortable being uncomfortable."',              attrib: '— Rory McIlroy' },
+    { text: '"The biggest thing is to believe in yourself."',                 attrib: '— Rory McIlroy' },
+    { text: '"The only thing you can control is your effort."',               attrib: '— Tiger Woods' },
+    { text: '"You can always become better."',                                attrib: '— Tiger Woods' },
+    { text: '"You learn more from failure than from success."',               attrib: '— Tiger Woods' },
+    { text: '"You have to earn it every day."',                               attrib: '— Tiger Woods' },
+    { text: '"I practice until I don\'t have to think about it."',            attrib: '— Tiger Woods' },
+  ];
+
+  const QUOTE_KEY = 'heroQuoteIdx';
+  function cycleQuote() {
+    const lastIdx = parseInt(localStorage.getItem(QUOTE_KEY) ?? '-1', 10);
+    let nextIdx;
+    do { nextIdx = Math.floor(Math.random() * HERO_QUOTES.length); }
+    while (nextIdx === lastIdx && HERO_QUOTES.length > 1);
+    localStorage.setItem(QUOTE_KEY, nextIdx);
+    const q = HERO_QUOTES[nextIdx];
+    const textEl  = document.getElementById('heroQuoteText');
+    const attribEl = document.getElementById('heroQuoteAttrib');
+    if (textEl)   textEl.textContent  = q.text;
+    if (attribEl) attribEl.textContent = q.attrib;
+  }
+
   // Cycle hero image — runs on every HOME visit (not just page load)
   // localStorage used intentionally: sessionStorage is wiped when iOS backgrounds the app
   const HERO_KEY = 'heroImgIdx';
@@ -1622,6 +1667,7 @@ initServices({
   function enterHomeMode() {
     document.getElementById('paneHome')?.classList.add('home-mode');
     cycleHeroImage();
+    cycleQuote();
     refreshHomePerf();
   }
   function exitHomeMode() {
