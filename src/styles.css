@@ -1196,7 +1196,9 @@
       padding: 6px 20px 18px;
       border-bottom: 1px solid #e0ddd8;
       touch-action: none; cursor: grab;
+      display: flex; align-items: center; gap: 12px;
     }
+    .scorecard-page-header-text { flex: 1; min-width: 0; }
     .scorecard-page-title {
       font-size: 1.35rem; font-weight: 700; color: #111;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1204,6 +1206,14 @@
     .scorecard-page-subtitle {
       font-size: 0.82rem; color: #888;
       margin-top: 4px; letter-spacing: 0.2px;
+    }
+    .sc2-close-btn {
+      flex-shrink: 0;
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #e7e8e9; border: none; cursor: pointer;
+      font-size: 14px; color: #45474c;
+      display: flex; align-items: center; justify-content: center;
+      touch-action: manipulation;
     }
 
     .scorecard-page-inner {

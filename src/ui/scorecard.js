@@ -506,6 +506,9 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     document.body.style.overflow = 'hidden';
 
     pageOverlay.onclick = closeScorecardPage;
+
+    const closeBtn = document.getElementById('scorecardPageClose');
+    if (closeBtn) closeBtn.onclick = closeScorecardPage;
   }
 
   function closeScorecardPage() {
