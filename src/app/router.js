@@ -1610,25 +1610,10 @@ initServices({
   function enterHomeMode() {
     document.getElementById('panePlay')?.classList.add('home-mode');
     refreshHomePerf();
-    // Patch updateLoadCourseBtn to suppress fixed button in home mode
-    _suppressLoadCourseBtn = true;
-    document.getElementById('loadCourseBtn')?.classList.remove('visible');
   }
   function exitHomeMode() {
     document.getElementById('panePlay')?.classList.remove('home-mode');
-    _suppressLoadCourseBtn = false;
   }
-
-  // Patch updateLoadCourseBtn to suppress the fixed "Load a course" pill
-  // when the home screen is showing (it has its own LAUNCH COURSE button).
-  let _suppressLoadCourseBtn = false;
-  const _origUpdateLoadCourseBtn = updateLoadCourseBtn;
-  updateLoadCourseBtn = function() {
-    _origUpdateLoadCourseBtn();
-    if (_suppressLoadCourseBtn) {
-      document.getElementById('loadCourseBtn')?.classList.remove('visible');
-    }
-  };
 
   // Patch switchTab so that returning to HOME shows the home screen when appropriate
   const _origSwitchTabHome = switchTab;
@@ -1643,9 +1628,24 @@ initServices({
     }
   };
 
+  // Exit home mode as soon as a course bar is injected into #calcView
+  (function watchForCourseLoad() {
+    const calcView = document.getElementById('calcView');
+    if (!calcView) return;
+    const observer = new MutationObserver(() => {
+      if (document.getElementById('playCourseBar')) {
+        exitHomeMode();
+        observer.disconnect();
+        // Re-observe for future course loads (e.g. round complete → new round)
+        setTimeout(watchForCourseLoad, 100);
+      }
+    });
+    observer.observe(calcView, { childList: true });
+  })();
+
   // Home screen button wiring
   document.getElementById('homeLaunchCourseBtn')?.addEventListener('click', () => {
-    exitHomeMode();
+    // Keep home screen visible — picker slides up over it
     openCoursePicker();
   });
 

@@ -100,7 +100,7 @@
 
     /* ── Course picker ──────────────────────────────────────── */
     .load-course-btn {
-      display: none;
+      display: none !important;
       position: fixed;
       bottom: calc(6px + 49px + 6px + env(safe-area-inset-bottom));
       left: 0; right: 0;
@@ -2483,29 +2483,28 @@
 .home-hero {
   position: relative;
   width: 100%;
-  height: calc(230px + env(safe-area-inset-top));
-  overflow: hidden;
-  border-radius: 0 0 22px 22px;
   background: #1a1a1a;
   flex-shrink: 0;
 }
 .home-hero img {
-  width: 100%; height: 100%;
-  object-fit: cover; object-position: center;
+  width: 100%; height: auto;
   display: block;
 }
 .home-hero-overlay {
   position: absolute; inset: 0;
   background: linear-gradient(to bottom,
-    rgba(0,0,0,0.08) 0%,
-    rgba(0,0,0,0.08) 30%,
-    rgba(0,0,0,0.65) 100%);
+    rgba(0,0,0,0.1) 0%,
+    rgba(0,0,0,0.0) 40%,
+    rgba(0,0,0,0.4) 100%);
 }
 .home-hero-title {
-  position: absolute; bottom: 18px; left: 18px;
+  position: absolute;
+  top: calc(50% + env(safe-area-inset-top) / 2);
+  left: 50%; transform: translate(-50%, -50%);
   font-size: 34px; font-weight: 800; color: #fff;
-  letter-spacing: -0.01em; line-height: 1;
-  text-shadow: 0 1px 8px rgba(0,0,0,0.3);
+  letter-spacing: 0.06em; line-height: 1;
+  text-align: center; white-space: nowrap;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.45);
 }
 
 /* Tagline */
@@ -2519,20 +2518,22 @@
   background: #fff;
   border-radius: 16px;
   border: 0.5px solid rgba(0,0,0,0.07);
-  padding: 14px 14px 12px;
-  display: flex; flex-direction: column; gap: 12px;
+  padding: 16px 16px 14px;
+  display: flex; flex-direction: column; gap: 0;
 }
-.home-card-top { display: flex; align-items: center; gap: 12px; }
+.home-card-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 14px;
+}
 .home-card-icon {
-  width: 44px; height: 44px; border-radius: 10px;
+  width: 48px; height: 48px; border-radius: 11px;
   background: #f0efeb;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.home-card-text { flex: 1; min-width: 0; }
-.home-card-title { font-size: 17px; font-weight: 700; color: #1a1a1a; line-height: 1.2; }
-.home-card-sub   { font-size: 13px; color: #888; margin-top: 3px; }
-.home-card-arrow { font-size: 20px; color: #bbb; font-weight: 300; flex-shrink: 0; margin-left: 4px; }
+.home-card-title { font-size: 17px; font-weight: 700; color: #1a1a1a; line-height: 1.2; margin-bottom: 4px; }
+.home-card-sub   { font-size: 13px; color: #888; margin-bottom: 16px; }
+.home-card-arrow { font-size: 22px; color: #bbb; font-weight: 300; line-height: 1; }
 
 .home-card-btn {
   width: 100%; padding: 17px; border: none; border-radius: 10px;
