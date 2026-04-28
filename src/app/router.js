@@ -937,18 +937,6 @@ initServices({
       if (liveOrientationActive && !_absOrientFired)
         window.addEventListener('deviceorientation', orientationHandler);
     }, 300);
-    setTimeout(() => {
-      if (lockPhase === 'live') {
-        stopLiveOrientation();
-        lockPhase = 'idle';
-        const deg = Math.round(windState.holeDeg);
-        const _cll5 = document.getElementById('compassLockLabel'); if (_cll5) _cll5.textContent = `Auto-locked: ${deg}°`;
-        windLockStrip.classList.remove('locking');
-        setLockIcon('locked', deg);
-        computeWindComponents(); updateWindEffectNote(); updateWindStripText(); saveWindPrefs();
-        updateWindSectionStatus();
-      }
-    }, 30000);
   });
 
   // ── Shared: apply fetched or manual wind data ────────────────────────
@@ -1003,12 +991,26 @@ initServices({
     applyWindData(speed, null, dir, `Manual entry · ${speed} m/s from ${bearingLabel(dir)}`);
   });
 
-  // ── Fetch wind + show location ────────────────────────────────────────
+  // ── Toast helper ──────────────────────────────────────────────────────
+  function showToast(msg, durationMs = 2200) {
+    let toast = document.getElementById('_windToast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = '_windToast';
+      toast.style.cssText = 'position:fixed;bottom:88px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.78);color:#fff;padding:10px 20px;border-radius:20px;font-size:15px;pointer-events:none;z-index:9999;transition:opacity 0.35s';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => { toast.style.opacity = '0'; }, durationMs);
+  }
+
+  // ── Fetch wind + lock direction (point-and-shoot) ─────────────────────
   document.getElementById('windRefresh').addEventListener('click', async (e) => {
-    e.stopPropagation(); // don't toggle collapsible
+    e.stopPropagation();
     hideOfflineFallback();
 
-    // Fast offline check before attempting any network calls
     if (!navigator.onLine) {
       showOfflineFallback('📶 No internet connection — wind data unavailable offline.');
       return;
@@ -1020,25 +1022,77 @@ initServices({
       return;
     }
 
+    // Request orientation permission immediately — must be inside user gesture
+    let orientPermGranted = false;
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      try {
+        const perm = await DeviceOrientationEvent.requestPermission();
+        orientPermGranted = perm === 'granted';
+      } catch(_e) { /* denied or unsupported */ }
+    } else {
+      orientPermGranted = typeof DeviceOrientationEvent !== 'undefined';
+    }
+
     navigator.geolocation.getCurrentPosition(async pos => {
       const lat = pos.coords.latitude;
       const lon = pos.coords.longitude;
       try {
         windText.textContent = '⏳ Fetching wind…';
 
-        const [locationName, w] = await Promise.all([
+        // Collect orientation readings for 1.5 s in parallel with wind fetch
+        let orientPromise = Promise.resolve(null);
+        if (orientPermGranted && !liveOrientationActive && lockPhase === 'idle') {
+          orientPromise = new Promise(resolve => {
+            const readings = [];
+            const _h = (ev) => {
+              const h = ev.webkitCompassHeading != null
+                ? ev.webkitCompassHeading
+                : (360 - (ev.alpha ?? 0)) % 360;
+              if (h != null && !isNaN(h)) readings.push(h);
+            };
+            let _absFired = false;
+            const _absH = (ev) => { _absFired = true; _h(ev); };
+            window.addEventListener('deviceorientationabsolute', _absH);
+            const _fbTimer = setTimeout(() => {
+              if (!_absFired) window.addEventListener('deviceorientation', _h);
+            }, 300);
+            setTimeout(() => {
+              clearTimeout(_fbTimer);
+              window.removeEventListener('deviceorientationabsolute', _absH);
+              window.removeEventListener('deviceorientation', _h);
+              if (readings.length === 0) { resolve(null); return; }
+              const r = readings.slice(-8).sort((a, b) => a - b);
+              resolve(r[Math.floor(r.length / 2)]);
+            }, 1500);
+          });
+        }
+
+        const [locationName, w, heading] = await Promise.all([
           fetchLocationName(lat, lon),
           fetchWind(lat, lon),
+          orientPromise,
         ]);
+
+        if (heading !== null) {
+          windState.holeDeg = Math.round(heading);
+          setCompassAngle(windState.holeDeg);
+          setLockIcon('locked', windState.holeDeg);
+          lockPhase = 'idle';
+          saveWindPrefs();
+        }
+
         applyWindData(w.speedMs, w.gustMs, w.dirDeg, locationName, w.tempC, w.feelsLike, w.rainPct);
 
-      } catch(e) {
-        // Distinguish offline (network error) from server errors
-        if (!navigator.onLine || e instanceof TypeError) {
+        if (heading !== null) {
+          showToast('Wind + direction locked');
+        }
+
+      } catch(err) {
+        if (!navigator.onLine || err instanceof TypeError) {
           showOfflineFallback('📶 Lost connection during fetch — set wind manually or retry when online.');
         } else {
           windText.textContent = '⚠ Wind service unavailable — try again';
-          // Still offer manual entry as a fallback
           windOfflineMsg.textContent = 'Wind service returned an error. You can set wind manually:';
           windOfflineMsg.classList.add('visible');
           windManualEntry.classList.add('visible');
@@ -1048,7 +1102,6 @@ initServices({
       if (err.code === err.PERMISSION_DENIED) {
         windText.textContent = '⚠ Location access denied — enable GPS and retry';
       } else {
-        // GPS timeout or unavailable — still allow manual wind
         showOfflineFallback('📍 Could not get GPS location. Set wind direction and speed manually:');
       }
     }, { timeout: 8000, maximumAge: 60000 });
