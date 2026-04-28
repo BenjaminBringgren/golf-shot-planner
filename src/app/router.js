@@ -1549,9 +1549,16 @@ initServices({
 // ── Home screen ───────────────────────────────────────────────────────────
 (function initHomeScreen() {
   const HERO_IMAGES = [
-    'assets/images/Green top.png',
-    'assets/images/Bunker.png',
-    'assets/images/Green top222.png',
+    'assets/images/Green top.webp',
+    'assets/images/Bunker.webp',
+    'assets/images/Green top222.webp',
+    'assets/images/Autumn.webp',
+    'assets/images/FW1.webp',
+    'assets/images/Green1.webp',
+    'assets/images/Mountains1.webp',
+    'assets/images/Pen green.webp',
+    'assets/images/Top3.webp',
+    'assets/images/Top4.webp',
   ];
 
   // Cycle hero image — runs on every HOME visit (not just page load)
