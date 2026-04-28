@@ -1562,11 +1562,12 @@ initServices({
   ];
 
   // Cycle hero image — runs on every HOME visit (not just page load)
-  const SESSION_KEY = 'heroImgIdx';
+  // localStorage used intentionally: sessionStorage is wiped when iOS backgrounds the app
+  const HERO_KEY = 'heroImgIdx';
   function cycleHeroImage() {
-    const lastIdx = parseInt(sessionStorage.getItem(SESSION_KEY) ?? '-1', 10);
+    const lastIdx = parseInt(localStorage.getItem(HERO_KEY) ?? '-1', 10);
     const nextIdx = (lastIdx + 1) % HERO_IMAGES.length;
-    sessionStorage.setItem(SESSION_KEY, nextIdx);
+    localStorage.setItem(HERO_KEY, nextIdx);
     const hero = document.getElementById('homeHero');
     if (!hero) return;
     let img = hero.querySelector('img');
