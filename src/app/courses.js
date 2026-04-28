@@ -70,7 +70,7 @@ export function loadCourseIntoPlay(id) {
   if (!c) return;
   saveActiveCourse(id, 0);
   applyHoleToPlay(c, 0);
-  _svc.switchTab?.('play');
+  _svc.switchTab?.('home');
   _svc.renderPlayCourseBar?.(id);
   _svc.updateCalcButtonVisibility?.();
   const scores = loadScores(id);

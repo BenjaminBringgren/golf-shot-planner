@@ -79,8 +79,8 @@
     .tab-btn.active svg polyline { stroke: #1a1a1a; }
     .tab-btn .tab-icon-bag { fill: #aaa; }
     .tab-btn.active .tab-icon-bag { fill: #1a1a1a; }
-    #panePlay, #panePrepare { display: none; }
-    #panePlay.active {
+    #paneHome, #panePrepare { display: none; }
+    #paneHome.active {
       display: flex; flex-direction: column; gap: 8px;
       padding: 10px 12px calc(77px + env(safe-area-inset-bottom) + 110px) 12px;
     }
@@ -88,12 +88,12 @@
       display: block;
       padding-bottom: calc(77px + env(safe-area-inset-bottom));
     }
-    #panePlay > .card, #calcView > .card { margin: 0; border-radius: 12px; }
-    #panePlay > .collapsible, #calcView > .collapsible { margin: 0; }
-    #panePlay > .gps-warning, #calcView > .gps-warning { margin: -4px 0 0; font-size: 12px; }
-    #panePlay > .cond-strip, #calcView > .cond-strip { margin: 0; }
-    #panePlay > #calcButton, #calcView > #calcButton { margin-top: 0; }
-    #panePlay > .collapsible + .gps-row, #calcView > .collapsible + .gps-row { margin-top: 0; }
+    #paneHome > .card, #calcView > .card { margin: 0; border-radius: 12px; }
+    #paneHome > .collapsible, #calcView > .collapsible { margin: 0; }
+    #paneHome > .gps-warning, #calcView > .gps-warning { margin: -4px 0 0; font-size: 12px; }
+    #paneHome > .cond-strip, #calcView > .cond-strip { margin: 0; }
+    #paneHome > #calcButton, #calcView > #calcButton { margin-top: 0; }
+    #paneHome > .collapsible + .gps-row, #calcView > .collapsible + .gps-row { margin-top: 0; }
     #calcButton { margin: 0; width: 100%; border-radius: 11px; padding: 20px; font-size: 17px; }
     #calcButton.course-active { display: none; }
     #playBodyPad { padding: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -1592,8 +1592,8 @@
     #calcButton { background: #1a1a1a; }
     #calcButton:hover { background: #333; }
     #calcButton.course-active { display: none; }
-    #panePlay.course-active-play { background: #f5f4f0; }
-    #panePlay:not(.course-active-play):not(.home-mode) { padding-bottom: calc(6px + 49px + 6px + env(safe-area-inset-bottom) + 58px) !important; }
+    #paneHome.course-active-play { background: #f5f4f0; }
+    #paneHome:not(.course-active-play):not(.home-mode) { padding-bottom: calc(6px + 49px + 6px + env(safe-area-inset-bottom) + 58px) !important; }
     #panePrepare.active { min-height: 100vh; }
     #playBodyPad { padding-top: 8px; }
     /* Par/cond strip in body area */
@@ -2028,14 +2028,14 @@
   /* ── First-run splash overlay ───────────────────────────────────────── */
   #splashOverlay {
     position: fixed; inset: 0; z-index: 3000;
-    background: #fffffe;
+    background: #f5f4f0;
     display: flex; flex-direction: column;
     overflow: hidden;
   }
   #splashOverlay.hidden { display: none; }
   #splashImg {
-    width: 100%; height: 42vh; object-fit: cover;
-    object-position: center; flex-shrink: 0; display: block;
+    width: 100%; height: auto;
+    flex-shrink: 0; display: block;
   }
   #splashBody {
     flex: 1; display: flex; flex-direction: column;
@@ -2470,11 +2470,11 @@
 /* Mode toggle: home-mode shows #homeScreen, hides #calcView and vice-versa */
 #homeScreen { display: none; flex-direction: column; gap: 12px; padding-bottom: calc(77px + env(safe-area-inset-bottom)); }
 #calcView { display: contents; }
-#panePlay.home-mode #homeScreen { display: flex; }
-#panePlay.home-mode #calcView { display: none; }
+#paneHome.home-mode #homeScreen { display: flex; }
+#paneHome.home-mode #calcView { display: none; }
 
 /* Remove panePlay side/top padding in home mode so hero bleeds edge-to-edge */
-#panePlay.active.home-mode {
+#paneHome.active.home-mode {
   padding: 0 0 0 0;
   gap: 0;
   background: #f5f4f0;

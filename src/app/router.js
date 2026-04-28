@@ -213,6 +213,7 @@ function buildCallbacks() {
     renderSavedRounds,
     updateLoadCourseBtn,
     updateCalcButtonVisibility,
+    navigateHome: () => switchTab('home'),
     // Shot-sheet / hole-flow callbacks
     commitShot:        (lie)    => commitShot(lie),
     holeOut:           ()       => holeOut(),
@@ -299,7 +300,7 @@ function switchTab(name) {
   // Reset scroll position on tab switch
   window.scrollTo(0, 0);
   if (pane) pane.scrollTop = 0;
-  if (name === 'play') {
+  if (name === 'home') {
     updateLoadCourseBtn();
     const _sess = loadActiveCourse();
     if (_sess.id) {
@@ -318,7 +319,7 @@ function switchTab(name) {
   const fab = document.getElementById('scoreFab');
   if (fab) {
     const courseActive = !!getActiveCourseId();
-    fab.classList.toggle('visible', name === 'play' && courseActive);
+    fab.classList.toggle('visible', name === 'home' && courseActive);
   }
   // Close drawer when switching tabs
   const drawer = document.getElementById('scoreDrawer');
@@ -331,7 +332,7 @@ function switchTab(name) {
   document.body.style.overflow = '';
 }
 
-document.getElementById('tabPlay')?.addEventListener('click', () => switchTab('play'));
+document.getElementById('tabHome')?.addEventListener('click', () => switchTab('home'));
 document.getElementById('tabPrepare')?.addEventListener('click', () => switchTab('prepare'));
 
 
@@ -1608,18 +1609,18 @@ initServices({
 
   // Enter/exit home mode — public so the tab switch logic can call them
   function enterHomeMode() {
-    document.getElementById('panePlay')?.classList.add('home-mode');
+    document.getElementById('paneHome')?.classList.add('home-mode');
     refreshHomePerf();
   }
   function exitHomeMode() {
-    document.getElementById('panePlay')?.classList.remove('home-mode');
+    document.getElementById('paneHome')?.classList.remove('home-mode');
   }
 
   // Patch switchTab so that returning to HOME shows the home screen when appropriate
   const _origSwitchTabHome = switchTab;
   switchTab = function(name) {
     _origSwitchTabHome(name);
-    if (name === 'play') {
+    if (name === 'home') {
       if (getActiveCourseId()) {
         exitHomeMode();
       } else {
@@ -1646,7 +1647,7 @@ initServices({
   // Home screen button wiring
   document.getElementById('homeLaunchCourseBtn')?.addEventListener('click', () => {
     // Keep home screen visible — picker slides up over it
-    openCoursePicker();
+    openCoursePicker(loadCourseIntoPlay);
   });
 
   document.getElementById('homeOpenCalcBtn')?.addEventListener('click', () => {

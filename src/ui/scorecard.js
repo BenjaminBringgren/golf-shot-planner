@@ -233,6 +233,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
         callbacks.updateLoadCourseBtn?.();
         callbacks.updateHoleCardMode?.();
         callbacks.updateCalcButtonVisibility?.();
+        callbacks.navigateHome?.();
       };
 
       document.getElementById('cancelRoundAbort').onclick = () => {
@@ -653,7 +654,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     }
   }
 
-  const playPane = document.getElementById('calcView') || document.getElementById('panePlay');
+  const playPane = document.getElementById('calcView') || document.getElementById('paneHome');
   playPane.insertBefore(bar, playPane.firstChild);
   callbacks.updateHoleCardMode?.();
 }
