@@ -82,10 +82,11 @@
     #paneHome, #panePrepare { display: none; }
     #paneHome.active {
       display: flex; flex-direction: column; gap: 8px;
-      padding: 10px 12px calc(77px + env(safe-area-inset-bottom) + 110px) 12px;
+      padding: calc(10px + env(safe-area-inset-top)) 12px calc(77px + env(safe-area-inset-bottom) + 110px) 12px;
     }
     #panePrepare.active {
       display: block;
+      padding-top: env(safe-area-inset-top);
       padding-bottom: calc(77px + env(safe-area-inset-bottom));
     }
     #paneHome > .card, #calcView > .card { margin: 0; border-radius: 12px; }
