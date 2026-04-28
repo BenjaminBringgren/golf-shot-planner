@@ -508,7 +508,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     pageOverlay.onclick = closeScorecardPage;
 
     const closeBtn = document.getElementById('scorecardPageClose');
-    if (closeBtn) closeBtn.onclick = closeScorecardPage;
+    if (closeBtn) closeBtn.onclick = (e) => { e.stopPropagation(); closeScorecardPage(); };
   }
 
   function closeScorecardPage() {
@@ -591,6 +591,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
 
     function startDismiss(e) {
       if (!_swipePage.classList.contains('open')) return;
+      if (e.target.closest?.('#scorecardPageClose')) return;
       dragStartY   = e.touches[0].clientY;
       dragCurrentY = 0;
       dismissMode  = true;
