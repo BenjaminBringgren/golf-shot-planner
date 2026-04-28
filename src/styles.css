@@ -2477,13 +2477,15 @@
 #panePlay.active.home-mode {
   padding: 0 0 0 0;
   gap: 0;
+  background: #f5f4f0;
 }
+#homeScreen { background: #f5f4f0; }
 
 /* Hero */
 .home-hero {
   position: relative;
   width: 100%;
-  background: #f5f4f0;
+  background: #f5f4f0 !important;
   flex-shrink: 0;
 }
 .home-hero img {
@@ -2491,6 +2493,7 @@
   display: block;
 }
 .home-hero-overlay {
+  display: none; /* removed — gradient was darkening the transparent cutout */
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   background: linear-gradient(to bottom,
