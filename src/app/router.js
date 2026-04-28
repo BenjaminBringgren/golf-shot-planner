@@ -1545,3 +1545,125 @@ initServices({
   wireChipRow('condChipRow',       'conditions');
   wireChipRow('condChipRowWeather','conditions');
 
+// ── Home screen ───────────────────────────────────────────────────────────
+(function initHomeScreen() {
+  const HERO_IMAGES = [
+    'assets/images/Green top.png',
+    'assets/images/Bunker.png',
+    'assets/images/Green top222.png',
+  ];
+
+  // Cycle hero image on each page load using sessionStorage counter
+  const SESSION_KEY = 'heroImgIdx';
+  const lastIdx = parseInt(sessionStorage.getItem(SESSION_KEY) ?? '-1', 10);
+  const nextIdx = (lastIdx + 1) % HERO_IMAGES.length;
+  sessionStorage.setItem(SESSION_KEY, nextIdx);
+
+  const hero = document.getElementById('homeHero');
+  if (hero) {
+    const img = document.createElement('img');
+    img.src = HERO_IMAGES[nextIdx];
+    img.alt = '';
+    hero.insertBefore(img, hero.firstChild);
+  }
+
+  // Read most recent round score across all courses
+  function getLastScore() {
+    try {
+      const all = JSON.parse(localStorage.getItem('golfRounds_v1')) || {};
+      let latestTime = 0, latestScore = null;
+      for (const rounds of Object.values(all)) {
+        if (!Array.isArray(rounds) || rounds.length === 0) continue;
+        const r = rounds[0]; // most recent first (unshifted on save)
+        const t = r.completedAt || 0;
+        if (t > latestTime && r.totalStrokes > 0) {
+          latestTime = t;
+          latestScore = r.totalStrokes;
+        }
+      }
+      return latestScore;
+    } catch(e) { return null; }
+  }
+
+  function refreshHomePerf() {
+    const scoreEl = document.getElementById('homeLastScore');
+    const hcpEl   = document.getElementById('homeHandicap');
+    if (!scoreEl || !hcpEl) return;
+
+    const score = getLastScore();
+    scoreEl.textContent = score !== null ? score : '—';
+
+    try {
+      const profile = loadProfile();
+      const hcp = parseFloat(profile.handicap);
+      if (!isNaN(hcp) && hcp >= 0) {
+        hcpEl.textContent = (hcp % 1 === 0 ? hcp.toFixed(0) : hcp.toFixed(1));
+        hcpEl.classList.add('home-perf-value-hcp');
+      } else {
+        hcpEl.textContent = '—';
+        hcpEl.classList.remove('home-perf-value-hcp');
+      }
+    } catch(e) { hcpEl.textContent = '—'; }
+  }
+
+  // Enter/exit home mode — public so the tab switch logic can call them
+  function enterHomeMode() {
+    document.getElementById('panePlay')?.classList.add('home-mode');
+    refreshHomePerf();
+    // Patch updateLoadCourseBtn to suppress fixed button in home mode
+    _suppressLoadCourseBtn = true;
+    document.getElementById('loadCourseBtn')?.classList.remove('visible');
+  }
+  function exitHomeMode() {
+    document.getElementById('panePlay')?.classList.remove('home-mode');
+    _suppressLoadCourseBtn = false;
+  }
+
+  // Patch updateLoadCourseBtn to suppress the fixed "Load a course" pill
+  // when the home screen is showing (it has its own LAUNCH COURSE button).
+  let _suppressLoadCourseBtn = false;
+  const _origUpdateLoadCourseBtn = updateLoadCourseBtn;
+  updateLoadCourseBtn = function() {
+    _origUpdateLoadCourseBtn();
+    if (_suppressLoadCourseBtn) {
+      document.getElementById('loadCourseBtn')?.classList.remove('visible');
+    }
+  };
+
+  // Patch switchTab so that returning to HOME shows the home screen when appropriate
+  const _origSwitchTabHome = switchTab;
+  switchTab = function(name) {
+    _origSwitchTabHome(name);
+    if (name === 'play') {
+      if (getActiveCourseId()) {
+        exitHomeMode();
+      } else {
+        enterHomeMode();
+      }
+    }
+  };
+
+  // Home screen button wiring
+  document.getElementById('homeLaunchCourseBtn')?.addEventListener('click', () => {
+    exitHomeMode();
+    openCoursePicker();
+  });
+
+  document.getElementById('homeOpenCalcBtn')?.addEventListener('click', () => {
+    exitHomeMode();
+    updateLoadCourseBtn();
+  });
+
+  document.getElementById('homeViewAllBtn')?.addEventListener('click', () => {
+    switchTab('prepare');
+    showMgSub('mgSubStats');
+  });
+
+  // Initialise on page load
+  if (getActiveCourseId()) {
+    exitHomeMode();
+  } else {
+    enterHomeMode();
+  }
+})();
+

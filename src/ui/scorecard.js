@@ -653,7 +653,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     }
   }
 
-  const playPane = document.getElementById('panePlay');
+  const playPane = document.getElementById('calcView') || document.getElementById('panePlay');
   playPane.insertBefore(bar, playPane.firstChild);
   callbacks.updateHoleCardMode?.();
 }
