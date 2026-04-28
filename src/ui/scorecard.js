@@ -1364,6 +1364,7 @@ function _dismissRoundComplete(courseId, callbacks = {}) {
   callbacks.updateLoadCourseBtn?.();
   callbacks.updateHoleCardMode?.();
   callbacks.updateCalcButtonVisibility?.();
+  callbacks.navigateHome?.();
 }
 
 // ── Hide FAB when no course is active ─────────────────────────────────────

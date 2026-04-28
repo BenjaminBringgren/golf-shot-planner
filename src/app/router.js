@@ -1554,18 +1554,21 @@ initServices({
     'assets/images/Green top222.png',
   ];
 
-  // Cycle hero image on each page load using sessionStorage counter
+  // Cycle hero image — runs on every HOME visit (not just page load)
   const SESSION_KEY = 'heroImgIdx';
-  const lastIdx = parseInt(sessionStorage.getItem(SESSION_KEY) ?? '-1', 10);
-  const nextIdx = (lastIdx + 1) % HERO_IMAGES.length;
-  sessionStorage.setItem(SESSION_KEY, nextIdx);
-
-  const hero = document.getElementById('homeHero');
-  if (hero) {
-    const img = document.createElement('img');
+  function cycleHeroImage() {
+    const lastIdx = parseInt(sessionStorage.getItem(SESSION_KEY) ?? '-1', 10);
+    const nextIdx = (lastIdx + 1) % HERO_IMAGES.length;
+    sessionStorage.setItem(SESSION_KEY, nextIdx);
+    const hero = document.getElementById('homeHero');
+    if (!hero) return;
+    let img = hero.querySelector('img');
+    if (!img) {
+      img = document.createElement('img');
+      img.alt = '';
+      hero.insertBefore(img, hero.firstChild);
+    }
     img.src = HERO_IMAGES[nextIdx];
-    img.alt = '';
-    hero.insertBefore(img, hero.firstChild);
   }
 
   // Read most recent round score across all courses
@@ -1610,6 +1613,7 @@ initServices({
   // Enter/exit home mode — public so the tab switch logic can call them
   function enterHomeMode() {
     document.getElementById('paneHome')?.classList.add('home-mode');
+    cycleHeroImage();
     refreshHomePerf();
   }
   function exitHomeMode() {
