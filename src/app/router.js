@@ -1551,7 +1551,7 @@ initServices({
   const HERO_IMAGES = [
     'assets/images/Green top.webp',
     'assets/images/Bunker.webp',
-    'assets/images/Green top222.webp',
+    'assets/images/Green top2.webp',
     'assets/images/Autumn.webp',
     'assets/images/FW1.webp',
     'assets/images/Green1.webp',
