@@ -46,7 +46,7 @@ import {
   renderMgStatTiles, renderMgCarryBars, renderSavedRounds,
 } from './rounds.js';
 import {
-  initHoleFlowServices,
+  initHoleFlowServices, setHoleExpected,
   commitShot, holeOut, penaltyShot, setPutts, finishHole,
   back as _flowBack, edit as _flowEdit, nextHole, undoLastShot,
   getState as getHoleFlowState, subscribe as subscribeHoleFlow,
@@ -1422,6 +1422,12 @@ initServices({
     const inputs = readInputsFromDOM();
     inputs.clearOverrides = clearOverrides;
     const plan = computePlan(inputs);
+    if (!plan.isError) {
+      const _exp = plan.isPar3
+        ? plan.par3.scoreVal3
+        : (plan.ordered.find(p => p.type === plan.activePlanType) ?? plan.ordered[0])?.score;
+      setHoleExpected(_exp);
+    }
     renderPlan(plan, {
       windState, _holeHcpAdj, _overrideCourseId, _overrideHoleIdx,
       par3ClubOverrides, teeOverrides, shot2Overrides, approachOverrides, gpsShot2Overrides,

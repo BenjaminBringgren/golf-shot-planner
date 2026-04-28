@@ -114,9 +114,12 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
         vsExpected = state.totalShots - expected;
       }
     }
-    if (state.stage === STAGE_RESULT && state.getExpectedStrokes) {
-      const expected = state.getExpectedStrokes(0, false);
-      vsExpected = state.totalShots - expected;
+    if (state.stage === STAGE_RESULT) {
+      if (state.holeExpected != null) {
+        vsExpected = state.totalShots - state.holeExpected;
+      } else if (state.getExpectedStrokes) {
+        vsExpected = state.totalShots - state.getExpectedStrokes(0, false);
+      }
     }
 
     // ── Activity header ─────────────────────────────────────────────────

@@ -38,8 +38,8 @@
       border-top: 0.5px solid rgba(0,0,0,0.1);
       border-bottom: none;
       margin-bottom: 0;
-      padding-top: 6px;
-      padding-bottom: calc(env(safe-area-inset-bottom) + 6px);
+      padding-top: 0;
+      padding-bottom: env(safe-area-inset-bottom);
       max-width: 520px;
       margin-left: auto;
       margin-right: auto;
@@ -51,8 +51,7 @@
       align-items: center;
       justify-content: center;
       gap: 3px;
-      padding: 8px 0;
-      min-height: 49px;
+      padding: 16px 0;
       background: none;
       border: none;
       border-bottom: none;

@@ -31,6 +31,10 @@ let _milestones   = [];
 // Signature: (remaining: number, inRough: boolean) => number
 let _getExpectedStrokes = null;
 
+// Expected score for this hole captured at tee time (from the carousel's best plan).
+// Used for vs-Expected at STAGE_RESULT. Locked once set so mid-hole recalculates don't overwrite it.
+let _holeExpected = null;
+
 const _listeners = [];
 
 // ── Pub-sub ───────────────────────────────────────────────────────────────────
@@ -52,6 +56,14 @@ export function initHoleFlowServices({ getExpectedStrokes }) {
   _getExpectedStrokes = getExpectedStrokes;
 }
 
+// Called by router.js after computePlan(). Only locks in the first value — mid-hole
+// recalculates (e.g. after a bad tee shot) must not overwrite the tee-time baseline.
+export function setHoleExpected(score) {
+  if (_holeExpected === null && score != null && isFinite(score)) {
+    _holeExpected = score;
+  }
+}
+
 // ── Init / reset for a new hole ───────────────────────────────────────────────
 export function initHole(courseId, holeIdx, par, gpsShotCount) {
   _courseId = courseId;
@@ -67,6 +79,7 @@ export function initHole(courseId, holeIdx, par, gpsShotCount) {
     _putts        = saved.putts ?? 2;
     _holedFromLie = saved.holedFromLie ?? null;
     _milestones   = saved.milestones ?? [];
+    _holeExpected = saved.holeExpected ?? null;
     _notify();
     return;
   }
@@ -87,6 +100,7 @@ export function initHole(courseId, holeIdx, par, gpsShotCount) {
   // Fresh hole — auto-log Tee as shot 1
   _stage        = STAGE_SHOTS;
   _holedFromLie = null;
+  _holeExpected = null;
   _shots        = ['tee'];
 
   // GPS pre-fill: if GPS tracked N shots, pre-fill shots 2..N as 'fw'
@@ -126,6 +140,7 @@ function _persist() {
   saveHoleFlowState(_courseId, _holeIdx, {
     stage: _stage, shots: _shots, putts: _putts,
     holedFromLie: _holedFromLie, milestones: _milestones,
+    holeExpected: _holeExpected,
   });
 }
 
@@ -304,5 +319,6 @@ export function getState() {
     tier,
     isFirstOfType: isFirst,
     getExpectedStrokes: _getExpectedStrokes,
+    holeExpected: _holeExpected,
   };
 }
