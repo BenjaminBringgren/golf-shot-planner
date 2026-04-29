@@ -91,7 +91,6 @@
     #paneHome > .card, #calcView > .card { margin: 0; border-radius: 12px; }
     #paneHome > .collapsible, #calcView > .collapsible { margin: 0; }
     #paneHome > .gps-warning, #calcView > .gps-warning { margin: -4px 0 0; font-size: 12px; }
-    #paneHome > .cond-strip, #calcView > .cond-strip { margin: 0; }
     #paneHome > #calcButton, #calcView > #calcButton { margin-top: 0; }
     #paneHome > .collapsible + .gps-row, #calcView > .collapsible + .gps-row { margin-top: 0; }
     #calcButton { margin: 0; width: 100%; border-radius: 11px; padding: 20px; font-size: 17px; }
@@ -1597,9 +1596,7 @@
     #paneHome:not(.course-active-play):not(.home-mode) { padding-bottom: calc(6px + 49px + 6px + env(safe-area-inset-bottom) + 58px) !important; }
     #panePrepare.active { min-height: 100vh; }
     #playBodyPad { padding-top: 8px; }
-    /* Par/cond strip in body area */
     #gpsAndCondWrap { padding: 0 14px; margin-bottom: 2px; }
-    #parCondGrid { background: transparent; }
     .recalc-link {
       display: none; text-align: center; margin-top: 0; margin-bottom: 20px;
       font-size: 13px; color: #aaa;
@@ -1989,15 +1986,8 @@
       width: 18px; border-radius: 3px; background: #888;
     }
 
-/* ── Par & Conditions — compact inline strip ────────────── */
+/* ── Par & Conditions chips ─────────────────────────────── */
     .chip-control-grid { display: none; }
-    .cond-strip {
-      display: flex; align-items: center; justify-content: space-between; gap: 6px; flex-wrap: wrap;
-      background: transparent !important; border: none !important;
-      padding: 2px 14px !important;
-    }
-    .cond-strip-label { font-size: 11px; color: #bbb; flex-shrink: 0; }
-    .cond-strip-sep { display: none; }
     .chip-control-row { display: flex; gap: 6px; }
     .chip-control-btn {
       background: #eeede9 !important; border: none !important;

@@ -120,25 +120,6 @@
 
   <!-- Course bar injected here by JS (playCourseBar) -->
 
-  <!-- ── Par + Conditions strip ─────────────────────────────────────────── -->
-  <div class="cond-strip" id="parCondGrid">
-    <div style="display:flex;align-items:center;gap:6px;">
-      <span class="cond-strip-label" id="parChipGroup">Par</span>
-      <div class="chip-control-row" id="parChipRow">
-        <button class="chip-control-btn" data-value="3" type="button">3</button>
-        <button class="chip-control-btn active" data-value="4" type="button">4</button>
-        <button class="chip-control-btn" data-value="5" type="button">5</button>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:6px;">
-      <span class="cond-strip-label">Cond.</span>
-      <div class="chip-control-row" id="condChipRow">
-        <button class="chip-control-btn active" data-value="soft" type="button">Soft</button>
-        <button class="chip-control-btn" data-value="firm" type="button">Firm</button>
-      </div>
-    </div>
-  </div>
-
   <!-- ── This Hole card (manual mode / no course) ─────────────────────── -->
   <div class="card" id="thisHoleCard">
     <!-- Compact summary hidden — course bar handles it -->
@@ -151,6 +132,23 @@
     <!-- Full manual fields — hidden when course is active -->
     <div class="hole-manual-fields">
       <div class="card-title">This Hole</div>
+      <div style="display:flex;gap:20px;">
+        <div>
+          <label>Par</label>
+          <div class="chip-control-row" id="parChipRow">
+            <button class="chip-control-btn" data-value="3" type="button">3</button>
+            <button class="chip-control-btn active" data-value="4" type="button">4</button>
+            <button class="chip-control-btn" data-value="5" type="button">5</button>
+          </div>
+        </div>
+        <div>
+          <label>Cond.</label>
+          <div class="chip-control-row" id="condChipRow">
+            <button class="chip-control-btn active" data-value="soft" type="button">Soft</button>
+            <button class="chip-control-btn" data-value="firm" type="button">Firm</button>
+          </div>
+        </div>
+      </div>
       <label for="holeLength">Hole Length (meters)</label>
       <input type="number" id="holeLength" placeholder="e.g. 380" min="50" max="600" />
     </div>
