@@ -79,8 +79,6 @@
     .tab-btn .tab-icon-bag { fill: #aaa; }
     .tab-btn.active .tab-icon-bag { fill: #1a1a1a; }
     #paneHome, #panePlay, #panePrepare { display: none; }
-    #tabPlay { display: none; }
-    #tabPlay.visible { display: flex; }
     #paneHome.active {
       display: flex; flex-direction: column; gap: 0;
       padding: 0;
@@ -2533,6 +2531,20 @@
 .home-card-btn-primary:hover { background: #333; }
 .home-card-btn-secondary { background: #f0efeb; color: #1a1a1a; }
 .home-card-btn-secondary:hover { background: #e5e3df; }
+
+/* ── Play tab hero strip + landing ───────────────────────────────────────── */
+.play-hero {
+  width: 100%; height: 120px; flex-shrink: 0;
+  background-size: cover; background-position: center 40%;
+  background-color: #2a2a2a;
+  position: relative; overflow: hidden;
+}
+.play-hero::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.42) 100%);
+}
+.play-landing { display: flex; flex-direction: column; gap: 8px; }
+.play-landing.hidden { display: none; }
 
 /* ── Home stats dashboard ─────────────────────────────────────────────────── */
 .home-stats { margin: 0 12px; }

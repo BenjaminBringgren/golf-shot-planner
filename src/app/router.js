@@ -311,6 +311,10 @@ function switchTab(name) {
       try {
         renderScoreEntry(_sess.id, _sess.holeIdx ?? 0, loadScores(_sess.id), buildCallbacks());
       } catch(e) {}
+    } else {
+      // Restore landing cards when returning to Play with no active course
+      document.getElementById('playLanding')?.classList.remove('hidden');
+      document.getElementById('playHero')?.classList.remove('hidden');
     }
   }
   if (name === 'prepare') {
@@ -354,7 +358,7 @@ document.getElementById('tabPrepare')?.addEventListener('click', () => switchTab
   document.getElementById('mgBackScoreBreakdown')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackPuttsBreakdown')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackAvgStrokes')?.addEventListener('click', () => showMgSub('mgSubStats'));
-  document.getElementById('mgBackBaseline')?.addEventListener('click', () => showMgSub('mgSubAvgStrokes'));
+  document.getElementById('mgBackBaseline')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackRoundsHistory')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackCourses')?.addEventListener('click', showMgHub);
   // Edit bag toggle
@@ -472,12 +476,12 @@ initServices({
       if (weatherCondRow) weatherCondRow.style.display = 'none';
     }
   }
-  // Show load-course button only when no course is active
+  // Show load-course button only when no course is active; hide play landing when course active
   function updateLoadCourseBtn() {
-    const btn = document.getElementById('loadCourseBtn');
-    if (!btn) return;
     const courseActive = !!getActiveCourseId();
-    btn.classList.toggle('visible', !courseActive);
+    document.getElementById('loadCourseBtn')?.classList.toggle('visible', !courseActive);
+    document.getElementById('playLanding')?.classList.toggle('hidden', courseActive);
+    document.getElementById('playHero')?.classList.toggle('hidden', courseActive);
   }
 
   const saved = loadBag();
@@ -1762,19 +1766,17 @@ initServices({
     const nextIdx = (lastIdx + 1) % HERO_IMAGES.length;
     localStorage.setItem(KEY_HERO_IMG_IDX, nextIdx);
     const hero = document.getElementById('homeHero');
-    if (!hero) return;
-    let img = hero.querySelector('img');
-    if (!img) {
-      img = document.createElement('img');
-      img.alt = '';
-      hero.insertBefore(img, hero.firstChild);
+    if (hero) {
+      let img = hero.querySelector('img');
+      if (!img) {
+        img = document.createElement('img');
+        img.alt = '';
+        hero.insertBefore(img, hero.firstChild);
+      }
+      img.src = HERO_IMAGES[nextIdx];
     }
-    img.src = HERO_IMAGES[nextIdx];
-  }
-
-  // Show the Play tab button (once shown it stays visible)
-  function showPlayTab() {
-    document.getElementById('tabPlay')?.classList.add('visible');
+    const playHero = document.getElementById('playHero');
+    if (playHero) playHero.style.backgroundImage = `url(${HERO_IMAGES[nextIdx]})`;
   }
 
   // Patch switchTab so HOME always refreshes hero/quote/perf
@@ -1794,7 +1796,6 @@ initServices({
     if (!calcView) return;
     const observer = new MutationObserver(() => {
       if (document.getElementById('playCourseBar')) {
-        showPlayTab();
         switchTab('play');
         observer.disconnect();
         // Re-observe for future course loads (e.g. round complete → new round)
@@ -1810,9 +1811,8 @@ initServices({
   });
 
   document.getElementById('homeOpenCalcBtn')?.addEventListener('click', () => {
-    showPlayTab();
-    switchTab('play');
-    updateLoadCourseBtn();
+    document.getElementById('playLanding')?.classList.add('hidden');
+    document.getElementById('playHero')?.classList.add('hidden');
   });
 
   document.getElementById('homeViewAllBtn')?.addEventListener('click', () => {
@@ -1822,7 +1822,7 @@ initServices({
 
   // Initialise on page load
   if (getActiveCourseId()) {
-    showPlayTab();
+    cycleHeroImage();
     switchTab('play');
   } else {
     switchTab('home');

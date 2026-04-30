@@ -63,49 +63,6 @@
       </div>
     </div>
 
-    <!-- Tagline -->
-    <div class="home-tagline">
-      <div class="home-tagline-main">Ready for your round?</div>
-      <div class="home-tagline-sub">Plan your shots with precision.</div>
-    </div>
-
-    <!-- Start a Round card -->
-    <div class="home-card">
-      <div class="home-card-header">
-        <div class="home-card-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-               stroke="#444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="8" y1="2" x2="8" y2="20"/>
-            <path d="M8 2l10 4.5L8 11"/>
-            <ellipse cx="8" cy="20" rx="5" ry="1.5"/>
-          </svg>
-        </div>
-        <div class="home-card-arrow">›</div>
-      </div>
-      <div class="home-card-title">Start a Round</div>
-      <div class="home-card-sub">Load a course and track your score</div>
-      <button class="home-card-btn home-card-btn-primary" id="homeLaunchCourseBtn" type="button">LAUNCH COURSE</button>
-    </div>
-
-    <!-- Shot Planner card -->
-    <div class="home-card">
-      <div class="home-card-header">
-        <div class="home-card-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-               stroke="#444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="7" rx="1"/>
-            <rect x="14" y="3" width="7" height="7" rx="1"/>
-            <rect x="3" y="14" width="7" height="7" rx="1"/>
-            <rect x="14" y="14" width="7" height="7" rx="1"/>
-          </svg>
-        </div>
-        <div class="home-card-arrow">›</div>
-      </div>
-      <div class="home-card-title">Shot Planner</div>
-      <div class="home-card-sub">Calculate carry, wind, and elevation</div>
-      <button class="home-card-btn home-card-btn-secondary" id="homeOpenCalcBtn" type="button">OPEN CALCULATOR</button>
-    </div>
-
     <!-- Stats dashboard -->
     <div class="home-stats" id="homeStats">
       <div class="home-stats-header">
@@ -127,6 +84,49 @@
 
   <!-- ══ PLAY TAB ═════════════════════════════════════════════════════════ -->
   <div class="tab-pane" id="panePlay">
+
+  <!-- ── Play landing (hidden when course is active) ──────────────────────── -->
+  <div class="play-hero" id="playHero"></div>
+  <div class="play-landing" id="playLanding">
+
+    <!-- Start a Round card -->
+    <div class="home-card">
+      <div class="home-card-header">
+        <div class="home-card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+               stroke="#444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="8" y1="2" x2="8" y2="20"/>
+            <path d="M8 2l10 4.5L8 11"/>
+            <ellipse cx="8" cy="20" rx="5" ry="1.5"/>
+          </svg>
+        </div>
+        <div class="home-card-arrow">›</div>
+      </div>
+      <div class="home-card-title">Start a Round</div>
+      <div class="home-card-sub">Load a course and track your score</div>
+      <button class="home-card-btn home-card-btn-primary" id="homeLaunchCourseBtn" type="button">LAUNCH COURSE</button>
+    </div>
+
+    <!-- Calculator card -->
+    <div class="home-card">
+      <div class="home-card-header">
+        <div class="home-card-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+               stroke="#444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="7" height="7" rx="1"/>
+            <rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <rect x="14" y="14" width="7" height="7" rx="1"/>
+          </svg>
+        </div>
+        <div class="home-card-arrow">›</div>
+      </div>
+      <div class="home-card-title">Shot Planner</div>
+      <div class="home-card-sub">Calculate carry, wind, and elevation</div>
+      <button class="home-card-btn home-card-btn-secondary" id="homeOpenCalcBtn" type="button">OPEN CALCULATOR</button>
+    </div>
+
+  </div>
 
   <!-- ── Calculator view ───────────────────────────────────────────────────── -->
   <div id="calcView">
