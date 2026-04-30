@@ -1776,9 +1776,11 @@ initServices({
     }
     const playHeroImg = document.getElementById('playHeroImg');
     if (playHeroImg) playHeroImg.src = HERO_IMAGES[nextIdx];
+    const mgHeroImg = document.getElementById('mgHeroImg');
+    if (mgHeroImg) mgHeroImg.src = HERO_IMAGES[nextIdx];
   }
 
-  // Patch switchTab so HOME always refreshes hero/quote/perf
+  // Patch switchTab so HOME always refreshes hero/quote/perf; My Golf gets same hero image
   const _origSwitchTabHome = switchTab;
   switchTab = function(name) {
     _origSwitchTabHome(name);
@@ -1786,6 +1788,8 @@ initServices({
       cycleHeroImage();
       cycleQuote();
       refreshHomeStats();
+    } else if (name === 'prepare') {
+      cycleHeroImage();
     }
   };
 
