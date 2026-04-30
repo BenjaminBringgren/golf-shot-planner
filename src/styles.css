@@ -2534,10 +2534,11 @@
 
 /* ── Play tab hero strip + landing ───────────────────────────────────────── */
 .play-hero {
-  width: 100%; height: 120px; flex-shrink: 0;
-  background-size: cover; background-position: center 40%;
+  width: 100%; flex-shrink: 0;
+  background-size: 100% auto; background-position: top center;
   background-color: #2a2a2a;
   position: relative; overflow: hidden;
+  padding-bottom: 32%; /* preserve natural image aspect ratio, cropped by overflow:hidden */
 }
 .play-hero::before {
   content: ''; position: absolute; inset: 0;
@@ -2556,17 +2557,17 @@
 #panePlay #calcView.open { display: contents; }
 
 .calc-close-row {
-  display: flex; justify-content: flex-start; padding: 4px 0 2px;
+  display: flex; justify-content: flex-end; padding: 4px 0 0;
 }
 .calc-close-row.hidden { display: none; }
 .calc-close-btn {
-  display: flex; align-items: center; gap: 7px;
-  background: none; border: none; padding: 8px 0;
-  font-size: 13px; font-weight: 600; color: #888;
-  cursor: pointer; -webkit-tap-highlight-color: transparent;
-  font-family: inherit;
+  background: #f0efeb; color: #bbb;
+  border: none; border-radius: 8px; cursor: pointer;
+  font-size: 17px; padding: 0; width: 42px; height: 42px; margin: 0;
+  display: flex; align-items: center; justify-content: center;
+  -webkit-tap-highlight-color: transparent; font-family: inherit;
 }
-.calc-close-btn:active { color: #555; }
+.calc-close-btn:active { background: #e5e3df; }
 
 /* ── Home stats dashboard ─────────────────────────────────────────────────── */
 .home-stats { margin: 0 12px; }
