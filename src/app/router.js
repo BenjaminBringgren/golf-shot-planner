@@ -12,6 +12,7 @@ import {
   loadCourses, loadScores, loadProfile,
   saveProfile, getScoringMode,
   loadCollapseState, saveCollapseState,
+  KEY_HERO_IMG_IDX, KEY_HERO_QUOTE_IDX,
 } from '../storage/storage.js';
 import {
   teeMarked, completedShots,
@@ -43,7 +44,7 @@ import {
 } from './courses.js';
 import {
   showMgSub, showMgHub, refreshMgHub,
-  renderMgStatTiles, renderMgCarryBars, renderSavedRounds,
+  renderMgCarryBars, renderSavedRounds, refreshHomeStats,
 } from './rounds.js';
 import {
   initHoleFlowServices, setHoleExpected,
@@ -1741,13 +1742,12 @@ initServices({
     { text: '"I practice until I don\'t have to think about it."',                            attrib: '— Tiger Woods' },
   ];
 
-  const QUOTE_KEY = 'heroQuoteIdx';
   function cycleQuote() {
-    const lastIdx = parseInt(localStorage.getItem(QUOTE_KEY) ?? '-1', 10);
+    const lastIdx = parseInt(localStorage.getItem(KEY_HERO_QUOTE_IDX) ?? '-1', 10);
     let nextIdx;
     do { nextIdx = Math.floor(Math.random() * HERO_QUOTES.length); }
     while (nextIdx === lastIdx && HERO_QUOTES.length > 1);
-    localStorage.setItem(QUOTE_KEY, nextIdx);
+    localStorage.setItem(KEY_HERO_QUOTE_IDX, nextIdx);
     const q = HERO_QUOTES[nextIdx];
     const textEl  = document.getElementById('heroQuoteText');
     const attribEl = document.getElementById('heroQuoteAttrib');
@@ -1757,11 +1757,10 @@ initServices({
 
   // Cycle hero image — runs on every HOME visit (not just page load)
   // localStorage used intentionally: sessionStorage is wiped when iOS backgrounds the app
-  const HERO_KEY = 'heroImgIdx';
   function cycleHeroImage() {
-    const lastIdx = parseInt(localStorage.getItem(HERO_KEY) ?? '-1', 10);
+    const lastIdx = parseInt(localStorage.getItem(KEY_HERO_IMG_IDX) ?? '-1', 10);
     const nextIdx = (lastIdx + 1) % HERO_IMAGES.length;
-    localStorage.setItem(HERO_KEY, nextIdx);
+    localStorage.setItem(KEY_HERO_IMG_IDX, nextIdx);
     const hero = document.getElementById('homeHero');
     if (!hero) return;
     let img = hero.querySelector('img');
@@ -1771,45 +1770,6 @@ initServices({
       hero.insertBefore(img, hero.firstChild);
     }
     img.src = HERO_IMAGES[nextIdx];
-  }
-
-  // Read most recent round score across all courses
-  function getLastScore() {
-    try {
-      const all = JSON.parse(localStorage.getItem('golfRounds_v1')) || {};
-      let latestTime = 0, latestScore = null;
-      for (const rounds of Object.values(all)) {
-        if (!Array.isArray(rounds) || rounds.length === 0) continue;
-        const r = rounds[0]; // most recent first (unshifted on save)
-        const t = r.completedAt || 0;
-        if (t > latestTime && r.totalStrokes > 0) {
-          latestTime = t;
-          latestScore = r.totalStrokes;
-        }
-      }
-      return latestScore;
-    } catch(e) { return null; }
-  }
-
-  function refreshHomePerf() {
-    const scoreEl = document.getElementById('homeLastScore');
-    const hcpEl   = document.getElementById('homeHandicap');
-    if (!scoreEl || !hcpEl) return;
-
-    const score = getLastScore();
-    scoreEl.textContent = score !== null ? score : '—';
-
-    try {
-      const profile = loadProfile();
-      const hcp = parseFloat(profile.handicap);
-      if (!isNaN(hcp) && hcp >= 0) {
-        hcpEl.textContent = (hcp % 1 === 0 ? hcp.toFixed(0) : hcp.toFixed(1));
-        hcpEl.classList.add('home-perf-value-hcp');
-      } else {
-        hcpEl.textContent = '—';
-        hcpEl.classList.remove('home-perf-value-hcp');
-      }
-    } catch(e) { hcpEl.textContent = '—'; }
   }
 
   // Show the Play tab button (once shown it stays visible)
@@ -1824,7 +1784,7 @@ initServices({
     if (name === 'home') {
       cycleHeroImage();
       cycleQuote();
-      refreshHomePerf();
+      refreshHomeStats();
     }
   };
 

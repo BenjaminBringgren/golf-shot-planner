@@ -265,13 +265,6 @@
     .lrh-right { text-align: right; }
     .lrh-score { font-size: 17px; font-weight: 700; color: #1a1a1a; }
     .lrh-diff { font-size: 13px; font-weight: 600; margin-top: 1px; }
-    /* Stat tiles */
-    .mg-stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px; }
-    .mg-stat-tile { background: #f0efeb; border-radius: 9px; padding: 11px 13px; }
-    .mg-stat-val  { font-size: 22px; font-weight: 700; color: #1a1a1a; line-height: 1; }
-    .mg-stat-lbl  { font-size: 11px; color: #888; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.3px; }
-    .mg-stat-tile.tappable { cursor: pointer; -webkit-tap-highlight-color: transparent; }
-    .mg-stat-tile.tappable:active { background: #e5e3df; }
     .mg-breakdown-card { background: #fff; border-radius: 12px; border: 0.5px solid rgba(0,0,0,0.08); overflow: hidden; }
     .mg-breakdown-title { font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em; padding: 12px 14px 8px; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
     .mg-breakdown-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.05); }
@@ -289,14 +282,6 @@
       padding: 14px 14px 6px;
     }
 
-    /* Rounds list in My Stats */
-    .mg-rounds-card {
-      margin: 0 12px 12px; background: #fff;
-      border: 0.5px solid rgba(0,0,0,0.07); border-radius: 12px; overflow: hidden;
-    }
-    .mg-score-over   { color: #3a6fc4; }
-    .mg-score-under  { color: #c0392b; }
-    .mg-score-even   { color: #aaa; }
     .mg-chart-strip {
       display: flex; border-top: 0.5px solid rgba(0,0,0,0.05);
     }
@@ -2549,41 +2534,82 @@
 .home-card-btn-secondary { background: #f0efeb; color: #1a1a1a; }
 .home-card-btn-secondary:hover { background: #e5e3df; }
 
-/* Recent Performance */
-.home-perf { margin: 0 12px; }
-.home-perf-header {
+/* ── Home stats dashboard ─────────────────────────────────────────────────── */
+.home-stats { margin: 0 12px; }
+.home-stats-header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 10px;
 }
-.home-perf-label {
+.home-stats-label {
   font-size: 11px; font-weight: 700; color: #888;
   text-transform: uppercase; letter-spacing: 0.06em;
 }
-.home-perf-viewall {
+.home-stats-viewall {
   font-size: 13px; font-weight: 600; color: #1a1a1a;
   background: none; border: none; padding: 0; margin: 0;
   width: auto; cursor: pointer;
-  border-bottom: 1px solid #1a1a1a; border-radius: 0;
-  line-height: 1.2;
+  border-bottom: 1px solid #1a1a1a; border-radius: 0; line-height: 1.2;
 }
-.home-perf-viewall:hover { background: none; color: #555; border-bottom-color: #555; }
-.home-perf-tiles {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+.home-stats-viewall:hover { color: #555; border-bottom-color: #555; }
+.home-stats-empty {
+  font-size: 15px; color: #aaa; padding: 16px 0; text-align: center;
 }
-.home-perf-tile {
+.home-stats-body { display: flex; flex-direction: column; gap: 8px; }
+.home-stats-body.hidden, .home-stats-empty.hidden { display: none; }
+
+.home-sparkline-card {
+  background: #fff; border-radius: 12px;
+  border: 0.5px solid rgba(0,0,0,0.07); overflow: hidden;
+}
+.home-stat-row {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+}
+.home-stat-tile {
   background: #fff; border-radius: 12px;
   border: 0.5px solid rgba(0,0,0,0.07);
-  padding: 16px 14px;
-  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  padding: 13px 12px; display: flex; flex-direction: column;
+  align-items: flex-start; gap: 4px;
 }
-.home-perf-value {
-  font-size: 28px; font-weight: 700; color: #1a1a1a;
-  line-height: 1; letter-spacing: -0.02em;
+.home-stat-val {
+  font-size: 20px; font-weight: 700; color: #1a1a1a; line-height: 1;
 }
-.home-perf-value-hcp { color: #2a7a4f; }
-.home-perf-meta {
+.home-stat-lbl {
   font-size: 11px; font-weight: 600; color: #888;
-  text-transform: uppercase; letter-spacing: 0.06em;
+  text-transform: uppercase; letter-spacing: 0.05em;
 }
+.home-insight {
+  background: #fff; border-radius: 12px;
+  border: 0.5px solid rgba(0,0,0,0.07);
+  padding: 13px 14px;
+  font-size: 13px; color: #555; line-height: 1.4;
+}
+.home-recent-rounds {
+  background: #fff; border-radius: 12px;
+  border: 0.5px solid rgba(0,0,0,0.07); overflow: hidden;
+}
+
+/* ── Stats page drill-down menu ──────────────────────────────────────────── */
+.mg-stats-summary {
+  font-size: 13px; color: #888; font-weight: 600;
+  padding: 10px 16px 8px; letter-spacing: 0.01em;
+}
+.mg-drilldown-btn {
+  display: flex; align-items: center; gap: 12px;
+  background: #fff; border-radius: 12px;
+  border: 0.5px solid rgba(0,0,0,0.07);
+  padding: 14px; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mg-drilldown-btn:active { background: #f5f4f0; }
+.mg-drilldown-icon {
+  width: 36px; height: 36px; border-radius: 9px;
+  background: #f0efeb;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.mg-drilldown-text { flex: 1; }
+.mg-drilldown-title { font-size: 15px; font-weight: 700; color: #1a1a1a; }
+.mg-drilldown-sub   { font-size: 12px; color: #888; margin-top: 2px; }
+.mg-drilldown-arrow { font-size: 17px; color: #ccc; font-weight: 300; flex-shrink: 0; }
 
 

@@ -14,6 +14,8 @@ export const KEY_WIND             = 'golfWind_v1';
 export const KEY_WIND_ENABLED     = 'windEnabled';
 export const KEY_ACTIVE_COURSE    = 'activeCourse';     // sessionStorage
 export const KEY_HOLE_FLOW_STATE  = 'holeFlowState';    // localStorage — mid-hole resume
+export const KEY_HERO_IMG_IDX     = 'heroImgIdx';
+export const KEY_HERO_QUOTE_IDX   = 'heroQuoteIdx';
 
 // ── Per-hole record shape (extended) ─────────────────────────────────────────
 // Backward-compat: new fields default safely on read for older saved rounds.

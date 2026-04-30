@@ -106,21 +106,18 @@
       <button class="home-card-btn home-card-btn-secondary" id="homeOpenCalcBtn" type="button">OPEN CALCULATOR</button>
     </div>
 
-    <!-- Recent Performance -->
-    <div class="home-perf">
-      <div class="home-perf-header">
-        <span class="home-perf-label">RECENT PERFORMANCE</span>
-        <button class="home-perf-viewall" id="homeViewAllBtn" type="button">View All</button>
+    <!-- Stats dashboard -->
+    <div class="home-stats" id="homeStats">
+      <div class="home-stats-header">
+        <span class="home-stats-label">MY PERFORMANCE</span>
+        <button class="home-stats-viewall" id="homeViewAllBtn" type="button">View all</button>
       </div>
-      <div class="home-perf-tiles">
-        <div class="home-perf-tile">
-          <div class="home-perf-value" id="homeLastScore">—</div>
-          <div class="home-perf-meta">LAST SCORE</div>
-        </div>
-        <div class="home-perf-tile">
-          <div class="home-perf-value home-perf-value-hcp" id="homeHandicap">—</div>
-          <div class="home-perf-meta">HANDICAP</div>
-        </div>
+      <div class="home-stats-empty hidden" id="homeStatsEmpty">Play a round to see your stats here.</div>
+      <div class="home-stats-body hidden" id="homeStatsBody">
+        <div class="home-sparkline-card" id="homeSparkline"></div>
+        <div class="home-stat-row" id="homeStatRow"></div>
+        <div class="home-insight" id="homeInsight"></div>
+        <div class="home-recent-rounds" id="homeRecentRounds"></div>
       </div>
     </div>
 
@@ -616,9 +613,75 @@
         <button class="mg-back-btn" id="mgBackStats">‹</button>
         <h2>My Stats</h2>
       </div>
-      <div class="mg-stat-grid" id="mgStatTiles"><!-- populated by JS --></div>
-      <div class="mg-rounds-card" id="mgRecentRounds"><!-- chart --></div>
-      <div id="mgRoundsHistoryContent" data-limit="5"></div>
+      <div class="mg-stats-summary" id="mgStatsSummary"></div>
+      <div style="padding:0 12px 12px;display:flex;flex-direction:column;gap:10px;">
+
+        <div class="mg-drilldown-btn" id="mgStatsGotoScoreBreakdown">
+          <div class="mg-drilldown-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div class="mg-drilldown-text">
+            <div class="mg-drilldown-title">Score distribution</div>
+            <div class="mg-drilldown-sub" id="mgDrillScoreSub"></div>
+          </div>
+          <div class="mg-drilldown-arrow">›</div>
+        </div>
+
+        <div class="mg-drilldown-btn" id="mgStatsGotoParType">
+          <div class="mg-drilldown-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <div class="mg-drilldown-text">
+            <div class="mg-drilldown-title">Par type analysis</div>
+            <div class="mg-drilldown-sub" id="mgDrillParSub"></div>
+          </div>
+          <div class="mg-drilldown-arrow">›</div>
+        </div>
+
+        <div class="mg-drilldown-btn" id="mgStatsGotoPutts">
+          <div class="mg-drilldown-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/><line x1="12" y1="3" x2="12" y2="9"/><line x1="12" y1="15" x2="12" y2="21"/>
+            </svg>
+          </div>
+          <div class="mg-drilldown-text">
+            <div class="mg-drilldown-title">Putting breakdown</div>
+            <div class="mg-drilldown-sub" id="mgDrillPuttsSub"></div>
+          </div>
+          <div class="mg-drilldown-arrow">›</div>
+        </div>
+
+        <div class="mg-drilldown-btn" id="mgStatsGotoBaseline">
+          <div class="mg-drilldown-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+          </div>
+          <div class="mg-drilldown-text">
+            <div class="mg-drilldown-title">Personal baseline</div>
+            <div class="mg-drilldown-sub" id="mgDrillBaselineSub"></div>
+          </div>
+          <div class="mg-drilldown-arrow">›</div>
+        </div>
+
+        <div class="mg-drilldown-btn" id="mgStatsGotoHistory">
+          <div class="mg-drilldown-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="12 8 12 12 14 14"/><circle cx="12" cy="12" r="9"/>
+            </svg>
+          </div>
+          <div class="mg-drilldown-text">
+            <div class="mg-drilldown-title">Rounds history</div>
+            <div class="mg-drilldown-sub" id="mgDrillHistorySub"></div>
+          </div>
+          <div class="mg-drilldown-arrow">›</div>
+        </div>
+
+      </div>
     </div>
 
     <!-- ── Score Breakdown sub-page ──────────────────────────────────── -->

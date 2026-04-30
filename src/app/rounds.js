@@ -22,7 +22,7 @@ export function showMgSub(id) {
   document.querySelectorAll('.mg-sub').forEach(s => s.classList.remove('active'));
   const sub = document.getElementById(id);
   if (sub) sub.classList.add('active');
-  if (id === 'mgSubStats') { renderMgStatTiles(); renderMgRecentRounds(); renderMgRoundsHistory(); }
+  if (id === 'mgSubStats') { renderMgStatsPage(); }
   if (id === 'mgSubRoundsHistory') { renderSavedRounds(); }
   if (id === 'mgSubCourses') renderCourseList();
   if (id === 'mgSubBag') renderMgCarryBars();
@@ -187,6 +187,336 @@ export function renderMgStatTiles() {
     renderMgPuttsBreakdown();
     showMgSub('mgSubPuttsBreakdown');
   });
+}
+
+// ── Home stats dashboard ──────────────────────────────────────────────────────
+export function refreshHomeStats() {
+  const bodyEl  = document.getElementById('homeStatsBody');
+  const emptyEl = document.getElementById('homeStatsEmpty');
+  if (!bodyEl || !emptyEl) return;
+
+  const courses   = loadCourses ? loadCourses() : {};
+  const allRounds = Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []);
+  const full      = allRounds.filter(r => (r.holesPlayed ?? 0) >= 18);
+  full.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  const recent8 = full.slice(-8);
+
+  if (!recent8.length) {
+    bodyEl.classList.add('hidden');
+    emptyEl.classList.remove('hidden');
+    return;
+  }
+  bodyEl.classList.remove('hidden');
+  emptyEl.classList.add('hidden');
+
+  _renderHomeSparkline(recent8);
+  _renderHomeStatTiles(allRounds, full);
+  _renderHomeInsight(courses);
+  _renderHomeRecentRounds(allRounds, courses);
+}
+
+function _renderHomeSparkline(recent) {
+  const el = document.getElementById('homeSparkline');
+  if (!el) return;
+
+  const strokes = recent.map(r => r.totalStrokes ?? 0);
+  const diffs   = recent.map(r => (r.totalStrokes ?? 0) - (r.totalPar ?? 0));
+  const minS    = Math.min(...strokes);
+  const maxS    = Math.max(...strokes);
+  const range   = Math.max(maxS - minS, 4);
+
+  const W = 296, H = 80, padX = 10, padY = 14;
+  const scale = (H - padY * 2) / range;
+  const n     = recent.length;
+  const xStep = n > 1 ? (W - padX * 2) / (n - 1) : 0;
+  const xs    = recent.map((_, i) => padX + i * xStep);
+  const ys    = strokes.map(v => padY + (maxS - v) * scale);
+  const pts   = xs.map((x, i) => x.toFixed(1) + ',' + ys[i].toFixed(1)).join(' ');
+
+  const avgStrokes = strokes.reduce((a, b) => a + b, 0) / strokes.length;
+  const avgY       = (padY + (maxS - avgStrokes) * scale).toFixed(1);
+  const avgLine    = `<line x1="0" y1="${avgY}" x2="${W}" y2="${avgY}" stroke="#ece9e4" stroke-width="1" stroke-dasharray="3,3"/>`;
+  const lineBase   = `<polyline points="${pts}" fill="none" stroke="#e0ddd8" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  const lineFG     = `<polyline points="${pts}" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+  let dots = '', labels = '';
+  recent.forEach((r, i) => {
+    const x = xs[i].toFixed(1), y = ys[i].toFixed(1);
+    const d = diffs[i];
+    const isLast = i === recent.length - 1;
+    const col    = d < 0 ? '#1e7a45' : d > 0 ? '#3a6fc4' : '#aaa';
+    dots   += isLast
+      ? `<circle cx="${x}" cy="${y}" r="3.5" fill="${col}" stroke="${col}" stroke-width="2"/>`
+      : `<circle cx="${x}" cy="${y}" r="3.5" fill="#fff" stroke="${col}" stroke-width="2"/>`;
+    const ly = strokes[i] <= avgStrokes
+      ? (parseFloat(y) - 8).toFixed(1)
+      : (parseFloat(y) + 14).toFixed(1);
+    labels += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="11" font-weight="700" fill="${col}" font-family="system-ui">${strokes[i]}</text>`;
+  });
+
+  const best    = Math.min(...diffs);
+  const avg     = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+  const avgStr  = avg === 0 ? 'E' : (avg > 0 ? '+' + avg.toFixed(1) : avg.toFixed(1));
+  const bestStr = best === 0 ? 'E' : (best > 0 ? '+' + best : String(best));
+  const trendDown  = diffs.length >= 4
+    ? (diffs.slice(-3).reduce((a,b)=>a+b,0)/3) < (diffs.slice(0,3).reduce((a,b)=>a+b,0)/3)
+    : best < 0;
+  const trendArrow = trendDown ? '↗' : '↘';
+  const trendCol   = trendDown ? '#1e7a45' : '#3a6fc4';
+  const bestCol    = best < 0 ? '#1e7a45' : best > 0 ? '#3a6fc4' : '#aaa';
+  const avgCol     = avg  < 0 ? '#1e7a45' : avg  > 0 ? '#3a6fc4' : '#aaa';
+
+  el.innerHTML =
+    `<div style="padding:14px 12px 0;">` +
+    `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;overflow:visible;">${avgLine}${lineBase}${lineFG}${dots}${labels}</svg>` +
+    `</div>` +
+    `<div class="mg-chart-strip">` +
+    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val">${recent.length}</div><div class="mg-chart-strip-lbl">Rounds</div></div>` +
+    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${bestCol};">${bestStr}</div><div class="mg-chart-strip-lbl">Best</div></div>` +
+    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${avgCol};">${avgStr}</div><div class="mg-chart-strip-lbl">Avg</div></div>` +
+    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${trendCol};">${trendArrow}</div><div class="mg-chart-strip-lbl">Trend</div></div>` +
+    `</div>`;
+}
+
+function _renderHomeStatTiles(allRounds, full) {
+  const el = document.getElementById('homeStatRow');
+  if (!el) return;
+
+  const courses      = loadCourses ? loadCourses() : {};
+  const totalHoles   = allRounds.reduce((a, r) => a + (r.holesPlayed ?? 0), 0);
+  const totalStrokes = allRounds.reduce((a, r) => a + (r.totalStrokes ?? 0), 0);
+  const totalPar     = allRounds.reduce((a, r) => a + (r.totalPar ?? 0), 0);
+  const totalGIR     = allRounds.reduce((a, r) => a + (r.totalGIR ?? 0), 0);
+  const girPct       = totalHoles > 0 ? Math.round(totalGIR / totalHoles * 100) : 0;
+
+  const avgVsPar    = totalPar > 0 && allRounds.length > 0
+    ? ((totalStrokes - totalPar) / allRounds.length).toFixed(1)
+    : null;
+  const avgVsParStr = avgVsPar === null ? '—'
+    : parseFloat(avgVsPar) > 0 ? '+' + avgVsPar
+    : avgVsPar;
+  const avgVsParCol = avgVsPar === null ? '#aaa'
+    : parseFloat(avgVsPar) < 0 ? '#1e7a45'
+    : parseFloat(avgVsPar) > 0 ? '#3a6fc4' : '#aaa';
+
+  // Putts/hole using per-hole data (excludes simple-mode holes)
+  let totalPutts = 0, totalPuttsHoles = 0;
+  Object.keys(courses).forEach(courseId => {
+    const rounds = loadRounds ? loadRounds(courseId) : [];
+    rounds.forEach(round => {
+      if (!round.scores) return;
+      round.scores.forEach(s => {
+        if (!s) return;
+        if (s.putts != null && s.scoringMode !== 'simple') {
+          totalPutts += s.putts;
+          totalPuttsHoles++;
+        }
+      });
+    });
+  });
+  const puttsPerHole = totalPuttsHoles > 0 ? (totalPutts / totalPuttsHoles).toFixed(1) : '—';
+
+  el.innerHTML =
+    `<div class="home-stat-tile"><div class="home-stat-val">${girPct}%</div><div class="home-stat-lbl">GIR</div></div>` +
+    `<div class="home-stat-tile"><div class="home-stat-val">${puttsPerHole}</div><div class="home-stat-lbl">Putts/hole</div></div>` +
+    `<div class="home-stat-tile"><div class="home-stat-val" style="color:${avgVsParCol};">${avgVsParStr}</div><div class="home-stat-lbl">vs par avg</div></div>`;
+}
+
+function _renderHomeInsight(courses) {
+  const el = document.getElementById('homeInsight');
+  if (!el) return;
+
+  const parData = { 3: { strokes: 0, holes: 0 }, 4: { strokes: 0, holes: 0 }, 5: { strokes: 0, holes: 0 } };
+  Object.keys(courses).forEach(courseId => {
+    const course = courses[courseId];
+    const rounds = loadRounds ? loadRounds(courseId) : [];
+    rounds.forEach(round => {
+      if (!round.scores) return;
+      round.scores.forEach((s, i) => {
+        if (!s) return;
+        const par   = course.holes?.[i]?.par || 4;
+        const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
+        if (!total || !parData[par]) return;
+        parData[par].strokes += total;
+        parData[par].holes++;
+      });
+    });
+  });
+
+  const diffs = [3, 4, 5].map(p => {
+    const d = parData[p];
+    return d.holes > 0 ? { par: p, diff: d.strokes / d.holes - p, holes: d.holes } : null;
+  }).filter(Boolean);
+
+  if (!diffs.length) { el.textContent = ''; return; }
+
+  const best  = diffs.reduce((a, b) => b.diff < a.diff ? b : a);
+  const worst = diffs.reduce((a, b) => b.diff > a.diff ? b : a);
+
+  let text = '';
+  if (best.diff < -0.1) {
+    const s = best.diff > 0 ? '+' + best.diff.toFixed(1) : best.diff.toFixed(1);
+    text = `Par ${best.par}s: ${s} avg — your strongest hole type`;
+  } else if (worst.diff > 0.1) {
+    const s = '+' + worst.diff.toFixed(1);
+    text = `Par ${worst.par}s: ${s} avg — needs the most work`;
+  } else {
+    text = 'Scoring consistently across all par types';
+  }
+  el.textContent = text;
+}
+
+function _renderHomeRecentRounds(allRounds, courses) {
+  const el = document.getElementById('homeRecentRounds');
+  if (!el) return;
+
+  const all = [];
+  Object.keys(courses).forEach(id => {
+    const rounds = loadRounds ? loadRounds(id) : [];
+    rounds.forEach(r => all.push({ ...r, courseName: courses[id].name }));
+  });
+  all.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  const shown = all.slice(0, 3);
+
+  if (!shown.length) { el.innerHTML = ''; return; }
+
+  el.innerHTML = shown.map(r => {
+    const diff    = (r.totalStrokes || 0) - (r.totalPar || 0);
+    const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff);
+    const color   = diff < 0 ? '#1e7a45' : diff > 0 ? '#3a6fc4' : '#888';
+    return '<div class="lrh-row"><div class="lrh-left"><div class="lrh-course">' + (r.courseName || '—') + '</div>' +
+      '<div class="lrh-date">' + (r.date || '—') + '</div></div>' +
+      '<div class="lrh-right"><div class="lrh-score">' + (r.totalStrokes || '—') + '</div>' +
+      '<div class="lrh-diff" style="color:' + color + '">' + diffStr + '</div></div></div>';
+  }).join('');
+}
+
+// ── Stats page (My Golf) ──────────────────────────────────────────────────────
+export function renderMgStatsPage() {
+  const courses    = loadCourses ? loadCourses() : {};
+  const allRounds  = Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []);
+  const fullRounds = allRounds.filter(r => (r.holesPlayed ?? 0) >= 18);
+
+  // Compact summary header
+  const summaryEl = document.getElementById('mgStatsSummary');
+  if (summaryEl) {
+    if (!allRounds.length) {
+      summaryEl.textContent = 'No rounds saved yet';
+    } else {
+      let bestDiff = null, bestStrokes = null;
+      fullRounds.forEach(r => {
+        const d = (r.totalStrokes ?? 0) - (r.totalPar ?? 0);
+        if (bestDiff === null || d < bestDiff) { bestDiff = d; bestStrokes = r.totalStrokes; }
+      });
+      const avgStrokes = fullRounds.length
+        ? Math.round(fullRounds.reduce((a, r) => a + (r.totalStrokes ?? 0), 0) / fullRounds.length)
+        : null;
+      const parts = [allRounds.length + ' round' + (allRounds.length !== 1 ? 's' : '')];
+      if (bestStrokes !== null) parts.push('Best ' + bestStrokes);
+      if (avgStrokes  !== null) parts.push('Avg '  + avgStrokes);
+      summaryEl.textContent = parts.join(' · ');
+    }
+  }
+
+  // Populate drill-down subtitles
+  _populateStatsDrillSubs(allRounds, courses, fullRounds);
+  _wireStatsDrillButtons();
+}
+
+function _populateStatsDrillSubs(allRounds, courses, fullRounds) {
+  // Score distribution sub
+  const scoreSub = document.getElementById('mgDrillScoreSub');
+  if (scoreSub) {
+    let birdies = 0, bogeys = 0, doubles = 0, totalHoles = 0;
+    Object.keys(courses).forEach(courseId => {
+      const course = courses[courseId];
+      const rounds = loadRounds ? loadRounds(courseId) : [];
+      rounds.forEach(round => {
+        if (!round.scores) return;
+        round.scores.forEach((s, i) => {
+          if (!s) return;
+          const par   = course.holes?.[i]?.par || 4;
+          const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
+          if (!total) return;
+          totalHoles++;
+          const diff = total - par;
+          if (diff <= -1) birdies++;
+          else if (diff === 1) bogeys++;
+          else if (diff >= 2) doubles++;
+        });
+      });
+    });
+    scoreSub.textContent = totalHoles
+      ? `Birdies ${birdies} · Bogeys ${bogeys} · Doubles ${doubles}`
+      : 'No data yet';
+  }
+
+  // Par type sub
+  const parSub = document.getElementById('mgDrillParSub');
+  if (parSub) {
+    const parData = { 3: { strokes: 0, holes: 0 }, 4: { strokes: 0, holes: 0 }, 5: { strokes: 0, holes: 0 } };
+    Object.keys(courses).forEach(courseId => {
+      const course = courses[courseId];
+      const rounds = loadRounds ? loadRounds(courseId) : [];
+      rounds.forEach(round => {
+        if (!round.scores) return;
+        round.scores.forEach((s, i) => {
+          if (!s) return;
+          const par   = course.holes?.[i]?.par || 4;
+          const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
+          if (!total || !parData[par]) return;
+          parData[par].strokes += total; parData[par].holes++;
+        });
+      });
+    });
+    const parts = [3, 4, 5].map(p => {
+      const d = parData[p];
+      if (!d.holes) return null;
+      const diff = d.strokes / d.holes - p;
+      return 'Par ' + p + ': ' + (diff > 0 ? '+' : '') + diff.toFixed(1);
+    }).filter(Boolean);
+    parSub.textContent = parts.length ? parts.join(' · ') : 'No data yet';
+  }
+
+  // Putting sub
+  const puttsSub = document.getElementById('mgDrillPuttsSub');
+  if (puttsSub) {
+    const avgPuttsRound = fullRounds.length > 0
+      ? (fullRounds.reduce((a, r) => a + (r.totalPutts ?? (r.scores||[]).reduce((x,sc)=>x+(sc?.putts||0),0)), 0) / fullRounds.length).toFixed(1)
+      : null;
+    puttsSub.textContent = avgPuttsRound ? `Avg ${avgPuttsRound} putts/round` : 'No data yet';
+  }
+
+  // Baseline sub
+  const baselineSub = document.getElementById('mgDrillBaselineSub');
+  if (baselineSub) {
+    const n = Object.keys(courses).filter(id => (loadRounds ? loadRounds(id) : []).length > 0).length;
+    baselineSub.textContent = n
+      ? n + ' course' + (n !== 1 ? 's' : '') + ' · hole-by-hole avg vs par'
+      : 'No rounds yet';
+  }
+
+  // History sub
+  const historySub = document.getElementById('mgDrillHistorySub');
+  if (historySub) {
+    historySub.textContent = allRounds.length
+      ? allRounds.length + ' round' + (allRounds.length !== 1 ? 's' : '') + ' saved'
+      : 'No rounds saved yet';
+  }
+}
+
+function _wireStatsDrillButtons() {
+  function wire(id, fn) {
+    const el = document.getElementById(id);
+    if (!el || el.dataset.wired) return;
+    el.dataset.wired = '1';
+    el.addEventListener('click', fn);
+  }
+  wire('mgStatsGotoScoreBreakdown', () => { renderMgScoreBreakdown();      showMgSub('mgSubScoreBreakdown'); });
+  wire('mgStatsGotoParType',        () => { renderMgAvgStrokesBreakdown(); showMgSub('mgSubAvgStrokes'); });
+  wire('mgStatsGotoPutts',          () => { renderMgPuttsBreakdown();      showMgSub('mgSubPuttsBreakdown'); });
+  wire('mgStatsGotoBaseline',       () => { renderMgBaseline();            showMgSub('mgSubBaseline'); });
+  wire('mgStatsGotoHistory',        () => { showMgSub('mgSubRoundsHistory'); });
 }
 
 // ── Score breakdown ───────────────────────────────────────────────────────────
