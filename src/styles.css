@@ -2534,16 +2534,16 @@
 
 /* ── Play tab hero strip + landing ───────────────────────────────────────── */
 .play-hero {
-  width: 100%; flex-shrink: 0;
-  background-size: 100% auto; background-position: top center;
-  background-color: #2a2a2a;
+  flex-shrink: 0;
+  height: 130px;
   position: relative; overflow: hidden;
-  padding-bottom: 32%; /* preserve natural image aspect ratio, cropped by overflow:hidden */
+  margin-left: -12px; margin-right: -12px;
+  margin-top: calc(-10px - env(safe-area-inset-top));
 }
-.play-hero::before {
-  content: ''; position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.42) 100%);
-  pointer-events: none;
+.play-hero img {
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center center;
+  display: block;
 }
 .play-hero-cut {
   position: absolute; bottom: 0; left: 0;
@@ -2556,10 +2556,10 @@
 #panePlay #calcView { display: none; }
 #panePlay #calcView.open { display: contents; }
 
-.calc-close-row {
-  display: flex; justify-content: flex-end; padding: 4px 0 0;
+.hole-manual-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
 }
-.calc-close-row.hidden { display: none; }
+.hole-manual-header .card-title { margin-bottom: 0; }
 .calc-close-btn {
   background: #f0efeb; color: #bbb;
   border: none; border-radius: 8px; cursor: pointer;
@@ -2568,6 +2568,7 @@
   -webkit-tap-highlight-color: transparent; font-family: inherit;
 }
 .calc-close-btn:active { background: #e5e3df; }
+.calc-close-btn.hidden { display: none; }
 
 /* ── Home stats dashboard ─────────────────────────────────────────────────── */
 .home-stats { margin: 0 12px; }

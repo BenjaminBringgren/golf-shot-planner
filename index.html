@@ -87,6 +87,7 @@
 
   <!-- ── Play landing (hidden when course is active) ──────────────────────── -->
   <div class="play-hero" id="playHero">
+    <img id="playHeroImg" alt="" />
     <svg class="play-hero-cut" viewBox="0 0 375 28" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
       <path d="M 0 28 C 80 28 180 0 255 3 C 305 5 355 18 375 16 L 375 28 Z" fill="#f5f4f0"/>
     </svg>
@@ -135,11 +136,6 @@
   <!-- ── Calculator view ───────────────────────────────────────────────────── -->
   <div id="calcView">
 
-  <!-- Close bar — visible only in manual mode (no active course) -->
-  <div class="calc-close-row hidden" id="calcCloseRow">
-    <button class="calc-close-btn" id="calcCloseBtn" type="button">✕</button>
-  </div>
-
   <!-- Course bar injected here by JS (playCourseBar) -->
 
   <!-- ── This Hole card (manual mode / no course) ─────────────────────── -->
@@ -153,7 +149,10 @@
 
     <!-- Full manual fields — hidden when course is active -->
     <div class="hole-manual-fields">
-      <div class="card-title">This Hole</div>
+      <div class="hole-manual-header">
+        <div class="card-title">This Hole</div>
+        <button class="calc-close-btn hidden" id="calcCloseBtn" type="button">✕</button>
+      </div>
       <div style="display:flex;gap:20px;">
         <div>
           <label>Par</label>

@@ -480,7 +480,7 @@ initServices({
     document.getElementById('playHero')?.classList.toggle('hidden', courseActive);
     const calcView = document.getElementById('calcView');
     if (calcView) calcView.classList.toggle('open', courseActive);
-    document.getElementById('calcCloseRow')?.classList.toggle('hidden', true); // close row only shown manually
+    document.getElementById('calcCloseBtn')?.classList.toggle('hidden', true); // close btn only shown in manual mode
   }
 
   const saved = loadBag();
@@ -1774,8 +1774,8 @@ initServices({
       }
       img.src = HERO_IMAGES[nextIdx];
     }
-    const playHero = document.getElementById('playHero');
-    if (playHero) playHero.style.backgroundImage = `url(${HERO_IMAGES[nextIdx]})`;
+    const playHeroImg = document.getElementById('playHeroImg');
+    if (playHeroImg) playHeroImg.src = HERO_IMAGES[nextIdx];
   }
 
   // Patch switchTab so HOME always refreshes hero/quote/perf
@@ -1813,12 +1813,12 @@ initServices({
     document.getElementById('playLanding')?.classList.add('hidden');
     document.getElementById('playHero')?.classList.add('hidden');
     document.getElementById('calcView')?.classList.add('open');
-    document.getElementById('calcCloseRow')?.classList.remove('hidden');
+    document.getElementById('calcCloseBtn')?.classList.remove('hidden');
   });
 
   document.getElementById('calcCloseBtn')?.addEventListener('click', () => {
     document.getElementById('calcView')?.classList.remove('open');
-    document.getElementById('calcCloseRow')?.classList.add('hidden');
+    document.getElementById('calcCloseBtn')?.classList.add('hidden');
     document.getElementById('playLanding')?.classList.remove('hidden');
     document.getElementById('playHero')?.classList.remove('hidden');
   });
