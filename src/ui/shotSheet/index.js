@@ -159,7 +159,11 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
       inner.appendChild(renderStatsBar({ vsExpected, roundScore: runDiff, animate: false }));
 
     } else if (state.stage === STAGE_PUTTS) {
-      inner.appendChild(renderShotCountDisplay({ shots: state.shots.length, putts: state.putts }));
+      inner.appendChild(renderShotCountDisplay({
+        shots: state.shots.length, putts: state.putts,
+        onAdd:    () => callbacks.addApproachShot?.('fw'),
+        onRemove: () => callbacks.removeApproachShot?.(),
+      }));
       inner.appendChild(renderPuttsCard({
         putts: state.putts,
         onChange: (n) => callbacks.setPutts?.(n),
@@ -194,6 +198,12 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
         hapticSuccess();
       }
 
+      inner.appendChild(renderShotCountDisplay({
+        shots: state.shots.length, putts: state.putts,
+        onAdd:    () => callbacks.addApproachShot?.('fw'),
+        onRemove: () => callbacks.removeApproachShot?.(),
+      }));
+
       // Always show Edit + Next in result stage
       inner.appendChild(renderConfirmRow({
         stage: STAGE_RESULT,
@@ -208,7 +218,7 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
 
     // Update FAB label
     const liveFab = document.getElementById('scoreFab');
-    if (liveFab) _updateFab(liveFab, courseId, holeIdx);
+    if (liveFab) _updateFab(liveFab, courseId, holeIdx, state);
 
     // Refresh hole grid in course bar
     const bar = document.getElementById('playCourseBar');
@@ -240,12 +250,16 @@ function _handleNext(state, isLastHole, courseId, holeIdx, callbacks) {
 }
 
 // ── FAB label update ─────────────────────────────────────────────────────────
-function _updateFab(fab, courseId, holeIdx) {
+function _updateFab(fab, courseId, holeIdx, state) {
   const scores = loadScores(courseId);
   const s = scores[holeIdx];
   if (s) {
     const total = (s.fairway ?? 0) + (s.rough ?? 0) + (s.putts ?? 0);
     fab.textContent = String(total);
+    fab.classList.add('has-score');
+  } else if (state && state.shots.length > 0) {
+    const liveTotal = state.shots.length + (state.putts ?? 0);
+    fab.textContent = String(liveTotal);
     fab.classList.add('has-score');
   } else {
     fab.textContent = '+';

@@ -254,6 +254,23 @@ export function nextHole(currentScores) {
   return nextIdx;
 }
 
+/** Add an approach shot without leaving current stage. Works from STAGE_PUTTS and STAGE_RESULT. */
+export function addApproachShot(lie = 'fw') {
+  if (_stage !== STAGE_PUTTS && _stage !== STAGE_RESULT) return;
+  _shots.push(lie);
+  _persist();
+  _notify();
+}
+
+/** Remove the last approach shot without leaving current stage. Works from STAGE_PUTTS and STAGE_RESULT. */
+export function removeApproachShot() {
+  if (_stage !== STAGE_PUTTS && _stage !== STAGE_RESULT) return;
+  if (_shots.length <= 1) return;
+  _shots.pop();
+  _persist();
+  _notify();
+}
+
 /** Undo the last shot. Works from STAGE_SHOTS and STAGE_PUTTS. */
 export function undoLastShot() {
   if (_stage === STAGE_PUTTS) {

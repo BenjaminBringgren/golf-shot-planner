@@ -15,11 +15,14 @@ function escHtml(str) {
 }
 
 // ── Club picker modal ─────────────────────────────────────────────────────────
-export function openClubPicker(currentKey, onSelect, constraints, clubsList = []) {
+export function openClubPicker(currentKey, onSelect, constraints, clubsList = [], title) {
   const overlay = document.getElementById('clubPickerOverlay');
   const sheet   = document.getElementById('clubPickerSheet');
   const list    = document.getElementById('clubPickerList');
   if (!overlay || !sheet || !list) return;
+
+  const titleEl = document.getElementById('clubPickerTitle');
+  if (titleEl) titleEl.textContent = title || 'Select club';
 
   function isEnabled(club) {
     if (!constraints) return true;

@@ -78,8 +78,15 @@
     .tab-btn.active svg polyline { stroke: #1a1a1a; }
     .tab-btn .tab-icon-bag { fill: #aaa; }
     .tab-btn.active .tab-icon-bag { fill: #1a1a1a; }
-    #paneHome, #panePrepare { display: none; }
+    #paneHome, #panePlay, #panePrepare { display: none; }
+    #tabPlay { display: none; }
+    #tabPlay.visible { display: flex; }
     #paneHome.active {
+      display: flex; flex-direction: column; gap: 0;
+      padding: 0;
+      background: #f5f4f0;
+    }
+    #panePlay.active {
       display: flex; flex-direction: column; gap: 8px;
       padding: calc(10px + env(safe-area-inset-top)) 12px calc(77px + env(safe-area-inset-bottom) + 110px) 12px;
     }
@@ -88,11 +95,11 @@
       padding-top: env(safe-area-inset-top);
       padding-bottom: calc(77px + env(safe-area-inset-bottom));
     }
-    #paneHome > .card, #calcView > .card { margin: 0; border-radius: 12px; }
-    #paneHome > .collapsible, #calcView > .collapsible { margin: 0; }
-    #paneHome > .gps-warning, #calcView > .gps-warning { margin: -4px 0 0; font-size: 12px; }
-    #paneHome > #calcButton, #calcView > #calcButton { margin-top: 0; }
-    #paneHome > .collapsible + .gps-row, #calcView > .collapsible + .gps-row { margin-top: 0; }
+    #calcView > .card { margin: 0; border-radius: 12px; }
+    #calcView > .collapsible { margin: 0; }
+    #calcView > .gps-warning { margin: -4px 0 0; font-size: 12px; }
+    #calcView > #calcButton { margin-top: 0; }
+    #calcView > .collapsible + .gps-row { margin-top: 0; }
     #calcButton { margin: 0; width: 100%; border-radius: 11px; padding: 20px; font-size: 17px; }
     #calcButton.course-active { display: none; }
     #playBodyPad { padding: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -1410,7 +1417,7 @@
     .cc-shot-right { text-align: right; margin-left: auto; flex-shrink: 0; }
     .cc-shot-dist { font-size: 28px; font-weight: 700; color: #1a1a1a; line-height: 1; }
     .cc-shot-unit { font-size: 12px; color: #bbb; }
-    .cc-shot-carry { font-size: 11px; color: #aaa; margin-top: 1px; }
+    .cc-shot-carry { font-size: 12px; color: #aaa; margin-top: 1px; }
     .cc-shot-done {
       display: flex; align-items: center; gap: 10px;
       padding: 9px 0; border-bottom: 0.5px solid #f2f1ee; opacity: 0.45;
@@ -1424,7 +1431,7 @@
       display: flex; align-items: center; gap: 8px;
       padding: 7px 14px; margin: 0 -14px;
       background: #fafafa; border-top: 0.5px solid #f2f1ee;
-      font-size: 12px;
+      font-size: 13px;
     }
     .cc-wind-effect-text { color: #888; flex: 1; }
     .cc-wind-effect-val  { font-weight: 700; color: #c05000; }
@@ -1592,8 +1599,7 @@
     #calcButton { background: #1a1a1a; }
     #calcButton:hover { background: #333; }
     #calcButton.course-active { display: none; }
-    #paneHome.course-active-play { background: #f5f4f0; }
-    #paneHome:not(.course-active-play):not(.home-mode) { padding-bottom: calc(6px + 49px + 6px + env(safe-area-inset-bottom) + 58px) !important; }
+    #panePlay { background: #f5f4f0; }
     #panePrepare.active { min-height: 100vh; }
     #playBodyPad { padding-top: 8px; }
     #gpsAndCondWrap { padding: 0 14px; margin-bottom: 2px; }
@@ -2228,6 +2234,9 @@
     padding: 4px 20px 14px; flex-shrink: 0;
     display: flex; flex-direction: column; align-items: center;
   }
+  .sh-shot-stepper {
+    display: flex; align-items: center; justify-content: center; gap: 20px;
+  }
   .sh-shot-count {
     font-size: 80px; font-weight: 700; letter-spacing: -0.03em; line-height: 1;
     color: #000;
@@ -2458,19 +2467,8 @@
 
 /* ── Home screen ──────────────────────────────────────────────────────────── */
 
-/* Mode toggle: home-mode shows #homeScreen, hides #calcView and vice-versa */
-#homeScreen { display: none; flex-direction: column; gap: 12px; padding-bottom: calc(77px + env(safe-area-inset-bottom)); }
+#homeScreen { display: flex; flex-direction: column; gap: 12px; padding-bottom: calc(77px + env(safe-area-inset-bottom)); background: #f5f4f0; }
 #calcView { display: contents; }
-#paneHome.home-mode #homeScreen { display: flex; }
-#paneHome.home-mode #calcView { display: none; }
-
-/* Remove panePlay side/top padding in home mode so hero bleeds edge-to-edge */
-#paneHome.active.home-mode {
-  padding: 0 0 0 0;
-  gap: 0;
-  background: #f5f4f0;
-}
-#homeScreen { background: #f5f4f0; }
 
 /* Hero */
 .home-hero {

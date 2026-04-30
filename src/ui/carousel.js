@@ -802,7 +802,7 @@ export function renderPlan(_result, ctx) {
                   const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
                   newCard.id = card.id || 'activeStrategyCard';
                   newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
-                }, { type: 'no-driver' });
+                }, { type: 'no-driver' }, 'Select 2nd shot club');
             });
             s2Chips.appendChild(s2BagChip);
 
@@ -898,7 +898,7 @@ export function renderPlan(_result, ctx) {
               const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
               newCard.id = card.id || 'activeStrategyCard';
               newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
-            }, { type: 'no-driver' });
+            }, { type: 'no-driver' }, 'Select approach club');
         });
         appChips.appendChild(appBagChip);
         appChipRow.appendChild(appChips);
@@ -986,7 +986,7 @@ export function renderPlan(_result, ctx) {
                   const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
                   newCard.id = card.id || 'activeStrategyCard';
                   newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
-                }, { type: 'no-driver' });
+                }, { type: 'no-driver' }, 'Select next shot club');
             });
             chips.appendChild(bagChip);
             chipRow.appendChild(chips);
@@ -1120,7 +1120,7 @@ export function renderPlan(_result, ctx) {
             teeOverrides[_hk(basePlan.type)] = selectedKey !== basePlan.shots[0].key ? selectedKey : null;
             const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
             newCard.id = 'activeStrategyCard'; newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
-          }, { type: 'par', parValue });
+          }, { type: 'par', parValue }, 'Select tee club');
       });
       stratFooter.appendChild(bagBtn);
     }

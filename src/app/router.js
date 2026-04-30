@@ -49,6 +49,7 @@ import {
   initHoleFlowServices, setHoleExpected,
   commitShot, holeOut, penaltyShot, setPutts, finishHole,
   back as _flowBack, edit as _flowEdit, nextHole, undoLastShot,
+  addApproachShot, removeApproachShot,
   getState as getHoleFlowState, subscribe as subscribeHoleFlow,
 } from './holeFlow.js';
 
@@ -224,6 +225,8 @@ function buildCallbacks() {
     editHole:          ()       => _flowEdit(),
     nextHole:          (scores) => nextHole(scores),
     undoLastShot:      ()       => undoLastShot(),
+    addApproachShot:   (lie)    => addApproachShot(lie),
+    removeApproachShot: ()      => removeApproachShot(),
     getHoleFlowState:  ()       => getHoleFlowState(),
     subscribeHoleFlow: (fn)     => subscribeHoleFlow(fn),
     showRoundComplete: (cId, hIdx) => showRoundCompleteOverlay(cId, hIdx, buildCallbacks()),
@@ -300,7 +303,7 @@ function switchTab(name) {
   // Reset scroll position on tab switch
   window.scrollTo(0, 0);
   if (pane) pane.scrollTop = 0;
-  if (name === 'home') {
+  if (name === 'play') {
     updateLoadCourseBtn();
     const _sess = loadActiveCourse();
     if (_sess.id) {
@@ -319,7 +322,7 @@ function switchTab(name) {
   const fab = document.getElementById('scoreFab');
   if (fab) {
     const courseActive = !!getActiveCourseId();
-    fab.classList.toggle('visible', name === 'home' && courseActive);
+    fab.classList.toggle('visible', name === 'play' && courseActive);
   }
   // Close drawer when switching tabs
   const drawer = document.getElementById('scoreDrawer');
@@ -333,6 +336,7 @@ function switchTab(name) {
 }
 
 document.getElementById('tabHome')?.addEventListener('click', () => switchTab('home'));
+document.getElementById('tabPlay')?.addEventListener('click', () => switchTab('play'));
 document.getElementById('tabPrepare')?.addEventListener('click', () => switchTab('prepare'));
 
 
@@ -1488,7 +1492,7 @@ initServices({
       blendedScore:        (s, c, h) => blendedScore(s, c, h),
       computeHoleBaseline: (...a) => computeHoleBaseline(...a),
       calculate,
-      openClubPicker:      (key, onSelect, constraints) => openClubPicker(key, onSelect, constraints, plan.clubsList),
+      openClubPicker:      (key, onSelect, constraints, title) => openClubPicker(key, onSelect, constraints, plan.clubsList, title),
       updateCalcButtonVisibility,
     });
   }
@@ -1808,37 +1812,30 @@ initServices({
     } catch(e) { hcpEl.textContent = '—'; }
   }
 
-  // Enter/exit home mode — public so the tab switch logic can call them
-  function enterHomeMode() {
-    document.getElementById('paneHome')?.classList.add('home-mode');
-    cycleHeroImage();
-    cycleQuote();
-    refreshHomePerf();
-  }
-  function exitHomeMode() {
-    document.getElementById('paneHome')?.classList.remove('home-mode');
+  // Show the Play tab button (once shown it stays visible)
+  function showPlayTab() {
+    document.getElementById('tabPlay')?.classList.add('visible');
   }
 
-  // Patch switchTab so that returning to HOME shows the home screen when appropriate
+  // Patch switchTab so HOME always refreshes hero/quote/perf
   const _origSwitchTabHome = switchTab;
   switchTab = function(name) {
     _origSwitchTabHome(name);
     if (name === 'home') {
-      if (getActiveCourseId()) {
-        exitHomeMode();
-      } else {
-        enterHomeMode();
-      }
+      cycleHeroImage();
+      cycleQuote();
+      refreshHomePerf();
     }
   };
 
-  // Exit home mode as soon as a course bar is injected into #calcView
+  // Switch to Play pane as soon as a course bar is injected into #calcView
   (function watchForCourseLoad() {
     const calcView = document.getElementById('calcView');
     if (!calcView) return;
     const observer = new MutationObserver(() => {
       if (document.getElementById('playCourseBar')) {
-        exitHomeMode();
+        showPlayTab();
+        switchTab('play');
         observer.disconnect();
         // Re-observe for future course loads (e.g. round complete → new round)
         setTimeout(watchForCourseLoad, 100);
@@ -1849,12 +1846,12 @@ initServices({
 
   // Home screen button wiring
   document.getElementById('homeLaunchCourseBtn')?.addEventListener('click', () => {
-    // Keep home screen visible — picker slides up over it
     openCoursePicker(loadCourseIntoPlay);
   });
 
   document.getElementById('homeOpenCalcBtn')?.addEventListener('click', () => {
-    exitHomeMode();
+    showPlayTab();
+    switchTab('play');
     updateLoadCourseBtn();
   });
 
@@ -1865,9 +1862,10 @@ initServices({
 
   // Initialise on page load
   if (getActiveCourseId()) {
-    exitHomeMode();
+    showPlayTab();
+    switchTab('play');
   } else {
-    enterHomeMode();
+    switchTab('home');
   }
 })();
 
