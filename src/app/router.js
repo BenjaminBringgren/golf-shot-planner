@@ -311,10 +311,6 @@ function switchTab(name) {
       try {
         renderScoreEntry(_sess.id, _sess.holeIdx ?? 0, loadScores(_sess.id), buildCallbacks());
       } catch(e) {}
-    } else {
-      // Restore landing cards when returning to Play with no active course
-      document.getElementById('playLanding')?.classList.remove('hidden');
-      document.getElementById('playHero')?.classList.remove('hidden');
     }
   }
   if (name === 'prepare') {
@@ -482,6 +478,9 @@ initServices({
     document.getElementById('loadCourseBtn')?.classList.toggle('visible', !courseActive);
     document.getElementById('playLanding')?.classList.toggle('hidden', courseActive);
     document.getElementById('playHero')?.classList.toggle('hidden', courseActive);
+    const calcView = document.getElementById('calcView');
+    if (calcView) calcView.classList.toggle('open', courseActive);
+    document.getElementById('calcCloseRow')?.classList.toggle('hidden', true); // close row only shown manually
   }
 
   const saved = loadBag();
@@ -1813,6 +1812,15 @@ initServices({
   document.getElementById('homeOpenCalcBtn')?.addEventListener('click', () => {
     document.getElementById('playLanding')?.classList.add('hidden');
     document.getElementById('playHero')?.classList.add('hidden');
+    document.getElementById('calcView')?.classList.add('open');
+    document.getElementById('calcCloseRow')?.classList.remove('hidden');
+  });
+
+  document.getElementById('calcCloseBtn')?.addEventListener('click', () => {
+    document.getElementById('calcView')?.classList.remove('open');
+    document.getElementById('calcCloseRow')?.classList.add('hidden');
+    document.getElementById('playLanding')?.classList.remove('hidden');
+    document.getElementById('playHero')?.classList.remove('hidden');
   });
 
   document.getElementById('homeViewAllBtn')?.addEventListener('click', () => {

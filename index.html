@@ -86,7 +86,11 @@
   <div class="tab-pane" id="panePlay">
 
   <!-- ── Play landing (hidden when course is active) ──────────────────────── -->
-  <div class="play-hero" id="playHero"></div>
+  <div class="play-hero" id="playHero">
+    <svg class="play-hero-cut" viewBox="0 0 375 28" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 0 28 C 80 28 180 0 255 3 C 305 5 355 18 375 16 L 375 28 Z" fill="#f5f4f0"/>
+    </svg>
+  </div>
   <div class="play-landing" id="playLanding">
 
     <!-- Start a Round card -->
@@ -130,6 +134,16 @@
 
   <!-- ── Calculator view ───────────────────────────────────────────────────── -->
   <div id="calcView">
+
+  <!-- Close bar — visible only in manual mode (no active course) -->
+  <div class="calc-close-row hidden" id="calcCloseRow">
+    <button class="calc-close-btn" id="calcCloseBtn" type="button">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <line x1="1" y1="1" x2="12" y2="12"/><line x1="12" y1="1" x2="1" y2="12"/>
+      </svg>
+      Close calculator
+    </button>
+  </div>
 
   <!-- Course bar injected here by JS (playCourseBar) -->
 
