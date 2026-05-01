@@ -996,7 +996,7 @@
       transition: transform 0.2s;
       box-shadow: 0 1px 3px #0003;
     }
-    .wind-toggle input:checked + .wind-toggle-slider { background: #1e7a45; }
+    .wind-toggle input:checked + .wind-toggle-slider { background: #1a1a1a; }
     .wind-toggle input:checked + .wind-toggle-slider::before { transform: translateX(18px); }
     .wind-section-disabled { opacity: 0.45; pointer-events: none; }
 

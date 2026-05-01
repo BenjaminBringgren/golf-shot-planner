@@ -55,7 +55,7 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
     const newFab = fab.cloneNode(true);
     fab.parentNode.replaceChild(newFab, fab);
     newFab.classList.add('visible');
-    _updateFab(newFab, courseId, holeIdx);
+    _updateFab(newFab, courseId, holeIdx, callbacks.getHoleFlowState?.());
 
     newFab.addEventListener('click', () => {
       if (drawer.classList.contains('open')) closeDrawer();
@@ -258,7 +258,9 @@ function _updateFab(fab, courseId, holeIdx, state) {
     fab.textContent = String(total);
     fab.classList.add('has-score');
   } else if (state && state.shots.length > 0) {
-    const liveTotal = state.shots.length + (state.putts ?? 0);
+    // Only include putts once user has entered them (STAGE_PUTTS or STAGE_RESULT)
+    const includePutts = state.stage === STAGE_PUTTS || state.stage === STAGE_RESULT;
+    const liveTotal = state.shots.length + (includePutts ? (state.putts ?? 0) : 0);
     fab.textContent = String(liveTotal);
     fab.classList.add('has-score');
   } else {

@@ -265,7 +265,7 @@ export function addApproachShot(lie = 'fw') {
 /** Remove the last approach shot without leaving current stage. Works from STAGE_PUTTS and STAGE_RESULT. */
 export function removeApproachShot() {
   if (_stage !== STAGE_PUTTS && _stage !== STAGE_RESULT) return;
-  if (_shots.length <= 1) return;
+  if (_shots.length <= 0) return;
   _shots.pop();
   _persist();
   _notify();
