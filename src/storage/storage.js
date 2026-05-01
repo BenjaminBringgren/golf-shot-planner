@@ -172,6 +172,12 @@ export function saveHoleFlowState(courseId, holeIdx, state) {
 export function clearHoleFlowState(courseId, holeIdx) {
   try { localStorage.removeItem(_hfsKey(courseId, holeIdx)); } catch(e) {}
 }
+export function clearAllHoleFlowStates(courseId) {
+  try {
+    const prefix = KEY_HOLE_FLOW_STATE + '_' + courseId + '_';
+    Object.keys(localStorage).filter(k => k.startsWith(prefix)).forEach(k => localStorage.removeItem(k));
+  } catch(e) {}
+}
 
 // ── Collapsible section state ─────────────────────────────────────────────────
 export function loadCollapseState(sectionId) {
