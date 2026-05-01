@@ -208,7 +208,6 @@ export function refreshHomeStats() {
   if (!bodyEl || !emptyEl) return;
 
   _homeFilter = loadHomeRoundFilter();
-  _renderHomeFilterChips();
 
   const courses   = loadCourses ? loadCourses() : {};
   const allRounds = Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []);
@@ -230,59 +229,61 @@ export function refreshHomeStats() {
   _renderHomeRecentRounds(filtered, courses);
 }
 
-function _renderHomeFilterChips() {
-  const row = document.getElementById('homeRoundFilter');
-  if (!row) return;
-  row.innerHTML = ['18H', '9H', 'ALL'].map(label => {
-    const val = label === '18H' ? '18' : label === '9H' ? '9' : 'all';
-    const active = _homeFilter === val ? ' rfc-active' : '';
-    return `<button class="rfc-chip${active}" data-filter="${val}" type="button">${label}</button>`;
-  }).join('');
-  row.querySelectorAll('.rfc-chip').forEach(btn => {
-    btn.addEventListener('click', () => {
-      _homeFilter = btn.dataset.filter;
-      saveHomeRoundFilter(_homeFilter);
-      refreshHomeStats();
-    });
-  });
+// Catmull-Rom → cubic bezier for smooth curves
+function _smoothPath(xs, ys) {
+  const n = xs.length;
+  if (n < 2) return `M ${xs[0].toFixed(1)},${ys[0].toFixed(1)}`;
+  let d = `M ${xs[0].toFixed(1)},${ys[0].toFixed(1)}`;
+  for (let i = 0; i < n - 1; i++) {
+    const x0 = i > 0 ? xs[i-1] : xs[i],   y0 = i > 0 ? ys[i-1] : ys[i];
+    const x1 = xs[i],   y1 = ys[i];
+    const x2 = xs[i+1], y2 = ys[i+1];
+    const x3 = i < n-2 ? xs[i+2] : xs[i+1], y3 = i < n-2 ? ys[i+2] : ys[i+1];
+    const cp1x = (x1 + (x2 - x0) / 6).toFixed(1);
+    const cp1y = (y1 + (y2 - y0) / 6).toFixed(1);
+    const cp2x = (x2 - (x3 - x1) / 6).toFixed(1);
+    const cp2y = (y2 - (y3 - y1) / 6).toFixed(1);
+    d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${x2.toFixed(1)},${y2.toFixed(1)}`;
+  }
+  return d;
 }
 
 function _renderHomeSparkline(recent) {
   const el = document.getElementById('homeSparkline');
   if (!el) return;
 
+  const LINE_COLOR = '#9c9590';
   const strokes = recent.map(r => r.totalStrokes ?? 0);
   const diffs   = recent.map(r => (r.totalStrokes ?? 0) - (r.totalPar ?? 0));
-  const minS    = Math.min(...strokes);
   const maxS    = Math.max(...strokes);
-  const range   = Math.max(maxS - minS, 4);
+  const range   = Math.max(Math.max(...strokes) - Math.min(...strokes), 4);
 
-  const W = 296, H = 80, padX = 10, padY = 14;
+  const W = 296, H = 90, padX = 12, padY = 18;
   const scale = (H - padY * 2) / range;
   const n     = recent.length;
   const xStep = n > 1 ? (W - padX * 2) / (n - 1) : 0;
   const xs    = recent.map((_, i) => padX + i * xStep);
   const ys    = strokes.map(v => padY + (maxS - v) * scale);
-  const pts   = xs.map((x, i) => x.toFixed(1) + ',' + ys[i].toFixed(1)).join(' ');
+
+  const linePath = _smoothPath(xs, ys);
+  const fillPath = linePath + ` L ${xs[n-1].toFixed(1)},${(H + 4).toFixed(1)} L ${xs[0].toFixed(1)},${(H + 4).toFixed(1)} Z`;
 
   const avgStrokes = strokes.reduce((a, b) => a + b, 0) / strokes.length;
   const avgY       = (padY + (maxS - avgStrokes) * scale).toFixed(1);
-  const avgLine    = `<line x1="0" y1="${avgY}" x2="${W}" y2="${avgY}" stroke="#ece9e4" stroke-width="1" stroke-dasharray="3,3"/>`;
-  const lineBase   = `<polyline points="${pts}" fill="none" stroke="#e0ddd8" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`;
-  const lineFG     = `<polyline points="${pts}" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  const avgLine    = `<line x1="${padX}" y1="${avgY}" x2="${W - padX}" y2="${avgY}" stroke="#ede9e3" stroke-width="1" stroke-dasharray="3,3"/>`;
 
   let dots = '', labels = '';
   recent.forEach((r, i) => {
     const x = xs[i].toFixed(1), y = ys[i].toFixed(1);
     const d = diffs[i];
     const isLast = i === recent.length - 1;
-    const col    = d < 0 ? '#1e7a45' : d > 0 ? '#3a6fc4' : '#aaa';
-    dots   += isLast
-      ? `<circle cx="${x}" cy="${y}" r="3.5" fill="${col}" stroke="${col}" stroke-width="2"/>`
-      : `<circle cx="${x}" cy="${y}" r="3.5" fill="#fff" stroke="${col}" stroke-width="2"/>`;
+    const col = d < 0 ? '#1e7a45' : d > 0 ? '#3a6fc4' : '#aaa';
+    dots += isLast
+      ? `<circle cx="${x}" cy="${y}" r="3.5" fill="${LINE_COLOR}" stroke="none"/>`
+      : `<circle cx="${x}" cy="${y}" r="3.5" fill="#fff" stroke="${LINE_COLOR}" stroke-width="1.5"/>`;
     const ly = strokes[i] <= avgStrokes
-      ? (parseFloat(y) - 8).toFixed(1)
-      : (parseFloat(y) + 14).toFixed(1);
+      ? (parseFloat(y) - 9).toFixed(1)
+      : (parseFloat(y) + 15).toFixed(1);
     labels += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="11" font-weight="700" fill="${col}" font-family="system-ui">${strokes[i]}</text>`;
   });
 
@@ -298,16 +299,36 @@ function _renderHomeSparkline(recent) {
   const bestCol    = best < 0 ? '#1e7a45' : best > 0 ? '#3a6fc4' : '#aaa';
   const avgCol     = avg  < 0 ? '#1e7a45' : avg  > 0 ? '#3a6fc4' : '#aaa';
 
+  const chips = ['18H', '9H', 'ALL'].map(label => {
+    const val = label === '18H' ? '18' : label === '9H' ? '9' : 'all';
+    const active = _homeFilter === val ? ' rfc-active' : '';
+    return `<button class="rfc-chip${active}" data-filter="${val}" type="button">${label}</button>`;
+  }).join('');
+
   el.innerHTML =
-    `<div style="padding:14px 12px 0;">` +
-    `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;overflow:visible;">${avgLine}${lineBase}${lineFG}${dots}${labels}</svg>` +
-    `</div>` +
+    `<div class="hsc-header"><span class="hsc-title">Score history</span><div class="hsc-chips">${chips}</div></div>` +
+    `<div style="padding:10px 12px 0;">` +
+    `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;overflow:visible;">` +
+    `<defs><linearGradient id="hsg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${LINE_COLOR}" stop-opacity="0.18"/><stop offset="100%" stop-color="${LINE_COLOR}" stop-opacity="0"/></linearGradient></defs>` +
+    avgLine +
+    `<path d="${fillPath}" fill="url(#hsg)" stroke="none"/>` +
+    `<path d="${linePath}" fill="none" stroke="${LINE_COLOR}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>` +
+    dots + labels +
+    `</svg></div>` +
     `<div class="mg-chart-strip">` +
     `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val">${recent.length}</div><div class="mg-chart-strip-lbl">Rounds</div></div>` +
     `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${bestCol};">${bestStr}</div><div class="mg-chart-strip-lbl">Best</div></div>` +
     `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${avgCol};">${avgStr}</div><div class="mg-chart-strip-lbl">Avg</div></div>` +
     `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${trendCol};">${trendArrow}</div><div class="mg-chart-strip-lbl">Trend</div></div>` +
     `</div>`;
+
+  el.querySelectorAll('.rfc-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _homeFilter = btn.dataset.filter;
+      saveHomeRoundFilter(_homeFilter);
+      refreshHomeStats();
+    });
+  });
 }
 
 function _renderHomeStatTiles(allRounds, full) {

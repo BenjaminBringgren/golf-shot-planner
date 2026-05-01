@@ -2603,16 +2603,24 @@
 .round-filter-row {
   display: flex; gap: 6px; margin-bottom: 10px; padding: 0 16px;
 }
-#homeRoundFilter {
-  padding: 0;
-}
 .rfc-chip {
   font-size: 12px; font-weight: 600; color: #888;
   background: #f0efeb; border: none; border-radius: 20px;
-  padding: 4px 12px; cursor: pointer; line-height: 1.4;
+  padding: 4px 11px; cursor: pointer; line-height: 1.4;
 }
 .rfc-chip.rfc-active {
   background: #1a1a1a; color: #fff;
+}
+
+.hsc-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 14px 0;
+}
+.hsc-title {
+  font-size: 15px; font-weight: 700; color: #1a1a1a;
+}
+.hsc-chips {
+  display: flex; gap: 5px;
 }
 
 .home-sparkline-card {
