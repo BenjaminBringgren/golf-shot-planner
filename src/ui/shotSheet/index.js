@@ -257,11 +257,9 @@ function _updateFab(fab, courseId, holeIdx, state) {
     const total = (s.fairway ?? 0) + (s.rough ?? 0) + (s.putts ?? 0);
     fab.textContent = String(total);
     fab.classList.add('has-score');
-  } else if (state && state.shots.length > 0) {
-    // Only include putts once user has entered them (STAGE_PUTTS or STAGE_RESULT)
-    const includePutts = state.stage === STAGE_PUTTS || state.stage === STAGE_RESULT;
-    const liveTotal = state.shots.length + (includePutts ? (state.putts ?? 0) : 0);
-    fab.textContent = String(liveTotal);
+  } else if (state && state.totalShots > 0) {
+    // totalShots from getState() already excludes putts in STAGE_SHOTS
+    fab.textContent = String(state.totalShots);
     fab.classList.add('has-score');
   } else {
     fab.textContent = '+';

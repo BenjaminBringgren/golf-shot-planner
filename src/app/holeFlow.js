@@ -75,7 +75,7 @@ export function initHole(courseId, holeIdx, par, gpsShotCount) {
   const saved = loadHoleFlowState(courseId, holeIdx);
   if (saved && saved.stage) {
     _stage        = saved.stage;
-    _shots        = saved.shots ?? [];
+    _shots        = saved.shots?.length > 0 ? saved.shots : ['tee'];
     _putts        = saved.putts ?? 2;
     _holedFromLie = saved.holedFromLie ?? null;
     _milestones   = saved.milestones ?? [];
