@@ -2600,6 +2600,21 @@
 .home-stats-body { display: flex; flex-direction: column; gap: 8px; }
 .home-stats-body.hidden, .home-stats-empty.hidden { display: none; }
 
+.round-filter-row {
+  display: flex; gap: 6px; margin-bottom: 10px; padding: 0 16px;
+}
+#homeRoundFilter {
+  padding: 0;
+}
+.rfc-chip {
+  font-size: 12px; font-weight: 600; color: #888;
+  background: #f0efeb; border: none; border-radius: 20px;
+  padding: 4px 12px; cursor: pointer; line-height: 1.4;
+}
+.rfc-chip.rfc-active {
+  background: #1a1a1a; color: #fff;
+}
+
 .home-sparkline-card {
   background: #fff; border-radius: 12px;
   border: 0.5px solid rgba(0,0,0,0.07); overflow: hidden;

@@ -14,8 +14,10 @@ export const KEY_WIND             = 'golfWind_v1';
 export const KEY_WIND_ENABLED     = 'windEnabled';
 export const KEY_ACTIVE_COURSE    = 'activeCourse';     // sessionStorage
 export const KEY_HOLE_FLOW_STATE  = 'holeFlowState';    // localStorage — mid-hole resume
-export const KEY_HERO_IMG_IDX     = 'heroImgIdx';
-export const KEY_HERO_QUOTE_IDX   = 'heroQuoteIdx';
+export const KEY_HERO_IMG_IDX       = 'heroImgIdx';
+export const KEY_HERO_QUOTE_IDX     = 'heroQuoteIdx';
+export const KEY_HOME_ROUND_FILTER  = 'homeRoundFilter';
+export const KEY_STATS_ROUND_FILTER = 'statsRoundFilter';
 
 // ── Per-hole record shape (extended) ─────────────────────────────────────────
 // Backward-compat: new fields default safely on read for older saved rounds.
@@ -178,6 +180,12 @@ export function clearAllHoleFlowStates(courseId) {
     Object.keys(localStorage).filter(k => k.startsWith(prefix)).forEach(k => localStorage.removeItem(k));
   } catch(e) {}
 }
+
+// ── Round filter preferences ──────────────────────────────────────────────────
+export function loadHomeRoundFilter()       { return localStorage.getItem(KEY_HOME_ROUND_FILTER)  || '18'; }
+export function saveHomeRoundFilter(f)      { try { localStorage.setItem(KEY_HOME_ROUND_FILTER, f); } catch(e) {} }
+export function loadStatsRoundFilter()      { return localStorage.getItem(KEY_STATS_ROUND_FILTER) || 'all'; }
+export function saveStatsRoundFilter(f)     { try { localStorage.setItem(KEY_STATS_ROUND_FILTER, f); } catch(e) {} }
 
 // ── Collapsible section state ─────────────────────────────────────────────────
 export function loadCollapseState(sectionId) {

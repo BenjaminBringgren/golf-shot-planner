@@ -5,10 +5,22 @@
 import {
   loadCourses, loadRounds, deleteRound,
   loadBag, loadProfile, saveProfile,
+  loadHomeRoundFilter, saveHomeRoundFilter,
+  loadStatsRoundFilter, saveStatsRoundFilter,
 } from '../storage/storage.js';
 import { clubs } from '../engine/clubs.js';
 import { interpolate, decodeStrategy } from '../engine/calculations.js';
 import { renderCourseList } from './courses.js';
+
+// ── Round filter state ────────────────────────────────────────────────────────
+let _homeFilter  = '18';
+let _statsFilter = 'all';
+
+export function filterRounds(rounds, filter) {
+  if (filter === '18')  return rounds.filter(r => (r.holesPlayed ?? 0) >= 18);
+  if (filter === '9')   return rounds.filter(r => { const h = r.holesPlayed ?? 0; return h >= 9 && h < 18; });
+  return rounds; // 'all'
+}
 
 // ── Utility ───────────────────────────────────────────────────────────────────
 function escHtml(str) {
@@ -195,11 +207,14 @@ export function refreshHomeStats() {
   const emptyEl = document.getElementById('homeStatsEmpty');
   if (!bodyEl || !emptyEl) return;
 
+  _homeFilter = loadHomeRoundFilter();
+  _renderHomeFilterChips();
+
   const courses   = loadCourses ? loadCourses() : {};
   const allRounds = Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []);
-  const full      = allRounds.filter(r => (r.holesPlayed ?? 0) >= 18);
-  full.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-  const recent8 = full.slice(-8);
+  const filtered  = filterRounds(allRounds, _homeFilter);
+  filtered.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  const recent8 = filtered.slice(-8);
 
   if (!recent8.length) {
     bodyEl.classList.add('hidden');
@@ -210,9 +225,26 @@ export function refreshHomeStats() {
   emptyEl.classList.add('hidden');
 
   _renderHomeSparkline(recent8);
-  _renderHomeStatTiles(allRounds, full);
+  _renderHomeStatTiles(filtered, filtered);
   _renderHomeInsight(courses);
-  _renderHomeRecentRounds(allRounds, courses);
+  _renderHomeRecentRounds(filtered, courses);
+}
+
+function _renderHomeFilterChips() {
+  const row = document.getElementById('homeRoundFilter');
+  if (!row) return;
+  row.innerHTML = ['18H', '9H', 'ALL'].map(label => {
+    const val = label === '18H' ? '18' : label === '9H' ? '9' : 'all';
+    const active = _homeFilter === val ? ' rfc-active' : '';
+    return `<button class="rfc-chip${active}" data-filter="${val}" type="button">${label}</button>`;
+  }).join('');
+  row.querySelectorAll('.rfc-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _homeFilter = btn.dataset.filter;
+      saveHomeRoundFilter(_homeFilter);
+      refreshHomeStats();
+    });
+  });
 }
 
 function _renderHomeSparkline(recent) {
@@ -302,7 +334,7 @@ function _renderHomeStatTiles(allRounds, full) {
   // Putts/hole using per-hole data (excludes simple-mode holes)
   let totalPutts = 0, totalPuttsHoles = 0;
   Object.keys(courses).forEach(courseId => {
-    const rounds = loadRounds ? loadRounds(courseId) : [];
+    const rounds = filterRounds(loadRounds ? loadRounds(courseId) : [], _homeFilter);
     rounds.forEach(round => {
       if (!round.scores) return;
       round.scores.forEach(s => {
@@ -329,7 +361,7 @@ function _renderHomeInsight(courses) {
   const parData = { 3: { strokes: 0, holes: 0 }, 4: { strokes: 0, holes: 0 }, 5: { strokes: 0, holes: 0 } };
   Object.keys(courses).forEach(courseId => {
     const course = courses[courseId];
-    const rounds = loadRounds ? loadRounds(courseId) : [];
+    const rounds = filterRounds(loadRounds ? loadRounds(courseId) : [], _homeFilter);
     rounds.forEach(round => {
       if (!round.scores) return;
       round.scores.forEach((s, i) => {
@@ -372,7 +404,7 @@ function _renderHomeRecentRounds(allRounds, courses) {
 
   const all = [];
   Object.keys(courses).forEach(id => {
-    const rounds = loadRounds ? loadRounds(id) : [];
+    const rounds = filterRounds(loadRounds ? loadRounds(id) : [], _homeFilter);
     rounds.forEach(r => all.push({ ...r, courseName: courses[id].name }));
   });
   all.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
@@ -393,8 +425,12 @@ function _renderHomeRecentRounds(allRounds, courses) {
 
 // ── Stats page (My Golf) ──────────────────────────────────────────────────────
 export function renderMgStatsPage() {
+  _statsFilter = loadStatsRoundFilter();
+  _renderStatsFilterChips();
+
   const courses    = loadCourses ? loadCourses() : {};
-  const allRounds  = Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []);
+  const rawRounds  = Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []);
+  const allRounds  = filterRounds(rawRounds, _statsFilter);
   const fullRounds = allRounds.filter(r => (r.holesPlayed ?? 0) >= 18);
 
   // Compact summary header
@@ -423,6 +459,23 @@ export function renderMgStatsPage() {
   _wireStatsDrillButtons();
 }
 
+function _renderStatsFilterChips() {
+  const row = document.getElementById('statsRoundFilter');
+  if (!row) return;
+  row.innerHTML = ['18H', '9H', 'ALL'].map(label => {
+    const val = label === '18H' ? '18' : label === '9H' ? '9' : 'all';
+    const active = _statsFilter === val ? ' rfc-active' : '';
+    return `<button class="rfc-chip${active}" data-filter="${val}" type="button">${label}</button>`;
+  }).join('');
+  row.querySelectorAll('.rfc-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _statsFilter = btn.dataset.filter;
+      saveStatsRoundFilter(_statsFilter);
+      renderMgStatsPage();
+    });
+  });
+}
+
 function _populateStatsDrillSubs(allRounds, courses, fullRounds) {
   // Score distribution sub
   const scoreSub = document.getElementById('mgDrillScoreSub');
@@ -430,7 +483,7 @@ function _populateStatsDrillSubs(allRounds, courses, fullRounds) {
     let birdies = 0, bogeys = 0, doubles = 0, totalHoles = 0;
     Object.keys(courses).forEach(courseId => {
       const course = courses[courseId];
-      const rounds = loadRounds ? loadRounds(courseId) : [];
+      const rounds = filterRounds(loadRounds ? loadRounds(courseId) : [], _statsFilter);
       rounds.forEach(round => {
         if (!round.scores) return;
         round.scores.forEach((s, i) => {
@@ -457,7 +510,7 @@ function _populateStatsDrillSubs(allRounds, courses, fullRounds) {
     const parData = { 3: { strokes: 0, holes: 0 }, 4: { strokes: 0, holes: 0 }, 5: { strokes: 0, holes: 0 } };
     Object.keys(courses).forEach(courseId => {
       const course = courses[courseId];
-      const rounds = loadRounds ? loadRounds(courseId) : [];
+      const rounds = filterRounds(loadRounds ? loadRounds(courseId) : [], _statsFilter);
       rounds.forEach(round => {
         if (!round.scores) return;
         round.scores.forEach((s, i) => {
@@ -490,7 +543,7 @@ function _populateStatsDrillSubs(allRounds, courses, fullRounds) {
   // Baseline sub
   const baselineSub = document.getElementById('mgDrillBaselineSub');
   if (baselineSub) {
-    const n = Object.keys(courses).filter(id => (loadRounds ? loadRounds(id) : []).length > 0).length;
+    const n = Object.keys(courses).filter(id => filterRounds(loadRounds ? loadRounds(id) : [], _statsFilter).length > 0).length;
     baselineSub.textContent = n
       ? n + ' course' + (n !== 1 ? 's' : '') + ' · hole-by-hole avg vs par'
       : 'No rounds yet';
@@ -524,7 +577,7 @@ export function renderMgScoreBreakdown() {
   const el = document.getElementById('mgBreakdownContent');
   if (!el) return;
   const courses   = loadCourses ? loadCourses() : {};
-  const allRounds = Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []);
+  const allRounds = filterRounds(Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []), _statsFilter);
   if (!allRounds.length) {
     el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:15px;">No rounds saved yet.</div>';
     return;
@@ -536,7 +589,7 @@ export function renderMgScoreBreakdown() {
 
   Object.keys(courses).forEach(courseId => {
     const course = courses[courseId];
-    const rounds = loadRounds ? loadRounds(courseId) : [];
+    const rounds = filterRounds(loadRounds ? loadRounds(courseId) : [], _statsFilter);
     rounds.forEach(round => {
       if (!round.scores) return;
       round.scores.forEach((s, i) => {
@@ -595,14 +648,14 @@ export function renderMgBaseline() {
   const el = document.getElementById('mgBaselineContent');
   if (!el) return;
   const courses   = loadCourses ? loadCourses() : {};
-  const courseIds = Object.keys(courses).filter(id => (loadRounds ? loadRounds(id) : []).length > 0);
+  const courseIds = Object.keys(courses).filter(id => filterRounds(loadRounds ? loadRounds(id) : [], _statsFilter).length > 0);
   if (!courseIds.length) {
     el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:15px;">No rounds saved yet.</div>';
     return;
   }
   el.innerHTML = courseIds.map(courseId => {
     const course    = courses[courseId];
-    const rounds    = loadRounds ? loadRounds(courseId) : [];
+    const rounds    = filterRounds(loadRounds ? loadRounds(courseId) : [], _statsFilter);
     const holes     = course.holes || [];
     const numHoles  = Math.max(holes.length, 18);
     const holeData  = Array.from({ length: numHoles }, () => ({ strokes: 0, par: 0, count: 0 }));
@@ -654,7 +707,7 @@ export function renderMgAvgStrokesBreakdown() {
   const el = document.getElementById('mgAvgStrokesContent');
   if (!el) return;
   const courses   = loadCourses ? loadCourses() : {};
-  const allRounds = Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []);
+  const allRounds = filterRounds(Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []), _statsFilter);
   if (!allRounds.length) { el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:15px;">No rounds saved yet.</div>'; return; }
 
   let parData = { 3: { strokes: 0, holes: 0 }, 4: { strokes: 0, holes: 0 }, 5: { strokes: 0, holes: 0 } };
@@ -663,7 +716,7 @@ export function renderMgAvgStrokesBreakdown() {
 
   Object.keys(courses).forEach(courseId => {
     const course = courses[courseId];
-    const rounds = loadRounds ? loadRounds(courseId) : [];
+    const rounds = filterRounds(loadRounds ? loadRounds(courseId) : [], _statsFilter);
     rounds.forEach(round => {
       if (!round.scores) return;
       round.scores.forEach((s, i) => {
@@ -682,7 +735,7 @@ export function renderMgAvgStrokesBreakdown() {
   let totalFIR = 0, totalFIRHoles = 0;
   Object.keys(courses).forEach(courseId => {
     const course = courses[courseId];
-    const rounds = loadRounds ? loadRounds(courseId) : [];
+    const rounds = filterRounds(loadRounds ? loadRounds(courseId) : [], _statsFilter);
     rounds.forEach(round => {
       if (!round.scores) return;
       round.scores.forEach((s, i) => {
@@ -763,7 +816,7 @@ export function renderMgPuttsBreakdown() {
   const el = document.getElementById('mgPuttsContent');
   if (!el) return;
   const courses   = loadCourses ? loadCourses() : {};
-  const allRounds = Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []);
+  const allRounds = filterRounds(Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []), _statsFilter);
   if (!allRounds.length) {
     el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:15px;">No rounds saved yet.</div>';
     return;
@@ -772,7 +825,7 @@ export function renderMgPuttsBreakdown() {
   let counts     = { 1: 0, 2: 0, 3: 0, more: 0 };
   let totalHoles = 0;
   Object.keys(courses).forEach(courseId => {
-    const rounds = loadRounds ? loadRounds(courseId) : [];
+    const rounds = filterRounds(loadRounds ? loadRounds(courseId) : [], _statsFilter);
     rounds.forEach(round => {
       if (!round.scores) return;
       round.scores.forEach(s => {
@@ -848,7 +901,7 @@ export function renderMgRecentRounds() {
   const courses = loadCourses ? loadCourses() : {};
   const all     = [];
   Object.keys(courses).forEach(id => {
-    const rounds = loadRounds ? loadRounds(id) : [];
+    const rounds = filterRounds(loadRounds ? loadRounds(id) : [], _statsFilter);
     rounds.forEach(r => all.push({ ...r, courseName: courses[id].name }));
   });
   all.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
