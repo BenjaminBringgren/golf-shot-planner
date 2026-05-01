@@ -252,7 +252,7 @@ function _renderHomeSparkline(recent) {
   const el = document.getElementById('homeSparkline');
   if (!el) return;
 
-  const LINE_COLOR = '#9c9590';
+  const LINE_COLOR = '#5c5752';
   const strokes = recent.map(r => r.totalStrokes ?? 0);
   const diffs   = recent.map(r => (r.totalStrokes ?? 0) - (r.totalPar ?? 0));
   const maxS    = Math.max(...strokes);
@@ -272,19 +272,18 @@ function _renderHomeSparkline(recent) {
   const avgY       = (padY + (maxS - avgStrokes) * scale).toFixed(1);
   const avgLine    = `<line x1="${padX}" y1="${avgY}" x2="${W - padX}" y2="${avgY}" stroke="#ede9e3" stroke-width="1" stroke-dasharray="3,3"/>`;
 
+  const LABEL_COLOR = '#2a2826';
   let dots = '', labels = '';
   recent.forEach((r, i) => {
     const x = xs[i].toFixed(1), y = ys[i].toFixed(1);
-    const d = diffs[i];
     const isLast = i === recent.length - 1;
-    const col = d < 0 ? '#1e7a45' : d > 0 ? '#3a6fc4' : '#aaa';
     dots += isLast
       ? `<circle cx="${x}" cy="${y}" r="3.5" fill="${LINE_COLOR}" stroke="none"/>`
       : `<circle cx="${x}" cy="${y}" r="3.5" fill="#fff" stroke="${LINE_COLOR}" stroke-width="1.5"/>`;
     const ly = strokes[i] <= avgStrokes
       ? (parseFloat(y) - 9).toFixed(1)
       : (parseFloat(y) + 15).toFixed(1);
-    labels += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="11" font-weight="700" fill="${col}" font-family="system-ui">${strokes[i]}</text>`;
+    labels += `<text x="${x}" y="${ly}" text-anchor="middle" font-size="11" font-weight="700" fill="${LABEL_COLOR}" font-family="system-ui">${strokes[i]}</text>`;
   });
 
   const best    = Math.min(...diffs);
@@ -296,8 +295,6 @@ function _renderHomeSparkline(recent) {
     : best < 0;
   const trendArrow = trendDown ? '↗' : '↘';
   const trendCol   = trendDown ? '#1e7a45' : '#3a6fc4';
-  const bestCol    = best < 0 ? '#1e7a45' : best > 0 ? '#3a6fc4' : '#aaa';
-  const avgCol     = avg  < 0 ? '#1e7a45' : avg  > 0 ? '#3a6fc4' : '#aaa';
 
   const chips = ['18H', '9H', 'ALL'].map(label => {
     const val = label === '18H' ? '18' : label === '9H' ? '9' : 'all';
@@ -317,8 +314,8 @@ function _renderHomeSparkline(recent) {
     `</svg></div>` +
     `<div class="mg-chart-strip">` +
     `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val">${recent.length}</div><div class="mg-chart-strip-lbl">Rounds</div></div>` +
-    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${bestCol};">${bestStr}</div><div class="mg-chart-strip-lbl">Best</div></div>` +
-    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${avgCol};">${avgStr}</div><div class="mg-chart-strip-lbl">Avg</div></div>` +
+    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val">${bestStr}</div><div class="mg-chart-strip-lbl">Best</div></div>` +
+    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val">${avgStr}</div><div class="mg-chart-strip-lbl">Avg</div></div>` +
     `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${trendCol};">${trendArrow}</div><div class="mg-chart-strip-lbl">Trend</div></div>` +
     `</div>`;
 
