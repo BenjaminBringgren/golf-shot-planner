@@ -61,6 +61,7 @@ export function initHoleFlowServices({ getExpectedStrokes }) {
 export function setHoleExpected(score) {
   if (_holeExpected === null && score != null && isFinite(score)) {
     _holeExpected = score;
+    _persist(); // must persist immediately — initHole re-runs after calculate() and would restore null otherwise
   }
 }
 
