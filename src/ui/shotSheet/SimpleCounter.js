@@ -216,8 +216,8 @@ function _buildModeToggle(courseId, holeIdx, callbacks) {
       saveScoringMode(mode);
       document.getElementById('scoreDrawer')?.classList.remove('open');
       document.getElementById('scoreDrawerOverlay')?.classList.remove('visible');
-      const scores = loadScores(courseId);
-      callbacks.renderScoreEntry?.(courseId, holeIdx, scores);
+      callbacks.renderScoreEntry?.(courseId, holeIdx, loadScores(courseId));
+      document.getElementById('scoreFab')?.click();
     });
     toggle.appendChild(btn);
   });
