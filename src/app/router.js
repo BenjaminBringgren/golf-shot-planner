@@ -207,7 +207,7 @@ function buildCallbacks() {
     clearRoundOverrides,
     clearAllOverrides,
     applyHoleToPlay,
-    renderScoreEntry,
+    renderScoreEntry: (id, hIdx, scores) => renderScoreEntry(id, hIdx, scores, buildCallbacks()),
     updateHoleCardMode,
     gpsTeeSetState,
     gpsBallSetState,
