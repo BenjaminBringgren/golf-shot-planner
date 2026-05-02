@@ -113,7 +113,7 @@ numeric inputs that need to enable a button as-you-type.
 type="number" with min/max clears the value on iOS for
 intermediate inputs below min, breaking input event handling.
 
-## Button press states — iOS :active fix (applies to Capacitor too)
+## Button press/hover states — iOS fix (applies to Capacitor too)
 Safari and WKWebView do not reliably clear :active when the DOM
 changes during a touch gesture. The app uses a global fix instead:
 
@@ -128,3 +128,11 @@ changes during a touch gesture. The app uses a global fix instead:
   add the CSS rule as `.your-class.is-pressed { ... }` and, if the
   element is not a `<button>`, add its class to `_PRESS_SEL` in
   router.js. Do NOT use `:active` for touch feedback.
+
+Two separate iOS issues, both fixed:
+1. `:active` stuck — fixed via `.is-pressed` + JS touch handler
+2. `:hover` stuck — iOS fires `:hover` on tap and it sticks until
+   next tap elsewhere. Fixed by wrapping ALL `:hover` rules in
+   `@media (hover: hover) { ... }` so they only apply on real
+   pointer devices (desktop). Never write a bare `:hover` rule.
+   Always write: `@media (hover: hover) { .foo:hover { ... } }`

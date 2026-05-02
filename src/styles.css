@@ -24,7 +24,7 @@
       background: #1a1a1a; color: white; border: none; border-radius: 8px; cursor: pointer;
       font-family: inherit;
     }
-    button:hover { background: #333; }
+    @media (hover: hover) { button:hover { background: #333; } }
 
     /* ── Tab bar ───────────────────────────────────────────── */
     .tab-bar {
@@ -64,7 +64,7 @@
       transition: color 0.15s;
       -webkit-tap-highlight-color: transparent;
     }
-    .tab-btn:hover { background: none; color: #555; }
+    @media (hover: hover) { .tab-btn:hover { background: none; color: #555; } }
     .tab-btn.active { color: #1a1a1a; border-bottom-color: transparent; }
     .tab-btn svg path,
     .tab-btn svg circle,
@@ -117,7 +117,7 @@
     }
     .load-course-btn.visible { display: flex; }
     .load-course-btn svg { stroke: #fff !important; }
-    .load-course-btn:hover { background: #333 !important; }
+    @media (hover: hover) { .load-course-btn:hover { background: #333 !important; } }
     .load-course-btn.is-pressed { background: #333 !important; }
 
     /* Sheet overlay */
@@ -160,14 +160,14 @@
       font-size: 15px; font-weight: 700; cursor: pointer;
       flex-shrink: 0; width: auto; margin: 0;
     }
-    .course-picker-play:hover { background: #333 !important; }
+    @media (hover: hover) { .course-picker-play:hover { background: #333 !important; } }
     .course-picker-cancel {
       display: block; width: 100%; padding: 18px;
       text-align: center; font-size: 15px; color: #888 !important;
       border: none; background: #fff !important; cursor: pointer;
       border-top: 0.5px solid #f1efe9; margin: 0; border-radius: 0 !important;
     }
-    .course-picker-cancel:hover { background: #f5f5f5 !important; color: #555 !important; }
+    @media (hover: hover) { .course-picker-cancel:hover { background: #f5f5f5 !important; color: #555 !important; } }
     .course-picker-empty {
       padding: 24px 16px; text-align: center;
       font-size: 15px; color: #aaa;
@@ -207,7 +207,7 @@
       font-size: 22px; line-height: 1; cursor: pointer; padding: 0 4px 0 0;
       font-weight: 300; width: auto; margin: 0;
     }
-    .mg-back-btn:hover { background: none; color: #fff; }
+    @media (hover: hover) { .mg-back-btn:hover { background: none; color: #fff; } }
     .mg-sub-header h2 { margin: 0; font-size: 17px; font-weight: 700; color: #fff; }
 
     /* Hub menu card */
@@ -391,9 +391,9 @@
       display: flex; align-items: center;
     }
     .course-action-btn:first-child { border-left: none; }
-    .course-action-btn:hover { background: rgba(0,0,0,0.05); }
+    @media (hover: hover) { .course-action-btn:hover { background: rgba(0,0,0,0.05); } }
     .course-action-btn.danger { color: #c0392b; }
-    .course-action-btn.danger:hover { background: rgba(0,0,0,0.05); color: #a32d2d; }
+    @media (hover: hover) { .course-action-btn.danger:hover { background: rgba(0,0,0,0.05); color: #a32d2d; } }
     /* ── iOS touch target minimums ───────────────────────────── */
     .course-action-btn { min-height: 42px; padding: 11px 16px; }
     /* hole-cell sizing controlled by main rule below */
@@ -424,13 +424,13 @@
       background: #f0efeb; color: #888; border: none;
       border-radius: 7px; cursor: pointer; width: auto; margin: 0; flex-shrink: 0;
     }
-    .course-editor-cancel:hover { background: #f9f8f6; color: #555; }
+    @media (hover: hover) { .course-editor-cancel:hover { background: #f9f8f6; color: #555; } }
     .course-editor-save {
       font-size: 15px; padding: 12px 16px; border-radius: 5px;
       border: none; background: #1a1a1a; color: #fff;
       cursor: pointer; width: auto; margin: 0; flex-shrink: 0;
     }
-    .course-editor-save:hover { background: #333; }
+    @media (hover: hover) { .course-editor-save:hover { background: #333; } }
 
     /* ── Scorecard — shared across editor, summary, saved rounds ── */
     .scorecard {
@@ -582,7 +582,7 @@
       display: block; font-size: 11px; font-weight: 400;
       color: #aaa; margin-top: 1px;
     }
-    .hole-cell:hover { background: #e5e3df; }
+    @media (hover: hover) { .hole-cell:hover { background: #e5e3df; } }
     .hole-cell.current { background: #1a1a1a; color: #fff; }
     .hole-cell.current .hole-cell-par { color: rgba(255,255,255,0.5); }
     .hole-cell.score-hole-in-one { background: #f5c400; color: #7a5800; }
@@ -719,7 +719,7 @@
       cursor: pointer; display: flex; align-items: center;
       justify-content: center; flex-shrink: 0;
     }
-    .score-stepper-btn:hover { background: #f0efeb; }
+    @media (hover: hover) { .score-stepper-btn:hover { background: #f0efeb; } }
     .score-stepper-val {
       font-size: 22px; font-weight: bold; min-width: 32px;
       text-align: center; color: #222;
@@ -745,7 +745,7 @@
       border-radius: 10px; cursor: pointer; margin: 0; margin-top: 16px;
       transition: background 0.12s, border-color 0.12s;
     }
-    .new-course-btn:hover { background: #f0efeb; border-color: #aaa; }
+    @media (hover: hover) { .new-course-btn:hover { background: #f0efeb; border-color: #aaa; } }
 
     /* ── This Hole card ────────────────────────────────────── */
     .card {
@@ -789,7 +789,7 @@
       padding: 14px 14px; cursor: pointer; user-select: none;
       background: #fff; border-radius: 12px; min-height: 42px;
     }
-    .collapsible-header:hover { background: #fafafa; }
+    @media (hover: hover) { .collapsible-header:hover { background: #fafafa; } }
     .collapsible-header .col-title {
       font-size: 15px; font-weight: 600; color: #333;
     }
@@ -958,7 +958,7 @@
       padding: 0; height: 42px; min-height: 42px;
       transition: background 0.15s, border-color 0.15s, transform 0.1s;
     }
-    .wind-strip-btn:hover { background: #e5e5e2; }
+    @media (hover: hover) { .wind-strip-btn:hover { background: #e5e5e2; } }
     .wind-strip-btn.is-pressed { transform: scale(0.93); background: #d8d8d5; }
     .wind-strip-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
     .wind-strip-btn.locking { background: #e8f0fb !important; border-color: #185fa5 !important; color: #185fa5; }
@@ -1023,7 +1023,7 @@
       cursor: pointer; width: auto; margin: 0; margin-left: auto;
       display: flex; align-items: center; gap: 5px; flex-shrink: 0;
     }
-    .compass-lock-btn:hover { background: #333 !important; }
+    @media (hover: hover) { .compass-lock-btn:hover { background: #333 !important; } }
     .compass-lock-btn:disabled { background: #888 !important; cursor: default; }
 
     .wind-breakdown {
@@ -1102,7 +1102,7 @@
       font-size: 12px; color: #aaa; cursor: pointer;
       text-decoration: underline dotted;
     }
-    .gps-reset-link:hover { color: #c00; }
+    @media (hover: hover) { .gps-reset-link:hover { color: #c00; } }
     .gps-warning { font-size: 12px; color: #a06000; margin: 2px 0 4px; }
 
     /* ── Score FAB ───────────────────────────────────────────── */
@@ -1119,7 +1119,7 @@
       font-family: inherit;
     }
     .score-fab.visible { display: flex; }
-    .score-fab:hover { background: #333; transform: scale(1.06); }
+    @media (hover: hover) { .score-fab:hover { background: #333; transform: scale(1.06); } }
     .score-fab.has-score { background: #1a1a1a; font-size: 22px; }
 
     /* ── Score drawer ────────────────────────────────────────── */
@@ -1173,7 +1173,7 @@
       margin: 0; padding: 0;
     }
     .widget-fab.visible { display: flex; }
-    .widget-fab:hover { background: #333; transform: scale(1.06); }
+    @media (hover: hover) { .widget-fab:hover { background: #333; transform: scale(1.06); } }
 
     /* ── Widget drawer ───────────────────────────────────────── */
     .widget-drawer-overlay {
@@ -1399,7 +1399,7 @@
       cursor: pointer; user-select: none;
       background: #f0efeb;
     }
-    .course-bar-last-round:hover { background: #ebe9e4; }
+    @media (hover: hover) { .course-bar-last-round:hover { background: #ebe9e4; } }
     .course-bar-last-round .lrh-label { color: #888; flex-shrink: 0; }
     .course-bar-last-round .lrh-score { font-weight: 700; color: #1e7a45; }
     .course-bar-last-round .lrh-score.over  { color: #c00; }
@@ -1566,7 +1566,7 @@
       height: 60px; width: 60px; flex-shrink: 0; margin: 0; user-select: none;
       display: inline-flex; align-items: center; justify-content: center;
     }
-    .tee-chip:hover { background: #eeecea; }
+    @media (hover: hover) { .tee-chip:hover { background: #eeecea; } }
     .carousel-card.type-max-distance  .tee-chip.active { border: 1.5px solid #c0392b; background: #fde8e8; color: #c0392b; }
     .carousel-card.type-controlled    .tee-chip.active { border: 1.5px solid #c07820; background: #fef3e2; color: #c07820; }
     .carousel-card.type-conservative  .tee-chip.active { border: 1.5px solid #1e7a45; background: #d4edda; color: #1e7a45; }
@@ -1625,7 +1625,7 @@
       cursor: pointer; border: none; width: 100%; margin: 0; font-family: inherit;
       -webkit-tap-highlight-color: transparent;
     }
-    .play-next-btn:hover { background: #e5e3df !important; }
+    @media (hover: hover) { .play-next-btn:hover { background: #e5e3df !important; } }
     .play-next-btn.is-pressed { background: #e5e3df !important; }
     .play-next-btn-text { color: #555 !important; }
     .play-next-btn-text { font-size: 16px; font-weight: 700; color: #555; }
@@ -1685,7 +1685,7 @@
 
     /* ── Calculate button — context aware ───────────────────── */
     #calcButton { background: #1a1a1a; }
-    #calcButton:hover { background: #333; }
+    @media (hover: hover) { #calcButton:hover { background: #333; } }
     #calcButton.course-active { display: none; }
     #panePlay { background: #f5f4f0; }
     #panePrepare.active { min-height: 100vh; }
@@ -1787,7 +1787,7 @@
       background: #fffffe;
     }
     .hole-row.nodata { cursor: default; }
-    .hole-row:hover:not(.nodata) { background: #f9f8f6; }
+    @media (hover: hover) { .hole-row:hover:not(.nodata) { background: #f9f8f6; } }
     .hole-num {
       width: 28px; height: 28px; border-radius: 7px;
       background: #1a1a1a; color: #fff;
@@ -1890,7 +1890,7 @@
       padding: 13px 16px; border-bottom: 0.5px solid rgba(0,0,0,0.07);
       cursor: pointer; user-select: none; background: #fff;
     }
-    .round-row:hover { background: #f9f8f6; }
+    @media (hover: hover) { .round-row:hover { background: #f9f8f6; } }
     .round-left { flex: 1; min-width: 0; }
     .round-date  { font-size: 15px; font-weight: 600; color: #1a1a1a; }
     .round-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
@@ -1912,7 +1912,7 @@
       font-size: 13px; color: #555; font-weight: 600;
       border-top: 1px solid #ece9e4; cursor: pointer;
     }
-    .show-more:hover { background: #f9f8f6; }
+    @media (hover: hover) { .show-more:hover { background: #f9f8f6; } }
 
     /* ── Round scorecard table ─────────────────────────────── */
     .sc-table { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
@@ -1992,7 +1992,7 @@
       background: #1a1a1a; color: #fff; border: none; border-radius: 6px;
       cursor: pointer; white-space: nowrap; width: auto; margin: 0; flex-shrink: 0;
     }
-    .wind-manual-apply:hover { background: #333; }
+    @media (hover: hover) { .wind-manual-apply:hover { background: #333; } }
 
     /* ── Club picker modal ───────────────────────────────────── */
     .club-picker-overlay {
@@ -2066,7 +2066,7 @@
       font-size: 12px; color: #555; text-decoration: underline dotted;
       cursor: pointer; margin-top: 3px; display: inline-block;
     }
-    .cc-custom-clear:hover { color: #1a1a1a; }
+    @media (hover: hover) { .cc-custom-clear:hover { color: #1a1a1a; } }
 
 
 
@@ -2639,9 +2639,9 @@
   -webkit-tap-highlight-color: transparent;
 }
 .home-card-btn-primary { background: #1a1a1a; color: #fff; }
-.home-card-btn-primary:hover { background: #333; }
+@media (hover: hover) { .home-card-btn-primary:hover { background: #333; } }
 .home-card-btn-secondary { background: #f0efeb; color: #1a1a1a; }
-.home-card-btn-secondary:hover { background: #e5e3df; }
+@media (hover: hover) { .home-card-btn-secondary:hover { background: #e5e3df; } }
 
 /* ── Play tab hero strip + landing ───────────────────────────────────────── */
 .play-hero {
@@ -2697,7 +2697,7 @@
   width: auto; cursor: pointer;
   border-bottom: 1px solid #1a1a1a; border-radius: 0; line-height: 1.2;
 }
-.home-stats-viewall:hover { color: #555; border-bottom-color: #555; }
+@media (hover: hover) { .home-stats-viewall:hover { color: #555; border-bottom-color: #555; } }
 .home-stats-empty {
   font-size: 15px; color: #aaa; padding: 16px 0; text-align: center;
 }
