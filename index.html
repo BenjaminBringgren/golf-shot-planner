@@ -442,7 +442,7 @@
   </div><!-- /windSection -->
 
   <!-- ── GPS tiles ──────────────────────────────────────────────────────── -->
-  <div style="background:#fff;border:0.5px solid rgba(0,0,0,0.07);border-radius:12px;padding:10px 14px 12px;margin-top:0;">
+  <div id="gpsSection" style="background:#fff;border:0.5px solid rgba(0,0,0,0.07);border-radius:12px;padding:10px 14px 12px;margin-top:0;">
     <div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">GPS tracking</div>
     <div class="gps-row" id="gpsTileRow">
       <div class="gps-tile" id="gpsTeeBtn">
@@ -811,6 +811,26 @@
 </div><!-- /appShell -->
 
 <script type="module" src="src/app/router.js"></script>
+  <!-- ── Widget FAB ────────────────────────────────────────────────────── -->
+  <button class="widget-fab" id="widgetFab" type="button" aria-label="Widgets">
+    <svg width="22" height="22" viewBox="-2.4 -2.4 28.80 28.80" fill="none" xmlns="http://www.w3.org/2000/svg" transform="rotate(270)">
+      <rect x="3" y="3" width="7" height="7" rx="1" stroke="#f5f4f0" stroke-width="1.75" stroke-linecap="round"/>
+      <rect x="3" y="14" width="7" height="7" rx="1" stroke="#f5f4f0" stroke-width="1.75" stroke-linecap="round"/>
+      <rect x="14" y="3" width="7" height="7" rx="1" stroke="#f5f4f0" stroke-width="1.75" stroke-linecap="round"/>
+      <path d="M17.5 14.0002L17.5 21.0004" stroke="#f5f4f0" stroke-width="1.75" stroke-linecap="round"/>
+      <path d="M21.0001 17.5001L14 17.5001" stroke="#f5f4f0" stroke-width="1.75" stroke-linecap="round"/>
+    </svg>
+  </button>
+
+  <!-- ── Widget drawer ─────────────────────────────────────────────────── -->
+  <div class="widget-drawer-overlay" id="widgetDrawerOverlay"></div>
+  <div class="widget-drawer" id="widgetDrawer">
+    <div class="score-drawer-handle-area">
+      <div class="score-drawer-handle"></div>
+    </div>
+    <div class="widget-drawer-inner" id="widgetDrawerInner"></div>
+  </div>
+
   <!-- ── Score FAB ─────────────────────────────────────────────────────── -->
   <button class="score-fab" id="scoreFab" type="button">+</button>
 

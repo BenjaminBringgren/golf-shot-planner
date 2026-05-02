@@ -1161,6 +1161,104 @@
       margin-bottom: 14px;
     }
 
+    /* ── Widget FAB ─────────────────────────────────────────── */
+    .widget-fab {
+      position: fixed; bottom: 24px; left: 20px; z-index: 996;
+      width: 72px; height: 72px; border-radius: 50%;
+      background: #1a1a1a; border: none;
+      box-shadow: 0 4px 16px #0004;
+      cursor: pointer; display: none;
+      align-items: center; justify-content: center;
+      transition: background 0.15s, transform 0.15s;
+      margin: 0; padding: 0;
+    }
+    .widget-fab.visible { display: flex; }
+    .widget-fab:hover { background: #333; transform: scale(1.06); }
+
+    /* ── Widget drawer ───────────────────────────────────────── */
+    .widget-drawer-overlay {
+      display: none; position: fixed; inset: 0; z-index: 995;
+      background: rgba(0,0,0,0.45);
+      transition: opacity 0.2s;
+    }
+    .widget-drawer-overlay.visible { display: block; }
+
+    .widget-drawer {
+      position: fixed; bottom: 0; right: 0; left: 0; z-index: 996;
+      background: #f5f4f0; border-radius: 18px 18px 0 0;
+      box-shadow: 0 -4px 24px #0002;
+      padding: 0 0 32px;
+      transform: translateY(100%);
+      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+      touch-action: none;
+      max-width: 520px; margin: 0 auto;
+      height: min(600px, 90vh); display: flex; flex-direction: column; overflow: hidden;
+    }
+    .widget-drawer.open { transform: translateY(0); }
+
+    .widget-drawer-inner {
+      flex: 1; overflow-y: auto; padding: 4px 12px 12px;
+      display: flex; flex-direction: column; gap: 10px; min-height: 0;
+    }
+
+    /* ── Widget cards ────────────────────────────────────────── */
+    .wd-card {
+      background: #fff; border-radius: 12px;
+      border: 0.5px solid rgba(0,0,0,0.07); overflow: hidden;
+    }
+    .wd-card-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 13px 14px;
+    }
+    .wd-card-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: #f0efeb; display: flex; align-items: center;
+      justify-content: center; flex-shrink: 0; color: #555;
+    }
+    .wd-card-title {
+      font-size: 15px; font-weight: 700; color: #1a1a1a; flex: 1;
+    }
+    .wd-card-hint {
+      font-size: 12px; color: #aaa; flex-shrink: 0;
+    }
+    .wd-card-body {
+      border-top: 0.5px solid rgba(0,0,0,0.06);
+    }
+    .wd-card-empty {
+      padding: 12px 14px; font-size: 13px; color: #aaa;
+    }
+
+    /* Weather stats list */
+    .wd-stat-list { padding: 4px 0 2px; }
+    .wd-stat-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 7px 14px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.05);
+    }
+    .wd-stat-row:last-child { border-bottom: none; }
+    .wd-stat-label { font-size: 13px; color: #888; }
+    .wd-stat-val   { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+
+    /* GPS tiles */
+    .wd-gps-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 0; padding: 10px 10px 12px;
+    }
+    .wd-gps-tile {
+      display: flex; align-items: center; gap: 10px;
+      background: #f8f8f6; border-radius: 10px;
+      padding: 10px 12px; margin: 4px;
+    }
+    .wd-gps-tile--marked { background: #edf6f0; }
+    .wd-gps-tile--dim    { opacity: 0.45; }
+    .wd-gps-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #ccc; flex-shrink: 0;
+    }
+    .wd-gps-dot--on { background: #1e7a45; }
+    .wd-gps-label  { font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .wd-gps-status { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-top: 2px; }
+
     /* ── Scorecard full-page overlay ────────────────────────── */
     .scorecard-overlay {
       display: none; position: fixed; inset: 0; z-index: 1099;
@@ -1602,10 +1700,14 @@
       color: #555; text-decoration: underline dotted; cursor: pointer;
     }
 
-    /* ── FAB — positioned above tab bar ─────────────────────── */
+    /* ── FABs — positioned above tab bar ────────────────────── */
     .score-fab {
       bottom: calc(77px + env(safe-area-inset-bottom) + 12px);
       right: 20px;
+    }
+    .widget-fab {
+      bottom: calc(77px + env(safe-area-inset-bottom) + 12px);
+      left: 20px;
     }
 
     /* ── Courses tab — course blocks ───────────────────────── */

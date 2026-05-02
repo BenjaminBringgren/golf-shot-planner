@@ -18,6 +18,8 @@ export const KEY_HERO_IMG_IDX       = 'heroImgIdx';
 export const KEY_HERO_QUOTE_IDX     = 'heroQuoteIdx';
 export const KEY_HOME_ROUND_FILTER  = 'homeRoundFilter';
 export const KEY_STATS_ROUND_FILTER = 'statsRoundFilter';
+export const KEY_WIDGET_WEATHER     = 'widgetWeather';
+export const KEY_WIDGET_GPS         = 'widgetGps';
 
 // ── Per-hole record shape (extended) ─────────────────────────────────────────
 // Backward-compat: new fields default safely on read for older saved rounds.
@@ -178,6 +180,20 @@ export function clearAllHoleFlowStates(courseId) {
   try {
     const prefix = KEY_HOLE_FLOW_STATE + '_' + courseId + '_';
     Object.keys(localStorage).filter(k => k.startsWith(prefix)).forEach(k => localStorage.removeItem(k));
+  } catch(e) {}
+}
+
+// ── Widget visibility preferences ────────────────────────────────────────────
+export function loadWidgetPrefs() {
+  return {
+    weather: localStorage.getItem(KEY_WIDGET_WEATHER) !== '0',
+    gps:     localStorage.getItem(KEY_WIDGET_GPS)     !== '0',
+  };
+}
+export function saveWidgetPrefs(weather, gps) {
+  try {
+    localStorage.setItem(KEY_WIDGET_WEATHER, weather ? '1' : '0');
+    localStorage.setItem(KEY_WIDGET_GPS,     gps     ? '1' : '0');
   } catch(e) {}
 }
 

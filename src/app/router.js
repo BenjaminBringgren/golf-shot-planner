@@ -319,17 +319,19 @@ function switchTab(name) {
     renderCourseList();
     refreshMgHub();
   }
-  // FAB only visible on Play tab when course is active
+  // FABs only visible on Play tab when course is active
+  const courseActive = !!getActiveCourseId();
   const fab = document.getElementById('scoreFab');
-  if (fab) {
-    const courseActive = !!getActiveCourseId();
-    fab.classList.toggle('visible', name === 'play' && courseActive);
-  }
-  // Close drawer when switching tabs
+  if (fab) fab.classList.toggle('visible', name === 'play' && courseActive);
+  const wfab = document.getElementById('widgetFab');
+  if (wfab) wfab.classList.toggle('visible', name === 'play' && courseActive);
+  // Close drawers when switching tabs
   const drawer = document.getElementById('scoreDrawer');
   if (drawer) drawer.classList.remove('open');
   const overlay = document.getElementById('scoreDrawerOverlay');
   if (overlay) overlay.classList.remove('visible');
+  document.getElementById('widgetDrawer')?.classList.remove('open');
+  document.getElementById('widgetDrawerOverlay')?.classList.remove('visible');
   // Close scorecard page when switching tabs
   document.getElementById('scorecardPage')?.classList.remove('open');
   document.getElementById('scorecardOverlay')?.classList.remove('visible');

@@ -15,6 +15,7 @@ import { decodeStrategy } from '../engine/calculations.js';
 import { initHole } from '../app/holeFlow.js';
 import { mountShotSheet }    from './shotSheet/index.js';
 import { mountSimpleCounter } from './shotSheet/SimpleCounter.js';
+import { mountWidgetSheet, hideWidgetFab } from './widgetSheet.js';
 
 // ── Rough-lie state (read by router.js via getInRough) ────────────────────────
 let _inRough = false;
@@ -676,12 +677,14 @@ export function renderScoreEntry(courseId, holeIdx, scores, callbacks = {}) {
   // Simple mode — delegate to simple counter
   if (getScoringMode() === 'simple') {
     mountSimpleCounter({ courseId, holeIdx, par, callbacks });
+    mountWidgetSheet({ courseId });
     return;
   }
 
   // Advanced mode — delegate to shot sheet
   initHole(courseId, holeIdx, par, completedShots.length);
   mountShotSheet({ courseId, holeIdx, callbacks });
+  mountWidgetSheet({ courseId });
   return;
 
   const gpsShots  = completedShots.length;
@@ -1370,7 +1373,7 @@ function _dismissRoundComplete(courseId, callbacks = {}) {
   callbacks.navigateHome?.();
 }
 
-// ── Hide FAB when no course is active ─────────────────────────────────────
+// ── Hide FABs when no course is active ────────────────────────────────────
 export function hideScorefab() {
   const fab = document.getElementById('scoreFab');
   if (fab) fab.classList.remove('visible');
@@ -1378,4 +1381,7 @@ export function hideScorefab() {
   if (drawer) drawer.classList.remove('open');
   const overlay = document.getElementById('scoreDrawerOverlay');
   if (overlay) overlay.classList.remove('visible');
+  hideWidgetFab();
+  document.getElementById('widgetDrawer')?.classList.remove('open');
+  document.getElementById('widgetDrawerOverlay')?.classList.remove('visible');
 }
