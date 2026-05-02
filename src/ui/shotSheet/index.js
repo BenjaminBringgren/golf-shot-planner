@@ -292,6 +292,8 @@ function _buildModeToggle(courseId, holeIdx, callbacks) {
     btn.addEventListener('click', () => {
       if (getScoringMode() === mode) return;
       saveScoringMode(mode);
+      document.getElementById('scoreDrawer')?.classList.remove('open');
+      document.getElementById('scoreDrawerOverlay')?.classList.remove('visible');
       const scores = loadScores(courseId);
       callbacks.renderScoreEntry?.(courseId, holeIdx, scores);
     });
