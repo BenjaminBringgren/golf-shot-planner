@@ -112,3 +112,19 @@ Use type="text" inputmode="numeric" pattern="[0-9]*" for
 numeric inputs that need to enable a button as-you-type.
 type="number" with min/max clears the value on iOS for
 intermediate inputs below min, breaking input event handling.
+
+## Button press states — iOS :active fix (applies to Capacitor too)
+Safari and WKWebView do not reliably clear :active when the DOM
+changes during a touch gesture. The app uses a global fix instead:
+
+- In CSS: use `.is-pressed` class, never `:active`, for all button
+  feedback (background change, transform scale, etc.)
+- The global handler lives in src/app/router.js and uses delegated
+  touchstart/touchend/touchcancel on document to add/remove
+  `.is-pressed` on any matching element.
+- Selector covers: `button`, `.mg-menu-row`, `.gps-tile`,
+  `.club-picker-item`, `.sh-lie`
+- When adding new interactive elements that need press feedback:
+  add the CSS rule as `.your-class.is-pressed { ... }` and, if the
+  element is not a `<button>`, add its class to `_PRESS_SEL` in
+  router.js. Do NOT use `:active` for touch feedback.

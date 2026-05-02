@@ -118,7 +118,7 @@
     .load-course-btn.visible { display: flex; }
     .load-course-btn svg { stroke: #fff !important; }
     .load-course-btn:hover { background: #333 !important; }
-    .load-course-btn:active { background: #333 !important; }
+    .load-course-btn.is-pressed { background: #333 !important; }
 
     /* Sheet overlay */
     .course-picker-overlay {
@@ -222,7 +222,7 @@
       padding: 13px 14px; border-bottom: 0.5px solid #f1efe9; cursor: pointer;
     }
     .mg-menu-row:last-child { border-bottom: none; }
-    .mg-menu-row:active { background: #f5f4f0; }
+    .mg-menu-row.is-pressed { background: #f5f4f0; }
     .mg-menu-icon {
       width: 42px; height: 42px; border-radius: 9px;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
@@ -347,7 +347,7 @@
       text-align: center; font-size: 17px; font-weight: 700;
       color: #fff; cursor: pointer; width: calc(100% - 24px);
     }
-    .mg-profile-save-btn:active { background: #333; }
+    .mg-profile-save-btn.is-pressed { background: #333; }
 
     /* Edit bag button */
     .mg-edit-btn {
@@ -357,7 +357,7 @@
       text-align: center; font-size: 16px; font-weight: 700;
       color: #1a1a1a; cursor: pointer;
     }
-    .mg-edit-btn:active { background: #e8e6e1; }
+    .mg-edit-btn.is-pressed { background: #e8e6e1; }
 
     /* Prepare tab (legacy — keep for course editor) */
     .prepare-header {
@@ -548,7 +548,7 @@
       font-size: 17px; padding: 0; width: 42px; height: 42px; margin: 0;
       display: flex; align-items: center; justify-content: center;
     }
-    .course-bar-btn:active { background: #e5e3df; }
+    .course-bar-btn.is-pressed { background: #e5e3df; }
     .course-bar-btn.dismiss { color: #bbb; }
     .course-bar-stats { display: flex; align-items: center; gap: 8px; }
     .cbs-item { text-align: right; }
@@ -693,7 +693,7 @@
     .rc-btn-primary { flex: 1; background: #1a1a1a; color: #fff; border: none; border-radius: 8px; height: 56px; font-size: 15px; font-weight: 700; cursor: pointer; }
     .rc-btn-secondary { flex: 1; background: #f0efeb; color: #333; border: none; border-radius: 8px; height: 56px; font-size: 15px; font-weight: 600; cursor: pointer; }
     .rc-btn-delete { display: flex; align-items: center; justify-content: center; width: calc(100% - 28px); margin: 10px 14px 14px; background: none; color: #c00; border: 0.5px solid rgba(204,0,0,0.25); border-radius: 8px; height: 44px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.12s, color 0.12s; text-align: center; }
-    .rc-btn-delete:active { background: rgba(204,0,0,0.07); transform: scale(0.98); }
+    .rc-btn-delete.is-pressed { background: rgba(204,0,0,0.07); transform: scale(0.98); }
     .rc-footnote { text-align: center; font-size: 12px; color: #aaa; padding: 10px 0 4px; }
     .score-entry-title {
       font-size: 13px; font-weight: 700; color: #888;
@@ -959,7 +959,7 @@
       transition: background 0.15s, border-color 0.15s, transform 0.1s;
     }
     .wind-strip-btn:hover { background: #e5e5e2; }
-    .wind-strip-btn:active { transform: scale(0.93); background: #d8d8d5; }
+    .wind-strip-btn.is-pressed { transform: scale(0.93); background: #d8d8d5; }
     .wind-strip-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
     .wind-strip-btn.locking { background: #e8f0fb !important; border-color: #185fa5 !important; color: #185fa5; }
     .wind-strip-btn.locked { background: #1a1a1a; border-color: transparent; }
@@ -1079,7 +1079,7 @@
       -webkit-tap-highlight-color: transparent;
       transition: background 0.12s;
     }
-    .gps-tile:active { background: #f5f4f0; }
+    .gps-tile.is-pressed { background: #f5f4f0; }
     .gps-tile-indicator {
       width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
     }
@@ -1626,7 +1626,7 @@
       -webkit-tap-highlight-color: transparent;
     }
     .play-next-btn:hover { background: #e5e3df !important; }
-    .play-next-btn:active { background: #e5e3df !important; }
+    .play-next-btn.is-pressed { background: #e5e3df !important; }
     .play-next-btn-text { color: #555 !important; }
     .play-next-btn-text { font-size: 16px; font-weight: 700; color: #555; }
     /* Compare table */
@@ -2041,7 +2041,7 @@
       cursor: pointer; min-height: 60px;
     }
     .club-picker-item:last-child { border-bottom: none; }
-    .club-picker-item:active { background: #f9f8f6; }
+    .club-picker-item.is-pressed { background: #f9f8f6; }
     .club-picker-item.active { background: #f0efeb; }
     .cpi-name { font-size: 17px; font-weight: 600; color: #222; }
     .club-picker-item.active .cpi-name { color: #1a1a1a; }
@@ -2355,7 +2355,7 @@
     position: relative; overflow: hidden;
     -webkit-tap-highlight-color: transparent; width: auto; margin: 0;
   }
-  .sh-lie:active { transform: scale(0.96); }
+  .sh-lie.is-pressed { transform: scale(0.96); }
   .sh-lie-icon { width: 22px; height: 22px; opacity: 0.55; }
   .sh-lie-label { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
   .sh-lie.fw      { background: var(--sh-fw);      color: var(--sh-fw-ink); }
@@ -2382,7 +2382,7 @@
     transition: transform 0.12s var(--sh-spring);
     -webkit-tap-highlight-color: transparent; width: auto; margin: 0;
   }
-  .sh-sec-btn:active { transform: scale(0.97); }
+  .sh-sec-btn.is-pressed { transform: scale(0.97); }
   .sh-sec-btn.penalty { background: var(--sh-penalty); color: var(--sh-penalty-ink); }
   .sh-sec-btn.holed   { background: var(--sh-holed);   color: #fff; }
   .sh-sec-btn svg { width: 18px; height: 18px; }
@@ -2411,7 +2411,7 @@
     transition: transform 0.1s ease;
     -webkit-tap-highlight-color: transparent; width: auto; margin: 0;
   }
-  .sh-quick-putt:active { transform: scale(0.94); }
+  .sh-quick-putt.is-pressed { transform: scale(0.94); }
   .sh-quick-putt.active { background: #000; color: #fff; border-color: #000; }
   .sh-putts-stepper {
     display: none; align-items: center; justify-content: center; gap: 16px;
@@ -2443,7 +2443,7 @@
     cursor: pointer; -webkit-tap-highlight-color: transparent;
     transition: background 0.1s;
   }
-  .sh-simple-btn:active { background: rgba(0,0,0,0.14); }
+  .sh-simple-btn.is-pressed { background: rgba(0,0,0,0.14); }
   .sh-simple-btn:disabled { opacity: 0.25; pointer-events: none; }
 
   .sh-confirm-row {
@@ -2678,7 +2678,7 @@
   display: flex; align-items: center; justify-content: center;
   -webkit-tap-highlight-color: transparent; font-family: inherit;
 }
-.calc-close-btn:active { background: #e5e3df; }
+.calc-close-btn.is-pressed { background: #e5e3df; }
 .calc-close-btn.hidden { display: none; }
 
 /* ── Home stats dashboard ─────────────────────────────────────────────────── */
@@ -2770,7 +2770,7 @@
   padding: 14px; cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
-.mg-drilldown-btn:active { background: #f5f4f0; }
+.mg-drilldown-btn.is-pressed { background: #f5f4f0; }
 .mg-drilldown-icon {
   width: 36px; height: 36px; border-radius: 9px;
   background: #f0efeb;
