@@ -46,24 +46,6 @@ export function showMgSub(id) {
     if (f) f.value = p.name || '';
     if (h) h.value = p.handicap !== undefined ? p.handicap : '';
     if (c) c.value = p.homeCourse || '';
-    const curMode = p.scoringMode || 'advanced';
-    function _updateModeDesc(m) {
-      const d = document.getElementById('scoreModeDesc');
-      if (d) d.textContent = m === 'simple'
-        ? 'Total shots only. No putts, GIR or FIR.'
-        : 'Shot sequence, putts, GIR & FIR tracking.';
-    }
-    document.querySelectorAll('.score-mode-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.mode === curMode);
-      btn.addEventListener('click', () => {
-        const prof = loadProfile();
-        saveProfile({ ...prof, scoringMode: btn.dataset.mode });
-        document.querySelectorAll('.score-mode-btn')
-          .forEach(b => b.classList.toggle('active', b === btn));
-        _updateModeDesc(btn.dataset.mode);
-      });
-    });
-    _updateModeDesc(curMode);
   }
 }
 

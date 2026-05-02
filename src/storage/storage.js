@@ -59,6 +59,12 @@ export function saveProfile(data) {
 export function getScoringMode() {
   try { return JSON.parse(localStorage.getItem(KEY_PROFILE) || '{}').scoringMode || 'advanced'; } catch(e) { return 'advanced'; }
 }
+export function saveScoringMode(mode) {
+  try {
+    const p = JSON.parse(localStorage.getItem(KEY_PROFILE) || '{}');
+    localStorage.setItem(KEY_PROFILE, JSON.stringify({ ...p, scoringMode: mode }));
+  } catch(e) {}
+}
 
 // ── Courses ───────────────────────────────────────────────────────────────────
 export function loadCourses() {

@@ -16,7 +16,7 @@ import { renderConfirmRow }       from './ConfirmRow.js';
 import { renderResultBar }        from './ResultBar.js';
 import { renderStatsBar }         from './StatsBar.js';
 import { success as hapticSuccess } from '../../platform/haptics.js';
-import { loadScores, loadCourses } from '../../storage/storage.js';
+import { loadScores, loadCourses, getScoringMode, saveScoringMode } from '../../storage/storage.js';
 
 /**
  * Mount the shot sheet into the score drawer inner container.
@@ -218,6 +218,9 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
       inner.appendChild(renderStatsBar({ vsExpected, roundScore: runDiff, animate: true }));
     }
 
+    // Mode toggle — always at the bottom
+    inner.appendChild(_buildModeToggle(courseId, holeIdx, callbacks));
+
     // Update FAB label
     const liveFab = document.getElementById('scoreFab');
     if (liveFab) _updateFab(liveFab, courseId, holeIdx, state, _openedThisHole);
@@ -266,6 +269,38 @@ function _updateFab(fab, courseId, holeIdx, state, openedThisHole) {
     fab.textContent = '+';
     fab.classList.remove('has-score');
   }
+}
+
+// ── Mode toggle row ───────────────────────────────────────────────────────────
+function _buildModeToggle(courseId, holeIdx, callbacks) {
+  const row = document.createElement('div');
+  row.className = 'sh-mode-row';
+
+  const label = document.createElement('span');
+  label.className = 'sh-mode-label';
+  label.textContent = 'Score entry';
+
+  const toggle = document.createElement('div');
+  toggle.className = 'score-mode-toggle';
+
+  const cur = getScoringMode();
+  ['simple', 'advanced'].forEach(mode => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'score-mode-btn' + (cur === mode ? ' active' : '');
+    btn.textContent = mode === 'simple' ? 'Simple' : 'Advanced';
+    btn.addEventListener('click', () => {
+      if (getScoringMode() === mode) return;
+      saveScoringMode(mode);
+      const scores = loadScores(courseId);
+      callbacks.renderScoreEntry?.(courseId, holeIdx, scores);
+    });
+    toggle.appendChild(btn);
+  });
+
+  row.appendChild(label);
+  row.appendChild(toggle);
+  return row;
 }
 
 // ── Swipe-down to close (entire drawer surface) ──────────────────────────────

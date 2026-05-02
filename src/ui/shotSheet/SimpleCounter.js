@@ -6,7 +6,7 @@
 import { renderActivityHeader } from './ActivityHeader.js';
 import { renderHoleHeader }     from './HoleHeader.js';
 import { renderStatsBar }       from './StatsBar.js';
-import { loadScores, saveScores, loadCourses } from '../../storage/storage.js';
+import { loadScores, saveScores, loadCourses, getScoringMode, saveScoringMode } from '../../storage/storage.js';
 
 let _swipeController = null;
 
@@ -183,12 +183,46 @@ export function mountSimpleCounter({ courseId, holeIdx, par, callbacks }) {
 
     inner.appendChild(renderStatsBar({ vsExpected: null, roundScore: runDiff, animate: false }));
 
+    inner.appendChild(_buildModeToggle(courseId, holeIdx, callbacks));
+
     _updateFab();
   }
 
   if (drawer.classList.contains('open')) _render();
 
   return { openDrawer, closeDrawer };
+}
+
+// ── Mode toggle row ───────────────────────────────────────────────────────────
+function _buildModeToggle(courseId, holeIdx, callbacks) {
+  const row = document.createElement('div');
+  row.className = 'sh-mode-row';
+
+  const label = document.createElement('span');
+  label.className = 'sh-mode-label';
+  label.textContent = 'Score entry';
+
+  const toggle = document.createElement('div');
+  toggle.className = 'score-mode-toggle';
+
+  const cur = getScoringMode();
+  ['simple', 'advanced'].forEach(mode => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'score-mode-btn' + (cur === mode ? ' active' : '');
+    btn.textContent = mode === 'simple' ? 'Simple' : 'Advanced';
+    btn.addEventListener('click', () => {
+      if (getScoringMode() === mode) return;
+      saveScoringMode(mode);
+      const scores = loadScores(courseId);
+      callbacks.renderScoreEntry?.(courseId, holeIdx, scores);
+    });
+    toggle.appendChild(btn);
+  });
+
+  row.appendChild(label);
+  row.appendChild(toggle);
+  return row;
 }
 
 // ── Swipe-down to close ───────────────────────────────────────────────────────

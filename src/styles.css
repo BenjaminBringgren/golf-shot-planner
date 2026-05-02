@@ -2150,9 +2150,11 @@
   #splashStartBtn:disabled { opacity: 0.4; }
   #splashHint { font-size: 13px; color: #999; text-align: center; }
 
-  /* ── Score entry mode toggle (Profile) ──────────────────────────────── */
+  /* ── Score entry mode toggle (score drawer) ─────────────────────────── */
+  .sh-mode-row { display:flex; align-items:center; justify-content:space-between; padding:12px 18px 8px; gap:12px; }
+  .sh-mode-label { font-size:13px; color:#888; flex-shrink:0; }
   .score-mode-toggle { display:flex; border:1.5px solid #ddd; border-radius:10px; overflow:hidden; }
-  .score-mode-btn { flex:1; padding:10px; background:none; border:none; font-size:15px; color:#555; cursor:pointer; }
+  .score-mode-btn { flex:1; padding:8px 14px; background:none; border:none; font-size:13px; color:#555; cursor:pointer; white-space:nowrap; }
   .score-mode-btn.active { background:#1a1a1a; color:#fff; font-weight:600; }
 
   /* ── Score drawer — Direction 2.1 tile grid ──────────────────────────── */
