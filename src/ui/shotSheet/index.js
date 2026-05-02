@@ -36,9 +36,11 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
   drawer.classList.add('sh-expanded');
 
   let _unsubscribe = null;
+  let _openedThisHole = false;
 
   // ── Open / close helpers ─────────────────────────────────────────────────
   function openDrawer() {
+    _openedThisHole = true;
     _render();
     overlay.classList.add('visible');
     drawer.classList.add('open');
@@ -55,7 +57,7 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
     const newFab = fab.cloneNode(true);
     fab.parentNode.replaceChild(newFab, fab);
     newFab.classList.add('visible');
-    _updateFab(newFab, courseId, holeIdx, callbacks.getHoleFlowState?.());
+    _updateFab(newFab, courseId, holeIdx, callbacks.getHoleFlowState?.(), _openedThisHole);
 
     newFab.addEventListener('click', () => {
       if (drawer.classList.contains('open')) closeDrawer();
@@ -218,7 +220,7 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
 
     // Update FAB label
     const liveFab = document.getElementById('scoreFab');
-    if (liveFab) _updateFab(liveFab, courseId, holeIdx, state);
+    if (liveFab) _updateFab(liveFab, courseId, holeIdx, state, _openedThisHole);
 
     // Refresh hole grid in course bar
     const bar = document.getElementById('playCourseBar');
@@ -250,15 +252,14 @@ function _handleNext(state, isLastHole, courseId, holeIdx, callbacks) {
 }
 
 // ── FAB label update ─────────────────────────────────────────────────────────
-function _updateFab(fab, courseId, holeIdx, state) {
+function _updateFab(fab, courseId, holeIdx, state, openedThisHole) {
   const scores = loadScores(courseId);
   const s = scores[holeIdx];
   if (s) {
     const total = (s.fairway ?? 0) + (s.rough ?? 0) + (s.putts ?? 0);
     fab.textContent = String(total);
     fab.classList.add('has-score');
-  } else if (state && state.totalShots > 0) {
-    // totalShots from getState() already excludes putts in STAGE_SHOTS
+  } else if (openedThisHole && state && state.totalShots > 0) {
     fab.textContent = String(state.totalShots);
     fab.classList.add('has-score');
   } else {
