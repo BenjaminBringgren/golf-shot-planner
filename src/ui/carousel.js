@@ -546,13 +546,16 @@ export function renderPlan(_result, ctx) {
     // Strategy name badge (coloured by type)
     const badgeDiv = document.createElement('div');
     badgeDiv.className = 'cc-badge';
-    badgeDiv.textContent = isCustom ? 'Custom' : basePlan.type;
+
+    const badgeLeft = document.createElement('div');
+    badgeLeft.textContent = isCustom ? 'Custom' : basePlan.type;
+
     // Personal baseline indicator
     if (activePlan.blended && activePlan.blendRounds) {
       const ind = document.createElement('div');
       ind.style.cssText = 'font-size:11px;color:#888;font-weight:500;';
       ind.textContent = 'Personal · ' + activePlan.blendRounds + ' rounds';
-      badgeDiv.appendChild(ind);
+      badgeLeft.appendChild(ind);
     } else {
       try {
         const _bSess = loadActiveCourse();
@@ -563,11 +566,20 @@ export function renderPlan(_result, ctx) {
             const ind = document.createElement('div');
             ind.style.cssText = 'font-size:11px;color:#888;font-weight:500;';
             ind.textContent = 'Personal · ' + _bl.rounds + ' rounds';
-            badgeDiv.appendChild(ind);
+            badgeLeft.appendChild(ind);
           }
         }
       } catch(e) {}
     }
+    badgeDiv.appendChild(badgeLeft);
+
+    if (hole) {
+      const lenSpan = document.createElement('span');
+      lenSpan.className = 'cc-badge-length';
+      lenSpan.textContent = `${hole}m`;
+      badgeDiv.appendChild(lenSpan);
+    }
+
     header.appendChild(badgeDiv);
 
     // Score row: big number + label + vs par
