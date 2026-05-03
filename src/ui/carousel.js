@@ -217,7 +217,45 @@ export function renderPlan(_result, ctx) {
 
       const badge = document.createElement('div');
       badge.className = 'cc-badge';
-      badge.textContent = 'Par 3';
+
+      const badgeLeft = document.createElement('div');
+      badgeLeft.textContent = 'Par 3';
+      badge.appendChild(badgeLeft);
+
+      if (hole) {
+        const lenSpan = document.createElement('span');
+        lenSpan.className = 'cc-badge-length cc-badge-length--editable';
+        lenSpan.textContent = `${hole}m`;
+        lenSpan.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.inputMode = 'numeric';
+          input.pattern = '[0-9]*';
+          input.className = 'cc-badge-length-input';
+          input.value = hole;
+          lenSpan.replaceWith(input);
+          input.focus();
+          input.select();
+          function commit() {
+            const val = parseInt(input.value, 10);
+            if (val >= 30 && val <= 300) {
+              const holeLenEl = document.getElementById('holeLength');
+              if (holeLenEl) holeLenEl.value = val;
+              calculate();
+            } else {
+              input.replaceWith(lenSpan);
+            }
+          }
+          input.addEventListener('blur', commit);
+          input.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter')  { ev.preventDefault(); commit(); }
+            if (ev.key === 'Escape') { input.replaceWith(lenSpan); }
+          });
+        });
+        badge.appendChild(lenSpan);
+      }
+
       header.appendChild(badge);
 
       // Expected strokes score row (scoreVal3, diff3, gpsActive3 come from _result.par3 via closure)

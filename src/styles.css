@@ -1465,6 +1465,14 @@
       font-size: 13px; font-weight: 500; text-transform: none;
       letter-spacing: 0; color: #bbb;
     }
+    .cc-badge-length--editable {
+      text-decoration: underline; text-underline-offset: 2px; cursor: pointer;
+    }
+    .cc-badge-length-input {
+      width: 48px; font-size: 13px; font-weight: 500; color: #bbb;
+      border: none; border-bottom: 1px solid #bbb; background: transparent;
+      text-align: right; outline: none; padding: 0;
+    }
     .carousel-card.type-max-distance  .cc-badge { color: #c0392b; }
     .carousel-card.type-controlled    .cc-badge { color: #c07820; }
     .carousel-card.type-conservative  .cc-badge { color: #1e7a45; }
