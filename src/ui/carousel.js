@@ -6,7 +6,7 @@
 import { clubMap, idx7 } from '../engine/clubs.js';
 import {
   expectedStrokesRemaining, findBestContinuation, ALT_FACTORS, tempCarryFactor,
-  windAdjustedRoll, interpolate, calcPar3,
+  windAdjustedRoll, interpolate, calcPar3, crosswindDrift,
 } from '../engine/calculations.js';
 import { loadActiveCourse, getCommittedStrategies, setCommittedStrategies } from '../storage/storage.js';
 
@@ -417,12 +417,13 @@ export function renderPlan(_result, ctx) {
       // ── Crosswind ────────────────────────────────────────────────────
       const cwSide3 = crosswindSide(windState);
       if (cwSide3 !== 'none') {
+        const arrow3   = cwSide3 === 'left' ? '→' : '←';
         const aimSide3 = cwSide3 === 'left' ? 'right' : 'left';
+        const drift3   = crosswindDrift(windState.crosswind, s.carry);
+        const driftStr3 = drift3 > 0 ? ` · ~${drift3}m drift` : '';
         const cwDiv = document.createElement('div');
         cwDiv.className = 'cc-crosswind';
-        cwDiv.innerHTML =
-          `<div class="cc-crosswind-title">${windState.crosswind.toFixed(1)} m/s crosswind from the ${cwSide3}</div>` +
-          `<div class="cc-crosswind-note">Aim ${aimSide3} into the wind</div>`;
+        cwDiv.innerHTML = `<span class="cc-crosswind-arrow">${arrow3}</span><span class="cc-crosswind-text">${windState.crosswind.toFixed(1)} m/s${driftStr3} &nbsp;·&nbsp; Aim ${aimSide3} to compensate</span>`;
         body.appendChild(cwDiv);
       }
 
@@ -1115,12 +1116,13 @@ export function renderPlan(_result, ctx) {
     // Crosswind
     const cwSide = crosswindSide(windState);
     if (cwSide !== 'none') {
+      const arrow   = cwSide === 'left' ? '→' : '←';
       const aimSide = cwSide === 'left' ? 'right' : 'left';
+      const drift   = crosswindDrift(windState.crosswind, activePlan.shots[0].carry);
+      const driftStr = drift > 0 ? ` · ~${drift}m drift` : '';
       const cwDiv   = document.createElement('div');
       cwDiv.className = 'cc-crosswind';
-      cwDiv.innerHTML =
-        `<div class="cc-crosswind-title">${windState.crosswind.toFixed(1)} m/s crosswind from the ${cwSide}</div>` +
-        `<div class="cc-crosswind-note">Aim ${aimSide} into the wind</div>`;
+      cwDiv.innerHTML = `<span class="cc-crosswind-arrow">${arrow}</span><span class="cc-crosswind-text">${windState.crosswind.toFixed(1)} m/s${driftStr} &nbsp;·&nbsp; Aim ${aimSide} to compensate</span>`;
       body.appendChild(cwDiv);
     }
     } // end !gpsActive

@@ -24,9 +24,9 @@ export const WIND_ADJ = {
 
 // ── Altitude correction factors ───────────────────────────────────────────────
 // Wind speed increases with height: V(z) = V(10) * (z/10)^0.143 (open terrain).
-// Golf ball peak trajectory heights (approx):
-//   driver/fw : ~35m  → 1.20 | hybrid/long: ~28m → 1.16 | mid iron : ~22m → 1.12
-//   short iron: ~16m  → 1.07 | wedge       : ~12m → 1.03
+// Trackman data shows PGA Tour apex heights converge across clubs (~27–30m, all ~1.15).
+// Amateurs diverge: driver stays airborne but wedge apex drops with lower technique.
+// ALT_FACTORS = high-handicap baseline; ALT_FACTORS_SCRATCH = tour/low-hcp baseline.
 export const ALT_FACTORS = {
   driver_fw:   1.20,
   hybrid_long: 1.16,
@@ -34,6 +34,24 @@ export const ALT_FACTORS = {
   short_iron:  1.07,
   wedge:       1.03,
 };
+const ALT_FACTORS_SCRATCH = {
+  driver_fw:   1.18,
+  hybrid_long: 1.16,
+  mid_iron:    1.15,
+  short_iron:  1.14,
+  wedge:       1.13,
+};
+
+// Returns the interpolated altitude factor for a club category and handicap.
+// Fallback: HCP 18 (global amateur median) when handicap is unknown.
+export function altFactor(category, handicap) {
+  const hcp = Math.min(Math.max(handicap ?? 18, 0), 54);
+  const t   = hcp / 28; // 0 = scratch, 1 = HCP 28+; clamped below
+  const tt  = Math.min(t, 1);
+  const lo  = ALT_FACTORS_SCRATCH[category];
+  const hi  = ALT_FACTORS[category];
+  return lo + tt * (hi - lo);
+}
 
 // ── Expected strokes remaining lookup ─────────────────────────────────────────
 // 6 approach bands × 4 driver carry tiers
@@ -72,13 +90,13 @@ export function tempCarryFactor(windState) {
 
 // ── Wind carry adjustment ─────────────────────────────────────────────────────
 // Applied to carry only — roll calculated after on the adjusted carry.
-export function applyWind(carry, clubIdx, windState) {
+export function applyWind(carry, clubIdx, windState, handicap) {
   if (!windState.enabled) return carry;
   const tempAdj = carry * tempCarryFactor(windState);
   if (!windState.active) return tempAdj;
   const cat    = windCategory(clubIdx);
   const adj    = WIND_ADJ[cat];
-  const altFac = ALT_FACTORS[cat];
+  const altFac = altFactor(cat, handicap);
   const hw = windState.headwind * altFac;
   if (hw >= 0) {
     return tempAdj - hw * adj.head;
@@ -90,9 +108,9 @@ export function applyWind(carry, clubIdx, windState) {
 // ── Wind roll adjustment ──────────────────────────────────────────────────────
 // η_hw = 0.022 (headwind); η_tw = 0.011 (tailwind ≈ η_hw / 2)
 // Floor: 1.0; ceiling: 1.6
-export function windAdjustedRoll(baseRoll, clubIdx, windState) {
+export function windAdjustedRoll(baseRoll, clubIdx, windState, handicap) {
   if (!windState.active || !windState.enabled) return baseRoll;
-  const altFac = ALT_FACTORS[windCategory(clubIdx)];
+  const altFac = altFactor(windCategory(clubIdx), handicap);
   const hw = windState.headwind * altFac;
   let adjusted;
   if (hw >= 0) {
@@ -234,6 +252,15 @@ export function calcPar3(clubsList, hole) {
 
 // ── Strategy decode / display ─────────────────────────────────────────────────
 export function strategyDisplayName(type) { return type; }
+
+// ── Crosswind lateral drift ───────────────────────────────────────────────────
+// Source: Trackman instructor community rule of thumb — 1 mph crosswind causes
+// 1 foot of drift per 100 yards of carry. Converted to metric and rounded.
+// Returns drift in metres (always positive — direction handled by caller).
+export function crosswindDrift(crosswindMs, carryM) {
+  if (!crosswindMs || !carryM) return 0;
+  return Math.round(crosswindMs * carryM * 0.00748);
+}
 
 export function decodeStrategy(stored) {
   if (!stored) return { type: null, club: null };

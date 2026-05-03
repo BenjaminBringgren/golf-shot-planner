@@ -24,7 +24,7 @@ import {
   clubs, clubOrder, idx7, idxPW, clubMap, getRollFactor,
 } from '../engine/clubs.js';
 import {
-  WIND_ADJ, ALT_FACTORS, EXPECTED_STROKES,
+  WIND_ADJ, ALT_FACTORS, EXPECTED_STROKES, altFactor,
   windCategory, windAdjustedRoll, applyWind, tempCarryFactor,
   interpolate, expectedStrokesRemaining,
   getValidTeeClubs, findBestContinuation, calcPar3,
@@ -77,6 +77,13 @@ function getCarryInputs() {
   };
 }
 
+function _readHandicap() {
+  try {
+    const _hv = parseFloat(loadProfile()?.handicap);
+    return (!isNaN(_hv) && _hv >= 0) ? _hv : null;
+  } catch(e) { return null; }
+}
+
 function updateCarryLabels() {
   const { driver, i7, pw } = getCarryInputs();
   const cond = document.getElementById('conditions').value;
@@ -86,7 +93,7 @@ function updateCarryLabels() {
     if (!driver) { span.textContent = ''; return; }
     const carry = interpolate(driver, i7, pw, c.key);
     const baseRoll = getRollFactor(c.key, cond);
-    const roll  = windAdjustedRoll(baseRoll, clubOrder.indexOf(c.key), windState);
+    const roll  = windAdjustedRoll(baseRoll, clubOrder.indexOf(c.key), windState, _readHandicap());
     const total = carry * roll;
     span.textContent = isFinite(carry) && carry > 0
       ? (roll > 1.00 ? `${carry.toFixed(0)}→${total.toFixed(0)}m` : `${carry.toFixed(0)}m`)
@@ -136,9 +143,9 @@ function getClubs(driver, i7, pw, windState) {
       const baseCarry = interpolate(driver, i7, pw, key);
       if (!isFinite(baseCarry) || baseCarry <= 0) return null;
       const idx   = clubOrder.indexOf(key);
-      const carry    = applyWind(baseCarry, idx, windState);   // wind-adjusted carry
+      const carry    = applyWind(baseCarry, idx, windState, _readHandicap());
       const baseRoll = getRollFactor(key, cond);
-      const roll     = windAdjustedRoll(baseRoll, idx, windState);
+      const roll     = windAdjustedRoll(baseRoll, idx, windState, _readHandicap());
       return { key, carry, baseCarry, total: carry * roll, roll, idx };
     })
     .filter(Boolean)
@@ -741,8 +748,7 @@ initServices({
     if (!windState.active) { windEffectNote.classList.remove('visible'); return; }
     const hw  = windState.headwind;
     const cw  = windState.crosswind;
-    // Altitude-corrected headwind at mid-iron trajectory (~22m) for display
-    const hwAlt = hw * ALT_FACTORS['mid_iron'];
+    const hwAlt = hw * altFactor('mid_iron', _readHandicap());
     let msg = '';
     if (Math.abs(hw) < 0.5 && cw < 1) {
       msg = '🟢 Near-calm — wind effect minimal';
