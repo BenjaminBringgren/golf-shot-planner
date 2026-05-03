@@ -121,10 +121,23 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     nameSpan.textContent = c.name;
     nameWrap.appendChild(nameSpan);
 
+    const holeRow = document.createElement('div');
+    holeRow.className = 'course-bar-hole-row';
+
     const holeNumEl = document.createElement('div');
     holeNumEl.className = 'course-bar-hole-num';
     holeNumEl.textContent = holeIdx + 1;
-    nameWrap.appendChild(holeNumEl);
+    holeRow.appendChild(holeNumEl);
+
+    const holeParts = [`Par ${hole.par || 4}`];
+    if (hole.length) holeParts.push(`${hole.length}m`);
+    if (hole.si)     holeParts.push(`Hcp ${hole.si}`);
+    const holeMetaEl = document.createElement('div');
+    holeMetaEl.className = 'course-bar-hole-meta';
+    holeMetaEl.textContent = holeParts.join(' · ');
+    holeRow.appendChild(holeMetaEl);
+
+    nameWrap.appendChild(holeRow);
 
     if (hole.note) {
       const holeNote = document.createElement('div');
@@ -186,11 +199,6 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     const scoreTxt  = scoreDiff === null ? 'E' : scoreDiff === 0 ? 'E' : (scoreDiff > 0 ? `+${scoreDiff}` : `${scoreDiff}`);
     const scoreCls  = scoreDiff === null || scoreDiff === 0 ? 'score-even' : scoreDiff > 0 ? 'score-over' : 'score-under';
 
-    // Hole meta (par · length) under the hole number in nameWrap
-    const metaEl = document.createElement('div');
-    metaEl.className = 'course-bar-meta';
-    metaEl.textContent = `Par ${holePar}` + (holeLen ? ` · ${holeLen}m` : '');
-    nameWrap.appendChild(metaEl);
 
     statsRow.appendChild(statItem('Score', scoreTxt, scoreCls));
     rightCol.appendChild(statsRow);

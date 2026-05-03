@@ -91,6 +91,8 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
 
     const totalHoles = course.holes.length;
     const holePar    = course.holes[holeIdx]?.par ?? 4;
+    const holeLength = course.holes[holeIdx]?.length || 0;
+    const holeSi     = course.holes[holeIdx]?.si || 0;
     const isLastHole = holeIdx === totalHoles - 1;
 
     // Compute round score (vs par for completed holes)
@@ -136,6 +138,8 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
     inner.appendChild(renderHoleHeader({
       holeIdx,
       par: holePar,
+      length: holeLength,
+      si: holeSi,
     }));
 
     // ── Shot chips ──────────────────────────────────────────────────────

@@ -115,7 +115,12 @@ export function mountSimpleCounter({ courseId, holeIdx, par, callbacks }) {
       roundScore: runDiff,
     }));
 
-    inner.appendChild(renderHoleHeader({ holeIdx, par }));
+    inner.appendChild(renderHoleHeader({
+      holeIdx,
+      par,
+      length: course.holes[holeIdx]?.length || 0,
+      si:     course.holes[holeIdx]?.si || 0,
+    }));
 
     // ── Counter area ────────────────────────────────────────────────────
     const counterArea = document.createElement('div');
