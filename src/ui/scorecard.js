@@ -334,16 +334,20 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
       }
     });
 
-    let front9Par = 0, front9Strokes = 0, front9Putts = 0, front9GIR = 0, front9FIR = 0, front9FIRDenom = 0, front9Played = 0;
+    // FIR denominator = total par 4+ holes in the section (not just played ones)
+    const front9FIRTotal = played.slice(0, 9).filter(h => h.par >= 4).length;
+    const back9FIRTotal  = played.slice(9, 18).filter(h => h.par >= 4).length;
+
+    let front9Par = 0, front9Strokes = 0, front9Putts = 0, front9GIR = 0, front9FIR = 0, front9Played = 0;
     played.slice(0, 9).forEach(h => {
       front9Par += h.par;
-      if (h.total != null) { front9Strokes += h.total; front9Putts += h.putts; if (h.gir === true) front9GIR++; if (h.par >= 4) { front9FIRDenom++; if (h.fir === true) front9FIR++; } front9Played++; }
+      if (h.total != null) { front9Strokes += h.total; front9Putts += h.putts; if (h.gir === true) front9GIR++; if (h.par >= 4 && h.fir === true) front9FIR++; front9Played++; }
     });
 
-    let back9Par = 0, back9Strokes = 0, back9Putts = 0, back9GIR = 0, back9FIR = 0, back9FIRDenom = 0, back9Played = 0;
+    let back9Par = 0, back9Strokes = 0, back9Putts = 0, back9GIR = 0, back9FIR = 0, back9Played = 0;
     played.slice(9, 18).forEach(h => {
       back9Par += h.par;
-      if (h.total != null) { back9Strokes += h.total; back9Putts += h.putts; if (h.gir === true) back9GIR++; if (h.par >= 4) { back9FIRDenom++; if (h.fir === true) back9FIR++; } back9Played++; }
+      if (h.total != null) { back9Strokes += h.total; back9Putts += h.putts; if (h.gir === true) back9GIR++; if (h.par >= 4 && h.fir === true) back9FIR++; back9Played++; }
     });
 
     // Running cumulative diff per hole
@@ -399,6 +403,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
             <div><span class="sc2-hole ${holeCls}">${h.hole}</span></div>
             <div class="sc2-par">${h.par}</div>
             <div class="sc2-idx">${h.si ?? '—'}</div>
+            <div class="sc2-col-sep"></div>
             <div class="sc2-score">${badgeHtml(h.total, h.par)}</div>
             <div class="sc2-gir">${girDot(isPlayed ? girVal : null)}</div>
             ${firCell}
@@ -421,13 +426,14 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           </div>
           <div class="sc2-card">
             <div class="sc2-col-hdr">
-              <span>Hole</span><span>Par</span><span>Hcp</span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span>Total</span>
+              <span>Hole</span><span>Par</span><span>Hcp</span><span class="sc2-col-sep"></span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span>Total</span>
             </div>
             ${rowsHtml}
             <div class="sc2-sub sc2-sub--${subCls}">
               <span class="sc2-sub-lbl">${subLbl}</span>
               <span class="sc2-sub-num">${subPlayed ? subPar : '—'}</span>
               <span class="sc2-sub-num">—</span>
+              <span class="sc2-col-sep"></span>
               <span class="sc2-sub-num">${subPlayed ? subStrokes : '—'}</span>
               <span class="sc2-sub-num">${subPlayed ? subGIR + '/' + subGIRDenom : '—'}</span>
               <span class="sc2-sub-num">${subPlayed && subFIRDenom > 0 ? subFIR + '/' + subFIRDenom : '—'}</span>
@@ -446,21 +452,22 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
       sectionHtml('Front 9', 'Out', 'out', 'OUT',
         sectionRows(0, 9),
         front9Par, front9Putts, front9Played, front9GIR, 9,
-        front9FIR, front9FIRDenom,
+        front9FIR, front9FIRTotal,
         front9Strokes, front9Played ? front9Strokes - front9Par : null) +
       sectionHtml('Back 9', 'In', 'in', 'IN',
         sectionRows(9, 18),
-        back9Par, back9Putts, back9Played, back9GIR, back9Played,
-        back9FIR, back9FIRDenom,
+        back9Par, back9Putts, back9Played, back9GIR, 9,
+        back9FIR, back9FIRTotal,
         back9Strokes, back9Played ? back9Strokes - back9Par : null) +
       `<div class="sc2-card sc2-total-card">
         <div class="sc2-sub sc2-sub--total">
           <span class="sc2-sub-lbl">Total</span>
           <span class="sc2-sub-num">${anyPlayed ? front9Par + back9Par : '—'}</span>
           <span class="sc2-sub-num">—</span>
+          <span class="sc2-col-sep"></span>
           <span class="sc2-sub-num">${holesPlayed ? totalStrokes : '—'}</span>
           <span class="sc2-sub-num">${holesPlayed ? totalGIR + '/' + holesPlayed : '—'}</span>
-          <span class="sc2-sub-num">${holesPlayed && totalFIRDenom > 0 ? totalFIR + '/' + totalFIRDenom : '—'}</span>
+          <span class="sc2-sub-num">${holesPlayed ? totalFIR + '/' + played.filter(h => h.par >= 4).length : '—'}</span>
           <span class="sc2-sub-num">${holesPlayed ? totalPutts : '—'}</span>
           <span class="sc2-sub-diff">${holesPlayed ? subDiff(totalStrokes - totalPar) : '—'}</span>
         </div>
