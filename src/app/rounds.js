@@ -297,7 +297,7 @@ function _renderHomeSparkline(recent) {
     `<div class="mg-chart-strip">` +
     `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val">${recent.length}</div><div class="mg-chart-strip-lbl">Rounds</div></div>` +
     `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val">${bestStr}</div><div class="mg-chart-strip-lbl">Best</div></div>` +
-    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val">${avgStr}</div><div class="mg-chart-strip-lbl">Avg</div></div>` +
+    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val">${Math.round(avgStrokes)}</div><div class="mg-chart-strip-lbl">Avg</div></div>` +
     `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${trendCol};">${trendArrow}</div><div class="mg-chart-strip-lbl">Trend</div></div>` +
     `</div>`;
 

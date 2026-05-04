@@ -1073,8 +1073,7 @@ export function renderPlan(_result, ctx) {
         const dir = anyDelta < 0 ? 'head' : 'tail';
         wRow.innerHTML =
           `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round"><path d="M9.59 4.59A2 2 0 1 1 11 8H2"/><path d="M8 11.03A2.5 2.5 0 1 1 9.5 16H2"/></svg>` +
-          `<span class="cc-wind-effect-text">${hw} m/s ${dir}wind</span>` +
-          `<span class="cc-wind-effect-val${anyDelta > 0 ? ' help' : ''}">${anyDelta > 0 ? '+' : ''}${anyDelta}m total</span>`;
+          `<span class="cc-wind-effect-text">${hw} m/s ${dir}wind</span>`;
         body.appendChild(wRow);
       }
     }
