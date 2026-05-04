@@ -129,25 +129,9 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     holeNumEl.textContent = holeIdx + 1;
     holeRow.appendChild(holeNumEl);
 
-    const _barProf   = loadProfile ? loadProfile() : {};
-    const _barHcpIdx = parseFloat(_barProf.handicap);
-    const _barSlope  = parseInt(c?.slopeRating);
-    const _barRating = parseFloat(c?.courseRating);
-    const _barPar    = (c?.holes || []).reduce((a, h) => a + (h.par || 4), 0);
-    const _barAllSI  = (c?.holes || []).map(h => h.si || 0);
-    const _barSiOk   = _barAllSI.length === 18 && _barAllSI.every(si => si >= 1 && si <= 18);
-    let _holeGetsStroke = false;
-    if (!isNaN(_barHcpIdx) && _barHcpIdx > 0 && _barSlope > 0 && _barRating > 0 && _barSiOk) {
-      const _barCh   = courseHandicap(_barHcpIdx, _barSlope, _barRating, _barPar);
-      const _barFull = Math.floor(_barCh / 18);
-      const _barRem  = _barCh % 18;
-      const _barSI   = _barAllSI[holeIdx];
-      _holeGetsStroke = _barFull > 0 || _barSI <= _barRem;
-    }
-
     const holeParts = [`Par ${hole.par || 4}`];
     if (hole.length) holeParts.push(`${hole.length}m`);
-    if (hole.si)     holeParts.push(`Hcp ${hole.si}${_holeGetsStroke ? ' •' : ''}`);
+    if (hole.si)     holeParts.push(`Hcp ${hole.si}`);
     const holeMetaEl = document.createElement('div');
     holeMetaEl.className = 'course-bar-hole-meta';
     holeMetaEl.textContent = holeParts.join(' · ');
@@ -347,15 +331,21 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     const _cTotalPar = (c?.holes || []).reduce((a, h) => a + (h.par || 4), 0);
     const _allSI   = (c?.holes || []).map(h => h.si || 0);
     const _siOk    = _allSI.length === 18 && _allSI.every(si => si >= 1 && si <= 18);
-    const strokeHoles = new Set();
+    const holeStrokeCounts = new Array(18).fill(0);
     if (!isNaN(_hcpIdx) && _hcpIdx > 0 && _slope > 0 && _rating > 0 && _siOk) {
       const ch        = courseHandicap(_hcpIdx, _slope, _rating, _cTotalPar);
       const full      = Math.floor(ch / 18);
       const remainder = ch % 18;
-      _allSI.forEach((si, i) => { if (full > 0 || si <= remainder) strokeHoles.add(i); });
+      _allSI.forEach((si, i) => { holeStrokeCounts[i] = full + (si <= remainder ? 1 : 0); });
     }
-    const front9StrokeCount = [...strokeHoles].filter(i => i < 9).length;
-    const back9StrokeCount  = [...strokeHoles].filter(i => i >= 9).length;
+    const front9StrokeCount = holeStrokeCounts.slice(0, 9).reduce((a, n) => a + n, 0);
+    const back9StrokeCount  = holeStrokeCounts.slice(9).reduce((a, n) => a + n, 0);
+    const totalStrokeCount  = front9StrokeCount + back9StrokeCount;
+
+    function hcpDotsHtml(count) {
+      if (!count) return '';
+      return Array(Math.min(count, 4)).fill('<span class="sc2-hcp-dot"></span>').join('');
+    }
 
     let totalStrokes = 0, totalPar = 0, totalPutts = 0, totalGIR = 0, totalFIR = 0, totalFIRDenom = 0, holesPlayed = 0;
     played.forEach(h => {
@@ -436,7 +426,8 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           <div class="sc2-row">
             <div><span class="sc2-hole ${holeCls}">${h.hole}</span></div>
             <div class="sc2-par">${h.par}</div>
-            <div class="sc2-idx">${h.si ?? '—'}${strokeHoles.has(from + idx) ? '<span class="sc2-stroke-dot">•</span>' : ''}</div>
+            <div class="sc2-idx">${h.si ?? '—'}</div>
+            <div class="sc2-hcp-dots">${hcpDotsHtml(holeStrokeCounts[from + idx])}</div>
             <div class="sc2-col-sep"></div>
             <div class="sc2-score">${badgeHtml(h.total, h.par)}</div>
             <div class="sc2-gir">${girDot(isPlayed ? girVal : null)}</div>
@@ -452,7 +443,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
                          subFIR, subFIRDenom,
                          subStrokes, subDiffVal, subStrokeCount) {
       const d = subPlayed ? subDiff(subDiffVal) : '—';
-      const hcpCell = subStrokeCount > 0 ? subStrokeCount : '—';
+      const dotsCell = subStrokeCount > 0 ? subStrokeCount : '—';
       return `
         <div class="sc2-section">
           <div class="sc2-section-header">
@@ -461,13 +452,14 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           </div>
           <div class="sc2-card">
             <div class="sc2-col-hdr">
-              <span>Hole</span><span>Par</span><span>Hcp</span><span class="sc2-col-sep"></span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span>Total</span>
+              <span>Hole</span><span>Par</span><span>Hcp</span><span></span><span class="sc2-col-sep"></span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span>Total</span>
             </div>
             ${rowsHtml}
             <div class="sc2-sub sc2-sub--${subCls}">
               <span class="sc2-sub-lbl">${subLbl}</span>
               <span class="sc2-sub-num">${subPlayed ? subPar : '—'}</span>
-              <span class="sc2-sub-num">${hcpCell}</span>
+              <span class="sc2-sub-num">—</span>
+              <span class="sc2-sub-num">${dotsCell}</span>
               <span class="sc2-col-sep"></span>
               <span class="sc2-sub-num">${subPlayed ? subStrokes : '—'}</span>
               <span class="sc2-sub-num">${subPlayed ? subGIR + '/' + subGIRDenom : '—'}</span>
@@ -498,7 +490,8 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
         <div class="sc2-sub sc2-sub--total">
           <span class="sc2-sub-lbl">Total</span>
           <span class="sc2-sub-num">${anyPlayed ? front9Par + back9Par : '—'}</span>
-          <span class="sc2-sub-num">${strokeHoles.size > 0 ? strokeHoles.size : '—'}</span>
+          <span class="sc2-sub-num">—</span>
+          <span class="sc2-sub-num">${totalStrokeCount > 0 ? totalStrokeCount : '—'}</span>
           <span class="sc2-col-sep"></span>
           <span class="sc2-sub-num">${holesPlayed ? totalStrokes : '—'}</span>
           <span class="sc2-sub-num">${holesPlayed ? totalGIR + '/' + holesPlayed : '—'}</span>
