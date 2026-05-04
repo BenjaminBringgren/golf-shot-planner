@@ -1331,10 +1331,10 @@
 
     .sc2-card { background: #fff; border-radius: 12px; overflow: hidden; border: 0.5px solid rgba(0,0,0,0.07); }
 
-    .sc2-col-hdr { display: grid; grid-template-columns: 44px 1fr 1fr 1px 1fr 1fr 1fr 1fr 1.4fr; padding: 9px 14px; background: #f0efeb; border-bottom: 0.5px solid rgba(0,0,0,0.07); }
-    .sc2-col-hdr > span { font-size: 10px; font-weight: 700; color: #888; letter-spacing: 0.06em; text-transform: uppercase; }
-    .sc2-col-hdr > span:not(:first-child) { text-align: center; }
-    .sc2-col-hdr > span:last-child { text-align: right; }
+    .sc2-col-hdr { display: grid; grid-template-columns: 44px 1fr 1fr 1px 1fr 1fr 1fr 1fr 1.4fr; padding: 0 14px; background: #f0efeb; }
+    .sc2-col-hdr > span { font-size: 10px; font-weight: 700; color: #888; letter-spacing: 0.06em; text-transform: uppercase; padding: 9px 0; display: flex; align-items: center; justify-content: center; }
+    .sc2-col-hdr > span:first-child { justify-content: flex-start; }
+    .sc2-col-hdr > span:last-child { justify-content: flex-end; }
 
     .sc2-row { display: grid; grid-template-columns: 44px 1fr 1fr 1px 1fr 1fr 1fr 1fr 1.4fr; padding: 0 14px; height: 52px; align-items: center; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
     .sc2-row:last-of-type { border-bottom: none; }
@@ -1346,12 +1346,10 @@
     .sc2-par { text-align: center; font-size: 15px; font-weight: 500; color: #1a1a1a; }
     .sc2-idx { text-align: center; font-size: 13px; font-weight: 500; color: #888; }
     .sc2-col-sep { background: rgba(0,0,0,0.1); align-self: stretch; }
-    .sc2-col-hdr .sc2-col-sep { margin: -9px 0; }
 
     /* Hole-info group background tint (Hole, Par, Hcp columns) */
     .sc2-row > div:nth-child(-n+3) { background: #f5f4f0; align-self: stretch; display: flex; align-items: center; justify-content: center; }
     .sc2-col-hdr > span:nth-child(-n+3) { background: none; }
-    .sc2-sub--in > *:nth-child(-n+3) { background: rgba(0,0,0,0.05); }
     .sc2-sub--out > *:nth-child(-n+3),
     .sc2-sub--total > *:nth-child(-n+3) { background: rgba(0,0,0,0.15); }
 
