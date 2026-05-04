@@ -1331,10 +1331,11 @@
 
     .sc2-card { background: #fff; border-radius: 12px; overflow: hidden; border: 0.5px solid rgba(0,0,0,0.07); }
 
-    .sc2-col-hdr { display: grid; grid-template-columns: 44px 1fr 1fr 1px 1fr 1fr 1fr 1fr 1.4fr; padding: 0 14px; background: #f0efeb; }
-    .sc2-col-hdr > span { font-size: 10px; font-weight: 700; color: #888; letter-spacing: 0.06em; text-transform: uppercase; padding: 9px 0; line-height: 1; }
+    .sc2-col-hdr { display: grid; grid-template-columns: 44px 1fr 1fr 1px 1fr 1fr 1fr 1fr 1.4fr; padding: 9px 14px; background: #f0efeb; border-bottom: 0.5px solid rgba(0,0,0,0.07); }
+    .sc2-col-hdr > span { font-size: 10px; font-weight: 700; color: #888; letter-spacing: 0.06em; text-transform: uppercase; }
     .sc2-col-hdr > span:not(:first-child) { text-align: center; }
     .sc2-col-hdr > span:last-child { text-align: right; }
+    .sc2-col-hdr .sc2-col-sep { background: transparent; }
 
     .sc2-row { display: grid; grid-template-columns: 44px 1fr 1fr 1px 1fr 1fr 1fr 1fr 1.4fr; padding: 0 14px; height: 52px; align-items: center; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
     .sc2-row:last-of-type { border-bottom: none; }
