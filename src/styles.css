@@ -1346,6 +1346,7 @@
     .sc2-par { text-align: center; font-size: 15px; font-weight: 500; color: #1a1a1a; }
     .sc2-idx { text-align: center; font-size: 13px; font-weight: 500; color: #888; }
     .sc2-col-sep { background: rgba(0,0,0,0.1); align-self: stretch; }
+    .sc2-col-hdr .sc2-col-sep { margin: -9px 0; }
 
     /* Hole-info group background tint (Hole, Par, Hcp columns) */
     .sc2-row > div:nth-child(-n+3) { background: #f5f4f0; align-self: stretch; display: flex; align-items: center; justify-content: center; }
