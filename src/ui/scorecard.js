@@ -317,7 +317,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
   function renderSummary() {
     scores = loadScores(courseId);
     const played = scores.map((s, i) => ({
-      hole: i + 1, par: c.holes[i]?.par || 4,
+      hole: i + 1, par: c.holes[i]?.par || 4, si: c.holes[i]?.si || null,
       total: s ? (s.fairway || 0) + (s.rough || 0) + (s.putts || 0) : null,
       fairway: s?.fairway ?? null, rough: s?.rough ?? null, putts: s?.putts ?? null,
       gir: s?.gir ?? null, fir: s?.fir ?? null,
@@ -398,6 +398,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           <div class="sc2-row">
             <div><span class="sc2-hole ${holeCls}">${h.hole}</span></div>
             <div class="sc2-par">${h.par}</div>
+            <div class="sc2-idx">${h.si ?? '—'}</div>
             <div class="sc2-score">${badgeHtml(h.total, h.par)}</div>
             <div class="sc2-gir">${girDot(isPlayed ? girVal : null)}</div>
             ${firCell}
@@ -420,12 +421,13 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           </div>
           <div class="sc2-card">
             <div class="sc2-col-hdr">
-              <span>Hole</span><span>Par</span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span>Total</span>
+              <span>Hole</span><span>Par</span><span>Hcp</span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span>Total</span>
             </div>
             ${rowsHtml}
             <div class="sc2-sub sc2-sub--${subCls}">
               <span class="sc2-sub-lbl">${subLbl}</span>
               <span class="sc2-sub-num">${subPlayed ? subPar : '—'}</span>
+              <span class="sc2-sub-num">—</span>
               <span class="sc2-sub-num">${subPlayed ? subStrokes : '—'}</span>
               <span class="sc2-sub-num">${subPlayed ? subGIR + '/' + subGIRDenom : '—'}</span>
               <span class="sc2-sub-num">${subPlayed && subFIRDenom > 0 ? subFIR + '/' + subFIRDenom : '—'}</span>
@@ -455,6 +457,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
         <div class="sc2-sub sc2-sub--total">
           <span class="sc2-sub-lbl">Total</span>
           <span class="sc2-sub-num">${anyPlayed ? front9Par + back9Par : '—'}</span>
+          <span class="sc2-sub-num">—</span>
           <span class="sc2-sub-num">${holesPlayed ? totalStrokes : '—'}</span>
           <span class="sc2-sub-num">${holesPlayed ? totalGIR + '/' + holesPlayed : '—'}</span>
           <span class="sc2-sub-num">${holesPlayed && totalFIRDenom > 0 ? totalFIR + '/' + totalFIRDenom : '—'}</span>
