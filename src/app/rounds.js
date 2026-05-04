@@ -13,9 +13,10 @@ import { interpolate, decodeStrategy, courseHandicap } from '../engine/calculati
 import { renderCourseList } from './courses.js';
 
 // ── Round filter state ────────────────────────────────────────────────────────
-let _homeFilter  = '18';
-let _statsFilter = 'all';
-let _homeNetMode = false;
+let _homeFilter   = '18';
+let _statsFilter  = 'all';
+let _homeNetMode  = false;
+let _statsNetMode = false;
 
 export function filterRounds(rounds, filter) {
   if (filter === '18')  return rounds.filter(r => (r.holesPlayed ?? 0) >= 18);
@@ -128,10 +129,20 @@ export function renderMgStatTiles() {
   const el = document.getElementById('mgStatTiles');
   if (!el) return;
   const courses   = loadCourses ? loadCourses() : {};
-  const allRounds = Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []);
+  const allRounds = Object.keys(courses).flatMap(id =>
+    (loadRounds ? loadRounds(id) : []).map(r => ({ ...r, _courseId: id }))
+  );
   if (!allRounds.length) { el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:15px;">No rounds saved yet.</div>'; return; }
+
+  const profile  = loadProfile();
+  const hcpIndex = parseFloat(profile.handicap);
+  const hasHcp   = !isNaN(hcpIndex) && profile.handicap !== '' && profile.handicap != null;
+
   const totalHoles   = allRounds.reduce((a, r) => a + (r.holesPlayed ?? 0), 0);
-  const totalStrokes = allRounds.reduce((a, r) => a + (r.totalStrokes ?? 0), 0);
+  const totalStrokes = allRounds.reduce((a, r) => {
+    const gross = r.totalStrokes ?? 0;
+    return a + ((_statsNetMode && hasHcp) ? gross - _netAdj(r, courses, hcpIndex) : gross);
+  }, 0);
   const totalPar     = allRounds.reduce((a, r) => a + (r.totalPar ?? 0), 0);
   const totalGIR     = allRounds.reduce((a, r) => a + (r.totalGIR ?? 0), 0);
   const avgVsPar     = totalPar > 0 ? ((totalStrokes - totalPar) / allRounds.length).toFixed(1) : '—';
@@ -146,12 +157,19 @@ export function renderMgStatTiles() {
   let bestRound = null;
   allRounds.forEach(r => {
     if ((r.holesPlayed ?? 0) < 18) return;
-    const diff = (r.totalStrokes ?? 0) - (r.totalPar ?? 0);
-    if (bestRound === null || diff < bestRound.diff) bestRound = { diff, r };
+    const gross  = r.totalStrokes ?? 0;
+    const net    = (_statsNetMode && hasHcp) ? gross - _netAdj(r, courses, hcpIndex) : gross;
+    const diff   = net - (r.totalPar ?? 0);
+    if (bestRound === null || diff < bestRound.diff) bestRound = { diff, net };
   });
-  const bestVal    = bestRound !== null ? (bestRound.r.totalStrokes ?? '—') : '—';
+  const bestVal    = bestRound !== null ? bestRound.net : '—';
   const fullRounds = allRounds.filter(r => (r.holesPlayed ?? 0) >= 18);
-  const avgStrokes = fullRounds.length > 0 ? (fullRounds.reduce((a, r) => a + (r.totalStrokes ?? 0), 0) / fullRounds.length).toFixed(1) : '—';
+  const avgStrokes = fullRounds.length > 0
+    ? (fullRounds.reduce((a, r) => {
+        const gross = r.totalStrokes ?? 0;
+        return a + ((_statsNetMode && hasHcp) ? gross - _netAdj(r, courses, hcpIndex) : gross);
+      }, 0) / fullRounds.length).toFixed(1)
+    : '—';
 
   const tiles = [
     { lbl: 'Rounds',       val: allRounds.length, tappable: true, id: 'mgRoundsTile' },
@@ -464,9 +482,15 @@ export function renderMgStatsPage() {
   _renderStatsFilterChips();
 
   const courses    = loadCourses ? loadCourses() : {};
-  const rawRounds  = Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []);
+  const rawRounds  = Object.keys(courses).flatMap(id =>
+    (loadRounds ? loadRounds(id) : []).map(r => ({ ...r, _courseId: id }))
+  );
   const allRounds  = filterRounds(rawRounds, _statsFilter);
   const fullRounds = allRounds.filter(r => (r.holesPlayed ?? 0) >= 18);
+
+  const profile  = loadProfile();
+  const hcpIndex = parseFloat(profile.handicap);
+  const hasHcp   = !isNaN(hcpIndex) && profile.handicap !== '' && profile.handicap != null;
 
   // Compact summary header
   const summaryEl = document.getElementById('mgStatsSummary');
@@ -476,11 +500,16 @@ export function renderMgStatsPage() {
     } else {
       let bestDiff = null, bestStrokes = null;
       fullRounds.forEach(r => {
-        const d = (r.totalStrokes ?? 0) - (r.totalPar ?? 0);
-        if (bestDiff === null || d < bestDiff) { bestDiff = d; bestStrokes = r.totalStrokes; }
+        const gross   = r.totalStrokes ?? 0;
+        const strokes = (_statsNetMode && hasHcp) ? gross - _netAdj(r, courses, hcpIndex) : gross;
+        const d       = strokes - (r.totalPar ?? 0);
+        if (bestDiff === null || d < bestDiff) { bestDiff = d; bestStrokes = strokes; }
       });
       const avgStrokes = fullRounds.length
-        ? Math.round(fullRounds.reduce((a, r) => a + (r.totalStrokes ?? 0), 0) / fullRounds.length)
+        ? Math.round(fullRounds.reduce((a, r) => {
+            const gross = r.totalStrokes ?? 0;
+            return a + ((_statsNetMode && hasHcp) ? gross - _netAdj(r, courses, hcpIndex) : gross);
+          }, 0) / fullRounds.length)
         : null;
       const parts = [allRounds.length + ' round' + (allRounds.length !== 1 ? 's' : '')];
       if (bestStrokes !== null) parts.push('Best ' + bestStrokes);
@@ -497,17 +526,36 @@ export function renderMgStatsPage() {
 function _renderStatsFilterChips() {
   const row = document.getElementById('statsRoundFilter');
   if (!row) return;
-  row.innerHTML = ['18H', '9H', 'ALL'].map(label => {
-    const val = label === '18H' ? '18' : label === '9H' ? '9' : 'all';
+
+  const profile  = loadProfile();
+  const hcpIndex = parseFloat(profile.handicap);
+  const hasHcp   = !isNaN(hcpIndex) && profile.handicap !== '' && profile.handicap != null;
+
+  const chipsHtml = ['18H', '9H', 'ALL'].map(label => {
+    const val    = label === '18H' ? '18' : label === '9H' ? '9' : 'all';
     const active = _statsFilter === val ? ' rfc-active' : '';
     return `<button class="rfc-chip${active}" data-filter="${val}" type="button">${label}</button>`;
   }).join('');
+
+  const netToggle = hasHcp
+    ? `<span class="hsc-chip-sep">|</span><button class="rfc-chip-toggle${_statsNetMode ? ' rfc-net-active' : ''}" id="statsNetToggle" type="button">${_statsNetMode ? 'Net' : 'Gross'}</button>`
+    : '';
+
+  row.innerHTML = chipsHtml + netToggle;
+
   row.querySelectorAll('.rfc-chip').forEach(btn => {
     btn.addEventListener('click', () => {
       _statsFilter = btn.dataset.filter;
       saveStatsRoundFilter(_statsFilter);
       renderMgStatsPage();
+      renderMgStatTiles();
     });
+  });
+
+  row.querySelector('#statsNetToggle')?.addEventListener('click', () => {
+    _statsNetMode = !_statsNetMode;
+    renderMgStatsPage();
+    renderMgStatTiles();
   });
 }
 
