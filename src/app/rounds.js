@@ -1107,6 +1107,10 @@ export function renderSavedRounds() {
   courseIds.forEach(id => { if ((loadRounds ? loadRounds(id) : []).length > 0) anyRounds = true; });
   if (!anyRounds) return;
 
+  const profile  = loadProfile();
+  const hcpIndex = parseFloat(profile.handicap);
+  const hasHcp   = !isNaN(hcpIndex) && profile.handicap !== '' && profile.handicap != null;
+
   const section = document.createElement('div');
   section.id = 'savedRoundsSection';
 
@@ -1186,10 +1190,12 @@ export function renderSavedRounds() {
     block.appendChild(hdr);
 
     rounds.forEach((round, ri) => {
-      const rowId   = 'rh-' + courseId + '-' + ri;
-      const diff    = (round.totalStrokes || 0) - (round.totalPar || 0);
-      const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : String(diff));
-      const diffCls = diff < 0 ? 'under' : diff > 0 ? 'over' : 'even';
+      const rowId    = 'rh-' + courseId + '-' + ri;
+      const netAdj   = (_statsNetMode && hasHcp) ? _netAdj({ ...round, _courseId: courseId }, courses, hcpIndex) : 0;
+      const netScore = (round.totalStrokes || 0) - netAdj;
+      const diff     = netScore - (round.totalPar || 0);
+      const diffStr  = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : String(diff));
+      const diffCls  = diff < 0 ? 'under' : diff > 0 ? 'over' : 'even';
       const rPutts  = round.totalPutts ?? (round.scores||[]).reduce((a,s)=>a+(s?.putts||0),0);
       const rGIR    = round.totalGIR   ?? (round.scores||[]).filter(s=>s?.gir).length;
       const rFIR    = (round.scores||[]).filter(s=>s?.fir===true).length;
@@ -1215,7 +1221,7 @@ export function renderSavedRounds() {
       const statBar = document.createElement('div');
       statBar.className = 'round-stat-bar';
       statBar.innerHTML = `
-        <div class="round-stat-cell"><div class="round-stat-val">${round.totalStrokes || '—'}</div><div class="round-stat-lbl">Score</div></div>
+        <div class="round-stat-cell"><div class="round-stat-val">${netScore || '—'}</div><div class="round-stat-lbl">${netAdj > 0 ? 'Net score' : 'Score'}</div></div>
         <div class="round-stat-cell"><div class="round-stat-val">${rPutts}</div><div class="round-stat-lbl">Putts</div></div>
         <div class="round-stat-cell"><div class="round-stat-val good">${girPctR}%</div><div class="round-stat-lbl">GIR</div></div>
         <div class="round-stat-cell"><div class="round-stat-val info">${firPctR}%</div><div class="round-stat-lbl">FIR</div></div>`;
