@@ -1348,8 +1348,8 @@
     .sc2-col-sep { background: rgba(0,0,0,0.1); align-self: stretch; }
 
     /* Hole-info group background tint (Hole, Par, Hcp columns) */
-    .sc2-row > div:nth-child(-n+3) { background: #f5f4f0; }
-    .sc2-col-hdr > span:nth-child(-n+3) { background: rgba(0,0,0,0.04); }
+    .sc2-row > div:nth-child(-n+3) { background: #e8e7e2; }
+    .sc2-col-hdr > span:nth-child(-n+3) { background: #e8e7e2; }
     .sc2-sub--in > *:nth-child(-n+3) { background: rgba(0,0,0,0.05); }
     .sc2-sub--out > *:nth-child(-n+3),
     .sc2-sub--total > *:nth-child(-n+3) { background: rgba(0,0,0,0.15); }
