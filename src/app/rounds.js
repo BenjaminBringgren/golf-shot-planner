@@ -9,12 +9,13 @@ import {
   loadStatsRoundFilter, saveStatsRoundFilter,
 } from '../storage/storage.js';
 import { clubs } from '../engine/clubs.js';
-import { interpolate, decodeStrategy } from '../engine/calculations.js';
+import { interpolate, decodeStrategy, courseHandicap } from '../engine/calculations.js';
 import { renderCourseList } from './courses.js';
 
 // ── Round filter state ────────────────────────────────────────────────────────
 let _homeFilter  = '18';
 let _statsFilter = 'all';
+let _homeNetMode = false;
 
 export function filterRounds(rounds, filter) {
   if (filter === '18')  return rounds.filter(r => (r.holesPlayed ?? 0) >= 18);
@@ -192,7 +193,9 @@ export function refreshHomeStats() {
   _homeFilter = loadHomeRoundFilter();
 
   const courses   = loadCourses ? loadCourses() : {};
-  const allRounds = Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []);
+  const allRounds = Object.keys(courses).flatMap(id =>
+    (loadRounds ? loadRounds(id) : []).map(r => ({ ...r, _courseId: id }))
+  );
   const filtered  = filterRounds(allRounds, _homeFilter);
   filtered.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
   const recent8 = filtered.slice(-8);
@@ -205,8 +208,8 @@ export function refreshHomeStats() {
   bodyEl.classList.remove('hidden');
   emptyEl.classList.add('hidden');
 
-  _renderHomeSparkline(recent8);
-  _renderHomeStatTiles(filtered, filtered);
+  _renderHomeSparkline(recent8, courses);
+  _renderHomeStatTiles(filtered, filtered, courses);
   _renderHomeInsight(courses);
   _renderHomeRecentRounds(filtered, courses);
 }
@@ -230,13 +233,30 @@ function _smoothPath(xs, ys) {
   return d;
 }
 
-function _renderHomeSparkline(recent) {
+function _netAdj(r, courses, hcpIndex) {
+  const course = courses[r._courseId];
+  const slope  = course?.slopeRating;
+  const rating = course?.courseRating;
+  if (!slope || !rating) return 0;
+  const totalPar = (course.holes || []).reduce((a, h) => a + (h.par || 4), 0) || 72;
+  const ch = courseHandicap(hcpIndex, slope, rating, totalPar);
+  return Math.round(ch * (r.holesPlayed ?? 18) / 18);
+}
+
+function _renderHomeSparkline(recent, courses) {
   const el = document.getElementById('homeSparkline');
   if (!el) return;
 
-  const LINE_COLOR = '#5c5752';
-  const strokes = recent.map(r => r.totalStrokes ?? 0);
-  const diffs   = recent.map(r => (r.totalStrokes ?? 0) - (r.totalPar ?? 0));
+  const profile   = loadProfile();
+  const hcpIndex  = parseFloat(profile.handicap);
+  const hasHcp    = !isNaN(hcpIndex) && profile.handicap !== '' && profile.handicap != null;
+
+  const LINE_COLOR   = '#5c5752';
+  const grossStrokes = recent.map(r => r.totalStrokes ?? 0);
+  const strokes = _homeNetMode && hasHcp
+    ? recent.map(r => (r.totalStrokes ?? 0) - _netAdj(r, courses, hcpIndex))
+    : grossStrokes;
+  const diffs   = recent.map((r, i) => strokes[i] - (r.totalPar ?? 0));
   const maxS    = Math.max(...strokes);
   const range   = Math.max(Math.max(...strokes) - Math.min(...strokes), 4);
 
@@ -283,9 +303,12 @@ function _renderHomeSparkline(recent) {
     const active = _homeFilter === val ? ' rfc-active' : '';
     return `<button class="rfc-chip${active}" data-filter="${val}" type="button">${label}</button>`;
   }).join('');
+  const netToggle = hasHcp
+    ? `<span class="hsc-chip-sep">|</span><button class="rfc-chip-toggle${_homeNetMode ? ' rfc-net-active' : ''}" id="homeNetToggle" type="button">${_homeNetMode ? 'Net' : 'Gross'}</button>`
+    : '';
 
   el.innerHTML =
-    `<div class="hsc-header"><span class="hsc-title">Score history</span><div class="hsc-chips">${chips}</div></div>` +
+    `<div class="hsc-header"><span class="hsc-title">Score history</span><div class="hsc-chips">${chips}${netToggle}</div></div>` +
     `<div style="padding:10px 12px 0;">` +
     `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;overflow:visible;">` +
     `<defs><linearGradient id="hsg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${LINE_COLOR}" stop-opacity="0.18"/><stop offset="100%" stop-color="${LINE_COLOR}" stop-opacity="0"/></linearGradient></defs>` +
@@ -308,18 +331,30 @@ function _renderHomeSparkline(recent) {
       refreshHomeStats();
     });
   });
+  el.querySelector('#homeNetToggle')?.addEventListener('click', () => {
+    _homeNetMode = !_homeNetMode;
+    refreshHomeStats();
+  });
 }
 
-function _renderHomeStatTiles(allRounds, full) {
+function _renderHomeStatTiles(allRounds, full, courses) {
   const el = document.getElementById('homeStatRow');
   if (!el) return;
 
-  const courses      = loadCourses ? loadCourses() : {};
   const totalHoles   = allRounds.reduce((a, r) => a + (r.holesPlayed ?? 0), 0);
-  const totalStrokes = allRounds.reduce((a, r) => a + (r.totalStrokes ?? 0), 0);
-  const totalPar     = allRounds.reduce((a, r) => a + (r.totalPar ?? 0), 0);
   const totalGIR     = allRounds.reduce((a, r) => a + (r.totalGIR ?? 0), 0);
   const girPct       = totalHoles > 0 ? Math.round(totalGIR / totalHoles * 100) : 0;
+
+  const profile  = loadProfile();
+  const hcpIndex = parseFloat(profile.handicap);
+  const hasHcp   = !isNaN(hcpIndex) && profile.handicap !== '' && profile.handicap != null;
+
+  const totalStrokes = allRounds.reduce((a, r) => {
+    const gross = r.totalStrokes ?? 0;
+    if (_homeNetMode && hasHcp) return a + gross - _netAdj(r, courses, hcpIndex);
+    return a + gross;
+  }, 0);
+  const totalPar = allRounds.reduce((a, r) => a + (r.totalPar ?? 0), 0);
 
   const avgVsPar    = totalPar > 0 && allRounds.length > 0
     ? ((totalStrokes - totalPar) / allRounds.length).toFixed(1)

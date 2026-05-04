@@ -2741,6 +2741,18 @@
 .rfc-chip.rfc-active {
   background: #1a1a1a; color: #fff;
 }
+.hsc-chip-sep {
+  color: rgba(0,0,0,0.2); font-size: 11px;
+  display: flex; align-items: center; padding: 0 1px;
+}
+.rfc-chip-toggle {
+  font-size: 12px; font-weight: 600; color: #888;
+  background: #f0efeb; border: none; border-radius: 20px;
+  padding: 4px 11px; cursor: pointer; line-height: 1.4;
+}
+.rfc-chip-toggle.rfc-net-active {
+  background: #d0ead0; color: #0f5c2e;
+}
 
 .hsc-header {
   display: flex; align-items: center; justify-content: space-between;

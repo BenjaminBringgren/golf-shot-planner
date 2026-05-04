@@ -268,3 +268,9 @@ export function decodeStrategy(stored) {
   if (parts.length >= 2) return { type: parts[0], club: parts.slice(1).join(' · ') };
   return { type: stored, club: null };
 }
+
+// WHS course handicap: strokes received on a specific course.
+// ch = round(hcpIndex × slope/113 + (courseRating − coursePar))
+export function courseHandicap(hcpIndex, slope, rating, par) {
+  return Math.round(hcpIndex * (slope / 113) + (rating - par));
+}
