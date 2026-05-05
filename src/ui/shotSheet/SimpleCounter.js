@@ -63,7 +63,7 @@ export function mountSimpleCounter({ courseId, holeIdx, par, callbacks }) {
       if (n > 0) {
         const dotsEl = document.createElement('span');
         dotsEl.className = 'fab-dots';
-        for (let d = 0; d < Math.min(n, 4); d++) {
+        for (let d = 0; d < Math.min(n, 2); d++) {
           const dot = document.createElement('span');
           dot.className = 'fab-dot';
           dotsEl.appendChild(dot);

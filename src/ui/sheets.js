@@ -208,7 +208,7 @@ export function openCoursePicker(onCourseSelect) {
       ).join('') +
       '<div class="picker-hcp-row">' +
         '<span class="picker-hcp-label">Apply handicap</span>' +
-        '<button class="picker-hcp-toggle" id="pickerHcpToggle" type="button"></button>' +
+        '<button class="picker-hcp-switch" id="pickerHcpToggle" type="button" role="switch"></button>' +
       '</div>';
 
     function _syncCards() {
@@ -218,11 +218,10 @@ export function openCoursePicker(onCourseSelect) {
     }
 
     function _syncHcp() {
-      const isStblf   = fmt === 'stableford';
-      const effectOn  = isStblf ? true : hcpOn;
-      const toggle    = formatBar.querySelector('#pickerHcpToggle');
+      const isStblf = fmt === 'stableford';
+      const effectOn = isStblf ? true : hcpOn;
+      const toggle   = formatBar.querySelector('#pickerHcpToggle');
       if (!toggle) return;
-      toggle.textContent = effectOn ? 'On' : 'Off';
       toggle.classList.toggle('active', effectOn);
       toggle.classList.toggle('dimmed', isStblf);
     }
