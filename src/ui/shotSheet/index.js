@@ -289,14 +289,10 @@ function _updateFab(fab, courseId, holeIdx, state, openedThisHole) {
     const counts = computeHoleStrokeCounts(courseId);
     const n = counts[holeIdx] ?? 0;
     if (n > 0) {
-      const dotsEl = document.createElement('span');
-      dotsEl.className = 'fab-dots';
-      for (let d = 0; d < Math.min(n, 2); d++) {
-        const dot = document.createElement('span');
-        dot.className = 'fab-dot';
-        dotsEl.appendChild(dot);
-      }
-      inner.appendChild(dotsEl);
+      const badge = document.createElement('span');
+      badge.className = 'fab-badge';
+      badge.textContent = String(n);
+      inner.appendChild(badge);
     }
   }
   fab.appendChild(inner);
