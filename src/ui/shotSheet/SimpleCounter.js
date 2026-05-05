@@ -57,7 +57,7 @@ export function mountSimpleCounter({ courseId, holeIdx, par, callbacks }) {
     inner.appendChild(textEl);
 
     const active = loadActiveCourse();
-    if (active?.gameFormat === 'stableford') {
+    if (active?.hcpEnabled !== false) {
       const counts = computeHoleStrokeCounts(courseId);
       const n = counts[holeIdx] ?? 0;
       if (n > 0) {

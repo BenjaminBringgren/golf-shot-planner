@@ -348,7 +348,7 @@ function switchTab(name) {
 // ── Global press-state fix (iOS/WKWebView :active stuck state) ───────────────
 // Safari and WKWebView don't reliably clear :active on touchend when the DOM
 // changes during the gesture. All button feedback uses .is-pressed instead.
-const _PRESS_SEL = 'button, .mg-menu-row, .gps-tile, .club-picker-item, .sh-lie';
+const _PRESS_SEL = 'button, .mg-menu-row, .gps-tile, .club-picker-item, .sh-lie, .picker-fmt-card';
 document.addEventListener('touchstart', e => {
   e.target.closest(_PRESS_SEL)?.classList.add('is-pressed');
 }, { passive: true });

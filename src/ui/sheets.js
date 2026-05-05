@@ -177,35 +177,73 @@ export function openCoursePicker(onCourseSelect) {
   let hcpOn = loadHcpEnabled();
 
   if (formatBar) {
+    const svgIcon =
+      '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M39.5,30.8668V6.5a2,2,0,0,0-2-2h-27a2,2,0,0,0-2,2v35a2,2,0,0,0,2,2h27a2,2,0,0,0,2-2V40.0311"/>' +
+      '<path d="M37.1342,37.66,21.2877,21.7746V17.25H25.92L41.7049,33.0776"/>' +
+      '<path d="M44.3148,37.9846a1.6234,1.6234,0,0,0,0-2.2906l-2.61-2.6164L37.1342,37.66l2.61,2.6164a1.6136,1.6136,0,0,0,2.2849,0Z"/>' +
+      '<line x1="13" y1="10.5" x2="35" y2="10.5"/>' +
+      '<line x1="13" y1="17.25" x2="21.2877" y2="17.25"/>' +
+      '<line x1="32.6516" y1="24" x2="35" y2="24"/>' +
+      '<line x1="13" y1="24" x2="23.5077" y2="24"/>' +
+      '<line x1="13" y1="30.75" x2="29.989" y2="30.75"/>' +
+      '<line x1="13" y1="37.5" x2="35" y2="37.5"/>' +
+      '</svg>';
+
+    const formats = [
+      { id: 'strokes',    name: 'Strokes Play', desc: 'Count every stroke across all 18 holes. Lowest total wins.' },
+      { id: 'stableford', name: 'Stableford',   desc: 'Points per hole based on your net score vs par — 2 for par, 3 for birdie. Highest total wins.' },
+    ];
+
     formatBar.innerHTML =
-      '<div class="picker-format-row">' +
-        '<button class="picker-fmt-chip' + (fmt === 'strokes' ? ' active' : '') + '" data-fmt="strokes" type="button">Strokes Play</button>' +
-        '<button class="picker-fmt-chip' + (fmt === 'stableford' ? ' active' : '') + '" data-fmt="stableford" type="button">Stableford</button>' +
-      '</div>' +
-      '<div class="picker-hcp-row" id="pickerHcpRow"' + (fmt === 'strokes' ? '' : ' style="display:none"') + '>' +
+      '<div class="picker-fmt-header">' + svgIcon + '<span>Game Format</span></div>' +
+      formats.map(f =>
+        '<div class="picker-fmt-card' + (fmt === f.id ? ' selected' : '') + '" data-fmt="' + f.id + '">' +
+          '<div class="picker-fmt-card-info">' +
+            '<div class="picker-fmt-card-name">' + f.name + '</div>' +
+            '<div class="picker-fmt-card-desc">' + f.desc + '</div>' +
+          '</div>' +
+          '<div class="picker-fmt-radio"><div class="picker-fmt-radio-dot"></div></div>' +
+        '</div>'
+      ).join('') +
+      '<div class="picker-hcp-row">' +
         '<span class="picker-hcp-label">Apply handicap</span>' +
-        '<button class="picker-hcp-toggle' + (hcpOn ? ' active' : '') + '" id="pickerHcpToggle" type="button">' + (hcpOn ? 'On' : 'Off') + '</button>' +
+        '<button class="picker-hcp-toggle" id="pickerHcpToggle" type="button"></button>' +
       '</div>';
 
-    formatBar.querySelectorAll('.picker-fmt-chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        fmt = btn.dataset.fmt;
+    function _syncCards() {
+      formatBar.querySelectorAll('.picker-fmt-card').forEach(c =>
+        c.classList.toggle('selected', c.dataset.fmt === fmt)
+      );
+    }
+
+    function _syncHcp() {
+      const isStblf   = fmt === 'stableford';
+      const effectOn  = isStblf ? true : hcpOn;
+      const toggle    = formatBar.querySelector('#pickerHcpToggle');
+      if (!toggle) return;
+      toggle.textContent = effectOn ? 'On' : 'Off';
+      toggle.classList.toggle('active', effectOn);
+      toggle.classList.toggle('dimmed', isStblf);
+    }
+
+    _syncHcp();
+
+    formatBar.querySelectorAll('.picker-fmt-card').forEach(card => {
+      card.addEventListener('click', () => {
+        fmt = card.dataset.fmt;
         saveGameFormat(fmt);
-        formatBar.querySelectorAll('.picker-fmt-chip').forEach(b => b.classList.toggle('active', b.dataset.fmt === fmt));
-        const hcpRow = formatBar.querySelector('#pickerHcpRow');
-        if (hcpRow) hcpRow.style.display = fmt === 'strokes' ? '' : 'none';
+        _syncCards();
+        _syncHcp();
       });
     });
 
-    const hcpToggle = formatBar.querySelector('#pickerHcpToggle');
-    if (hcpToggle) {
-      hcpToggle.addEventListener('click', () => {
-        hcpOn = !hcpOn;
-        saveHcpEnabled(hcpOn);
-        hcpToggle.textContent = hcpOn ? 'On' : 'Off';
-        hcpToggle.classList.toggle('active', hcpOn);
-      });
-    }
+    formatBar.querySelector('#pickerHcpToggle')?.addEventListener('click', () => {
+      if (fmt === 'stableford') return;
+      hcpOn = !hcpOn;
+      saveHcpEnabled(hcpOn);
+      _syncHcp();
+    });
   }
 
   // ── Course list ───────────────────────────────────────────────────────────
@@ -243,7 +281,7 @@ export function openCoursePicker(onCourseSelect) {
         '<button class="course-picker-play" type="button">Play</button>';
       row.querySelector('.course-picker-play').addEventListener('click', () => {
         closeCoursePicker();
-        onCourseSelect?.(id, fmt, hcpOn);
+        onCourseSelect?.(id, fmt, fmt === 'stableford' ? true : hcpOn);
       });
       list.appendChild(row);
     });
