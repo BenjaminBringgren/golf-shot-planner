@@ -344,7 +344,8 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
 
     function hcpDotsHtml(count) {
       if (!count) return '';
-      return Array(Math.min(count, 4)).fill('<span class="sc2-hcp-dot"></span>').join('');
+      const dots = Array(Math.min(count, 4)).fill('<span class="sc2-hcp-dot"></span>').join('');
+      return `<span class="sc2-hcp-dots-inner">${dots}</span>`;
     }
 
     let totalStrokes = 0, totalPar = 0, totalPutts = 0, totalGIR = 0, totalFIR = 0, totalFIRDenom = 0, holesPlayed = 0;

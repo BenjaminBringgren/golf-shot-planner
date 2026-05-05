@@ -1346,7 +1346,7 @@
 
     .sc2-par { text-align: center; font-size: 15px; font-weight: 500; color: #1a1a1a; }
     .sc2-idx { text-align: center; font-size: 13px; font-weight: 500; color: #888; }
-    .sc2-hcp-dots { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; align-items: center; align-content: center; max-width: 14px; margin: 0 auto; }
+    .sc2-hcp-dots-inner { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; align-items: center; align-content: center; max-width: 14px; }
     .sc2-hcp-dot { width: 6px; height: 6px; border-radius: 50%; background: #1e7a45; flex-shrink: 0; }
     .sc2-col-sep { background: rgba(0,0,0,0.1); align-self: stretch; }
 
