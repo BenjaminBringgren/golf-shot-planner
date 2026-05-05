@@ -966,9 +966,12 @@ export function renderMgRoundsHistory() {
     const limit = el.dataset.limit ? parseInt(el.dataset.limit) : all.length;
     const shown = all.slice(0, limit);
     el.innerHTML = shown.map(r => {
-      const diff    = (r.totalStrokes || 0) - (r.totalPar || 0);
-      const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff);
-      const color   = diff < 0 ? '#1e7a45' : diff > 0 ? '#3a6fc4' : '#888';
+      const isStblf  = r.gameFormat === 'stableford';
+      const diff     = (r.totalStrokes || 0) - (r.totalPar || 0);
+      const diffStr  = isStblf ? (r.totalPoints ?? 0) + ' pts'
+        : (diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff));
+      const color    = isStblf ? '#1e7a45'
+        : (diff < 0 ? '#1e7a45' : diff > 0 ? '#3a6fc4' : '#888');
       return '<div class="lrh-row"><div class="lrh-left"><div class="lrh-course">' + (r.courseName || '—') + '</div>' +
         '<div class="lrh-date">' + (r.date || '—') + '</div></div>' +
         '<div class="lrh-right"><div class="lrh-score">' + (r.totalStrokes || '—') + '</div>' +
@@ -1191,11 +1194,14 @@ export function renderSavedRounds() {
 
     rounds.forEach((round, ri) => {
       const rowId    = 'rh-' + courseId + '-' + ri;
-      const netAdj   = (_statsNetMode && hasHcp) ? _netAdj({ ...round, _courseId: courseId }, courses, hcpIndex) : 0;
-      const netScore = (round.totalStrokes || 0) - netAdj;
-      const diff     = netScore - (round.totalPar || 0);
-      const diffStr  = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : String(diff));
-      const diffCls  = diff < 0 ? 'under' : diff > 0 ? 'over' : 'even';
+      const netAdj      = (_statsNetMode && hasHcp) ? _netAdj({ ...round, _courseId: courseId }, courses, hcpIndex) : 0;
+      const netScore    = (round.totalStrokes || 0) - netAdj;
+      const diff        = netScore - (round.totalPar || 0);
+      const diffStr     = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : String(diff));
+      const diffCls     = diff < 0 ? 'under' : diff > 0 ? 'over' : 'even';
+      const isStblf     = round.gameFormat === 'stableford';
+      const displayStr  = isStblf ? (round.totalPoints ?? 0) + ' pts' : diffStr;
+      const displayCls  = isStblf ? 'stableford' : diffCls;
       const rPutts  = round.totalPutts ?? (round.scores||[]).reduce((a,s)=>a+(s?.putts||0),0);
       const rGIR    = round.totalGIR   ?? (round.scores||[]).filter(s=>s?.gir).length;
       const rFIR    = (round.scores||[]).filter(s=>s?.fir===true).length;
@@ -1210,7 +1216,7 @@ export function renderSavedRounds() {
           <div class="round-meta">${holesP}H · ⛳${rPutts} · GIR ${girPctR}% · FIR ${firPctR}%</div>
         </div>
         <div class="round-right">
-          <div class="round-score ${diffCls}">${diffStr}</div>
+          <div class="round-score ${displayCls}">${displayStr}</div>
           <div class="round-arr" id="${rowId}-arr">▶</div>
         </div>`;
 

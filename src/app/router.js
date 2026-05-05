@@ -440,7 +440,7 @@ document.getElementById('newCourseBtn').addEventListener('click', () => {
   updateLoadCourseBtn();
 })();
 
-wireCoursePickerEvents(loadCourseIntoPlay);
+wireCoursePickerEvents((id, fmt, hcpOn) => loadCourseIntoPlay(id, fmt, hcpOn));
 
 // Inject app-layer services into courses.js so it can call back into the app.
 // calculate is wrapped in an arrow to capture the final (wrapped) binding.
@@ -1831,7 +1831,7 @@ initServices({
 
   // Home screen button wiring
   document.getElementById('homeLaunchCourseBtn')?.addEventListener('click', () => {
-    openCoursePicker(loadCourseIntoPlay);
+    openCoursePicker((id, fmt, hcpOn) => loadCourseIntoPlay(id, fmt, hcpOn));
   });
 
   document.getElementById('homeOpenCalcBtn')?.addEventListener('click', () => {

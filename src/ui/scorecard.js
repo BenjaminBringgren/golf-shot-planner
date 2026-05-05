@@ -6,13 +6,14 @@
 import {
   loadCourses, loadScores, saveScores, loadRounds, saveRound, clearScores,
   loadActiveCourse, saveActiveCourse, clearActiveCourse,
-  getScoringMode, loadProfile,
+  getScoringMode,
   getCommittedStrategies, removeCommittedStrategies,
   clearTeeState, clearAllHoleFlowStates,
 } from '../storage/storage.js';
 import { teeMarked, completedShots, clearGpsState } from '../platform/gps.js';
-import { decodeStrategy, courseHandicap } from '../engine/calculations.js';
+import { decodeStrategy, courseHandicap, stablefordPoints } from '../engine/calculations.js';
 import { initHole } from '../app/holeFlow.js';
+import { computeHoleStrokeCounts } from '../app/courses.js';
 import { mountShotSheet }    from './shotSheet/index.js';
 import { mountSimpleCounter } from './shotSheet/SimpleCounter.js';
 import { mountWidgetSheet, hideWidgetFab } from './widgetSheet.js';
@@ -324,23 +325,14 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     }));
 
     // ── Per-hole WHS stroke allocation ────────────────────────────────────────
-    const _prof    = loadProfile ? loadProfile() : {};
-    const _hcpIdx  = parseFloat(_prof.handicap);
-    const _slope   = parseInt(c?.slopeRating);
-    const _rating  = parseFloat(c?.courseRating);
-    const _cTotalPar = (c?.holes || []).reduce((a, h) => a + (h.par || 4), 0);
-    const _allSI   = (c?.holes || []).map(h => h.si || 0);
-    const _siOk    = _allSI.length === 18 && _allSI.every(si => si >= 1 && si <= 18);
-    const holeStrokeCounts = new Array(18).fill(0);
-    if (!isNaN(_hcpIdx) && _hcpIdx > 0 && _slope > 0 && _rating > 0 && _siOk) {
-      const ch        = courseHandicap(_hcpIdx, _slope, _rating, _cTotalPar);
-      const full      = Math.floor(ch / 18);
-      const remainder = ch % 18;
-      _allSI.forEach((si, i) => { holeStrokeCounts[i] = full + (si <= remainder ? 1 : 0); });
-    }
+    const holeStrokeCounts = computeHoleStrokeCounts(courseId);
     const front9StrokeCount = holeStrokeCounts.slice(0, 9).reduce((a, n) => a + n, 0);
     const back9StrokeCount  = holeStrokeCounts.slice(9).reduce((a, n) => a + n, 0);
     const totalStrokeCount  = front9StrokeCount + back9StrokeCount;
+
+    // ── Game format ───────────────────────────────────────────────────────────
+    const { gameFormat = 'strokes' } = loadActiveCourse();
+    const isStableford = gameFormat === 'stableford';
 
     function hcpDotsHtml(count) {
       if (!count) return '';
@@ -374,6 +366,13 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
       back9Par += h.par;
       if (h.total != null) { back9Strokes += h.total; back9Putts += h.putts; if (h.gir === true) back9GIR++; if (h.par >= 4 && h.fir === true) back9FIR++; back9Played++; }
     });
+
+    // Stableford points per section (computed once, reused by sectionHtml and save)
+    const front9Pts = played.slice(0, 9).reduce((sum, h, idx) =>
+      h.total != null ? sum + stablefordPoints(h.total, h.par, holeStrokeCounts[idx]) : sum, 0);
+    const back9Pts  = played.slice(9, 18).reduce((sum, h, idx) =>
+      h.total != null ? sum + stablefordPoints(h.total, h.par, holeStrokeCounts[9 + idx]) : sum, 0);
+    const totalPts  = front9Pts + back9Pts;
 
     // Running cumulative diff per hole
     let runAcc = 0;
@@ -423,6 +422,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
         const firVal = h.par >= 4 ? (isPlayed ? (h.fir ?? null) : null) : null;
         const firCell = h.par < 4 ? '<div class="sc2-fir sc2-fir--par3">—</div>'
           : `<div class="sc2-fir">${girDot(firVal)}</div>`;
+        const pts = isPlayed ? stablefordPoints(h.total, h.par, holeStrokeCounts[from + idx]) : null;
         return `
           <div class="sc2-row">
             <div><span class="sc2-hole ${holeCls}">${h.hole}</span></div>
@@ -435,6 +435,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
             ${firCell}
             <div class="sc2-putts">${isPlayed ? h.putts : '—'}</div>
             <div>${runTotalHtml(runningTotals[from + idx])}</div>
+            <div class="sc2-pts">${pts !== null ? pts : '—'}</div>
           </div>`;
       }).join('');
     }
@@ -442,7 +443,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     function sectionHtml(title, chip, subCls, subLbl, rowsHtml,
                          subPar, subPutts, subPlayed, subGIR, subGIRDenom,
                          subFIR, subFIRDenom,
-                         subStrokes, subDiffVal, subStrokeCount) {
+                         subStrokes, subDiffVal, subStrokeCount, subPts) {
       const d = subPlayed ? subDiff(subDiffVal) : '—';
       const dotsCell = subStrokeCount > 0 ? subStrokeCount : '—';
       return `
@@ -453,7 +454,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           </div>
           <div class="sc2-card">
             <div class="sc2-col-hdr">
-              <span>Hole</span><span>Par</span><span>Hcp</span><span></span><span class="sc2-col-sep"></span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span>Total</span>
+              <span>Hole</span><span>Par</span><span>Hcp</span><span></span><span class="sc2-col-sep"></span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span>Total</span><span class="sc2-pts">Pts</span>
             </div>
             ${rowsHtml}
             <div class="sc2-sub sc2-sub--${subCls}">
@@ -467,6 +468,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
               <span class="sc2-sub-num">${subPlayed && subFIRDenom > 0 ? subFIR + '/' + subFIRDenom : '—'}</span>
               <span class="sc2-sub-num">${subPlayed ? subPutts : '—'}</span>
               <span class="sc2-sub-diff">${subPlayed ? d : '—'}</span>
+              <span class="sc2-sub-num sc2-pts">${subPlayed ? subPts : '—'}</span>
             </div>
           </div>
         </div>`;
@@ -476,17 +478,19 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     if (!pageInner) return;
 
     const anyPlayed = front9Played || back9Played;
+    if (isStableford) pageInner.classList.add('sc2-stableford');
+    else              pageInner.classList.remove('sc2-stableford');
     pageInner.innerHTML =
       sectionHtml('Front 9', 'Out', 'out', 'OUT',
         sectionRows(0, 9),
         front9Par, front9Putts, front9Played, front9GIR, 9,
         front9FIR, front9FIRTotal,
-        front9Strokes, front9Played ? front9Strokes - front9Par : null, front9StrokeCount) +
+        front9Strokes, front9Played ? front9Strokes - front9Par : null, front9StrokeCount, front9Pts) +
       sectionHtml('Back 9', 'In', 'in', 'IN',
         sectionRows(9, 18),
         back9Par, back9Putts, back9Played, back9GIR, 9,
         back9FIR, back9FIRTotal,
-        back9Strokes, back9Played ? back9Strokes - back9Par : null, back9StrokeCount) +
+        back9Strokes, back9Played ? back9Strokes - back9Par : null, back9StrokeCount, back9Pts) +
       `<div class="sc2-card sc2-total-card">
         <div class="sc2-sub sc2-sub--total">
           <span class="sc2-sub-lbl">Total</span>
@@ -499,6 +503,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           <span class="sc2-sub-num">${holesPlayed ? totalFIR + '/' + played.filter(h => h.par >= 4).length : '—'}</span>
           <span class="sc2-sub-num">${holesPlayed ? totalPutts : '—'}</span>
           <span class="sc2-sub-diff">${holesPlayed ? subDiff(totalStrokes - totalPar) : '—'}</span>
+          <span class="sc2-sub-num sc2-pts">${holesPlayed ? totalPts : '—'}</span>
         </div>
       </div>`;
 
@@ -520,6 +525,8 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           totalPar:     holesPlayed ? totalPar     : 0,
           totalPutts:   holesPlayed ? totalPutts   : 0,
           totalGIR:     holesPlayed ? totalGIR     : 0,
+          gameFormat,
+          totalPoints:  isStableford ? totalPts : 0,
         };
         saveRound(courseId, roundData);
         saveBtn.textContent = '✓ Saved!';
@@ -848,6 +855,20 @@ export function renderScoreEntry(courseId, holeIdx, scores, callbacks = {}) {
     newFab.classList.remove('has-score');
     newFab.textContent = '+';
   }
+
+  // FAB dot overlay — shows per-hole extra strokes for Stableford
+  const { gameFormat: _fabFmt = 'strokes' } = loadActiveCourse();
+  if (_fabFmt === 'stableford') {
+    const _fabCounts = computeHoleStrokeCounts(courseId);
+    const _fabStrokes = _fabCounts[holeIdx] ?? 0;
+    if (_fabStrokes > 0) {
+      const _overlay = document.createElement('span');
+      _overlay.className = 'fab-dots';
+      _overlay.innerHTML = Array(Math.min(_fabStrokes, 4)).fill('<span class="fab-dot"></span>').join('');
+      newFab.appendChild(_overlay);
+    }
+  }
+
   newFab.addEventListener('click', () => {
     drawer.classList.contains('open') ? closeDrawer() : openDrawer();
   });
@@ -1204,6 +1225,9 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
   if (!c) return;
 
   const scores = loadScores(courseId);
+  const { gameFormat = 'strokes' } = loadActiveCourse();
+  const rcIsStableford = gameFormat === 'stableford';
+  const rcHoleStrokeCounts = computeHoleStrokeCounts(courseId);
 
   // Compute stats
   const played = scores.map((s, i) => ({
@@ -1239,6 +1263,9 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
     back9Par += h.par;
     if (h.total != null) { back9Strokes += h.total; back9Putts += h.putts; back9Played++; }
   });
+
+  const rcTotalPoints = played.reduce((sum, h, i) =>
+    h.total != null ? sum + stablefordPoints(h.total, h.par, rcHoleStrokeCounts[i]) : sum, 0);
 
   const vsPar = totalStrokes - totalPar;
   const vsParStr = vsPar === 0 ? 'E' : (vsPar > 0 ? '+' + vsPar : '' + vsPar);
@@ -1282,7 +1309,7 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
     </div>
     <div class="rc-section">
       <div class="rc-hero">
-        <div class="rc-hero-score" style="color:${vsParColor}">${vsParStr}</div>
+        <div class="rc-hero-score" style="color:${rcIsStableford ? '#1e7a45' : vsParColor}">${rcIsStableford ? rcTotalPoints + ' pts' : vsParStr}</div>
         <div class="rc-hero-sub">${totalStrokes} strokes · par ${totalPar} · ${holesPlayed} holes</div>
       </div>
       <div class="rc-stat-grid">
@@ -1337,6 +1364,8 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
       totalPar:     holesPlayed ? totalPar     : 0,
       totalPutts:   holesPlayed ? totalPutts   : 0,
       totalGIR:     holesPlayed ? totalGIR     : 0,
+      gameFormat,
+      totalPoints:  rcIsStableford ? rcTotalPoints : 0,
     };
     saveRound(courseId, roundData);
 

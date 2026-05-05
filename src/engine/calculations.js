@@ -274,3 +274,9 @@ export function decodeStrategy(stored) {
 export function courseHandicap(hcpIndex, slope, rating, par) {
   return Math.round(hcpIndex * (slope / 113) + (rating - par));
 }
+
+// Stableford points: 2 = par net, 3 = birdie, 1 = bogey, 0 = double bogey or worse.
+export function stablefordPoints(gross, par, strokesReceived) {
+  const net = gross - strokesReceived;
+  return Math.max(0, Math.min(5, 2 - (net - par)));
+}

@@ -4,7 +4,11 @@
 // Rendering and event binding only. No business logic.
 
 import { clubMap, idx7 } from '../engine/clubs.js';
-import { loadCourses, loadRounds } from '../storage/storage.js';
+import {
+  loadCourses, loadRounds,
+  loadGameFormat, saveGameFormat,
+  loadHcpEnabled, saveHcpEnabled,
+} from '../storage/storage.js';
 
 // ── Module-level state ────────────────────────────────────────────────────────
 let _cpDragCleanup = null;
@@ -163,10 +167,48 @@ export function closeClubPicker() {
 
 // ── Course picker bottom sheet ────────────────────────────────────────────────
 export function openCoursePicker(onCourseSelect) {
-  const overlay = document.getElementById('coursePickerOverlay');
-  const list    = document.getElementById('coursePickerList');
+  const overlay   = document.getElementById('coursePickerOverlay');
+  const list      = document.getElementById('coursePickerList');
+  const formatBar = document.getElementById('coursePickerFormatBar');
   if (!overlay || !list) return;
 
+  // ── Format selector state ─────────────────────────────────────────────────
+  let fmt   = loadGameFormat();
+  let hcpOn = loadHcpEnabled();
+
+  if (formatBar) {
+    formatBar.innerHTML =
+      '<div class="picker-format-row">' +
+        '<button class="picker-fmt-chip' + (fmt === 'strokes' ? ' active' : '') + '" data-fmt="strokes" type="button">Strokes Play</button>' +
+        '<button class="picker-fmt-chip' + (fmt === 'stableford' ? ' active' : '') + '" data-fmt="stableford" type="button">Stableford</button>' +
+      '</div>' +
+      '<div class="picker-hcp-row" id="pickerHcpRow"' + (fmt === 'strokes' ? '' : ' style="display:none"') + '>' +
+        '<span class="picker-hcp-label">Apply handicap</span>' +
+        '<button class="picker-hcp-toggle' + (hcpOn ? ' active' : '') + '" id="pickerHcpToggle" type="button">' + (hcpOn ? 'On' : 'Off') + '</button>' +
+      '</div>';
+
+    formatBar.querySelectorAll('.picker-fmt-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        fmt = btn.dataset.fmt;
+        saveGameFormat(fmt);
+        formatBar.querySelectorAll('.picker-fmt-chip').forEach(b => b.classList.toggle('active', b.dataset.fmt === fmt));
+        const hcpRow = formatBar.querySelector('#pickerHcpRow');
+        if (hcpRow) hcpRow.style.display = fmt === 'strokes' ? '' : 'none';
+      });
+    });
+
+    const hcpToggle = formatBar.querySelector('#pickerHcpToggle');
+    if (hcpToggle) {
+      hcpToggle.addEventListener('click', () => {
+        hcpOn = !hcpOn;
+        saveHcpEnabled(hcpOn);
+        hcpToggle.textContent = hcpOn ? 'On' : 'Off';
+        hcpToggle.classList.toggle('active', hcpOn);
+      });
+    }
+  }
+
+  // ── Course list ───────────────────────────────────────────────────────────
   const courses = loadCourses();
   const ids     = Object.keys(courses);
   list.innerHTML = '';
@@ -174,7 +216,6 @@ export function openCoursePicker(onCourseSelect) {
   if (!ids.length) {
     list.innerHTML = '<div class="course-picker-empty">No courses saved yet.<br>Add one in My Golf → My Courses.</div>';
   } else {
-    // Sort: courses with rounds first (most recently played), then unplayed
     const withLastPlayed = ids.map(id => {
       const rounds = loadRounds(id);
       const last   = rounds.length ? rounds[0].date : null;
@@ -202,7 +243,7 @@ export function openCoursePicker(onCourseSelect) {
         '<button class="course-picker-play" type="button">Play</button>';
       row.querySelector('.course-picker-play').addEventListener('click', () => {
         closeCoursePicker();
-        onCourseSelect?.(id);
+        onCourseSelect?.(id, fmt, hcpOn);
       });
       list.appendChild(row);
     });

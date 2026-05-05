@@ -5,11 +5,35 @@
 import {
   loadCourses, saveCourses,
   loadRounds, deleteAllRoundsForCourse,
-  loadScores, saveActiveCourse,
+  loadScores, saveActiveCourse, loadProfile,
 } from '../storage/storage.js';
+import { courseHandicap } from '../engine/calculations.js';
 
 let _svc = {};
 export function initServices(svc) { _svc = svc; }
+
+// ── Per-hole WHS stroke counts ─────────────────────────────────────────────────
+// Returns array[18] where each entry = number of extra strokes received on that hole.
+// Returns all-zeros when profile HCP, course slope/rating, or SI data is missing/invalid.
+export function computeHoleStrokeCounts(courseId) {
+  const courses  = loadCourses();
+  const c        = courses[courseId];
+  const prof     = loadProfile();
+  const hcpIdx   = parseFloat(prof?.handicap);
+  const slope    = parseInt(c?.slopeRating);
+  const rating   = parseFloat(c?.courseRating);
+  const totalPar = (c?.holes || []).reduce((a, h) => a + (h.par || 4), 0);
+  const allSI    = (c?.holes || []).map(h => h.si || 0);
+  const siOk     = allSI.length === 18 && allSI.every(si => si >= 1 && si <= 18);
+  const counts   = new Array(18).fill(0);
+  if (!isNaN(hcpIdx) && hcpIdx > 0 && slope > 0 && rating > 0 && siOk) {
+    const ch   = courseHandicap(hcpIdx, slope, rating, totalPar);
+    const full = Math.floor(ch / 18);
+    const rem  = ch % 18;
+    allSI.forEach((si, i) => { counts[i] = full + (si <= rem ? 1 : 0); });
+  }
+  return counts;
+}
 
 function escHtml(str) {
   if (!str) return '';
@@ -64,11 +88,11 @@ export function applyHoleToPlay(course, holeIdx) {
   }
 }
 
-export function loadCourseIntoPlay(id) {
+export function loadCourseIntoPlay(id, gameFormat = 'strokes', hcpEnabled = true) {
   const courses = loadCourses();
   const c = courses[id];
   if (!c) return;
-  saveActiveCourse(id, 0);
+  saveActiveCourse(id, 0, gameFormat, hcpEnabled);
   applyHoleToPlay(c, 0);
   _svc.switchTab?.('play');
   _svc.renderPlayCourseBar?.(id);

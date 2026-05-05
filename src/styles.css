@@ -172,6 +172,34 @@
       padding: 24px 16px; text-align: center;
       font-size: 15px; color: #aaa;
     }
+    /* ── Course picker format selector ──────────────────────── */
+    .picker-format-row {
+      display: flex; gap: 8px; padding: 8px 16px 4px;
+    }
+    .picker-fmt-chip {
+      flex: 1; padding: 10px 0; font-size: 15px; font-weight: 600;
+      border: 1.5px solid #dedad4; border-radius: 10px;
+      background: #fff; color: #888; cursor: pointer;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .picker-fmt-chip.active {
+      background: #1e7a45; color: #fff; border-color: #1e7a45;
+    }
+    @media (hover: hover) { .picker-fmt-chip:hover { border-color: #aaa; } }
+    .picker-hcp-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 4px 16px 10px;
+    }
+    .picker-hcp-label { font-size: 15px; color: #555; }
+    .picker-hcp-toggle {
+      padding: 6px 18px; font-size: 15px; font-weight: 600;
+      border: 1.5px solid #dedad4; border-radius: 8px;
+      background: #fff; color: #888; cursor: pointer;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .picker-hcp-toggle.active {
+      background: #1e7a45; color: #fff; border-color: #1e7a45;
+    }
 
     /* ── My Golf sub-page system ───────────────────────────── */
     .mg-sub { display: none; }
@@ -1127,6 +1155,17 @@
     .score-fab.visible { display: flex; }
     @media (hover: hover) { .score-fab:hover { background: #333; transform: scale(1.06); } }
     .score-fab.has-score { background: #1a1a1a; font-size: 22px; }
+    /* Stableford extra-stroke dot overlay on FAB (upper-right corner) */
+    .score-fab { position: fixed; }
+    .fab-dots {
+      position: absolute; top: 3px; right: 3px;
+      display: flex; flex-wrap: wrap; gap: 2px; width: 12px;
+      justify-content: center; pointer-events: none;
+    }
+    .fab-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: #1e7a45; flex-shrink: 0;
+    }
 
     /* ── Score drawer ────────────────────────────────────────── */
     .score-drawer-overlay {
@@ -1410,6 +1449,16 @@
 
     .sc2-save-btn { width: 100%; margin-top: 20px; padding: 16px; font-size: 15px; font-weight: 600; background: #1a1a1a; color: #fff; border: none; border-radius: 10px; cursor: pointer; letter-spacing: 0.01em; }
     .sc2-save-btn:disabled { background: #aaa; color: #fff; cursor: default; }
+
+    /* ── Stableford points column ────────────────────────────── */
+    .sc2-pts { display: none; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #1e7a45; }
+    .sc2-stableford .sc2-pts { display: flex; }
+    .sc2-stableford .sc2-col-hdr,
+    .sc2-stableford .sc2-row,
+    .sc2-stableford .sc2-sub { grid-template-columns: 44px 1fr 1fr 28px 1px 1fr 1fr 1fr 1fr 1.4fr 1fr; }
+    .sc2-stableford .sc2-col-hdr > span:last-child { text-align: center; }
+    .sc2-stableford .sc2-row > div:last-child { text-align: center; }
+    .sc2-stableford .sc2-sub > *:last-child { text-align: center; }
 
     /* ── Last round hint in course bar ──────────────────────── */
     .course-bar-last-round {
@@ -1934,6 +1983,7 @@
     .round-score.over  { color: #3a6fc4; }
     .round-score.under { color: #1e7a45; }
     .round-score.even  { color: #555; }
+    .round-score.stableford { color: #1e7a45; font-size: 17px; }
     .round-arr   { font-size: 12px; color: #ccc; width: 16px; text-align: right; }
     .round-detail {
       display: none;

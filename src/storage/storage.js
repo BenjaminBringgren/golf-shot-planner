@@ -20,6 +20,8 @@ export const KEY_HOME_ROUND_FILTER  = 'homeRoundFilter';
 export const KEY_STATS_ROUND_FILTER = 'statsRoundFilter';
 export const KEY_WIDGET_WEATHER     = 'widgetWeather';
 export const KEY_WIDGET_GPS         = 'widgetGps';
+export const KEY_GAME_FORMAT        = 'golfGameFormat';  // localStorage — persists last choice
+export const KEY_HCP_ENABLED        = 'golfHcpEnabled';  // localStorage — persists last choice
 
 // ── Per-hole record shape (extended) ─────────────────────────────────────────
 // Backward-compat: new fields default safely on read for older saved rounds.
@@ -137,8 +139,8 @@ export function removeCommittedStrategies(courseId) {
 export function loadActiveCourse() {
   try { return JSON.parse(sessionStorage.getItem(KEY_ACTIVE_COURSE) || '{}'); } catch(e) { return {}; }
 }
-export function saveActiveCourse(id, holeIdx) {
-  try { sessionStorage.setItem(KEY_ACTIVE_COURSE, JSON.stringify({ id, holeIdx })); } catch(e) {}
+export function saveActiveCourse(id, holeIdx, gameFormat = 'strokes', hcpEnabled = true) {
+  try { sessionStorage.setItem(KEY_ACTIVE_COURSE, JSON.stringify({ id, holeIdx, gameFormat, hcpEnabled })); } catch(e) {}
 }
 export function clearActiveCourse() {
   try { sessionStorage.removeItem(KEY_ACTIVE_COURSE); } catch(e) {}
@@ -202,6 +204,12 @@ export function saveWidgetPrefs(weather, gps) {
     localStorage.setItem(KEY_WIDGET_GPS,     gps     ? '1' : '0');
   } catch(e) {}
 }
+
+// ── Game format preferences ───────────────────────────────────────────────────
+export function loadGameFormat()        { return localStorage.getItem(KEY_GAME_FORMAT) || 'strokes'; }
+export function saveGameFormat(fmt)     { try { localStorage.setItem(KEY_GAME_FORMAT, fmt); } catch(e) {} }
+export function loadHcpEnabled()        { return localStorage.getItem(KEY_HCP_ENABLED) !== 'false'; }
+export function saveHcpEnabled(enabled) { try { localStorage.setItem(KEY_HCP_ENABLED, String(enabled)); } catch(e) {} }
 
 // ── Round filter preferences ──────────────────────────────────────────────────
 export function loadHomeRoundFilter()       { return localStorage.getItem(KEY_HOME_ROUND_FILTER)  || '18'; }
