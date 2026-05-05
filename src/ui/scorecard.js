@@ -630,7 +630,8 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
   }
 
   function updateSession() {
-    saveActiveCourse(courseId, holeIdx);
+    const { gameFormat: _fmt = 'strokes', hcpEnabled: _hcp = true } = loadActiveCourse();
+    saveActiveCourse(courseId, holeIdx, _fmt, _hcp);
   }
 
   // Expose update function so GPS tracker and score entry can refresh the grid
@@ -1389,7 +1390,8 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
   // Wire back to round button
   el.querySelector('#rcBackBtn').addEventListener('click', () => {
     el.style.display = 'none';
-    saveActiveCourse(courseId, backHoleIdx);
+    const { gameFormat: _fmt = 'strokes', hcpEnabled: _hcp = true } = loadActiveCourse();
+    saveActiveCourse(courseId, backHoleIdx, _fmt, _hcp);
     const bar = document.getElementById('playCourseBar');
     if (bar?._navigateTo) bar._navigateTo(backHoleIdx);
   });

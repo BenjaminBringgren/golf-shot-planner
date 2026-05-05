@@ -1592,7 +1592,8 @@ initServices({
         return;
       }
       const nextIdx = holeIdx + 1;
-      saveActiveCourse(id, nextIdx);
+      const { gameFormat: _nFmt = 'strokes', hcpEnabled: _nHcp = true } = loadActiveCourse();
+      saveActiveCourse(id, nextIdx, _nFmt, _nHcp);
       // Reset rough flag for new hole
       resetInRough();
       // Trigger bar refresh
