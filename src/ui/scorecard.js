@@ -434,7 +434,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
             <div class="sc2-gir">${girDot(isPlayed ? girVal : null)}</div>
             ${firCell}
             <div class="sc2-putts">${isPlayed ? h.putts : '—'}</div>
-            <div>${runTotalHtml(runningTotals[from + idx])}</div>
+            <div class="sc2-total-col">${runTotalHtml(runningTotals[from + idx])}</div>
             <div class="sc2-pts">${pts !== null ? pts : '—'}</div>
           </div>`;
       }).join('');
@@ -454,7 +454,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           </div>
           <div class="sc2-card">
             <div class="sc2-col-hdr">
-              <span>Hole</span><span>Par</span><span>Hcp</span><span></span><span class="sc2-col-sep"></span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span>Total</span><span class="sc2-pts">Pts</span>
+              <span>Hole</span><span>Par</span><span>Hcp</span><span></span><span class="sc2-col-sep"></span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span class="sc2-total-col">Total</span><span class="sc2-pts">Pts</span>
             </div>
             ${rowsHtml}
             <div class="sc2-sub sc2-sub--${subCls}">
@@ -467,7 +467,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
               <span class="sc2-sub-num">${subPlayed ? subGIR + '/' + subGIRDenom : '—'}</span>
               <span class="sc2-sub-num">${subPlayed && subFIRDenom > 0 ? subFIR + '/' + subFIRDenom : '—'}</span>
               <span class="sc2-sub-num">${subPlayed ? subPutts : '—'}</span>
-              <span class="sc2-sub-diff">${subPlayed ? d : '—'}</span>
+              <span class="sc2-sub-diff sc2-total-col">${subPlayed ? d : '—'}</span>
               <span class="sc2-sub-num sc2-pts">${subPlayed ? subPts : '—'}</span>
             </div>
           </div>
@@ -502,7 +502,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           <span class="sc2-sub-num">${holesPlayed ? totalGIR + '/' + holesPlayed : '—'}</span>
           <span class="sc2-sub-num">${holesPlayed ? totalFIR + '/' + played.filter(h => h.par >= 4).length : '—'}</span>
           <span class="sc2-sub-num">${holesPlayed ? totalPutts : '—'}</span>
-          <span class="sc2-sub-diff">${holesPlayed ? subDiff(totalStrokes - totalPar) : '—'}</span>
+          <span class="sc2-sub-diff sc2-total-col">${holesPlayed ? subDiff(totalStrokes - totalPar) : '—'}</span>
           <span class="sc2-sub-num sc2-pts">${holesPlayed ? totalPts : '—'}</span>
         </div>
       </div>`;
@@ -845,7 +845,7 @@ export function renderScoreEntry(courseId, holeIdx, scores, callbacks = {}) {
   }
 
   // Remove old fab listener by replacing the node
-  const newFab = fab.cloneNode(true);
+  const newFab = fab.cloneNode(false);
   fab.parentNode.replaceChild(newFab, fab);
   newFab.classList.add('visible');
   const total0 = getScoringMode() === 'simple' ? simpleTotal : shots.length + putts;

@@ -1369,18 +1369,21 @@
     .sc2-section-title { font-size: 17px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.01em; }
     .sc2-section-chip { font-size: 11px; font-weight: 700; color: #888; background: #f0efeb; border-radius: 6px; padding: 3px 10px; letter-spacing: 0.05em; text-transform: uppercase; }
 
-    /* --sc2-cols drives all three row types — override once on .sc2-stableford .sc2-card */
-    .sc2-card { background: #fff; border-radius: 12px; overflow: hidden; border: 0.5px solid rgba(0,0,0,0.07); --sc2-cols: 44px 1fr 1fr 28px 1px 1fr 1fr 1fr 1fr 1.4fr; }
-    .sc2-stableford .sc2-card { --sc2-cols: 44px 1fr 1fr 28px 1px 1fr 1fr 1fr 1fr 1.4fr 1fr; }
+    /* .sc2-card is the single grid container — subgrid guarantees pixel-perfect column alignment */
+    .sc2-card { background: #fff; border-radius: 12px; overflow: hidden; border: 0.5px solid rgba(0,0,0,0.07); display: grid; grid-template-columns: 44px 1fr 1fr 28px 1px 1fr 1fr 1fr 1fr 1.4fr; }
+    .sc2-stableford .sc2-card { grid-template-columns: 44px 1fr 1fr 28px 1px 1fr 1fr 1fr 1fr 1.4fr 1fr; }
 
-    .sc2-col-hdr { display: grid; grid-template-columns: var(--sc2-cols); padding: 9px 14px; background: #f0efeb; border-bottom: 0.5px solid rgba(0,0,0,0.07); }
-    .sc2-col-hdr > span { font-size: 10px; font-weight: 700; color: #888; letter-spacing: 0.06em; text-transform: uppercase; }
-    .sc2-col-hdr > span:not(:first-child) { text-align: center; }
-    .sc2-col-hdr > span:last-child { text-align: right; }
+    /* All row types span the full card and inherit its exact column positions */
+    .sc2-col-hdr, .sc2-row, .sc2-sub { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; }
+
+    .sc2-col-hdr { padding: 9px 0; background: #f0efeb; border-bottom: 0.5px solid rgba(0,0,0,0.07); }
+    .sc2-col-hdr > span { font-size: 10px; font-weight: 700; color: #888; letter-spacing: 0.06em; text-transform: uppercase; text-align: center; }
+    .sc2-col-hdr > span:first-child { text-align: left; padding-left: 14px; }
     .sc2-col-hdr .sc2-col-sep { background: transparent; }
 
-    .sc2-row { display: grid; grid-template-columns: var(--sc2-cols); padding: 0 14px; height: 52px; align-items: center; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+    .sc2-row { height: 52px; align-items: center; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
     .sc2-row:last-of-type { border-bottom: none; }
+    .sc2-row > div:first-child { padding-left: 14px; }
 
     .sc2-hole { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
     .sc2-hole--played   { background: #1a1a1a; color: #fff; }
@@ -1417,14 +1420,19 @@
 
     .sc2-putts { text-align: center; font-size: 15px; color: #1a1a1a; }
 
-    .sc2-row > div:last-child { text-align: right; }
     .sc2-total { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
     .sc2-total--under { color: #1e7a45; }
     .sc2-total--over  { color: #c0392b; }
     .sc2-total--even  { color: #1a1a1a; }
     .sc2-total--none  { color: #aaa; }
 
-    .sc2-sub { display: grid; grid-template-columns: var(--sc2-cols); padding: 13px 14px; align-items: center; }
+    /* .sc2-total-col = last content column (running total / diff); carries the right-side gutter */
+    .sc2-total-col { padding-right: 14px; text-align: center; }
+    .sc2-stableford .sc2-total-col { padding-right: 0; }
+    .sc2-stableford .sc2-pts { padding-right: 14px; }
+
+    .sc2-sub { padding: 13px 0; align-items: center; }
+    .sc2-sub > *:first-child { padding-left: 14px; }
     .sc2-sub--out   { background: #1a1a1a; }
     .sc2-sub--in    { background: #f0efeb; }
     .sc2-sub--total { background: #1a1a1a; }
@@ -1442,7 +1450,6 @@
     .sc2-sub--in    .sc2-sub-num { color: #1a1a1a; }
     .sc2-sub--total .sc2-sub-num { color: #fff; }
 
-    .sc2-sub > *:last-child { text-align: right; }
     .sc2-sub-diff { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
     .sc2-sub--out   .sc2-sub-diff { color: #fff; }
     .sc2-sub--in    .sc2-sub-diff { color: #1a1a1a; }
@@ -1456,10 +1463,6 @@
     /* ── Stableford points column ────────────────────────────── */
     .sc2-pts { display: none; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #1e7a45; }
     .sc2-stableford .sc2-pts { display: flex; }
-    /* --sc2-cols variable override is on .sc2-stableford .sc2-card (declared with .sc2-card above) */
-    .sc2-stableford .sc2-col-hdr > span:last-child { text-align: center; }
-    .sc2-stableford .sc2-row > div:last-child { text-align: center; }
-    .sc2-stableford .sc2-sub > *:last-child { text-align: center; }
 
     /* ── Last round hint in course bar ──────────────────────── */
     .course-bar-last-round {

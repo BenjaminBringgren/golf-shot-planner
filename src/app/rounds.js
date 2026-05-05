@@ -9,8 +9,8 @@ import {
   loadStatsRoundFilter, saveStatsRoundFilter,
 } from '../storage/storage.js';
 import { clubs } from '../engine/clubs.js';
-import { interpolate, decodeStrategy, courseHandicap } from '../engine/calculations.js';
-import { renderCourseList } from './courses.js';
+import { interpolate, decodeStrategy, courseHandicap, stablefordPoints } from '../engine/calculations.js';
+import { renderCourseList, computeHoleStrokeCounts } from './courses.js';
 
 // ── Round filter state ────────────────────────────────────────────────────────
 let _homeFilter   = '18';
@@ -1137,7 +1137,7 @@ export function renderSavedRounds() {
     return 'sp-par';
   }
 
-  function scRowHtml(s, i, course, round) {
+  function scRowHtml(s, i, course, round, holeStrokeCounts = []) {
     if (!s) return '';
     const par   = course.holes[i]?.par || 4;
     const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
@@ -1158,6 +1158,10 @@ export function renderSavedRounds() {
       : s.fir === true  ? '<span style="color:#1e7a45;font-weight:700;">✓</span>'
       : s.fir === false ? '<span style="color:#ccc;">✗</span>'
       : '<span style="color:#ccc;">—</span>';
+    const isStblf = round.gameFormat === 'stableford';
+    const ptsCell = isStblf
+      ? `<td style="text-align:center;font-weight:700;color:#1e7a45">${stablefordPoints(total, par, holeStrokeCounts[i] ?? 0)}</td>`
+      : '';
     return `<tr>
       <td>${i + 1}</td>
       <td>${par}</td>
@@ -1166,6 +1170,7 @@ export function renderSavedRounds() {
       <td style="text-align:center">${girCell}</td>
       <td style="text-align:center">${firCell}</td>
       <td>${stratCell}</td>
+      ${ptsCell}
     </tr>`;
   }
 
@@ -1245,32 +1250,54 @@ export function renderSavedRounds() {
         else     { b9Par+=hPar;b9S+=total;b9P+=s.putts;if(s.gir)b9G++;b9n++;if(fir)b9F++;if(firApp)b9Fa++; }
       });
 
+      const isStblf2   = round.gameFormat === 'stableford';
+      const hSC        = isStblf2 ? computeHoleStrokeCounts(courseId) : [];
+      const colSpan    = isStblf2 ? 8 : 7;
+      let f9Pts = 0, b9Pts = 0;
+      if (isStblf2) {
+        (round.scores||[]).slice(0,9).forEach((s,idx) => {
+          if (!s) return;
+          const p = course.holes[idx]?.par || 4;
+          const t = (s.fairway||0)+(s.rough||0)+(s.putts||0);
+          f9Pts += stablefordPoints(t, p, hSC[idx] ?? 0);
+        });
+        (round.scores||[]).slice(9,18).forEach((s,idx) => {
+          if (!s) return;
+          const p = course.holes[9+idx]?.par || 4;
+          const t = (s.fairway||0)+(s.rough||0)+(s.putts||0);
+          b9Pts += stablefordPoints(t, p, hSC[9+idx] ?? 0);
+        });
+      }
+
       const scWrap = document.createElement('div');
       scWrap.style.overflowX = 'auto';
       scWrap.innerHTML = `<table class="sc-table">
-        <thead><tr><th>#</th><th>Par</th><th>Score</th><th>Putts</th><th>GIR</th><th>FIR</th><th>Strategy</th></tr></thead>
+        <thead><tr><th>#</th><th>Par</th><th>Score</th><th>Putts</th><th>GIR</th><th>FIR</th><th>Strategy</th>${isStblf2 ? '<th>Pts</th>' : ''}</tr></thead>
         <tbody>
-          <tr class="sc-section"><td colspan="7">Front 9</td></tr>
-          ${(round.scores||[]).slice(0,9).map((s,i)=>scRowHtml(s,i,course,round)).join('')}
+          <tr class="sc-section"><td colspan="${colSpan}">Front 9</td></tr>
+          ${(round.scores||[]).slice(0,9).map((s,i)=>scRowHtml(s,i,course,round,hSC)).join('')}
           <tr class="sc-total">
             <td class="sc-hole">Out</td><td>${f9Par}</td>
             <td>${f9n?f9S:'—'}</td><td>${f9n?f9P:'—'}</td>
             <td style="text-align:center">${f9n?f9G+'/'+f9n:'—'}</td>
             <td style="text-align:center">${f9Fa?f9F+'/'+f9Fa:'—'}</td><td></td>
+            ${isStblf2 ? `<td style="text-align:center;font-weight:700;color:#1e7a45">${f9n?f9Pts:'—'}</td>` : ''}
           </tr>
-          <tr class="sc-section"><td colspan="7">Back 9</td></tr>
-          ${(round.scores||[]).slice(9,18).map((s,i)=>scRowHtml(s,i+9,course,round)).join('')}
+          <tr class="sc-section"><td colspan="${colSpan}">Back 9</td></tr>
+          ${(round.scores||[]).slice(9,18).map((s,i)=>scRowHtml(s,i+9,course,round,hSC)).join('')}
           <tr class="sc-total">
             <td class="sc-hole">In</td><td>${b9Par}</td>
             <td>${b9n?b9S:'—'}</td><td>${b9n?b9P:'—'}</td>
             <td style="text-align:center">${b9n?b9G+'/'+b9n:'—'}</td>
             <td style="text-align:center">${b9Fa?b9F+'/'+b9Fa:'—'}</td><td></td>
+            ${isStblf2 ? `<td style="text-align:center;font-weight:700;color:#1e7a45">${b9n?b9Pts:'—'}</td>` : ''}
           </tr>
           <tr class="sc-total">
             <td class="sc-hole">Tot</td><td>${f9Par+b9Par}</td>
             <td>${f9n+b9n?(f9S+b9S):'—'}</td><td>${f9n+b9n?(f9P+b9P):'—'}</td>
             <td style="text-align:center">${f9n+b9n?(f9G+b9G)+'/'+(f9n+b9n):'—'}</td>
             <td style="text-align:center">${f9Fa+b9Fa?(f9F+b9F)+'/'+(f9Fa+b9Fa):'—'}</td><td></td>
+            ${isStblf2 ? `<td style="text-align:center;font-weight:700;color:#1e7a45">${f9n+b9n?f9Pts+b9Pts:'—'}</td>` : ''}
           </tr>
         </tbody>
       </table>`;
