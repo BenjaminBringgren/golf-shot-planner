@@ -16,7 +16,8 @@ import { renderConfirmRow }       from './ConfirmRow.js';
 import { renderResultBar }        from './ResultBar.js';
 import { renderStatsBar }         from './StatsBar.js';
 import { success as hapticSuccess } from '../../platform/haptics.js';
-import { loadScores, loadCourses, getScoringMode, saveScoringMode } from '../../storage/storage.js';
+import { loadScores, loadCourses, loadActiveCourse, getScoringMode, saveScoringMode } from '../../storage/storage.js';
+import { computeHoleStrokeCounts } from '../../app/courses.js';
 
 /**
  * Mount the shot sheet into the score drawer inner container.
@@ -54,7 +55,7 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
   // ── FAB wiring ───────────────────────────────────────────────────────────
   const fab = document.getElementById('scoreFab');
   if (fab) {
-    const newFab = fab.cloneNode(true);
+    const newFab = fab.cloneNode(false);
     fab.parentNode.replaceChild(newFab, fab);
     newFab.classList.add('visible');
     _updateFab(newFab, courseId, holeIdx, callbacks.getHoleFlowState?.(), _openedThisHole);
@@ -262,17 +263,43 @@ function _handleNext(state, isLastHole, courseId, holeIdx, callbacks) {
 function _updateFab(fab, courseId, holeIdx, state, openedThisHole) {
   const scores = loadScores(courseId);
   const s = scores[holeIdx];
+  let label, hasScore;
   if (s) {
-    const total = (s.fairway ?? 0) + (s.rough ?? 0) + (s.putts ?? 0);
-    fab.textContent = String(total);
-    fab.classList.add('has-score');
+    label = String((s.fairway ?? 0) + (s.rough ?? 0) + (s.putts ?? 0));
+    hasScore = true;
   } else if (openedThisHole && state && state.totalShots > 0) {
-    fab.textContent = String(state.totalShots);
-    fab.classList.add('has-score');
+    label = String(state.totalShots);
+    hasScore = true;
   } else {
-    fab.textContent = '+';
-    fab.classList.remove('has-score');
+    label = '+';
+    hasScore = false;
   }
+  fab.classList.toggle('has-score', hasScore);
+
+  // Rebuild inner DOM — never use textContent (it destroys child nodes)
+  fab.innerHTML = '';
+  const inner = document.createElement('span');
+  inner.className = 'fab-inner';
+  const textEl = document.createElement('span');
+  textEl.textContent = label;
+  inner.appendChild(textEl);
+
+  const active = loadActiveCourse();
+  if (active?.gameFormat === 'stableford') {
+    const counts = computeHoleStrokeCounts(courseId);
+    const n = counts[holeIdx] ?? 0;
+    if (n > 0) {
+      const dotsEl = document.createElement('span');
+      dotsEl.className = 'fab-dots';
+      for (let d = 0; d < Math.min(n, 4); d++) {
+        const dot = document.createElement('span');
+        dot.className = 'fab-dot';
+        dotsEl.appendChild(dot);
+      }
+      inner.appendChild(dotsEl);
+    }
+  }
+  fab.appendChild(inner);
 }
 
 // ── Mode toggle row ───────────────────────────────────────────────────────────

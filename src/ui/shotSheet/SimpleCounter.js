@@ -6,7 +6,8 @@
 import { renderActivityHeader } from './ActivityHeader.js';
 import { renderHoleHeader }     from './HoleHeader.js';
 import { renderStatsBar }       from './StatsBar.js';
-import { loadScores, saveScores, loadCourses, getScoringMode, saveScoringMode } from '../../storage/storage.js';
+import { loadScores, saveScores, loadCourses, loadActiveCourse, getScoringMode, saveScoringMode } from '../../storage/storage.js';
+import { computeHoleStrokeCounts } from '../../app/courses.js';
 
 let _swipeController = null;
 
@@ -44,13 +45,33 @@ export function mountSimpleCounter({ courseId, holeIdx, par, callbacks }) {
   function _updateFab() {
     const fab = document.getElementById('scoreFab');
     if (!fab) return;
-    if (_count > 0) {
-      fab.textContent = String(_count);
-      fab.classList.add('has-score');
-    } else {
-      fab.textContent = '+';
-      fab.classList.remove('has-score');
+    const hasScore = _count > 0;
+    fab.classList.toggle('has-score', hasScore);
+
+    // Rebuild inner DOM — never use textContent (it destroys child nodes)
+    fab.innerHTML = '';
+    const inner = document.createElement('span');
+    inner.className = 'fab-inner';
+    const textEl = document.createElement('span');
+    textEl.textContent = hasScore ? String(_count) : '+';
+    inner.appendChild(textEl);
+
+    const active = loadActiveCourse();
+    if (active?.gameFormat === 'stableford') {
+      const counts = computeHoleStrokeCounts(courseId);
+      const n = counts[holeIdx] ?? 0;
+      if (n > 0) {
+        const dotsEl = document.createElement('span');
+        dotsEl.className = 'fab-dots';
+        for (let d = 0; d < Math.min(n, 4); d++) {
+          const dot = document.createElement('span');
+          dot.className = 'fab-dot';
+          dotsEl.appendChild(dot);
+        }
+        inner.appendChild(dotsEl);
+      }
     }
+    fab.appendChild(inner);
   }
 
   // ── Open / close ─────────────────────────────────────────────────────────
@@ -68,7 +89,7 @@ export function mountSimpleCounter({ courseId, holeIdx, par, callbacks }) {
   // ── FAB ──────────────────────────────────────────────────────────────────
   const fab = document.getElementById('scoreFab');
   if (fab) {
-    const newFab = fab.cloneNode(true);
+    const newFab = fab.cloneNode(false);
     fab.parentNode.replaceChild(newFab, fab);
     newFab.classList.add('visible');
     _updateFab();

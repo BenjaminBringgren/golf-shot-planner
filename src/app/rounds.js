@@ -1160,7 +1160,7 @@ export function renderSavedRounds() {
       : '<span style="color:#ccc;">—</span>';
     const isStblf = round.gameFormat === 'stableford';
     const ptsCell = isStblf
-      ? `<td style="text-align:center;font-weight:700;color:#1e7a45">${stablefordPoints(total, par, holeStrokeCounts[i] ?? 0)}</td>`
+      ? `<td class="sc-pts" style="font-weight:700;color:#1e7a45">${stablefordPoints(total, par, holeStrokeCounts[i] ?? 0)}</td>`
       : '';
     return `<tr>
       <td>${i + 1}</td>
@@ -1169,7 +1169,7 @@ export function renderSavedRounds() {
       <td>${s.putts}</td>
       <td style="text-align:center">${girCell}</td>
       <td style="text-align:center">${firCell}</td>
-      <td>${stratCell}</td>
+      <td class="sc-strategy">${stratCell}</td>
       ${ptsCell}
     </tr>`;
   }
@@ -1272,7 +1272,7 @@ export function renderSavedRounds() {
       const scWrap = document.createElement('div');
       scWrap.style.overflowX = 'auto';
       scWrap.innerHTML = `<table class="sc-table">
-        <thead><tr><th>#</th><th>Par</th><th>Score</th><th>Putts</th><th>GIR</th><th>FIR</th><th>Strategy</th>${isStblf2 ? '<th>Pts</th>' : ''}</tr></thead>
+        <thead><tr><th>#</th><th>Par</th><th>Score</th><th>Putts</th><th>GIR</th><th>FIR</th><th class="sc-strategy">Strategy</th>${isStblf2 ? '<th class="sc-pts">Pts</th>' : ''}</tr></thead>
         <tbody>
           <tr class="sc-section"><td colspan="${colSpan}">Front 9</td></tr>
           ${(round.scores||[]).slice(0,9).map((s,i)=>scRowHtml(s,i,course,round,hSC)).join('')}
@@ -1281,7 +1281,7 @@ export function renderSavedRounds() {
             <td>${f9n?f9S:'—'}</td><td>${f9n?f9P:'—'}</td>
             <td style="text-align:center">${f9n?f9G+'/'+f9n:'—'}</td>
             <td style="text-align:center">${f9Fa?f9F+'/'+f9Fa:'—'}</td><td></td>
-            ${isStblf2 ? `<td style="text-align:center;font-weight:700;color:#1e7a45">${f9n?f9Pts:'—'}</td>` : ''}
+            ${isStblf2 ? `<td class="sc-pts" style="font-weight:700;color:#1e7a45">${f9n?f9Pts:'—'}</td>` : ''}
           </tr>
           <tr class="sc-section"><td colspan="${colSpan}">Back 9</td></tr>
           ${(round.scores||[]).slice(9,18).map((s,i)=>scRowHtml(s,i+9,course,round,hSC)).join('')}
@@ -1290,14 +1290,14 @@ export function renderSavedRounds() {
             <td>${b9n?b9S:'—'}</td><td>${b9n?b9P:'—'}</td>
             <td style="text-align:center">${b9n?b9G+'/'+b9n:'—'}</td>
             <td style="text-align:center">${b9Fa?b9F+'/'+b9Fa:'—'}</td><td></td>
-            ${isStblf2 ? `<td style="text-align:center;font-weight:700;color:#1e7a45">${b9n?b9Pts:'—'}</td>` : ''}
+            ${isStblf2 ? `<td class="sc-pts" style="font-weight:700;color:#1e7a45">${b9n?b9Pts:'—'}</td>` : ''}
           </tr>
           <tr class="sc-total">
             <td class="sc-hole">Tot</td><td>${f9Par+b9Par}</td>
             <td>${f9n+b9n?(f9S+b9S):'—'}</td><td>${f9n+b9n?(f9P+b9P):'—'}</td>
             <td style="text-align:center">${f9n+b9n?(f9G+b9G)+'/'+(f9n+b9n):'—'}</td>
             <td style="text-align:center">${f9Fa+b9Fa?(f9F+b9F)+'/'+(f9Fa+b9Fa):'—'}</td><td></td>
-            ${isStblf2 ? `<td style="text-align:center;font-weight:700;color:#1e7a45">${f9n+b9n?f9Pts+b9Pts:'—'}</td>` : ''}
+            ${isStblf2 ? `<td class="sc-pts" style="font-weight:700;color:#1e7a45">${f9n+b9n?f9Pts+b9Pts:'—'}</td>` : ''}
           </tr>
         </tbody>
       </table>`;
