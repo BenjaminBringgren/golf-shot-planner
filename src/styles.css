@@ -1155,8 +1155,9 @@
     .score-fab.visible { display: flex; }
     @media (hover: hover) { .score-fab:hover { background: #333; transform: scale(1.06); } }
     .score-fab.has-score { background: #1a1a1a; font-size: 22px; }
+    /* Inner wrapper — position:relative so .fab-dots (position:absolute) anchors correctly inside position:fixed on iOS Safari */
+    .fab-inner { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
     /* Stableford extra-stroke dot overlay on FAB (upper-right corner) */
-    .score-fab { position: fixed; }
     .fab-dots {
       position: absolute; top: 3px; right: 3px;
       display: flex; flex-wrap: wrap; gap: 2px; width: 12px;
@@ -1368,15 +1369,17 @@
     .sc2-section-title { font-size: 17px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.01em; }
     .sc2-section-chip { font-size: 11px; font-weight: 700; color: #888; background: #f0efeb; border-radius: 6px; padding: 3px 10px; letter-spacing: 0.05em; text-transform: uppercase; }
 
-    .sc2-card { background: #fff; border-radius: 12px; overflow: hidden; border: 0.5px solid rgba(0,0,0,0.07); }
+    /* --sc2-cols drives all three row types — override once on .sc2-stableford .sc2-card */
+    .sc2-card { background: #fff; border-radius: 12px; overflow: hidden; border: 0.5px solid rgba(0,0,0,0.07); --sc2-cols: 44px 1fr 1fr 28px 1px 1fr 1fr 1fr 1fr 1.4fr; }
+    .sc2-stableford .sc2-card { --sc2-cols: 44px 1fr 1fr 28px 1px 1fr 1fr 1fr 1fr 1.4fr 1fr; }
 
-    .sc2-col-hdr { display: grid; grid-template-columns: 44px 1fr 1fr 28px 1px 1fr 1fr 1fr 1fr 1.4fr; padding: 9px 14px; background: #f0efeb; border-bottom: 0.5px solid rgba(0,0,0,0.07); }
+    .sc2-col-hdr { display: grid; grid-template-columns: var(--sc2-cols); padding: 9px 14px; background: #f0efeb; border-bottom: 0.5px solid rgba(0,0,0,0.07); }
     .sc2-col-hdr > span { font-size: 10px; font-weight: 700; color: #888; letter-spacing: 0.06em; text-transform: uppercase; }
     .sc2-col-hdr > span:not(:first-child) { text-align: center; }
     .sc2-col-hdr > span:last-child { text-align: right; }
     .sc2-col-hdr .sc2-col-sep { background: transparent; }
 
-    .sc2-row { display: grid; grid-template-columns: 44px 1fr 1fr 28px 1px 1fr 1fr 1fr 1fr 1.4fr; padding: 0 14px; height: 52px; align-items: center; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+    .sc2-row { display: grid; grid-template-columns: var(--sc2-cols); padding: 0 14px; height: 52px; align-items: center; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
     .sc2-row:last-of-type { border-bottom: none; }
 
     .sc2-hole { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; }
@@ -1421,7 +1424,7 @@
     .sc2-total--even  { color: #1a1a1a; }
     .sc2-total--none  { color: #aaa; }
 
-    .sc2-sub { display: grid; grid-template-columns: 44px 1fr 1fr 28px 1px 1fr 1fr 1fr 1fr 1.4fr; padding: 13px 14px; align-items: center; }
+    .sc2-sub { display: grid; grid-template-columns: var(--sc2-cols); padding: 13px 14px; align-items: center; }
     .sc2-sub--out   { background: #1a1a1a; }
     .sc2-sub--in    { background: #f0efeb; }
     .sc2-sub--total { background: #1a1a1a; }
@@ -1453,9 +1456,7 @@
     /* ── Stableford points column ────────────────────────────── */
     .sc2-pts { display: none; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #1e7a45; }
     .sc2-stableford .sc2-pts { display: flex; }
-    .sc2-stableford .sc2-col-hdr,
-    .sc2-stableford .sc2-row,
-    .sc2-stableford .sc2-sub { grid-template-columns: 44px 1fr 1fr 28px 1px 1fr 1fr 1fr 1fr 1.4fr 1fr; }
+    /* --sc2-cols variable override is on .sc2-stableford .sc2-card (declared with .sc2-card above) */
     .sc2-stableford .sc2-col-hdr > span:last-child { text-align: center; }
     .sc2-stableford .sc2-row > div:last-child { text-align: center; }
     .sc2-stableford .sc2-sub > *:last-child { text-align: center; }

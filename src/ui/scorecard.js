@@ -849,13 +849,17 @@ export function renderScoreEntry(courseId, holeIdx, scores, callbacks = {}) {
   fab.parentNode.replaceChild(newFab, fab);
   newFab.classList.add('visible');
   const total0 = getScoringMode() === 'simple' ? simpleTotal : shots.length + putts;
+  // Inner span has position:relative so .fab-dots (position:absolute) works inside position:fixed on iOS Safari
+  const _fabInner = document.createElement('span');
+  _fabInner.className = 'fab-inner';
   if (existing_score || total0 > 0) {
     newFab.classList.add('has-score');
-    newFab.textContent = total0 > 0 ? String(total0) : '+';
+    _fabInner.textContent = total0 > 0 ? String(total0) : '+';
   } else {
     newFab.classList.remove('has-score');
-    newFab.textContent = '+';
+    _fabInner.textContent = '+';
   }
+  newFab.appendChild(_fabInner);
 
   // FAB dot overlay — shows per-hole extra strokes for Stableford
   const { gameFormat: _fabFmt = 'strokes' } = loadActiveCourse();
@@ -866,7 +870,7 @@ export function renderScoreEntry(courseId, holeIdx, scores, callbacks = {}) {
       const _overlay = document.createElement('span');
       _overlay.className = 'fab-dots';
       _overlay.innerHTML = Array(Math.min(_fabStrokes, 4)).fill('<span class="fab-dot"></span>').join('');
-      newFab.appendChild(_overlay);
+      _fabInner.appendChild(_overlay);
     }
   }
 
@@ -1267,6 +1271,10 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
 
   const rcTotalPoints = played.reduce((sum, h, i) =>
     h.total != null ? sum + stablefordPoints(h.total, h.par, rcHoleStrokeCounts[i]) : sum, 0);
+  const rcFront9Pts = played.slice(0, 9).reduce((sum, h, i) =>
+    h.total != null ? sum + stablefordPoints(h.total, h.par, rcHoleStrokeCounts[i]) : sum, 0);
+  const rcBack9Pts = played.slice(9, 18).reduce((sum, h, i) =>
+    h.total != null ? sum + stablefordPoints(h.total, h.par, rcHoleStrokeCounts[9 + i]) : sum, 0);
 
   const vsPar = totalStrokes - totalPar;
   const vsParStr = vsPar === 0 ? 'E' : (vsPar > 0 ? '+' + vsPar : '' + vsPar);
@@ -1296,9 +1304,13 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
   }
 
   function scRows(from, to) {
-    return played.slice(from, to).map(h => {
-      if (h.total == null) return `<tr><td class="rc-hole">${h.hole}</td><td>${h.par}</td><td>—</td><td>—</td><td>—</td></tr>`;
-      return `<tr><td class="rc-hole">${h.hole}</td><td>${h.par}</td><td>${h.total}</td><td>${h.putts}</td><td>${pillHtml2(h.total, h.par)}</td></tr>`;
+    return played.slice(from, to).map((h, relIdx) => {
+      const absIdx = from + relIdx;
+      const ptsCell = rcIsStableford
+        ? `<td>${h.total != null ? stablefordPoints(h.total, h.par, rcHoleStrokeCounts[absIdx]) : '—'}</td>`
+        : '';
+      if (h.total == null) return `<tr><td class="rc-hole">${h.hole}</td><td>${h.par}</td><td>—</td><td>—</td><td>—</td>${ptsCell}</tr>`;
+      return `<tr><td class="rc-hole">${h.hole}</td><td>${h.par}</td><td>${h.total}</td><td>${h.putts}</td><td>${pillHtml2(h.total, h.par)}</td>${ptsCell}</tr>`;
     }).join('');
   }
 
@@ -1330,15 +1342,15 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
     <div class="rc-section" style="margin-top:10px;padding-bottom:8px;">
       <div class="rc-section-label">Scorecard</div>
       <table class="rc-table">
-        <thead><tr><th>Hole</th><th>Par</th><th>Score</th><th>Putts</th><th>+/−</th></tr></thead>
+        <thead><tr><th>Hole</th><th>Par</th><th>Score</th><th>Putts</th><th>+/−</th>${rcIsStableford ? '<th>Pts</th>' : ''}</tr></thead>
         <tbody>
-          <tr class="rc-sect"><td colspan="5">Front 9</td></tr>
+          <tr class="rc-sect"><td colspan="${rcIsStableford ? 6 : 5}">Front 9</td></tr>
           ${scRows(0, 9)}
-          <tr class="rc-total"><td class="rc-hole" style="background:#e5e3df">Out</td><td>${front9Par}</td><td>${front9Played ? front9Strokes : '—'}</td><td>${front9Played ? front9Putts : '—'}</td><td>${front9Played ? pillHtml2(front9Strokes, front9Par) : '—'}</td></tr>
-          <tr class="rc-sect"><td colspan="5">Back 9</td></tr>
+          <tr class="rc-total"><td class="rc-hole" style="background:#e5e3df">Out</td><td>${front9Par}</td><td>${front9Played ? front9Strokes : '—'}</td><td>${front9Played ? front9Putts : '—'}</td><td>${front9Played ? pillHtml2(front9Strokes, front9Par) : '—'}</td>${rcIsStableford ? `<td>${front9Played ? rcFront9Pts : '—'}</td>` : ''}</tr>
+          <tr class="rc-sect"><td colspan="${rcIsStableford ? 6 : 5}">Back 9</td></tr>
           ${scRows(9, 18)}
-          <tr class="rc-total"><td class="rc-hole" style="background:#e5e3df">In</td><td>${back9Par}</td><td>${back9Played ? back9Strokes : '—'}</td><td>${back9Played ? back9Putts : '—'}</td><td>${back9Played ? pillHtml2(back9Strokes, back9Par) : '—'}</td></tr>
-          <tr class="rc-total"><td class="rc-hole" style="background:#333;color:#fff">Total</td><td>${totalPar}</td><td>${totalStrokes}</td><td>${totalPutts}</td><td>${pillHtml2(totalStrokes, totalPar)}</td></tr>
+          <tr class="rc-total"><td class="rc-hole" style="background:#e5e3df">In</td><td>${back9Par}</td><td>${back9Played ? back9Strokes : '—'}</td><td>${back9Played ? back9Putts : '—'}</td><td>${back9Played ? pillHtml2(back9Strokes, back9Par) : '—'}</td>${rcIsStableford ? `<td>${back9Played ? rcBack9Pts : '—'}</td>` : ''}</tr>
+          <tr class="rc-total"><td class="rc-hole" style="background:#333;color:#fff">Total</td><td>${totalPar}</td><td>${totalStrokes}</td><td>${totalPutts}</td><td>${pillHtml2(totalStrokes, totalPar)}</td>${rcIsStableford ? `<td>${rcTotalPoints}</td>` : ''}</tr>
         </tbody>
       </table>
     </div>
