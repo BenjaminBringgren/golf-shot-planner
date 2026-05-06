@@ -1214,9 +1214,11 @@ export function renderSavedRounds() {
       const diff        = netScore - (round.totalPar || 0);
       const diffStr     = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : String(diff));
       const diffCls     = diff < 0 ? 'under' : diff > 0 ? 'over' : 'even';
-      const isStblf     = round.gameFormat === 'stableford';
-      const displayStr  = isStblf ? (round.totalPoints ?? 0) + ' pts' : diffStr;
-      const displayCls  = isStblf ? 'stableford' : diffCls;
+      const isStblf    = round.gameFormat === 'stableford' || (((round.totalPoints ?? 0) > 0) && !round.gameFormat);
+      const pts        = round.totalPoints ?? 0;
+      const ptsExpect  = (round.holesPlayed || 18) * 2;
+      const displayStr = isStblf ? pts + ' pts' : diffStr;
+      const displayCls = isStblf ? (pts > ptsExpect ? 'under' : pts < ptsExpect ? 'over' : 'even') : diffCls;
       const rPutts  = round.totalPutts ?? (round.scores||[]).reduce((a,s)=>a+(s?.putts||0),0);
       const rGIR    = round.totalGIR   ?? (round.scores||[]).filter(s=>s?.gir).length;
       const rFIR    = (round.scores||[]).filter(s=>s?.fir===true).length;
