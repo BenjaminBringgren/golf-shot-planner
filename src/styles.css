@@ -174,7 +174,8 @@
     }
     /* ── Course picker format selector ──────────────────────── */
     /* ── Game format cards ───────────────────────────────────── */
-    .picker-fmt-header {
+    .picker-fmt-header,
+    .picker-section-header {
       display: flex; align-items: center; gap: 7px;
       padding: 12px 16px 10px;
       font-size: 13px; font-weight: 700; color: #555;
@@ -724,7 +725,7 @@
     }
 
     /* ── Round complete overlay ─────────────────────────────── */
-    .rc-body { max-width: 420px; margin: 0 auto; width: 100%; padding-bottom: 40px; }
+    .rc-body { width: 100%; padding-bottom: 40px; }
     .rc-header { position: relative; overflow: hidden; height: 110px; position: sticky; top: 0; z-index: 1; background: #1a1a1a; }
     .rc-header > img { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; display: block; }
     .rc-header::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 100%); pointer-events: none; }
@@ -745,7 +746,7 @@
     .rc-breakdown-row:last-child { border-bottom: none; }
     .rc-bd-label { font-size: 13px; color: #888; width: 70px; flex-shrink: 0; }
     .rc-bd-dots { flex: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 3px; }
-    .rc-bd-count { font-size: 13px; font-weight: 700; color: #1a1a1a; min-width: 20px; text-align: right; }
+    .rc-bd-count { font-size: 15px; font-weight: 700; color: #1a1a1a; min-width: 20px; text-align: right; }
     .rc-table { width: 100%; font-size: 12px; border-collapse: collapse; }
     .rc-table th { background: #f5f4f0; color: #888; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 6px 5px; text-align: center; border-bottom: 0.5px solid rgba(0,0,0,0.08); }
     .rc-table td { padding: 8px 5px; text-align: center; border-bottom: 0.5px solid rgba(0,0,0,0.06); color: #1a1a1a; }
@@ -1375,7 +1376,7 @@
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .scorecard-page-subtitle {
-      font-size: 0.82rem; color: #888;
+      font-size: 11px; font-weight: 600; color: #666;
       margin-top: 4px; letter-spacing: 0.2px;
     }
     .sc2-close-btn {
@@ -1676,7 +1677,7 @@
       border-top: 0.5px solid #f2f1ee;
       display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
     }
-    .tee-chip-label { font-size: 11px; color: #bbb; flex-shrink: 0; }
+    .tee-chip-label { font-size: 11px; color: #888; flex-shrink: 0; }
     .tee-chips { display: flex; gap: 5px; flex-wrap: wrap; }
     .tee-chip {
       border: none; border-radius: 8px;

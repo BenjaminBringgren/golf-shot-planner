@@ -253,6 +253,11 @@ export function openCoursePicker(onCourseSelect) {
   if (!ids.length) {
     list.innerHTML = '<div class="course-picker-empty">No courses saved yet.<br>Add one in My Golf → My Courses.</div>';
   } else {
+    const coursesHdr = document.createElement('div');
+    coursesHdr.className = 'picker-section-header';
+    coursesHdr.textContent = 'Courses';
+    list.appendChild(coursesHdr);
+
     const withLastPlayed = ids.map(id => {
       const rounds = loadRounds(id);
       const last   = rounds.length ? rounds[0].date : null;
