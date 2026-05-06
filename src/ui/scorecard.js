@@ -9,6 +9,7 @@ import {
   getScoringMode,
   getCommittedStrategies, removeCommittedStrategies,
   clearTeeState, clearAllHoleFlowStates,
+  clearInProgressRound,
 } from '../storage/storage.js';
 import { teeMarked, completedShots, clearGpsState } from '../platform/gps.js';
 import { decodeStrategy, courseHandicap, stablefordPoints } from '../engine/calculations.js';
@@ -306,6 +307,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
       document.getElementById('cancelRoundConfirm').onclick = () => {
         overlay.style.display = 'none';
         clearActiveCourse();
+        clearInProgressRound();
         // Clear in-progress scores and all mid-hole state for this course
         try {
           clearScores(courseId);
@@ -1411,6 +1413,7 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
       clearScores(courseId);
       clearAllHoleFlowStates(courseId);
       removeCommittedStrategies(courseId);
+      clearInProgressRound();
     } catch(e) {}
 
     callbacks.renderSavedRounds?.();
@@ -1466,6 +1469,7 @@ function _dismissRoundComplete(courseId, callbacks = {}) {
   document.body.style.overflow = '';
   // Full round teardown (same as quit round)
   clearActiveCourse();
+  clearInProgressRound();
   try {
     callbacks.clearAllOverrides?.();
     removeCommittedStrategies(null);

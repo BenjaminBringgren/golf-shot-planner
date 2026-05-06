@@ -146,6 +146,18 @@ export function clearActiveCourse() {
   try { sessionStorage.removeItem(KEY_ACTIVE_COURSE); } catch(e) {}
 }
 
+// ── In-progress round (localStorage — survives sessionStorage purge) ──────────
+export const KEY_IN_PROGRESS_ROUND = 'inProgressRound';
+export function saveInProgressRound(courseId, gameFormat = 'strokes', hcpEnabled = true) {
+  try { localStorage.setItem(KEY_IN_PROGRESS_ROUND, JSON.stringify({ courseId, gameFormat, hcpEnabled })); } catch(e) {}
+}
+export function loadInProgressRound() {
+  try { const r = localStorage.getItem(KEY_IN_PROGRESS_ROUND); return r ? JSON.parse(r) : null; } catch(e) { return null; }
+}
+export function clearInProgressRound() {
+  try { localStorage.removeItem(KEY_IN_PROGRESS_ROUND); } catch(e) {}
+}
+
 // ── Wind ──────────────────────────────────────────────────────────────────────
 export function loadWindEnabled() {
   return localStorage.getItem(KEY_WIND_ENABLED);

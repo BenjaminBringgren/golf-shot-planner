@@ -10,6 +10,7 @@ import {
   loadActiveCourse, saveActiveCourse, clearActiveCourse, getActiveCourseId,
   getCommittedStrategies, setCommittedStrategies, removeCommittedStrategies,
   loadCourses, loadScores, loadProfile,
+  loadInProgressRound, clearInProgressRound,
   saveProfile, getScoringMode,
   loadCollapseState, saveCollapseState,
   KEY_HERO_IMG_IDX, KEY_HERO_QUOTE_IDX,
@@ -38,7 +39,7 @@ import { renderPlayCourseBar, renderScoreEntry, showRoundCompleteOverlay, hideSc
          getInRough, resetInRough } from '../ui/scorecard.js';
 import {
   computeHoleBaseline, blendedScore,
-  applyHoleToPlay, loadCourseIntoPlay,
+  applyHoleToPlay, loadCourseIntoPlay, resumeRoundInPlay,
   deleteCourse, renderCourseList, openEditor,
   initServices,
 } from './courses.js';
@@ -1802,6 +1803,65 @@ initServices({
     if (mgHeroImg) mgHeroImg.src = HERO_IMAGES[nextIdx];
   }
 
+  // ── Active round banner ────────────────────────────────────────────────────
+  function _resumeHoleIdx(courseId) {
+    const scores = loadScores(courseId);
+    const c = loadCourses()[courseId];
+    const total = c?.holes?.length ?? 18;
+    let last = -1;
+    scores.forEach((s, i) => { if (s != null) last = i; });
+    return last < 0 ? 0 : Math.min(last + 1, total - 1);
+  }
+
+  function _renderActiveRoundBanner() {
+    const homeBanner = document.getElementById('activeRoundBanner');
+    const playBanner = document.getElementById('activeRoundBannerPlay');
+    const ipr = loadInProgressRound();
+
+    if (!ipr) {
+      if (homeBanner) homeBanner.innerHTML = '';
+      if (playBanner) playBanner.innerHTML = '';
+      return;
+    }
+
+    const { courseId, gameFormat, hcpEnabled } = ipr;
+    const c = loadCourses()[courseId];
+    if (!c) {
+      clearInProgressRound();
+      if (homeBanner) homeBanner.innerHTML = '';
+      if (playBanner) playBanner.innerHTML = '';
+      return;
+    }
+
+    const scores = loadScores(courseId);
+    const holesPlayed = scores.filter(s => s != null).length;
+    const nextIdx = _resumeHoleIdx(courseId);
+    const sub = holesPlayed === 0
+      ? 'Round started · no holes scored yet'
+      : `${holesPlayed} hole${holesPlayed !== 1 ? 's' : ''} played · resume at hole ${nextIdx + 1}`;
+
+    function _wire(container) {
+      container.innerHTML =
+        `<div class="active-round-banner">` +
+          `<div class="arb-text">` +
+            `<div class="arb-title">${c.name}</div>` +
+            `<div class="arb-sub">${sub}</div>` +
+          `</div>` +
+          `<button class="arb-resume-btn" type="button">Resume →</button>` +
+        `</div>`;
+      container.querySelector('.arb-resume-btn').addEventListener('click', () => {
+        resumeRoundInPlay(courseId, nextIdx, gameFormat, hcpEnabled);
+      });
+    }
+
+    if (homeBanner) _wire(homeBanner);
+
+    if (playBanner) {
+      if (!getActiveCourseId()) _wire(playBanner);
+      else playBanner.innerHTML = '';
+    }
+  }
+
   // Patch switchTab so HOME always refreshes hero/quote/perf; My Golf gets same hero image
   const _origSwitchTabHome = switchTab;
   switchTab = function(name) {
@@ -1810,8 +1870,11 @@ initServices({
       cycleHeroImage();
       cycleQuote();
       refreshHomeStats();
+      _renderActiveRoundBanner();
     } else if (name === 'prepare') {
       cycleHeroImage();
+    } else if (name === 'play') {
+      _renderActiveRoundBanner();
     }
   };
 

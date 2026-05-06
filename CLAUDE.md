@@ -30,7 +30,7 @@ src/engine/ — stop. That code belongs in a higher layer.
 
 ## Refactor status (as of 2026-04-25)
 The five-layer ES module refactor is complete. index.html is
-683 lines of pure markup with a single entry point:
+pure markup with a single entry point:
   <script type="module" src="src/app/router.js"></script>
 
 ## window.* status
@@ -123,7 +123,8 @@ changes during a touch gesture. The app uses a global fix instead:
   touchstart/touchend/touchcancel on document to add/remove
   `.is-pressed` on any matching element.
 - Selector covers: `button`, `.mg-menu-row`, `.gps-tile`,
-  `.club-picker-item`, `.sh-lie`
+  `.club-picker-item`, `.sh-lie`, `.picker-fmt-card`,
+  `.mg-stat-tile.tappable`, `.mg-drilldown-btn`
 - When adding new interactive elements that need press feedback:
   add the CSS rule as `.your-class.is-pressed { ... }` and, if the
   element is not a `<button>`, add its class to `_PRESS_SEL` in

@@ -6,6 +6,7 @@ import {
   loadCourses, saveCourses,
   loadRounds, deleteAllRoundsForCourse,
   loadScores, saveActiveCourse, loadProfile,
+  saveInProgressRound,
 } from '../storage/storage.js';
 import { courseHandicap } from '../engine/calculations.js';
 
@@ -93,12 +94,27 @@ export function loadCourseIntoPlay(id, gameFormat = 'strokes', hcpEnabled = true
   const c = courses[id];
   if (!c) return;
   saveActiveCourse(id, 0, gameFormat, hcpEnabled);
+  saveInProgressRound(id, gameFormat, hcpEnabled);
   applyHoleToPlay(c, 0);
   _svc.switchTab?.('play');
   _svc.renderPlayCourseBar?.(id);
   _svc.updateCalcButtonVisibility?.();
   const scores = loadScores(id);
   _svc.renderScoreEntry?.(id, 0, scores);
+  setTimeout(() => _svc.calculate?.(), 0);
+}
+
+export function resumeRoundInPlay(courseId, startHoleIdx, gameFormat = 'strokes', hcpEnabled = true) {
+  const courses = loadCourses();
+  const c = courses[courseId];
+  if (!c) return;
+  saveActiveCourse(courseId, startHoleIdx, gameFormat, hcpEnabled);
+  applyHoleToPlay(c, startHoleIdx);
+  _svc.switchTab?.('play');
+  _svc.renderPlayCourseBar?.(courseId);
+  _svc.updateCalcButtonVisibility?.();
+  const scores = loadScores(courseId);
+  _svc.renderScoreEntry?.(courseId, startHoleIdx, scores);
   setTimeout(() => _svc.calculate?.(), 0);
 }
 
