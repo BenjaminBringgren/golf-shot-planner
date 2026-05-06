@@ -1287,8 +1287,18 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
   const vsPar = totalStrokes - totalPar;
   const vsParStr = vsPar === 0 ? 'E' : (vsPar > 0 ? '+' + vsPar : '' + vsPar);
   const vsParColor = vsPar < 0 ? '#c0392b' : '#1a1a1a';
-  const puttsPerGir = totalGIR > 0 ? (totalPutts / totalGIR).toFixed(2) : '—';
   const today = new Date().toLocaleDateString('sv-SE');
+
+  const firEligible  = played.filter(h => h.par >= 4 && h.total != null).length;
+  const girPct       = holesPlayed > 0 ? Math.round(totalGIR / holesPlayed * 100) : '—';
+  const firPct       = firEligible > 0 ? Math.round(totalFIR / firEligible * 100) : '—';
+  let scrambOpp = 0, scrambMade = 0;
+  played.forEach(h => {
+    if (h.total == null) return;
+    if (h.gir === false && h.putts != null && h.putts > 0) { scrambOpp++; if (h.putts === 1) scrambMade++; }
+  });
+  const scrambPct = scrambOpp > 0 ? Math.round(scrambMade / scrambOpp * 100) : '—';
+  const parPct    = holesPlayed > 0 ? Math.round((birdies + pars) / holesPlayed * 100) : '—';
 
   // Score breakdown dots
   function dotStrip(count, bg, shape) {
@@ -1349,10 +1359,11 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
         <div class="rc-hero-sub">${totalStrokes} strokes · par ${totalPar} · ${holesPlayed} holes</div>
       </div>
       <div class="rc-stat-grid">
-        <div class="rc-stat-cell"><div class="rc-stat-val">${totalGIR}</div><div class="rc-stat-lbl">GIR</div></div>
-        <div class="rc-stat-cell"><div class="rc-stat-val">${totalPutts}</div><div class="rc-stat-lbl">Putts</div></div>
-        <div class="rc-stat-cell"><div class="rc-stat-val">${totalFIR}</div><div class="rc-stat-lbl">FIR</div></div>
-        <div class="rc-stat-cell"><div class="rc-stat-val">${puttsPerGir}</div><div class="rc-stat-lbl">Putts/GIR</div></div>
+        <div class="rc-stat-cell"><div class="rc-stat-val">${girPct !== '—' ? girPct + '%' : '—'}</div><div class="rc-stat-lbl">GIR</div></div>
+        <div class="rc-stat-cell"><div class="rc-stat-val">${firPct !== '—' ? firPct + '%' : '—'}</div><div class="rc-stat-lbl">FIR</div></div>
+        <div class="rc-stat-cell"><div class="rc-stat-val">${totalPutts || '—'}</div><div class="rc-stat-lbl">Putts</div></div>
+        <div class="rc-stat-cell"><div class="rc-stat-val">${scrambPct !== '—' ? scrambPct + '%' : '—'}</div><div class="rc-stat-lbl">Scrambling</div></div>
+        <div class="rc-stat-cell"><div class="rc-stat-val">${parPct !== '—' ? parPct + '%' : '—'}</div><div class="rc-stat-lbl">PAR%</div></div>
       </div>
     </div>
     <div class="rc-section" style="margin-top:10px;">

@@ -36,7 +36,7 @@ export function showMgSub(id) {
   document.querySelectorAll('.mg-sub').forEach(s => s.classList.remove('active'));
   const sub = document.getElementById(id);
   if (sub) sub.classList.add('active');
-  if (id === 'mgSubStats') { renderMgStatsPage(); }
+  if (id === 'mgSubStats') { renderMgStatsPage(); renderMgStatTiles(); }
   if (id === 'mgSubRoundsHistory') { renderSavedRounds(); }
   if (id === 'mgSubCourses') renderCourseList();
   if (id === 'mgSubBag') renderMgCarryBars();
@@ -148,6 +148,27 @@ export function renderMgStatTiles() {
   const avgVsPar     = totalPar > 0 ? ((totalStrokes - totalPar) / allRounds.length).toFixed(1) : '—';
   const avgVsParStr  = avgVsPar !== '—' ? (avgVsPar > 0 ? '+' + avgVsPar : avgVsPar) : '—';
   const girPct       = totalHoles > 0 ? Math.round(totalGIR / totalHoles * 100) : 0;
+
+  // Scrambling and PAR% — computed from raw hole scores
+  let _scrambOpp = 0, _scrambMade = 0;
+  let _parOrBetter = 0, _holesWithPar = 0;
+  allRounds.forEach(r => {
+    const course = courses[r._courseId];
+    (r.scores || []).forEach((s, i) => {
+      if (!s) return;
+      const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
+      if (!total) return;
+      if (s.gir === false && s.putts != null && s.putts > 0) { _scrambOpp++; if (s.putts === 1) _scrambMade++; }
+      if (course) {
+        const par = course.holes[i]?.par || 4;
+        _holesWithPar++;
+        if (total <= par) _parOrBetter++;
+      }
+    });
+  });
+  const scrambPctAll = _scrambOpp > 0 ? Math.round(_scrambMade / _scrambOpp * 100) + '%' : '—';
+  const parPctAll    = _holesWithPar > 0 ? Math.round(_parOrBetter / _holesWithPar * 100) + '%' : '—';
+
   const avgPutts = (() => {
     const full  = allRounds.filter(r => (r.holesPlayed ?? 0) >= 18);
     if (!full.length) return '—';
@@ -176,6 +197,8 @@ export function renderMgStatTiles() {
     { lbl: 'Best score',   val: bestVal,           tappable: true, id: 'mgBestRoundTile' },
     { lbl: 'Avg strokes',  val: avgStrokes,        tappable: true, id: 'mgAvgStrokesTile' },
     { lbl: 'Putts / round',val: avgPutts,          tappable: true, id: 'mgPuttsTile' },
+    { lbl: 'Scrambling',   val: scrambPctAll,      tappable: false },
+    { lbl: 'PAR%',         val: parPctAll,         tappable: false },
   ];
   el.innerHTML = tiles.map(t =>
     '<div class="mg-stat-tile' + (t.tappable ? ' tappable' : '') + '"' + (t.id ? ' id="' + t.id + '"' : '') + '>' +

@@ -736,7 +736,7 @@
     .rc-hero { text-align: center; padding: 18px 14px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.07); }
     .rc-hero-score { font-size: 34px; font-weight: 700; line-height: 1; }
     .rc-hero-sub { font-size: 13px; color: #888; margin-top: 5px; }
-    .rc-stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .rc-stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); }
     .rc-stat-cell { text-align: center; padding: 10px 6px 12px; border-right: 0.5px solid rgba(0,0,0,0.07); }
     .rc-stat-cell:last-child { border-right: none; }
     .rc-stat-val { font-size: 22px; font-weight: 700; color: #1a1a1a; line-height: 1; }
@@ -1421,8 +1421,8 @@
 
     .sc2-par { text-align: center; font-size: 15px; font-weight: 500; color: #1a1a1a; }
     .sc2-idx { text-align: center; font-size: 15px; font-weight: 500; color: #888; }
-    .sc2-hcp-dots-inner { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; align-items: center; align-content: center; max-width: 26px; }
-    .sc2-hcp-dot { width: 12px; height: 12px; border-radius: 50%; background: #1e7a45; flex-shrink: 0; }
+    .sc2-hcp-dots-inner { display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; align-items: center; align-content: center; max-width: 14px; }
+    .sc2-hcp-dot { width: 6px; height: 6px; border-radius: 50%; background: #1e7a45; flex-shrink: 0; }
     .sc2-col-sep { background: rgba(0,0,0,0.1); align-self: stretch; }
 
     /* Hole-info group background tint (Hole, Par, Hcp, dots columns) */
@@ -2895,6 +2895,20 @@
   font-size: 13px; color: #888; font-weight: 600;
   padding: 10px 16px 8px; letter-spacing: 0.01em;
 }
+.mg-stat-tile-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 8px; padding: 4px 12px 12px;
+}
+.mg-stat-tile {
+  background: #fff; border-radius: 12px;
+  border: 0.5px solid rgba(0,0,0,0.07);
+  padding: 12px 10px 14px; text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+.mg-stat-tile.tappable { cursor: pointer; }
+.mg-stat-tile.tappable.is-pressed { background: #f5f4f0; }
+.mg-stat-val { font-size: 22px; font-weight: 700; color: #1a1a1a; line-height: 1; }
+.mg-stat-lbl { font-size: 11px; color: #888; margin-top: 4px; font-weight: 500; }
 .mg-drilldown-btn {
   display: flex; align-items: center; gap: 12px;
   background: #fff; border-radius: 12px;
