@@ -2836,6 +2836,7 @@
   font-size: 13px; font-weight: 600; font-family: inherit;
   cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
+.arb-resume-btn.is-pressed { background: #333; }
 @media (hover: hover) { .arb-resume-btn:hover { background: #333; } }
 
 .home-stats { margin: 0 12px; }

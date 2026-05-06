@@ -349,7 +349,7 @@ function switchTab(name) {
 // ── Global press-state fix (iOS/WKWebView :active stuck state) ───────────────
 // Safari and WKWebView don't reliably clear :active on touchend when the DOM
 // changes during the gesture. All button feedback uses .is-pressed instead.
-const _PRESS_SEL = 'button, .mg-menu-row, .gps-tile, .club-picker-item, .sh-lie, .picker-fmt-card, .mg-stat-tile.tappable, .mg-drilldown-btn';
+const _PRESS_SEL = 'button, .mg-menu-row, .gps-tile, .club-picker-item, .sh-lie, .picker-fmt-card, .mg-stat-tile.tappable, .mg-drilldown-btn, .arb-resume-btn';
 document.addEventListener('touchstart', e => {
   e.target.closest(_PRESS_SEL)?.classList.add('is-pressed');
 }, { passive: true });
@@ -1864,10 +1864,10 @@ initServices({
           `<div class="arb-header">Active round</div>` +
           `<div class="arb-body">` +
             `<div class="arb-text">` +
-              `<div class="arb-title">${c.name}</div>` +
+              `<div class="arb-title">${c.name || 'Course'}</div>` +
               `<div class="arb-sub">${sub}</div>` +
             `</div>` +
-            `<button class="arb-resume-btn" type="button">Resume →</button>` +
+            `<div class="arb-resume-btn">Resume →</div>` +
           `</div>` +
         `</div>`;
       container.querySelector('.arb-resume-btn').addEventListener('click', () => {
