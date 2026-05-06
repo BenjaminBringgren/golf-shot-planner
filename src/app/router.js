@@ -1836,9 +1836,27 @@ initServices({
     const scores = loadScores(courseId);
     const holesPlayed = scores.filter(s => s != null).length;
     const nextIdx = _resumeHoleIdx(courseId);
+
+    // Compute running score from saved hole data
+    let runDiff = 0, runPts = 0;
+    scores.forEach((s, i) => {
+      if (!s) return;
+      const total = (s.scoringMode === 'simple')
+        ? (s.fairway || 0)
+        : (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
+      if (!total) return;
+      const par = c.holes[i]?.par || 4;
+      const d = total - par;
+      runDiff += d;
+      if (d <= -2) runPts += 4; else if (d === -1) runPts += 3;
+      else if (d === 0) runPts += 2; else if (d === 1) runPts += 1;
+    });
+    const scoreStr = holesPlayed === 0 ? '' : gameFormat === 'stableford'
+      ? ` · ${runPts} pts`
+      : ` · ${runDiff === 0 ? 'E' : runDiff > 0 ? '+' + runDiff : runDiff}`;
     const sub = holesPlayed === 0
-      ? 'Round started · no holes scored yet'
-      : `${holesPlayed} hole${holesPlayed !== 1 ? 's' : ''} played · resume at hole ${nextIdx + 1}`;
+      ? 'No holes scored yet'
+      : `${holesPlayed} hole${holesPlayed !== 1 ? 's' : ''} played${scoreStr}`;
 
     function _wire(container) {
       container.innerHTML =

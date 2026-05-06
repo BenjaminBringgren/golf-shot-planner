@@ -2829,7 +2829,7 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .arb-resume-btn {
-  flex-shrink: 0;
+  flex-shrink: 0; width: auto; margin: 0;
   background: #1a1a1a; color: #fff;
   border: none; border-radius: 8px;
   padding: 9px 16px;
