@@ -1446,11 +1446,13 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
   });
 
   el.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
 }
 
 function _dismissRoundComplete(courseId, callbacks = {}) {
   const el = document.getElementById('roundCompleteOverlay');
   el.style.display = 'none';
+  document.body.style.overflow = '';
   // Full round teardown (same as quit round)
   clearActiveCourse();
   try {
