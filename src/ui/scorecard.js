@@ -38,6 +38,100 @@ function scoreCssClass(strokes, par) {
   return 'score-double';
 }
 
+// ── Shared sc2 scorecard helpers (used by renderSummary + showRoundCompleteOverlay) ──
+function _hcpDotsHtml(count) {
+  if (!count) return '';
+  const dots = Array(Math.min(count, 4)).fill('<span class="sc2-hcp-dot"></span>').join('');
+  return `<span class="sc2-hcp-dots-inner">${dots}</span>`;
+}
+function _badgeHtml(total, par) {
+  if (total == null) return '<span class="sc2-score-dash">—</span>';
+  const diff = total - par;
+  let cls;
+  if (total === 1 && par >= 2) cls = 'ace';
+  else if (diff <= -2) cls = 'eagle';
+  else if (diff === -1) cls = 'birdie';
+  else if (diff === 0)  cls = 'par';
+  else if (diff === 1)  cls = 'bogey';
+  else                   cls = 'double';
+  return `<span class="sc2-badge sc2-badge--${cls}">${total}</span>`;
+}
+function _girDot(gir) {
+  if (gir === null) return '<span class="sc2-dot sc2-dot--none"></span>';
+  return gir ? '<span class="sc2-dot sc2-dot--made"></span>'
+             : '<span class="sc2-dot sc2-dot--miss"></span>';
+}
+function _runTotalHtml(diff) {
+  if (diff === null) return '<span class="sc2-total sc2-total--none">—</span>';
+  const lbl = diff === 0 ? 'E' : (diff > 0 ? `+${diff}` : `${diff}`);
+  const cls = diff < 0 ? 'under' : diff > 0 ? 'over' : 'even';
+  return `<span class="sc2-total sc2-total--${cls}">${lbl}</span>`;
+}
+function _subDiff(diff) {
+  if (diff === null) return '—';
+  return diff === 0 ? 'E' : (diff > 0 ? `+${diff}` : `${diff}`);
+}
+
+function _sectionRows(played, from, to, holeStrokeCounts, runningTotals) {
+  return played.slice(from, to).map((h, idx) => {
+    const isPlayed = h.total != null;
+    const holeCls  = isPlayed ? 'sc2-hole--played' : 'sc2-hole--unplayed';
+    const girVal   = h.gir !== null ? h.gir
+      : (isPlayed ? ((h.fairway + (h.rough || 0)) <= (h.par - 2)) : null);
+    const firVal   = h.par >= 4 ? (isPlayed ? (h.fir ?? null) : null) : null;
+    const firCell  = h.par < 4 ? '<div class="sc2-fir sc2-fir--par3">—</div>'
+      : `<div class="sc2-fir">${_girDot(firVal)}</div>`;
+    const pts = isPlayed ? stablefordPoints(h.total, h.par, holeStrokeCounts[from + idx]) : null;
+    return `
+      <div class="sc2-row">
+        <div><span class="sc2-hole ${holeCls}">${h.hole}</span></div>
+        <div class="sc2-par">${h.par}</div>
+        <div class="sc2-idx">${h.si ?? '—'}</div>
+        <div class="sc2-hcp-dots">${_hcpDotsHtml(holeStrokeCounts[from + idx])}</div>
+        <div class="sc2-col-sep"></div>
+        <div class="sc2-score">${_badgeHtml(h.total, h.par)}</div>
+        <div class="sc2-gir">${_girDot(isPlayed ? girVal : null)}</div>
+        ${firCell}
+        <div class="sc2-putts">${isPlayed ? h.putts : '—'}</div>
+        <div class="sc2-total-col">${_runTotalHtml(runningTotals[from + idx])}</div>
+        <div class="sc2-pts">${pts !== null ? pts : '—'}</div>
+      </div>`;
+  }).join('');
+}
+
+function _sectionHtml(title, chip, subCls, subLbl, rowsHtml,
+                      subPar, subPutts, subPlayed, subGIR, subGIRDenom,
+                      subFIR, subFIRDenom, subStrokes, subDiffVal, subStrokeCount, subPts) {
+  const dotsCell = subStrokeCount > 0 ? subStrokeCount : '—';
+  const d = subPlayed ? _subDiff(subDiffVal) : '—';
+  return `
+    <div class="sc2-section">
+      <div class="sc2-section-header">
+        <span class="sc2-section-title">${title}</span>
+        <span class="sc2-section-chip">${chip}</span>
+      </div>
+      <div class="sc2-card">
+        <div class="sc2-col-hdr">
+          <span>Hole</span><span>Par</span><span>Hcp</span><span></span><span class="sc2-col-sep"></span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span class="sc2-total-col">Total</span><span class="sc2-pts">Pts</span>
+        </div>
+        ${rowsHtml}
+        <div class="sc2-sub sc2-sub--${subCls}">
+          <span class="sc2-sub-lbl">${subLbl}</span>
+          <span class="sc2-sub-num">${subPlayed ? subPar : '—'}</span>
+          <span class="sc2-sub-num">—</span>
+          <span class="sc2-sub-num">${dotsCell}</span>
+          <span class="sc2-col-sep"></span>
+          <span class="sc2-sub-num">${subPlayed ? subStrokes : '—'}</span>
+          <span class="sc2-sub-num">${subPlayed ? subGIR + '/' + subGIRDenom : '—'}</span>
+          <span class="sc2-sub-num">${subPlayed && subFIRDenom > 0 ? subFIR + '/' + subFIRDenom : '—'}</span>
+          <span class="sc2-sub-num">${subPlayed ? subPutts : '—'}</span>
+          <span class="sc2-sub-diff sc2-total-col">${subPlayed ? d : '—'}</span>
+          <span class="sc2-sub-num sc2-pts">${subPlayed ? subPts : '—'}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
 // ── Play tab course bar — hole grid + score tracking ──────────────────────
 export function renderPlayCourseBar(courseId, callbacks = {}) {
   const existing = document.getElementById('playCourseBar');
@@ -334,12 +428,6 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     const { gameFormat = 'strokes' } = loadActiveCourse();
     const isStableford = gameFormat === 'stableford';
 
-    function hcpDotsHtml(count) {
-      if (!count) return '';
-      const dots = Array(Math.min(count, 4)).fill('<span class="sc2-hcp-dot"></span>').join('');
-      return `<span class="sc2-hcp-dots-inner">${dots}</span>`;
-    }
-
     let totalStrokes = 0, totalPar = 0, totalPutts = 0, totalGIR = 0, totalFIR = 0, totalFIRDenom = 0, holesPlayed = 0;
     played.forEach(h => {
       if (h.total != null) {
@@ -382,97 +470,6 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
       return runAcc;
     });
 
-    function badgeHtml(total, par) {
-      if (total == null) return '<span class="sc2-score-dash">—</span>';
-      const diff = total - par;
-      let cls;
-      if (total === 1 && par >= 2) cls = 'ace';
-      else if (diff <= -2) cls = 'eagle';
-      else if (diff === -1) cls = 'birdie';
-      else if (diff === 0)  cls = 'par';
-      else if (diff === 1)  cls = 'bogey';
-      else                   cls = 'double';
-      return `<span class="sc2-badge sc2-badge--${cls}">${total}</span>`;
-    }
-
-    function girDot(gir) {
-      if (gir === null) return '<span class="sc2-dot sc2-dot--none"></span>';
-      return gir ? '<span class="sc2-dot sc2-dot--made"></span>'
-                 : '<span class="sc2-dot sc2-dot--miss"></span>';
-    }
-
-    function runTotalHtml(diff) {
-      if (diff === null) return '<span class="sc2-total sc2-total--none">—</span>';
-      const lbl = diff === 0 ? 'E' : (diff > 0 ? `+${diff}` : `${diff}`);
-      const cls = diff < 0 ? 'under' : diff > 0 ? 'over' : 'even';
-      return `<span class="sc2-total sc2-total--${cls}">${lbl}</span>`;
-    }
-
-    function subDiff(diff) {
-      if (diff === null) return '—';
-      return diff === 0 ? 'E' : (diff > 0 ? `+${diff}` : `${diff}`);
-    }
-
-    function sectionRows(from, to) {
-      return played.slice(from, to).map((h, idx) => {
-        const isPlayed = h.total != null;
-        const holeCls  = isPlayed ? 'sc2-hole--played' : 'sc2-hole--unplayed';
-        const girVal   = h.gir !== null ? h.gir
-          : (isPlayed ? ((h.fairway + (h.rough || 0)) <= (h.par - 2)) : null);
-        const firVal = h.par >= 4 ? (isPlayed ? (h.fir ?? null) : null) : null;
-        const firCell = h.par < 4 ? '<div class="sc2-fir sc2-fir--par3">—</div>'
-          : `<div class="sc2-fir">${girDot(firVal)}</div>`;
-        const pts = isPlayed ? stablefordPoints(h.total, h.par, holeStrokeCounts[from + idx]) : null;
-        return `
-          <div class="sc2-row">
-            <div><span class="sc2-hole ${holeCls}">${h.hole}</span></div>
-            <div class="sc2-par">${h.par}</div>
-            <div class="sc2-idx">${h.si ?? '—'}</div>
-            <div class="sc2-hcp-dots">${hcpDotsHtml(holeStrokeCounts[from + idx])}</div>
-            <div class="sc2-col-sep"></div>
-            <div class="sc2-score">${badgeHtml(h.total, h.par)}</div>
-            <div class="sc2-gir">${girDot(isPlayed ? girVal : null)}</div>
-            ${firCell}
-            <div class="sc2-putts">${isPlayed ? h.putts : '—'}</div>
-            <div class="sc2-total-col">${runTotalHtml(runningTotals[from + idx])}</div>
-            <div class="sc2-pts">${pts !== null ? pts : '—'}</div>
-          </div>`;
-      }).join('');
-    }
-
-    function sectionHtml(title, chip, subCls, subLbl, rowsHtml,
-                         subPar, subPutts, subPlayed, subGIR, subGIRDenom,
-                         subFIR, subFIRDenom,
-                         subStrokes, subDiffVal, subStrokeCount, subPts) {
-      const d = subPlayed ? subDiff(subDiffVal) : '—';
-      const dotsCell = subStrokeCount > 0 ? subStrokeCount : '—';
-      return `
-        <div class="sc2-section">
-          <div class="sc2-section-header">
-            <span class="sc2-section-title">${title}</span>
-            <span class="sc2-section-chip">${chip}</span>
-          </div>
-          <div class="sc2-card">
-            <div class="sc2-col-hdr">
-              <span>Hole</span><span>Par</span><span>Hcp</span><span></span><span class="sc2-col-sep"></span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span class="sc2-total-col">Total</span><span class="sc2-pts">Pts</span>
-            </div>
-            ${rowsHtml}
-            <div class="sc2-sub sc2-sub--${subCls}">
-              <span class="sc2-sub-lbl">${subLbl}</span>
-              <span class="sc2-sub-num">${subPlayed ? subPar : '—'}</span>
-              <span class="sc2-sub-num">—</span>
-              <span class="sc2-sub-num">${dotsCell}</span>
-              <span class="sc2-col-sep"></span>
-              <span class="sc2-sub-num">${subPlayed ? subStrokes : '—'}</span>
-              <span class="sc2-sub-num">${subPlayed ? subGIR + '/' + subGIRDenom : '—'}</span>
-              <span class="sc2-sub-num">${subPlayed && subFIRDenom > 0 ? subFIR + '/' + subFIRDenom : '—'}</span>
-              <span class="sc2-sub-num">${subPlayed ? subPutts : '—'}</span>
-              <span class="sc2-sub-diff sc2-total-col">${subPlayed ? d : '—'}</span>
-              <span class="sc2-sub-num sc2-pts">${subPlayed ? subPts : '—'}</span>
-            </div>
-          </div>
-        </div>`;
-    }
 
     const pageInner = document.getElementById('scorecardPageInner');
     if (!pageInner) return;
@@ -481,13 +478,13 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     if (isStableford) pageInner.classList.add('sc2-stableford');
     else              pageInner.classList.remove('sc2-stableford');
     pageInner.innerHTML =
-      sectionHtml('Front 9', 'Out', 'out', 'OUT',
-        sectionRows(0, 9),
+      _sectionHtml('Front 9', 'Out', 'out', 'OUT',
+        _sectionRows(played, 0, 9, holeStrokeCounts, runningTotals),
         front9Par, front9Putts, front9Played, front9GIR, 9,
         front9FIR, front9FIRTotal,
         front9Strokes, front9Played ? front9Strokes - front9Par : null, front9StrokeCount, front9Pts) +
-      sectionHtml('Back 9', 'In', 'in', 'IN',
-        sectionRows(9, 18),
+      _sectionHtml('Back 9', 'In', 'in', 'IN',
+        _sectionRows(played, 9, 18, holeStrokeCounts, runningTotals),
         back9Par, back9Putts, back9Played, back9GIR, 9,
         back9FIR, back9FIRTotal,
         back9Strokes, back9Played ? back9Strokes - back9Par : null, back9StrokeCount, back9Pts) +
@@ -502,7 +499,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           <span class="sc2-sub-num">${holesPlayed ? totalGIR + '/' + holesPlayed : '—'}</span>
           <span class="sc2-sub-num">${holesPlayed ? totalFIR + '/' + played.filter(h => h.par >= 4).length : '—'}</span>
           <span class="sc2-sub-num">${holesPlayed ? totalPutts : '—'}</span>
-          <span class="sc2-sub-diff sc2-total-col">${holesPlayed ? subDiff(totalStrokes - totalPar) : '—'}</span>
+          <span class="sc2-sub-diff sc2-total-col">${holesPlayed ? _subDiff(totalStrokes - totalPar) : '—'}</span>
           <span class="sc2-sub-num sc2-pts">${holesPlayed ? totalPts : '—'}</span>
         </div>
       </div>`;
@@ -1236,9 +1233,10 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
 
   // Compute stats
   const played = scores.map((s, i) => ({
-    hole: i + 1, par: c.holes[i]?.par || 4,
+    hole: i + 1, par: c.holes[i]?.par || 4, si: c.holes[i]?.si || null,
     total: s ? (s.fairway || 0) + (s.rough || 0) + (s.putts || 0) : null,
-    fairway: s?.fairway ?? null, putts: s?.putts ?? null, gir: s?.gir ?? null,
+    fairway: s?.fairway ?? null, rough: s?.rough ?? null,
+    putts: s?.putts ?? null, gir: s?.gir ?? null, fir: s?.fir ?? null,
   }));
 
   let totalStrokes = 0, totalPar = 0, totalFW = 0, totalPutts = 0, totalGIR = 0, totalFIR = 0, holesPlayed = 0;
@@ -1258,15 +1256,25 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
     }
   });
 
-  let front9Par = 0, front9Strokes = 0, front9Putts = 0, front9Played = 0;
+  let front9Par = 0, front9Strokes = 0, front9Putts = 0, front9GIR = 0, front9FIR = 0, front9Played = 0;
   played.slice(0, 9).forEach(h => {
     front9Par += h.par;
-    if (h.total != null) { front9Strokes += h.total; front9Putts += h.putts; front9Played++; }
+    if (h.total != null) { front9Strokes += h.total; front9Putts += h.putts; if (h.gir === true) front9GIR++; if (h.par >= 4 && h.fir === true) front9FIR++; front9Played++; }
   });
-  let back9Par = 0, back9Strokes = 0, back9Putts = 0, back9Played = 0;
+  let back9Par = 0, back9Strokes = 0, back9Putts = 0, back9GIR = 0, back9FIR = 0, back9Played = 0;
   played.slice(9, 18).forEach(h => {
     back9Par += h.par;
-    if (h.total != null) { back9Strokes += h.total; back9Putts += h.putts; back9Played++; }
+    if (h.total != null) { back9Strokes += h.total; back9Putts += h.putts; if (h.gir === true) back9GIR++; if (h.par >= 4 && h.fir === true) back9FIR++; back9Played++; }
+  });
+  const rcFront9FIRTotal = played.slice(0, 9).filter(h => h.par >= 4).length;
+  const rcBack9FIRTotal  = played.slice(9, 18).filter(h => h.par >= 4).length;
+
+  // Running cumulative diff per hole
+  let rcRunAcc = 0;
+  const rcRunningTotals = played.map(h => {
+    if (h.total == null) return null;
+    rcRunAcc += h.total - h.par;
+    return rcRunAcc;
   });
 
   const rcTotalPoints = played.reduce((sum, h, i) =>
@@ -1290,29 +1298,39 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
     ).join('');
   }
 
-  // Scorecard rows
-  function pillHtml2(total, par) {
-    if (total == null) return '—';
-    const d = total - par;
-    let bg, color;
-    if (d <= -1) { bg = '#e6f4ec'; color = '#1e7a45'; }
-    else if (d === 0) { bg = '#f0efeb'; color = '#444'; }
-    else if (d === 1) { bg = '#fff3e0'; color = '#b25000'; }
-    else { bg = '#fde8e8'; color = '#a32d2d'; }
-    const lbl = d === 0 ? 'E' : (d > 0 ? '+' + d : '' + d);
-    return `<span style="display:inline-block;background:${bg};color:${color};font-weight:700;font-size:11px;border-radius:10px;padding:2px 6px;">${lbl}</span>`;
-  }
+  // sc2 grid scorecard — shared helpers used here
+  const rcFront9StrokeCount = rcHoleStrokeCounts.slice(0, 9).reduce((a, n) => a + n, 0);
+  const rcBack9StrokeCount  = rcHoleStrokeCounts.slice(9).reduce((a, n) => a + n, 0);
+  const rcTotalStrokeCount  = rcFront9StrokeCount + rcBack9StrokeCount;
 
-  function scRows(from, to) {
-    return played.slice(from, to).map((h, relIdx) => {
-      const absIdx = from + relIdx;
-      const ptsCell = rcIsStableford
-        ? `<td>${h.total != null ? stablefordPoints(h.total, h.par, rcHoleStrokeCounts[absIdx]) : '—'}</td>`
-        : '';
-      if (h.total == null) return `<tr><td class="rc-hole">${h.hole}</td><td>${h.par}</td><td>—</td><td>—</td><td>—</td>${ptsCell}</tr>`;
-      return `<tr><td class="rc-hole">${h.hole}</td><td>${h.par}</td><td>${h.total}</td><td>${h.putts}</td><td>${pillHtml2(h.total, h.par)}</td>${ptsCell}</tr>`;
-    }).join('');
-  }
+  const rcSc2Html =
+    _sectionHtml('Front 9', 'Out', 'out', 'OUT',
+      _sectionRows(played, 0, 9, rcHoleStrokeCounts, rcRunningTotals),
+      front9Par, front9Putts, front9Played, front9GIR, 9,
+      front9FIR, rcFront9FIRTotal,
+      front9Strokes, front9Played ? front9Strokes - front9Par : null,
+      rcFront9StrokeCount, rcFront9Pts) +
+    _sectionHtml('Back 9', 'In', 'in', 'IN',
+      _sectionRows(played, 9, 18, rcHoleStrokeCounts, rcRunningTotals),
+      back9Par, back9Putts, back9Played, back9GIR, 9,
+      back9FIR, rcBack9FIRTotal,
+      back9Strokes, back9Played ? back9Strokes - back9Par : null,
+      rcBack9StrokeCount, rcBack9Pts) +
+    `<div class="sc2-card sc2-total-card">
+      <div class="sc2-sub sc2-sub--total">
+        <span class="sc2-sub-lbl">Total</span>
+        <span class="sc2-sub-num">${holesPlayed ? totalPar : '—'}</span>
+        <span class="sc2-sub-num">—</span>
+        <span class="sc2-sub-num">${rcTotalStrokeCount > 0 ? rcTotalStrokeCount : '—'}</span>
+        <span class="sc2-col-sep"></span>
+        <span class="sc2-sub-num">${holesPlayed ? totalStrokes : '—'}</span>
+        <span class="sc2-sub-num">${holesPlayed ? totalGIR + '/' + holesPlayed : '—'}</span>
+        <span class="sc2-sub-num">${holesPlayed ? totalFIR + '/' + played.filter(h => h.par >= 4).length : '—'}</span>
+        <span class="sc2-sub-num">${holesPlayed ? totalPutts : '—'}</span>
+        <span class="sc2-sub-diff sc2-total-col">${holesPlayed ? _subDiff(totalStrokes - totalPar) : '—'}</span>
+        <span class="sc2-sub-num sc2-pts">${holesPlayed ? rcTotalPoints : '—'}</span>
+      </div>
+    </div>`;
 
   const el = document.getElementById('roundCompleteOverlay');
   el.querySelector('.rc-body').innerHTML = `
@@ -1339,21 +1357,7 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
       ${bogeys > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Bogeys</span><span class="rc-bd-dots">${dotStrip(bogeys, '#e8a070', 'square')}</span><span class="rc-bd-count">${bogeys}</span></div>` : ''}
       ${doubles > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Doubles+</span><span class="rc-bd-dots">${dotStrip(doubles, '#a32d2d', 'square')}</span><span class="rc-bd-count" style="color:#a32d2d">${doubles}</span></div>` : ''}
     </div>
-    <div class="rc-section" style="margin-top:10px;padding-bottom:8px;">
-      <div class="rc-section-label">Scorecard</div>
-      <table class="rc-table">
-        <thead><tr><th>Hole</th><th>Par</th><th>Score</th><th>Putts</th><th>+/−</th>${rcIsStableford ? '<th>Pts</th>' : ''}</tr></thead>
-        <tbody>
-          <tr class="rc-sect"><td colspan="${rcIsStableford ? 6 : 5}">Front 9</td></tr>
-          ${scRows(0, 9)}
-          <tr class="rc-total"><td class="rc-hole" style="background:#e5e3df">Out</td><td>${front9Par}</td><td>${front9Played ? front9Strokes : '—'}</td><td>${front9Played ? front9Putts : '—'}</td><td>${front9Played ? pillHtml2(front9Strokes, front9Par) : '—'}</td>${rcIsStableford ? `<td>${front9Played ? rcFront9Pts : '—'}</td>` : ''}</tr>
-          <tr class="rc-sect"><td colspan="${rcIsStableford ? 6 : 5}">Back 9</td></tr>
-          ${scRows(9, 18)}
-          <tr class="rc-total"><td class="rc-hole" style="background:#e5e3df">In</td><td>${back9Par}</td><td>${back9Played ? back9Strokes : '—'}</td><td>${back9Played ? back9Putts : '—'}</td><td>${back9Played ? pillHtml2(back9Strokes, back9Par) : '—'}</td>${rcIsStableford ? `<td>${back9Played ? rcBack9Pts : '—'}</td>` : ''}</tr>
-          <tr class="rc-total"><td class="rc-hole" style="background:#333;color:#fff">Total</td><td>${totalPar}</td><td>${totalStrokes}</td><td>${totalPutts}</td><td>${pillHtml2(totalStrokes, totalPar)}</td>${rcIsStableford ? `<td>${rcTotalPoints}</td>` : ''}</tr>
-        </tbody>
-      </table>
-    </div>
+    <div class="${rcIsStableford ? 'sc2-stableford' : ''}" style="padding:10px 16px 8px;">${rcSc2Html}</div>
     <div class="rc-btn-row">
       <button class="rc-btn-primary" id="rcSaveBtn" type="button">Save round</button>
       <button class="rc-btn-secondary" id="rcBackBtn" type="button">Back to round</button>
