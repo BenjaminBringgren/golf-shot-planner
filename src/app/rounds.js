@@ -965,21 +965,26 @@ export function renderMgRoundsHistory() {
     const limit = el.dataset.limit ? parseInt(el.dataset.limit) : all.length;
     const shown = all.slice(0, limit);
     el.innerHTML = shown.map(r => {
-      const isStblf = r.gameFormat === 'stableford';
+      // Robust stableford detection: explicit format flag OR points saved with no format (legacy)
+      const isStblf = r.gameFormat === 'stableford' || ((r.totalPoints ?? 0) > 0 && !r.gameFormat);
       const diff    = (r.totalStrokes || 0) - (r.totalPar || 0);
 
-      // Primary value (17px lrh-score): pts for stableford, stroke count for strokes
-      const primaryVal = isStblf ? (r.totalPoints ?? 0) + ' pts' : (r.totalStrokes || '—');
+      // Primary (17px lrh-score) — the meaningful indicator for each mode
+      const pts          = r.totalPoints ?? 0;
+      const ptsExpected  = (r.holesPlayed || 18) * 2;
+      const diffStr      = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff);
+      const primaryVal   = isStblf ? pts + ' pts' : diffStr;
+      const primaryColor = isStblf
+        ? (pts > ptsExpected ? '#c0392b' : '#1a1a1a')
+        : (diff < 0 ? '#c0392b' : '#1a1a1a');
 
-      // Secondary value (13px lrh-diff): stroke count for stableford, vs-par diff for strokes
-      const secondaryVal   = isStblf
-        ? (r.totalStrokes || '—') + ' strokes'
-        : (diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff));
-      const secondaryColor = isStblf ? '#aaa' : (diff < 0 ? '#c0392b' : '#1a1a1a');
+      // Secondary (13px lrh-diff) — supporting context
+      const secondaryVal   = (r.totalStrokes || '—') + ' strokes';
+      const secondaryColor = '#aaa';
 
       return '<div class="lrh-row"><div class="lrh-left"><div class="lrh-course">' + (r.courseName || '—') + '</div>' +
         '<div class="lrh-date">' + (r.date || '—') + '</div></div>' +
-        '<div class="lrh-right"><div class="lrh-score">' + primaryVal + '</div>' +
+        '<div class="lrh-right"><div class="lrh-score" style="color:' + primaryColor + '">' + primaryVal + '</div>' +
         '<div class="lrh-diff" style="color:' + secondaryColor + '">' + secondaryVal + '</div></div></div>';
     }).join('');
   });
