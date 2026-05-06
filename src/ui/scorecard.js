@@ -498,7 +498,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
           <span class="sc2-sub-num">${totalStrokeCount > 0 ? totalStrokeCount : '—'}</span>
           <span class="sc2-col-sep"></span>
           <span class="sc2-sub-num">${holesPlayed ? totalStrokes : '—'}</span>
-          <span class="sc2-sub-num">${holesPlayed ? totalGIR + '/' + holesPlayed : '—'}</span>
+          <span class="sc2-sub-num">${holesPlayed ? totalGIR + '/18' : '—'}</span>
           <span class="sc2-sub-num">${holesPlayed ? totalFIR + '/' + played.filter(h => h.par >= 4).length : '—'}</span>
           <span class="sc2-sub-num">${holesPlayed ? totalPutts : '—'}</span>
           <span class="sc2-sub-diff sc2-total-col">${holesPlayed ? _subDiff(totalStrokes - totalPar) : '—'}</span>
