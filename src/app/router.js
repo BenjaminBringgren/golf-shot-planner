@@ -1843,11 +1843,14 @@ initServices({
     function _wire(container) {
       container.innerHTML =
         `<div class="active-round-banner">` +
-          `<div class="arb-text">` +
-            `<div class="arb-title">${c.name}</div>` +
-            `<div class="arb-sub">${sub}</div>` +
+          `<div class="arb-header">Active round</div>` +
+          `<div class="arb-body">` +
+            `<div class="arb-text">` +
+              `<div class="arb-title">${c.name}</div>` +
+              `<div class="arb-sub">${sub}</div>` +
+            `</div>` +
+            `<button class="arb-resume-btn" type="button">Resume →</button>` +
           `</div>` +
-          `<button class="arb-resume-btn" type="button">Resume →</button>` +
         `</div>`;
       container.querySelector('.arb-resume-btn').addEventListener('click', () => {
         resumeRoundInPlay(courseId, nextIdx, gameFormat, hcpEnabled);
