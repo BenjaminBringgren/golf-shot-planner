@@ -112,7 +112,7 @@ function _sectionHtml(title, chip, subCls, subLbl, rowsHtml,
       </div>
       <div class="sc2-card">
         <div class="sc2-col-hdr">
-          <span>Hole</span><span>Par</span><span>Hcp</span><span></span><span class="sc2-col-sep"></span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span class="sc2-total-col">Total</span><span class="sc2-pts">Pts</span>
+          <span>Hole</span><span>Par</span><span>Hcp</span><span>+</span><span class="sc2-col-sep"></span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span class="sc2-total-col">Total</span><span class="sc2-pts">Pts</span>
         </div>
         ${rowsHtml}
         <div class="sc2-sub sc2-sub--${subCls}">
