@@ -618,9 +618,9 @@
       text-transform: uppercase; letter-spacing: 0.4px; line-height: 1;
     }
     .cbs-val { font-size: 28px; font-weight: 700; color: #1a1a1a; line-height: 1; }
-    .cbs-val.score-over  { color: #c0392b; }
-    .cbs-val.score-under { color: #1e7a45; }
-    .cbs-val.score-even  { color: #555; }
+    .cbs-val.score-over  { color: #1a1a1a; }
+    .cbs-val.score-under { color: #c0392b; }
+    .cbs-val.score-even  { color: #1a1a1a; }
     .cbs-divider { width: 1px; height: 26px; background: rgba(0,0,0,0.1); flex-shrink: 0; }
 
     /* ── Hole grid — 2×9 front/back inside header ──────────── */
@@ -668,9 +668,9 @@
       display: none; background: #fff;
     }
     .round-summary.visible { display: block; }
-    .round-summary .vs-under { color: #1e7a45; font-weight: 700; }
-    .round-summary .vs-over  { color: #c0392b; font-weight: 700; }
-    .round-summary .vs-even  { color: #555; }
+    .round-summary .vs-under { color: #c0392b; font-weight: 700; }
+    .round-summary .vs-over  { color: #1a1a1a; font-weight: 700; }
+    .round-summary .vs-even  { color: #1a1a1a; }
     .round-summary .save-round-btn { margin: 10px 12px; width: calc(100% - 24px); }
 
     /* Override all scorecard green with clean white/light design */
@@ -725,9 +725,12 @@
 
     /* ── Round complete overlay ─────────────────────────────── */
     .rc-body { max-width: 420px; margin: 0 auto; width: 100%; padding-bottom: 40px; }
-    .rc-header { background: #1a1a1a; color: #fff; padding: 16px 16px 14px; position: sticky; top: 0; z-index: 1; }
-    .rc-header-title { font-size: 17px; font-weight: 700; }
-    .rc-header-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 3px; }
+    .rc-header { position: relative; overflow: hidden; height: 110px; position: sticky; top: 0; z-index: 1; background: #1a1a1a; }
+    .rc-header > img { width: 100%; height: 100%; object-fit: cover; object-position: center 40%; display: block; }
+    .rc-header::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.55) 100%); pointer-events: none; }
+    .rc-header-overlay { position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 16px 14px; z-index: 1; color: #fff; }
+    .rc-header-title { font-size: 17px; font-weight: 700; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+    .rc-header-sub { font-size: 12px; color: rgba(255,255,255,0.75); margin-top: 3px; text-shadow: 0 1px 3px rgba(0,0,0,0.4); }
     .rc-section { background: #fff; margin: 12px 12px 0; border-radius: 10px; overflow: hidden; }
     .rc-section-label { font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #888; padding: 12px 14px 6px; }
     .rc-hero { text-align: center; padding: 18px 14px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.07); }
@@ -1448,8 +1451,8 @@
     .sc2-putts { text-align: center; font-size: 15px; color: #1a1a1a; }
 
     .sc2-total { font-size: 15px; font-weight: 600; letter-spacing: -0.02em; }
-    .sc2-total--under { color: #1e7a45; }
-    .sc2-total--over  { color: #c0392b; }
+    .sc2-total--under { color: #c0392b; }
+    .sc2-total--over  { color: #1a1a1a; }
     .sc2-total--even  { color: #1a1a1a; }
     .sc2-total--none  { color: #aaa; }
 

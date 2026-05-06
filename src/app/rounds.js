@@ -314,7 +314,7 @@ function _renderHomeSparkline(recent, courses) {
     ? (diffs.slice(-3).reduce((a,b)=>a+b,0)/3) < (diffs.slice(0,3).reduce((a,b)=>a+b,0)/3)
     : best < 0;
   const trendArrow = trendDown ? '↗' : '↘';
-  const trendCol   = trendDown ? '#1e7a45' : '#3a6fc4';
+  const trendCol   = trendDown ? '#c0392b' : '#1a1a1a';
 
   const chips = ['18H', '9H', 'ALL'].map(label => {
     const val = label === '18H' ? '18' : label === '9H' ? '9' : 'all';
@@ -381,8 +381,7 @@ function _renderHomeStatTiles(allRounds, full, courses) {
     : parseFloat(avgVsPar) > 0 ? '+' + avgVsPar
     : avgVsPar;
   const avgVsParCol = avgVsPar === null ? '#aaa'
-    : parseFloat(avgVsPar) < 0 ? '#1e7a45'
-    : parseFloat(avgVsPar) > 0 ? '#3a6fc4' : '#aaa';
+    : parseFloat(avgVsPar) < 0 ? '#c0392b' : '#1a1a1a';
 
   // Putts/hole using per-hole data (excludes simple-mode holes)
   let totalPutts = 0, totalPuttsHoles = 0;
@@ -468,7 +467,7 @@ function _renderHomeRecentRounds(allRounds, courses) {
   el.innerHTML = shown.map(r => {
     const diff    = (r.totalStrokes || 0) - (r.totalPar || 0);
     const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff);
-    const color   = diff < 0 ? '#1e7a45' : diff > 0 ? '#3a6fc4' : '#888';
+    const color   = diff < 0 ? '#c0392b' : '#1a1a1a';
     return '<div class="lrh-row"><div class="lrh-left"><div class="lrh-course">' + (r.courseName || '—') + '</div>' +
       '<div class="lrh-date">' + (r.date || '—') + '</div></div>' +
       '<div class="lrh-right"><div class="lrh-score">' + (r.totalStrokes || '—') + '</div>' +
@@ -966,16 +965,22 @@ export function renderMgRoundsHistory() {
     const limit = el.dataset.limit ? parseInt(el.dataset.limit) : all.length;
     const shown = all.slice(0, limit);
     el.innerHTML = shown.map(r => {
-      const isStblf  = r.gameFormat === 'stableford';
-      const diff     = (r.totalStrokes || 0) - (r.totalPar || 0);
-      const diffStr  = isStblf ? (r.totalPoints ?? 0) + ' pts'
+      const isStblf = r.gameFormat === 'stableford';
+      const diff    = (r.totalStrokes || 0) - (r.totalPar || 0);
+
+      // Primary value (17px lrh-score): pts for stableford, stroke count for strokes
+      const primaryVal = isStblf ? (r.totalPoints ?? 0) + ' pts' : (r.totalStrokes || '—');
+
+      // Secondary value (13px lrh-diff): stroke count for stableford, vs-par diff for strokes
+      const secondaryVal   = isStblf
+        ? (r.totalStrokes || '—') + ' strokes'
         : (diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff));
-      const color    = isStblf ? '#1e7a45'
-        : (diff < 0 ? '#1e7a45' : diff > 0 ? '#3a6fc4' : '#888');
+      const secondaryColor = isStblf ? '#aaa' : (diff < 0 ? '#c0392b' : '#1a1a1a');
+
       return '<div class="lrh-row"><div class="lrh-left"><div class="lrh-course">' + (r.courseName || '—') + '</div>' +
         '<div class="lrh-date">' + (r.date || '—') + '</div></div>' +
-        '<div class="lrh-right"><div class="lrh-score">' + (r.totalStrokes || '—') + '</div>' +
-        '<div class="lrh-diff" style="color:' + color + '">' + diffStr + '</div></div></div>';
+        '<div class="lrh-right"><div class="lrh-score">' + primaryVal + '</div>' +
+        '<div class="lrh-diff" style="color:' + secondaryColor + '">' + secondaryVal + '</div></div></div>';
     }).join('');
   });
 }
@@ -1024,7 +1029,7 @@ export function renderMgRecentRounds() {
     const x = xs[i].toFixed(1), y = ys[i].toFixed(1);
     const d = diffs[i];
     const isLast = i === recent.length - 1;
-    const col    = d < 0 ? '#1e7a45' : d > 0 ? '#3a6fc4' : '#aaa';
+    const col    = d < 0 ? '#c0392b' : '#1a1a1a';
     const lbl    = String(strokes[i]);
     dots   += isLast
       ? `<circle cx="${x}" cy="${y}" r="4" fill="${col}" stroke="${col}" stroke-width="2"/>`
@@ -1051,9 +1056,9 @@ export function renderMgRecentRounds() {
     ? (diffs.slice(-3).reduce((a,b)=>a+b,0)/3) < (diffs.slice(0,3).reduce((a,b)=>a+b,0)/3)
     : best < 0;
   const trendArrow = trendDown ? '↗' : '↘';
-  const trendCol   = trendDown ? '#1e7a45' : '#3a6fc4';
-  const bestCol    = best < 0 ? '#1e7a45' : best > 0 ? '#3a6fc4' : '#aaa';
-  const avgCol     = avg  < 0 ? '#1e7a45' : avg  > 0 ? '#3a6fc4' : '#aaa';
+  const trendCol   = trendDown ? '#c0392b' : '#1a1a1a';
+  const bestCol    = best < 0 ? '#c0392b' : '#1a1a1a';
+  const avgCol     = avg  < 0 ? '#c0392b' : '#1a1a1a';
 
   const svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block;overflow:visible;">
     ${avgLine}${lineBase}${lineColored}${dots}${labels}

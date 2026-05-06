@@ -1286,7 +1286,7 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
 
   const vsPar = totalStrokes - totalPar;
   const vsParStr = vsPar === 0 ? 'E' : (vsPar > 0 ? '+' + vsPar : '' + vsPar);
-  const vsParColor = vsPar < 0 ? '#1e7a45' : vsPar > 0 ? '#a32d2d' : '#444';
+  const vsParColor = vsPar < 0 ? '#c0392b' : '#1a1a1a';
   const puttsPerGir = totalGIR > 0 ? (totalPutts / totalGIR).toFixed(2) : '—';
   const today = new Date().toLocaleDateString('sv-SE');
 
@@ -1332,15 +1332,20 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
       </div>
     </div>`;
 
+  const _heroSrc = document.getElementById('mgHeroImg')?.src || '';
+
   const el = document.getElementById('roundCompleteOverlay');
   el.querySelector('.rc-body').innerHTML = `
     <div class="rc-header">
-      <div class="rc-header-title">Round complete</div>
-      <div class="rc-header-sub">${c.name || 'Course'} · ${today}</div>
+      <img src="${_heroSrc}" alt="" />
+      <div class="rc-header-overlay">
+        <div class="rc-header-title">Round complete</div>
+        <div class="rc-header-sub">${c.name || 'Course'} · ${today}</div>
+      </div>
     </div>
     <div class="rc-section">
       <div class="rc-hero">
-        <div class="rc-hero-score" style="color:${rcIsStableford ? '#1e7a45' : vsParColor}">${rcIsStableford ? rcTotalPoints + ' pts' : vsParStr}</div>
+        <div class="rc-hero-score" style="color:${rcIsStableford ? '#1a1a1a' : vsParColor}">${rcIsStableford ? rcTotalPoints + ' pts' : vsParStr}</div>
         <div class="rc-hero-sub">${totalStrokes} strokes · par ${totalPar} · ${holesPlayed} holes</div>
       </div>
       <div class="rc-stat-grid">
@@ -1352,10 +1357,10 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
     </div>
     <div class="rc-section" style="margin-top:10px;">
       <div class="rc-section-label">Score breakdown</div>
-      ${birdies > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Birdies</span><span class="rc-bd-dots">${dotStrip(birdies, '#1e7a45', 'circle')}</span><span class="rc-bd-count" style="color:#1e7a45">${birdies}</span></div>` : ''}
+      ${birdies > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Birdies</span><span class="rc-bd-dots">${dotStrip(birdies, '#c0392b', 'circle')}</span><span class="rc-bd-count" style="color:#c0392b">${birdies}</span></div>` : ''}
       ${pars > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Pars</span><span class="rc-bd-dots">${dotStrip(pars, '#c8c6c0', 'square')}</span><span class="rc-bd-count">${pars}</span></div>` : ''}
       ${bogeys > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Bogeys</span><span class="rc-bd-dots">${dotStrip(bogeys, '#e8a070', 'square')}</span><span class="rc-bd-count">${bogeys}</span></div>` : ''}
-      ${doubles > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Doubles+</span><span class="rc-bd-dots">${dotStrip(doubles, '#a32d2d', 'square')}</span><span class="rc-bd-count" style="color:#a32d2d">${doubles}</span></div>` : ''}
+      ${doubles > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Doubles+</span><span class="rc-bd-dots">${dotStrip(doubles, '#888', 'square')}</span><span class="rc-bd-count">${doubles}</span></div>` : ''}
     </div>
     <div class="${rcIsStableford ? 'sc2-stableford' : ''}" style="padding:10px 16px 8px;">${rcSc2Html}</div>
     <div class="rc-btn-row">
