@@ -835,11 +835,13 @@ export function renderScoreEntry(courseId, holeIdx, scores, callbacks = {}) {
     buildDrawerContent();
     overlay.classList.add('visible');
     drawer.classList.add('open');
+    document.body.style.overflow = 'hidden';
   }
 
   function closeDrawer() {
     drawer.classList.remove('open');
     overlay.classList.remove('visible');
+    document.body.style.overflow = '';
     callbacks.calculate?.();
   }
 
@@ -877,7 +879,8 @@ export function renderScoreEntry(courseId, holeIdx, scores, callbacks = {}) {
     drawer.classList.contains('open') ? closeDrawer() : openDrawer();
   });
 
-  // Close on overlay tap
+  // Close on overlay tap — prevent touchstart from passing through to page
+  overlay.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
   overlay.onclick = closeDrawer;
 
   // ── Swipe down to dismiss ─────────────────────────────────────────────

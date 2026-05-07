@@ -1694,7 +1694,8 @@ initServices({
     // Action row: show when course active + result ready
     const actionRow = document.getElementById('playActionRow');
     if (actionRow) {
-      actionRow.style.display = (courseActive && hasResult) ? 'flex' : 'none';
+      const _showRow = courseActive && hasResult;
+      actionRow.style.display = _showRow ? 'flex' : 'none';
       if (courseActive && hasResult) {
         const _s = loadActiveCourse();
         const _hi = _s.holeIdx ?? 0;

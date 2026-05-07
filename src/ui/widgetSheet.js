@@ -32,6 +32,7 @@ export function mountWidgetSheet({ courseId }) {
     const newOv = overlay.cloneNode(false);
     overlay.parentNode.replaceChild(newOv, overlay);
     newOv.className = overlay.className;
+    newOv.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
     newOv.addEventListener('click', _closeDrawer);
   }
 
@@ -41,6 +42,7 @@ export function mountWidgetSheet({ courseId }) {
     _render();
     document.getElementById('widgetDrawerOverlay')?.classList.add('visible');
     drawer.classList.add('open');
+    document.body.style.overflow = 'hidden';
   }
 
   function _render() {
@@ -60,6 +62,7 @@ export function hideWidgetFab() {
 function _closeDrawer() {
   document.getElementById('widgetDrawer')?.classList.remove('open');
   document.getElementById('widgetDrawerOverlay')?.classList.remove('visible');
+  document.body.style.overflow = '';
 }
 
 // ── Apply prefs to Play page sections ────────────────────────────────────────
