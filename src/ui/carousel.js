@@ -592,7 +592,7 @@ export function renderPlan(_result, ctx) {
     // Personal baseline indicator
     if (activePlan.blended && activePlan.blendRounds) {
       const ind = document.createElement('div');
-      ind.style.cssText = 'font-size:11px;color:#888;font-weight:500;';
+      ind.style.cssText = 'font-size:11px;color:#888;font-weight:400;';
       ind.textContent = 'Personal · ' + activePlan.blendRounds + ' rounds';
       badgeLeft.appendChild(ind);
     } else {
@@ -603,7 +603,7 @@ export function renderPlan(_result, ctx) {
           const _bl = computeHoleBaseline(_bid, _bhi ?? 0);
           if (_bl) {
             const ind = document.createElement('div');
-            ind.style.cssText = 'font-size:11px;color:#888;font-weight:500;';
+            ind.style.cssText = 'font-size:11px;color:#888;font-weight:400;';
             ind.textContent = 'Personal · ' + _bl.rounds + ' rounds';
             badgeLeft.appendChild(ind);
           }

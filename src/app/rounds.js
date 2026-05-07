@@ -1253,7 +1253,7 @@ export function renderMgAvgStrokesBreakdown() {
       '<div style="font-size:15px;font-weight:700;color:#1a1a1a;">Personal baseline</div>' +
       '<div style="font-size:12px;color:#888;margin-top:2px;">Your shot model for this course</div>' +
     '</div>' +
-    '<div style="font-size:17px;color:#ccc;font-weight:300;">›</div>';
+    '<div style="font-size:17px;color:#ccc;font-weight:400;">›</div>';
   baselineBtn.addEventListener('click', () => { renderMgBaseline(); showMgSub('mgSubBaseline'); });
   (lastCard || el).appendChild(baselineBtn);
 }

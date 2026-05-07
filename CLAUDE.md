@@ -102,6 +102,13 @@ Minimum size is 11px (Caption 2). Never go below it.
 Off-scale values like 9, 14, 18, 23, or 30px are not allowed —
 round to the nearest step in the table above.
 
+These rules apply everywhere without exception: CSS classes,
+inline styles in HTML, and JS-generated HTML strings.
+
+Permitted font-weight values: 400, 600, 700, 800 only.
+Never use 300 or 500. Primary buttons and actions: 700.
+Secondary buttons and actions: 600.
+
 ## Safari compatibility
 Hard requirement. Tested on Brave and Safari on iPhone.
 Never use Object.defineProperty on window.
