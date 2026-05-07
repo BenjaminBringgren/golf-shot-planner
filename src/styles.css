@@ -1266,14 +1266,14 @@
 
     /* ── Widget drawer ───────────────────────────────────────── */
     .widget-drawer-overlay {
-      display: none; position: fixed; inset: 0; z-index: 995;
+      display: none; position: fixed; inset: 0; z-index: 1001;
       background: rgba(0,0,0,0.45);
       transition: opacity 0.2s;
     }
     .widget-drawer-overlay.visible { display: block; }
 
     .widget-drawer {
-      position: fixed; bottom: 0; right: 0; left: 0; z-index: 996;
+      position: fixed; bottom: 0; right: 0; left: 0; z-index: 1002;
       background: #f5f4f0; border-radius: 18px 18px 0 0;
       box-shadow: 0 -4px 24px #0002;
       padding: 0 0 32px;
@@ -3027,21 +3027,24 @@
 
 /* ── Play focus strip (below course bar during active round) ─────────────────── */
 #playFocusStrip {
-  display: flex; align-items: flex-start; gap: 10px;
+  display: flex; align-items: flex-start; gap: 12px;
   background: #fff;
-  border-bottom: 0.5px solid rgba(0,0,0,0.07);
-  padding: 11px 14px;
+  border: 0.5px solid rgba(0,0,0,0.07);
+  border-radius: 12px;
+  margin: 8px 12px 0;
+  padding: 14px 14px;
 }
 #playFocusStrip.hidden { display: none; }
 .pfs-icon {
-  width: 26px; height: 26px; flex-shrink: 0;
+  width: 28px; height: 28px; flex-shrink: 0;
   background: #f0efeb; border-radius: 7px;
   display: flex; align-items: center; justify-content: center;
-  color: #555; margin-top: 1px;
+  color: #555; margin-top: 2px;
 }
 .pfs-text {
-  font-size: 13px; font-weight: 500; color: #1a1a1a;
-  line-height: 1.45; flex: 1;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 15px; font-weight: 400; color: #1a1a1a;
+  line-height: 1.5; flex: 1;
 }
 
 /* ── Empty-state stats preview ──────────────────────────────────────────────── */
