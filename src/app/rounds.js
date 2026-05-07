@@ -61,6 +61,22 @@ export function showMgHub() {
   refreshMgHub();
 }
 
+export function navigateToRound(courseId, roundIdx) {
+  if (_switchTab) _switchTab('prepare');
+  showMgSub('mgSubRoundsHistory'); // calls renderSavedRounds() synchronously
+  const rowId = 'rh-' + courseId + '-' + roundIdx;
+  const det   = document.getElementById(rowId + '-det');
+  const arr   = document.getElementById(rowId + '-arr');
+  if (det && !det.classList.contains('open')) {
+    det.classList.add('open');
+    if (arr) arr.textContent = '▼';
+  }
+  requestAnimationFrame(() => {
+    // round-row has no ID; scroll to its sibling detail element (immediately follows it)
+    det?.previousElementSibling?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+
 export function refreshMgHub() {
   const profile = loadProfile();
 
@@ -428,7 +444,7 @@ function _renderHomeStatTiles(allRounds, full, courses) {
   const puttsPerHole = totalPuttsHoles > 0 ? (totalPutts / totalPuttsHoles).toFixed(1) : '—';
 
   el.innerHTML =
-    `<div class="home-stat-tile tappable" data-nav="gir"><div class="home-stat-val">${girPct}%</div><div class="home-stat-lbl">GIR</div></div>` +
+    `<div class="home-stat-tile tappable" data-nav="avgStrokes"><div class="home-stat-val">${girPct}%</div><div class="home-stat-lbl">GIR</div></div>` +
     `<div class="home-stat-tile tappable" data-nav="putts"><div class="home-stat-val">${puttsPerHole}</div><div class="home-stat-lbl">Putts/hole</div></div>` +
     `<div class="home-stat-tile tappable" data-nav="stats"><div class="home-stat-val" style="color:${avgVsParCol};">${avgVsParStr}</div><div class="home-stat-lbl">vs par avg</div></div>`;
 
@@ -437,7 +453,7 @@ function _renderHomeStatTiles(allRounds, full, courses) {
       if (!_switchTab) return;
       const nav = tile.dataset.nav;
       _switchTab('prepare');
-      if (nav === 'gir')   { renderMgScoreBreakdown();  showMgSub('mgSubScoreBreakdown'); }
+      if (nav === 'avgStrokes') { renderMgAvgStrokesBreakdown(); showMgSub('mgSubAvgStrokes'); }
       else if (nav === 'putts') { renderMgPuttsBreakdown(); showMgSub('mgSubPuttsBreakdown'); }
       else if (nav === 'stats') { showMgSub('mgSubStats'); }
     });
@@ -494,8 +510,10 @@ function _renderHomeRecentRounds(allRounds, courses) {
 
   const all = [];
   Object.keys(courses).forEach(id => {
-    const rounds = filterRounds(loadRounds ? loadRounds(id) : [], _homeFilter);
-    rounds.forEach(r => all.push({ ...r, courseName: courses[id].name }));
+    const allForCourse = loadRounds ? loadRounds(id) : [];
+    filterRounds(allForCourse, _homeFilter).forEach(r => {
+      all.push({ ...r, courseName: courses[id].name, _courseId: id, _roundIdx: allForCourse.indexOf(r) });
+    });
   });
   all.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   const shown = all.slice(0, 3);
@@ -506,7 +524,8 @@ function _renderHomeRecentRounds(allRounds, courses) {
     const diff    = (r.totalStrokes || 0) - (r.totalPar || 0);
     const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff);
     const color   = diff < 0 ? '#c0392b' : '#1a1a1a';
-    return '<div class="lrh-row tappable"><div class="lrh-left"><div class="lrh-course">' + (r.courseName || '—') + '</div>' +
+    return '<div class="lrh-row tappable" data-course-id="' + escHtml(r._courseId) + '" data-round-idx="' + r._roundIdx + '">' +
+      '<div class="lrh-left"><div class="lrh-course">' + (r.courseName || '—') + '</div>' +
       '<div class="lrh-date">' + (r.date || '—') + '</div></div>' +
       '<div class="lrh-right"><div class="lrh-score">' + (r.totalStrokes || '—') + '</div>' +
       '<div class="lrh-diff" style="color:' + color + '">' + diffStr + '</div></div></div>';
@@ -514,9 +533,7 @@ function _renderHomeRecentRounds(allRounds, courses) {
 
   el.querySelectorAll('.lrh-row.tappable').forEach(row => {
     row.addEventListener('click', () => {
-      if (!_switchTab) return;
-      _switchTab('prepare');
-      showMgSub('mgSubRoundsHistory');
+      navigateToRound(row.dataset.courseId, parseInt(row.dataset.roundIdx, 10));
     });
   });
 }
