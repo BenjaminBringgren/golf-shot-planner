@@ -324,6 +324,9 @@
     .mg-par-sub.neg { color: #c0392b; }
     .lrh-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 0.5px solid #f2f1ee; }
     .lrh-row:last-child { border-bottom: none; }
+    .lrh-row.tappable { cursor: pointer; }
+    @media (hover: hover) { .lrh-row.tappable:hover { background: #fafafa; } }
+    .lrh-row.tappable.is-pressed { background: #edeae4; }
     .lrh-course { font-size: 15px; font-weight: 600; color: #1a1a1a; }
     .lrh-date { font-size: 12px; color: #aaa; margin-top: 2px; }
     .lrh-right { text-align: right; }
@@ -2910,6 +2913,9 @@
   padding: 13px 12px; display: flex; flex-direction: column;
   align-items: flex-start; gap: 4px;
 }
+.home-stat-tile.tappable { cursor: pointer; }
+@media (hover: hover) { .home-stat-tile.tappable:hover { background: #f5f4f0; } }
+.home-stat-tile.tappable.is-pressed { background: #edeae4; }
 .home-stat-val {
   font-size: 20px; font-weight: 700; color: #1a1a1a; line-height: 1;
 }

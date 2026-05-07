@@ -46,6 +46,7 @@ import {
 import {
   showMgSub, showMgHub, refreshMgHub,
   renderMgCarryBars, renderSavedRounds, refreshHomeStats,
+  initRoundsServices,
 } from './rounds.js';
 import {
   initHoleFlowServices, setHoleExpected,
@@ -349,7 +350,7 @@ function switchTab(name) {
 // ── Global press-state fix (iOS/WKWebView :active stuck state) ───────────────
 // Safari and WKWebView don't reliably clear :active on touchend when the DOM
 // changes during the gesture. All button feedback uses .is-pressed instead.
-const _PRESS_SEL = 'button, .mg-menu-row, .gps-tile, .club-picker-item, .sh-lie, .picker-fmt-card, .mg-stat-tile.tappable, .mg-drilldown-btn, .arb-resume-btn';
+const _PRESS_SEL = 'button, .mg-menu-row, .gps-tile, .club-picker-item, .sh-lie, .picker-fmt-card, .mg-stat-tile.tappable, .mg-drilldown-btn, .arb-resume-btn, .home-stat-tile.tappable, .lrh-row.tappable';
 document.addEventListener('touchstart', e => {
   e.target.closest(_PRESS_SEL)?.classList.add('is-pressed');
 }, { passive: true });
@@ -1898,6 +1899,8 @@ initServices({
       _renderActiveRoundBanner();
     }
   };
+
+  initRoundsServices({ switchTab });
 
   // Switch to Play pane as soon as a course bar is injected into #calcView
   (function watchForCourseLoad() {

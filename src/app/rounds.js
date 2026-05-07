@@ -12,6 +12,10 @@ import { clubs } from '../engine/clubs.js';
 import { interpolate, decodeStrategy, courseHandicap, stablefordPoints } from '../engine/calculations.js';
 import { renderCourseList, computeHoleStrokeCounts } from './courses.js';
 
+// ── Services (injected by router.js) ─────────────────────────────────────────
+let _switchTab = null;
+export function initRoundsServices(svc) { _switchTab = svc.switchTab; }
+
 // ── Round filter state ────────────────────────────────────────────────────────
 let _homeFilter   = '18';
 let _statsFilter  = 'all';
@@ -424,9 +428,20 @@ function _renderHomeStatTiles(allRounds, full, courses) {
   const puttsPerHole = totalPuttsHoles > 0 ? (totalPutts / totalPuttsHoles).toFixed(1) : '—';
 
   el.innerHTML =
-    `<div class="home-stat-tile"><div class="home-stat-val">${girPct}%</div><div class="home-stat-lbl">GIR</div></div>` +
-    `<div class="home-stat-tile"><div class="home-stat-val">${puttsPerHole}</div><div class="home-stat-lbl">Putts/hole</div></div>` +
-    `<div class="home-stat-tile"><div class="home-stat-val" style="color:${avgVsParCol};">${avgVsParStr}</div><div class="home-stat-lbl">vs par avg</div></div>`;
+    `<div class="home-stat-tile tappable" data-nav="gir"><div class="home-stat-val">${girPct}%</div><div class="home-stat-lbl">GIR</div></div>` +
+    `<div class="home-stat-tile tappable" data-nav="putts"><div class="home-stat-val">${puttsPerHole}</div><div class="home-stat-lbl">Putts/hole</div></div>` +
+    `<div class="home-stat-tile tappable" data-nav="stats"><div class="home-stat-val" style="color:${avgVsParCol};">${avgVsParStr}</div><div class="home-stat-lbl">vs par avg</div></div>`;
+
+  el.querySelectorAll('.home-stat-tile.tappable').forEach(tile => {
+    tile.addEventListener('click', () => {
+      if (!_switchTab) return;
+      const nav = tile.dataset.nav;
+      _switchTab('prepare');
+      if (nav === 'gir')   { renderMgScoreBreakdown();  showMgSub('mgSubScoreBreakdown'); }
+      else if (nav === 'putts') { renderMgPuttsBreakdown(); showMgSub('mgSubPuttsBreakdown'); }
+      else if (nav === 'stats') { showMgSub('mgSubStats'); }
+    });
+  });
 }
 
 function _renderHomeInsight(courses) {
@@ -491,11 +506,19 @@ function _renderHomeRecentRounds(allRounds, courses) {
     const diff    = (r.totalStrokes || 0) - (r.totalPar || 0);
     const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff);
     const color   = diff < 0 ? '#c0392b' : '#1a1a1a';
-    return '<div class="lrh-row"><div class="lrh-left"><div class="lrh-course">' + (r.courseName || '—') + '</div>' +
+    return '<div class="lrh-row tappable"><div class="lrh-left"><div class="lrh-course">' + (r.courseName || '—') + '</div>' +
       '<div class="lrh-date">' + (r.date || '—') + '</div></div>' +
       '<div class="lrh-right"><div class="lrh-score">' + (r.totalStrokes || '—') + '</div>' +
       '<div class="lrh-diff" style="color:' + color + '">' + diffStr + '</div></div></div>';
   }).join('');
+
+  el.querySelectorAll('.lrh-row.tappable').forEach(row => {
+    row.addEventListener('click', () => {
+      if (!_switchTab) return;
+      _switchTab('prepare');
+      showMgSub('mgSubRoundsHistory');
+    });
+  });
 }
 
 // ── Stats page (My Golf) ──────────────────────────────────────────────────────
