@@ -9,7 +9,7 @@ import {
   loadWindEnabled, saveWindEnabled, loadWindPrefs, saveWindPrefs as _saveWindPrefs,
   loadActiveCourse, saveActiveCourse, clearActiveCourse, getActiveCourseId,
   getCommittedStrategies, setCommittedStrategies, removeCommittedStrategies,
-  loadCourses, loadScores, loadProfile,
+  loadCourses, loadScores, loadRounds, loadProfile,
   loadInProgressRound, clearInProgressRound,
   saveProfile, getScoringMode,
   loadCollapseState, saveCollapseState,
@@ -1555,6 +1555,62 @@ initServices({
 
 
 
+  // ── Play focus strip — hole-specific or general course tip during a round ──
+  function _holeSpecificTip(course, rounds, holeIdx) {
+    if (!course || !rounds.length) return null;
+    const par = course.holes?.[holeIdx]?.par || 4;
+    const holeScores = rounds
+      .filter(r => r.scores?.[holeIdx])
+      .map(r => {
+        const s = r.scores[holeIdx];
+        const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
+        return { total, fir: s.fir, gir: s.gir, putts: s.putts || 0 };
+      })
+      .filter(s => s.total > 0);
+    if (holeScores.length < 3) return null;
+
+    const n        = holeScores.length;
+    const avgVsPar = holeScores.reduce((a, s) => a + (s.total - par), 0) / n;
+    if (Math.abs(avgVsPar) < 0.4) return null; // no actionable pattern
+
+    const avgStr   = avgVsPar > 0 ? '+' + avgVsPar.toFixed(1) : avgVsPar.toFixed(1);
+    const firPars  = holeScores.filter(s => par >= 4);
+    const firRate  = firPars.length > 0 ? firPars.filter(s => s.fir === true).length / firPars.length : null;
+    const girRate  = holeScores.filter(s => s.gir === true).length / n;
+    const avgPutts = holeScores.reduce((a, s) => a + s.putts, 0) / n;
+    const hNum     = holeIdx + 1;
+
+    if (firRate !== null && firRate < 0.4 && avgVsPar > 0.4) {
+      return `Hole ${hNum} avg ${avgStr} — fairway hit only ${Math.round(firRate * 100)}% here. Club down off the tee.`;
+    }
+    if (girRate < 0.3 && avgVsPar > 0.4) {
+      return `Hole ${hNum} avg ${avgStr} — GIR only ${Math.round(girRate * 100)}% here. Aim for the middle of the green.`;
+    }
+    if (avgPutts > 2.2) {
+      return `Hole ${hNum} avg ${avgStr} — you average ${avgPutts.toFixed(1)} putts here. Lag from distance.`;
+    }
+    return `Hole ${hNum} avg ${avgStr} — stay patient here.`;
+  }
+
+  function _updatePlayFocusStrip(courseId, holeIdx) {
+    const strip = document.getElementById('playFocusStrip');
+    if (!strip) return;
+    if (!courseId) { strip.classList.add('hidden'); return; }
+    try {
+      const courses = loadCourses();
+      const course  = courses[courseId];
+      const rounds  = loadRounds(courseId);
+      const tip = _holeSpecificTip(course, rounds, holeIdx)
+               || computePreRoundFocus(courseId);
+      if (tip) {
+        strip.textContent = tip;
+        strip.classList.remove('hidden');
+      } else {
+        strip.classList.add('hidden');
+      }
+    } catch(e) { strip.classList.add('hidden'); }
+  }
+
   // After calculate(), render score entry if a course is active
   // renderScoreEntry / loadCourses / loadScores live in prepare-module — guard with typeof
   const _origCalculate = calculate;
@@ -1573,13 +1629,14 @@ initServices({
     }
     _origCalculate(clearOverrides);
     const session = loadActiveCourse();
-    if (!session.id) return;
+    if (!session.id) { _updatePlayFocusStrip(null, null); return; }
     try {
       const { id, holeIdx } = session;
       const courses = loadCourses();
       if (!courses[id]) return;
       const scores = loadScores(id);
       renderScoreEntry(id, holeIdx, scores, buildCallbacks());
+      _updatePlayFocusStrip(id, holeIdx);
     } catch(e) {}
     updateCalcButtonVisibility();
     updateLoadCourseBtn();
@@ -1799,24 +1856,14 @@ initServices({
   ];
 
   function cycleQuote() {
-    const textEl   = document.getElementById('heroQuoteText');
-    const attribEl = document.getElementById('heroQuoteAttrib');
-    // Show personalised focus tip when there is an active course with enough round history
-    const activeCid = getActiveCourseId();
-    if (activeCid) {
-      const tip = computePreRoundFocus(activeCid);
-      if (tip) {
-        if (textEl)   textEl.textContent  = tip;
-        if (attribEl) attribEl.textContent = 'Your focus for today';
-        return;
-      }
-    }
     const lastIdx = parseInt(localStorage.getItem(KEY_HERO_QUOTE_IDX) ?? '-1', 10);
     let nextIdx;
     do { nextIdx = Math.floor(Math.random() * HERO_QUOTES.length); }
     while (nextIdx === lastIdx && HERO_QUOTES.length > 1);
     localStorage.setItem(KEY_HERO_QUOTE_IDX, nextIdx);
     const q = HERO_QUOTES[nextIdx];
+    const textEl  = document.getElementById('heroQuoteText');
+    const attribEl = document.getElementById('heroQuoteAttrib');
     if (textEl)   textEl.textContent  = q.text;
     if (attribEl) attribEl.textContent = q.attrib;
   }
@@ -1979,8 +2026,20 @@ initServices({
       setCompassAngle(0);
       applyWindData(10, null, 0, 'Demo · 10 m/s headwind');
       calculate();
-      // Show a brief hint so the user knows these are example values
-      showToast('Sample scenario — set your own distances in My Golf → Bag', 3500);
+      // Show inline banner and dismiss it if the user modifies any carry input
+      const demoBanner = document.getElementById('calcDemoBanner');
+      if (demoBanner) {
+        demoBanner.classList.remove('hidden');
+        const _dismissDemo = () => {
+          demoBanner.classList.add('hidden');
+          ['driverCarry','i7Carry','pwCarry'].forEach(id =>
+            document.getElementById(id)?.removeEventListener('input', _dismissDemo)
+          );
+        };
+        ['driverCarry','i7Carry','pwCarry'].forEach(id =>
+          document.getElementById(id)?.addEventListener('input', _dismissDemo)
+        );
+      }
     }
   });
 

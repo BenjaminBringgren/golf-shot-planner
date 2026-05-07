@@ -2898,9 +2898,7 @@
   border-bottom: 1px solid #1a1a1a; border-radius: 0; line-height: 1.2;
 }
 @media (hover: hover) { .home-stats-viewall:hover { color: #555; border-bottom-color: #555; } }
-.home-stats-empty {
-  font-size: 15px; color: #aaa; padding: 16px 0; text-align: center;
-}
+.home-stats-empty { padding: 0; }
 .home-stats-body { display: flex; flex-direction: column; gap: 8px; }
 .home-stats-body.hidden, .home-stats-empty.hidden { display: none; }
 
@@ -3011,8 +3009,27 @@
 .mg-drilldown-sub   { font-size: 12px; color: #888; margin-top: 2px; }
 .mg-drilldown-arrow { font-size: 17px; color: #ccc; font-weight: 300; flex-shrink: 0; }
 
+/* ── Demo hint banner (manual calc pre-filled for new users) ─────────────────── */
+#calcDemoBanner {
+  font-size: 12px; font-weight: 600; color: #185fa5;
+  background: #eef3fb; border-bottom: 0.5px solid rgba(24,95,165,0.15);
+  padding: 8px 14px; letter-spacing: 0.01em;
+}
+#calcDemoBanner.hidden { display: none; }
+
+/* ── Play focus strip (below course bar during active round) ─────────────────── */
+#playFocusStrip {
+  font-size: 13px; font-weight: 500; color: #1a1a1a;
+  background: #f0ece4;
+  padding: 9px 14px 9px 14px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.07);
+  line-height: 1.4;
+}
+#playFocusStrip.hidden { display: none; }
+#panePlay #calcView.open #playFocusStrip { display: block; }
+#panePlay #calcView.open #playFocusStrip.hidden { display: none; }
+
 /* ── Empty-state stats preview ──────────────────────────────────────────────── */
-.home-stats-empty { padding: 0; }
 .stats-preview-card {
   background: #f5f4f0; border-radius: 14px;
   overflow: hidden; opacity: 0.55; pointer-events: none;
