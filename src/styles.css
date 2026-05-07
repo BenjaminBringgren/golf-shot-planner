@@ -585,7 +585,7 @@
     }
     .course-bar-name-wrap { flex: 1; min-width: 0; }
     .course-bar-name {
-      font-size: 1.35rem; font-weight: 700; color: #111;
+      font-size: 17px; font-weight: 700; color: #111;
       letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .course-bar-hole-row {
@@ -747,7 +747,7 @@
     .prf-card { background: #fff; border-radius: 16px 16px 0 0; padding: 28px 20px 40px; width: 100%; max-width: 480px; position: relative; z-index: 1; }
     .prf-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #888; margin-bottom: 12px; }
     .prf-text { font-size: 17px; font-weight: 500; color: #1a1a1a; line-height: 1.5; margin-bottom: 24px; }
-    .prf-btn { width: 100%; padding: 14px; background: #1a1a1a; color: #fff; border: none; border-radius: 10px; font-size: 17px; font-weight: 600; cursor: pointer; }
+    .prf-btn { width: 100%; padding: 14px; background: #1a1a1a; color: #fff; border: none; border-radius: 10px; font-size: 17px; font-weight: 700; cursor: pointer; }
     .prf-btn.is-pressed { background: #444; transform: scale(0.98); }
     .rc-stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); }
     .rc-stat-cell { text-align: center; padding: 10px 6px 12px; border-right: 0.5px solid rgba(0,0,0,0.07); }
@@ -1388,7 +1388,7 @@
     }
     .scorecard-page-header-text { flex: 1; min-width: 0; }
     .scorecard-page-title {
-      font-size: 1.35rem; font-weight: 700; color: #111;
+      font-size: 17px; font-weight: 700; color: #111;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .scorecard-page-subtitle {
@@ -1399,7 +1399,7 @@
       flex-shrink: 0;
       width: 32px; height: 32px; border-radius: 50%;
       background: #f0efeb; border: none; cursor: pointer;
-      font-size: 14px; color: #555;
+      font-size: 13px; color: #555;
       display: flex; align-items: center; justify-content: center;
       touch-action: manipulation;
     }
@@ -1487,7 +1487,7 @@
     .sc2-sub--total .sc2-col-sep { background: rgba(255,255,255,0.2); }
     .sc2-sub--in .sc2-col-sep { background: rgba(0,0,0,0.08); }
 
-    .sc2-sub-lbl { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .sc2-sub-lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
     .sc2-sub--out   .sc2-sub-lbl { color: rgba(255,255,255,0.5); }
     .sc2-sub--in    .sc2-sub-lbl { color: #888; }
     .sc2-sub--total .sc2-sub-lbl { color: rgba(255,255,255,0.5); }
@@ -1504,7 +1504,7 @@
 
     .sc2-total-card { border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
 
-    .sc2-save-btn { width: 100%; margin-top: 20px; padding: 16px; font-size: 15px; font-weight: 600; background: #1a1a1a; color: #fff; border: none; border-radius: 10px; cursor: pointer; letter-spacing: 0.01em; }
+    .sc2-save-btn { width: 100%; margin-top: 20px; padding: 16px; font-size: 15px; font-weight: 700; background: #1a1a1a; color: #fff; border: none; border-radius: 10px; cursor: pointer; letter-spacing: 0.01em; }
     .sc2-save-btn:disabled { background: #aaa; color: #fff; cursor: default; }
 
     /* ── Stableford points column ────────────────────────────── */
@@ -1792,7 +1792,7 @@
     }
     .phn-chevron {
       background: none; border: none; cursor: pointer; font-family: inherit;
-      font-size: 24px; color: #555; line-height: 1;
+      font-size: 22px; color: #555; line-height: 1;
       width: 64px; height: 64px;
       display: flex; align-items: center; justify-content: center;
       -webkit-tap-highlight-color: transparent;
@@ -2439,7 +2439,7 @@
     background: var(--sh-accent); box-shadow: 0 0 8px var(--sh-accent);
     animation: sh-pulse 2s ease-in-out infinite;
   }
-  .sh-activity-score { color: #fff; font-weight: 600; font-size: 14px; }
+  .sh-activity-score { color: #fff; font-weight: 600; font-size: 13px; }
   .sh-activity-score.good { color: #34c759; }
   .sh-activity-score.bad  { color: #ff453a; }
 
@@ -2450,7 +2450,7 @@
     flex-shrink: 0;
   }
   .sh-hole-title {
-    font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1;
+    font-size: 28px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1;
   }
   .sh-hole-title .sh-par { color: var(--sh-ink-3); font-weight: 500; font-size: 16px; margin-left: 5px; }
 
@@ -2477,7 +2477,7 @@
   .sh-chip.sand    { background: var(--sh-sand);    color: var(--sh-sand-ink); }
   .sh-chip.green   { background: var(--sh-green);   color: var(--sh-green-ink); }
   .sh-chip.penalty { background: var(--sh-penalty); color: var(--sh-penalty-ink); }
-  .sh-chip-n { opacity: 0.55; font-size: 10px; font-weight: 600; }
+  .sh-chip-n { opacity: 0.55; font-size: 11px; font-weight: 600; }
   .sh-chip.last::after {
     content: ""; position: absolute; inset: -2px; border-radius: 17px;
     border: 2px solid rgba(0,0,0,0.08);
@@ -2528,7 +2528,7 @@
   }
   .sh-lie.is-pressed { transform: scale(0.96); }
   .sh-lie-icon { width: 22px; height: 22px; opacity: 0.55; }
-  .sh-lie-label { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
+  .sh-lie-label { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; }
   .sh-lie.fw      { background: var(--sh-fw);      color: var(--sh-fw-ink); }
   .sh-lie.rough   { background: var(--sh-rough);   color: var(--sh-rough-ink); }
   .sh-lie.sand    { background: var(--sh-sand);    color: var(--sh-sand-ink); }
@@ -2609,7 +2609,7 @@
   .sh-simple-btn {
     width: 80px; height: 80px; border-radius: 40px; border: none;
     background: rgba(0,0,0,0.06); color: #000;
-    font-size: 36px; font-weight: 300; line-height: 1;
+    font-size: 34px; font-weight: 300; line-height: 1;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; -webkit-tap-highlight-color: transparent;
     transition: background 0.1s;
@@ -2656,7 +2656,7 @@
   .sh-score-pill {
     width: 44px; height: 44px; border-radius: 12px; background: #fff;
     display: grid; place-items: center;
-    font-size: 21px; font-weight: 800; letter-spacing: -0.03em; color: #000;
+    font-size: 22px; font-weight: 800; letter-spacing: -0.03em; color: #000;
     box-shadow: 0 1px 2px rgba(0,0,0,0.04); flex-shrink: 0;
   }
   .sh-score-pill.over  { color: var(--sh-accent-bad); }
@@ -2667,7 +2667,7 @@
   .sh-result-next {
     height: 44px; padding: 0 18px; border-radius: 14px; border: none;
     background: #000; color: #fff; font-family: inherit;
-    font-size: 14px; font-weight: 600; cursor: pointer;
+    font-size: 15px; font-weight: 700; cursor: pointer;
     display: flex; align-items: center; gap: 5px;
     -webkit-tap-highlight-color: transparent; flex-shrink: 0; width: auto; margin: 0;
   }
@@ -2701,7 +2701,7 @@
   .sh-celebrate-kind { font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.8; margin-bottom: 5px; }
   .sh-celebrate-big  { font-size: 52px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
   .sh-celebrate-big .em { font-size: 38px; vertical-align: middle; margin-right: 5px; }
-  .sh-celebrate-meta { font-size: 14px; font-weight: 500; opacity: 0.85; margin-top: 5px; }
+  .sh-celebrate-meta { font-size: 13px; font-weight: 500; opacity: 0.85; margin-top: 5px; }
   .sh-celebrate-badges { display: flex; gap: 6px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
   .sh-badge {
     background: rgba(255,255,255,0.18); padding: 4px 10px; border-radius: 10px;
@@ -2719,11 +2719,11 @@
   .sh-stat { display: flex; flex-direction: column; gap: 2px; }
   .sh-stat.right { align-items: flex-end; }
   .sh-stat-label {
-    font-size: 10px; font-weight: 600; letter-spacing: -0.01em;
+    font-size: 11px; font-weight: 600; letter-spacing: -0.01em;
     color: var(--sh-ink-3); text-transform: uppercase;
   }
   .sh-stat-value {
-    font-size: 19px; font-weight: 700; letter-spacing: -0.02em;
+    font-size: 20px; font-weight: 700; letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
   }
   .sh-stat-value.good { color: var(--sh-accent); }
