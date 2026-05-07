@@ -46,6 +46,7 @@ export function mountWidgetSheet({ courseId }) {
   function _render() {
     const p = loadWidgetPrefs();
     inner.innerHTML = '';
+    inner.appendChild(_buildFocusCard(p.focus));
     inner.appendChild(_buildWeatherCard(p.weather));
     inner.appendChild(_buildGpsCard(p.gps));
   }
@@ -63,10 +64,61 @@ function _closeDrawer() {
 
 // ── Apply prefs to Play page sections ────────────────────────────────────────
 function _applyPrefs(prefs) {
-  const windSection = document.getElementById('windSection');
-  const gpsSection  = document.getElementById('gpsSection');
-  if (windSection) windSection.style.display = prefs.weather ? '' : 'none';
-  if (gpsSection)  gpsSection.style.display  = prefs.gps    ? '' : 'none';
+  const windSection  = document.getElementById('windSection');
+  const gpsSection   = document.getElementById('gpsSection');
+  const focusStrip   = document.getElementById('playFocusStrip');
+  if (windSection)  windSection.style.display  = prefs.weather ? '' : 'none';
+  if (gpsSection)   gpsSection.style.display   = prefs.gps     ? '' : 'none';
+  if (focusStrip && !focusStrip.classList.contains('pfs-empty')) {
+    focusStrip.style.display = prefs.focus ? '' : 'none';
+  }
+}
+
+// ── Focus card ────────────────────────────────────────────────────────────────
+function _buildFocusCard(visible) {
+  const card   = document.createElement('div');
+  card.className = 'wd-card';
+
+  const header = document.createElement('div');
+  header.className = 'wd-card-header';
+  header.innerHTML =
+    `<div class="wd-card-icon">
+       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+         <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/>
+       </svg>
+     </div>
+     <span class="wd-card-title">Player Focus</span>
+     <span class="wd-card-hint">Show on play page</span>
+     <label class="wind-toggle" style="flex-shrink:0;">
+       <input type="checkbox" ${visible ? 'checked' : ''}>
+       <span class="wind-toggle-slider"></span>
+     </label>`;
+
+  const body = document.createElement('div');
+  body.className = 'wd-card-body';
+  body.innerHTML = _focusBody();
+
+  const toggle = header.querySelector('input');
+  toggle.addEventListener('change', (e) => {
+    e.stopPropagation();
+    const p = loadWidgetPrefs();
+    p.focus = toggle.checked;
+    saveWidgetPrefs(p.weather, p.gps, p.focus);
+    _applyPrefs(p);
+  });
+
+  card.appendChild(header);
+  card.appendChild(body);
+  return card;
+}
+
+function _focusBody() {
+  const strip = document.getElementById('playFocusStrip');
+  const tip   = strip?.dataset?.tip || '';
+  if (!tip) {
+    return `<div class="wd-card-empty">Play more rounds to unlock your focus tips.</div>`;
+  }
+  return `<div class="wd-focus-body"><div class="wd-focus-text">${tip}</div></div>`;
 }
 
 // ── Weather card ──────────────────────────────────────────────────────────────
@@ -98,7 +150,7 @@ function _buildWeatherCard(visible) {
     e.stopPropagation();
     const p = loadWidgetPrefs();
     p.weather = toggle.checked;
-    saveWidgetPrefs(p.weather, p.gps);
+    saveWidgetPrefs(p.weather, p.gps, p.focus);
     _applyPrefs(p);
     body.innerHTML = _weatherBody();
   });
@@ -169,7 +221,7 @@ function _buildGpsCard(visible) {
     e.stopPropagation();
     const p = loadWidgetPrefs();
     p.gps = toggle.checked;
-    saveWidgetPrefs(p.weather, p.gps);
+    saveWidgetPrefs(p.weather, p.gps, p.focus);
     _applyPrefs(p);
     body.innerHTML = _gpsBody();
   });

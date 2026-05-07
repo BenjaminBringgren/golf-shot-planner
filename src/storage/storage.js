@@ -20,6 +20,7 @@ export const KEY_HOME_ROUND_FILTER  = 'homeRoundFilter';
 export const KEY_STATS_ROUND_FILTER = 'statsRoundFilter';
 export const KEY_WIDGET_WEATHER     = 'widgetWeather';
 export const KEY_WIDGET_GPS         = 'widgetGps';
+export const KEY_WIDGET_FOCUS       = 'widgetFocus';
 export const KEY_GAME_FORMAT        = 'golfGameFormat';  // localStorage — persists last choice
 export const KEY_HCP_ENABLED        = 'golfHcpEnabled';  // localStorage — persists last choice
 
@@ -208,12 +209,14 @@ export function loadWidgetPrefs() {
   return {
     weather: localStorage.getItem(KEY_WIDGET_WEATHER) !== '0',
     gps:     localStorage.getItem(KEY_WIDGET_GPS)     !== '0',
+    focus:   localStorage.getItem(KEY_WIDGET_FOCUS)   !== '0',
   };
 }
-export function saveWidgetPrefs(weather, gps) {
+export function saveWidgetPrefs(weather, gps, focus) {
   try {
     localStorage.setItem(KEY_WIDGET_WEATHER, weather ? '1' : '0');
     localStorage.setItem(KEY_WIDGET_GPS,     gps     ? '1' : '0');
+    localStorage.setItem(KEY_WIDGET_FOCUS,   focus   !== false ? '1' : '0');
   } catch(e) {}
 }
 

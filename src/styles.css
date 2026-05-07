@@ -1328,6 +1328,10 @@
     .wd-stat-label { font-size: 13px; color: #888; }
     .wd-stat-val   { font-size: 13px; font-weight: 600; color: #1a1a1a; }
 
+    /* Focus card body */
+    .wd-focus-body { padding: 10px 14px 12px; }
+    .wd-focus-text { font-size: 13px; font-weight: 500; color: #1a1a1a; line-height: 1.5; }
+
     /* GPS tiles */
     .wd-gps-row {
       display: grid; grid-template-columns: 1fr 1fr;
@@ -3019,15 +3023,22 @@
 
 /* ── Play focus strip (below course bar during active round) ─────────────────── */
 #playFocusStrip {
-  font-size: 13px; font-weight: 500; color: #1a1a1a;
-  background: #f0ece4;
-  padding: 9px 14px 9px 14px;
+  display: flex; align-items: flex-start; gap: 10px;
+  background: #fff;
   border-bottom: 0.5px solid rgba(0,0,0,0.07);
-  line-height: 1.4;
+  padding: 11px 14px;
 }
 #playFocusStrip.hidden { display: none; }
-#panePlay #calcView.open #playFocusStrip { display: block; }
-#panePlay #calcView.open #playFocusStrip.hidden { display: none; }
+.pfs-icon {
+  width: 26px; height: 26px; flex-shrink: 0;
+  background: #f0efeb; border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  color: #555; margin-top: 1px;
+}
+.pfs-text {
+  font-size: 13px; font-weight: 500; color: #1a1a1a;
+  line-height: 1.45; flex: 1;
+}
 
 /* ── Empty-state stats preview ──────────────────────────────────────────────── */
 .stats-preview-card {

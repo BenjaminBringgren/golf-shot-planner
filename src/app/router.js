@@ -9,7 +9,7 @@ import {
   loadWindEnabled, saveWindEnabled, loadWindPrefs, saveWindPrefs as _saveWindPrefs,
   loadActiveCourse, saveActiveCourse, clearActiveCourse, getActiveCourseId,
   getCommittedStrategies, setCommittedStrategies, removeCommittedStrategies,
-  loadCourses, loadScores, loadRounds, loadProfile,
+  loadCourses, loadScores, loadRounds, loadProfile, loadWidgetPrefs,
   loadInProgressRound, clearInProgressRound,
   saveProfile, getScoringMode,
   loadCollapseState, saveCollapseState,
@@ -1571,31 +1571,56 @@ initServices({
 
     const n        = holeScores.length;
     const avgVsPar = holeScores.reduce((a, s) => a + (s.total - par), 0) / n;
-    if (Math.abs(avgVsPar) < 0.4) return null; // no actionable pattern
-
     const avgStr   = avgVsPar > 0 ? '+' + avgVsPar.toFixed(1) : avgVsPar.toFixed(1);
-    const firPars  = holeScores.filter(s => par >= 4);
+    const firPars  = par >= 4 ? holeScores : [];
     const firRate  = firPars.length > 0 ? firPars.filter(s => s.fir === true).length / firPars.length : null;
     const girRate  = holeScores.filter(s => s.gir === true).length / n;
     const avgPutts = holeScores.reduce((a, s) => a + s.putts, 0) / n;
     const hNum     = holeIdx + 1;
 
-    if (firRate !== null && firRate < 0.4 && avgVsPar > 0.4) {
-      return `Hole ${hNum} avg ${avgStr} — fairway hit only ${Math.round(firRate * 100)}% here. Club down off the tee.`;
+    // ── Strength tips (avg ≤ par) ──────────────────────────────────────────
+    if (avgVsPar <= 0) {
+      if (avgVsPar < -0.3) return `Hole ${hNum} avg ${avgStr} — this is one of your best holes. Back yourself.`;
+      if (girRate > 0.6)   return `Hole ${hNum} avg ${avgStr} — your approach game is sharp here. Same routine.`;
+      if (firRate !== null && firRate > 0.6) return `Hole ${hNum} avg ${avgStr} — you find the fairway here. Trust that swing.`;
+      return `Hole ${hNum} avg ${avgStr} — you play this well. Stick to your plan.`;
     }
-    if (girRate < 0.3 && avgVsPar > 0.4) {
-      return `Hole ${hNum} avg ${avgStr} — GIR only ${Math.round(girRate * 100)}% here. Aim for the middle of the green.`;
+
+    // ── Neutral / no strong signal ─────────────────────────────────────────
+    if (Math.abs(avgVsPar) < 0.4) {
+      if (girRate > 0.5)   return `Hole ${hNum} avg ${avgStr} — good GIR rate here. Putt without fear.`;
+      if (avgPutts < 1.8)  return `Hole ${hNum} avg ${avgStr} — solid putter on this green. Keep it simple.`;
+      return null; // no useful signal, let the general tip show
     }
-    if (avgPutts > 2.2) {
-      return `Hole ${hNum} avg ${avgStr} — you average ${avgPutts.toFixed(1)} putts here. Lag from distance.`;
+
+    // ── Weakness tips ──────────────────────────────────────────────────────
+    if (firRate !== null && firRate < 0.35) {
+      const pct = Math.round(firRate * 100);
+      return `Hole ${hNum} avg ${avgStr} — fairway only ${pct}% of the time here. Take one club less and put it in play.`;
     }
-    return `Hole ${hNum} avg ${avgStr} — stay patient here.`;
+    if (firRate !== null && firRate < 0.55 && avgVsPar > 0.5) {
+      return `Hole ${hNum} avg ${avgStr} — misses off the tee are costing you. Commit to a conservative line.`;
+    }
+    if (girRate < 0.25) {
+      const pct = Math.round(girRate * 100);
+      return `Hole ${hNum} avg ${avgStr} — GIR only ${pct}% here. Pick a landing zone on the fat part of the green, not the flag.`;
+    }
+    if (girRate < 0.45 && avgVsPar > 0.5) {
+      return `Hole ${hNum} avg ${avgStr} — approach shots are missing here. Leave yourself a full wedge into the green.`;
+    }
+    if (avgPutts > 2.3) {
+      return `Hole ${hNum} avg ${avgStr} — you're averaging ${avgPutts.toFixed(1)} putts here. Your first putt is the one that matters — get it close.`;
+    }
+    if (avgPutts > 2.0 && avgVsPar > 0.5) {
+      return `Hole ${hNum} avg ${avgStr} — three-putt risk on this green. Play your approach shot for the easy two-putt zone.`;
+    }
+    return `Hole ${hNum} avg ${avgStr} — this hole costs you strokes. Play conservative and take par.`;
   }
 
   function _updatePlayFocusStrip(courseId, holeIdx) {
     const strip = document.getElementById('playFocusStrip');
     if (!strip) return;
-    if (!courseId) { strip.classList.add('hidden'); return; }
+    if (!courseId) { strip.classList.add('hidden'); strip.dataset.tip = ''; return; }
     try {
       const courses = loadCourses();
       const course  = courses[courseId];
@@ -1603,10 +1628,19 @@ initServices({
       const tip = _holeSpecificTip(course, rounds, holeIdx)
                || computePreRoundFocus(courseId);
       if (tip) {
-        strip.textContent = tip;
-        strip.classList.remove('hidden');
+        strip.dataset.tip = tip;
+        strip.classList.remove('pfs-empty');
+        strip.innerHTML =
+          `<div class="pfs-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg></div>` +
+          `<div class="pfs-text">${tip}</div>`;
+        // Respect widget pref
+        const { focus } = loadWidgetPrefs();
+        strip.style.display = focus ? '' : 'none';
+        if (focus) strip.classList.remove('hidden');
+        else strip.classList.add('hidden');
       } else {
-        strip.classList.add('hidden');
+        strip.dataset.tip = '';
+        strip.classList.add('hidden', 'pfs-empty');
       }
     } catch(e) { strip.classList.add('hidden'); }
   }
