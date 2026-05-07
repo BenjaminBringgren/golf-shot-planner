@@ -14,7 +14,7 @@ import {
 import { teeMarked, completedShots, clearGpsState } from '../platform/gps.js';
 import { decodeStrategy, courseHandicap, stablefordPoints } from '../engine/calculations.js';
 import { initHole } from '../app/holeFlow.js';
-import { computeHoleStrokeCounts } from '../app/courses.js';
+import { computeHoleStrokeCounts, computeHoleBaseline } from '../app/courses.js';
 import { mountShotSheet }    from './shotSheet/index.js';
 import { mountSimpleCounter } from './shotSheet/SimpleCounter.js';
 import { mountWidgetSheet, hideWidgetFab } from './widgetSheet.js';
@@ -1302,6 +1302,73 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
   const scrambPct = scrambOpp > 0 ? Math.round(scrambMade / scrambOpp * 100) : '—';
   const parPct    = holesPlayed > 0 ? Math.round((birdies + pars) / holesPlayed * 100) : '—';
 
+  // Baseline comparison — how did this round compare to the player's per-hole averages?
+  let baselineDelta = null, baselineHolesCount = 0;
+  played.forEach((h, i) => {
+    if (h.total == null) return;
+    const bl = computeHoleBaseline(courseId, i);
+    if (!bl) return;
+    baselineDelta = (baselineDelta || 0) + (h.total - bl.avgScore);
+    baselineHolesCount++;
+  });
+  let baselineStr = null, baselineColor = '#888';
+  if (baselineDelta !== null && baselineHolesCount >= Math.ceil(holesPlayed / 2)) {
+    if (Math.abs(baselineDelta) < 0.1) {
+      baselineStr = 'E vs your baseline';
+    } else if (baselineDelta < 0) {
+      baselineStr = baselineDelta.toFixed(1) + ' vs your baseline';
+      baselineColor = '#c0392b';
+    } else {
+      baselineStr = '+' + baselineDelta.toFixed(1) + ' vs your baseline';
+      baselineColor = '#1a1a1a';
+    }
+  }
+
+  // Strategy insight — best-performing strategy type at this course from saved rounds
+  let stratInsightHtml = '';
+  {
+    const savedRounds = loadRounds(courseId);
+    if (savedRounds.length) {
+      const byType = {};
+      savedRounds.forEach(r => {
+        if (!r.scores || !r.strategies) return;
+        r.scores.forEach((s, i) => {
+          if (!s) return;
+          const strat = r.strategies[i];
+          if (!strat) return;
+          const par   = c.holes[i]?.par || 4;
+          const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
+          if (!total) return;
+          const { type } = decodeStrategy(strat);
+          const key = type || strat;
+          if (!byType[key]) byType[key] = { totalDiff: 0, count: 0 };
+          byType[key].totalDiff += total - par;
+          byType[key].count++;
+        });
+      });
+      const sorted = Object.entries(byType)
+        .map(([type, d]) => ({ type, avg: d.totalDiff / d.count, count: d.count }))
+        .filter(d => d.count >= 3)
+        .sort((a, b) => a.avg - b.avg);
+      if (sorted.length >= 2) {
+        const rows = sorted.slice(0, 3).map(d => {
+          const avgStr   = Math.abs(d.avg) < 0.05 ? 'E' : (d.avg > 0 ? '+' : '') + d.avg.toFixed(1);
+          const avgColor = d.avg < -0.05 ? '#c0392b' : '#888';
+          const tagClass = (d.type === 'Max distance' || d.type === 'Aggressive' || d.type === 'Long') ? 'aggressive'
+            : (d.type === 'Controlled' || d.type === 'Balanced' || d.type === 'Medium') ? 'balanced' : 'safe';
+          return `<div class="strat-row"><span class="hint-best-tag ${tagClass}"><span class="hint-best-dot"></span>${d.type}</span>` +
+            `<span class="strat-row-count">${d.count} hole${d.count !== 1 ? 's' : ''}</span>` +
+            `<span class="strat-row-avg" style="color:${avgColor}">${avgStr}</span></div>`;
+        }).join('');
+        stratInsightHtml = `
+          <div class="rc-section" style="margin-top:10px;">
+            <div class="rc-section-label">Strategy insight</div>
+            <div style="padding:4px 14px 14px;">${rows}</div>
+          </div>`;
+      }
+    }
+  }
+
   // Score breakdown dots
   function dotStrip(count, bg, shape) {
     const r = shape === 'circle' ? '50%' : '2px';
@@ -1359,6 +1426,7 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
       <div class="rc-hero">
         <div class="rc-hero-score" style="color:${rcIsStableford ? '#1a1a1a' : vsParColor}">${rcIsStableford ? rcTotalPoints + ' pts' : vsParStr}</div>
         <div class="rc-hero-sub">${totalStrokes} strokes · par ${totalPar} · ${holesPlayed} holes</div>
+        ${baselineStr ? `<div class="rc-hero-baseline" style="color:${baselineColor}">${baselineStr}</div>` : ''}
       </div>
       <div class="rc-stat-grid">
         <div class="rc-stat-cell"><div class="rc-stat-val">${girPct !== '—' ? girPct + '%' : '—'}</div><div class="rc-stat-lbl">GIR</div></div>
@@ -1375,6 +1443,7 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
       ${bogeys > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Bogeys</span><span class="rc-bd-dots">${dotStrip(bogeys, '#e8a070', 'square')}</span><span class="rc-bd-count">${bogeys}</span></div>` : ''}
       ${doubles > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Doubles+</span><span class="rc-bd-dots">${dotStrip(doubles, '#888', 'square')}</span><span class="rc-bd-count">${doubles}</span></div>` : ''}
     </div>
+    ${stratInsightHtml}
     <div class="${rcIsStableford ? 'sc2-stableford' : ''}" style="padding:10px 16px 8px;">${rcSc2Html}</div>
     <div class="rc-btn-row">
       <button class="rc-btn-primary" id="rcSaveBtn" type="button">Save round</button>

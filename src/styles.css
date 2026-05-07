@@ -311,6 +311,7 @@
     .mg-baseline-dot.over1 .mg-baseline-rounds { color: #854F0B; }
     .mg-baseline-dot.over2 .mg-baseline-rounds { color: #993C1D; }
     .mg-baseline-dot.over3 .mg-baseline-rounds { color: #A32D2D; }
+    .mg-baseline-dot.low-sample { opacity: 0.5; }
     .mg-baseline-legend { display: flex; align-items: center; gap: 10px; padding: 10px 0 2px; flex-wrap: wrap; }
     .mg-baseline-legend-item { display: flex; align-items: center; gap: 5px; }
     .mg-baseline-legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
@@ -740,6 +741,14 @@
     .rc-hero { text-align: center; padding: 18px 14px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.07); }
     .rc-hero-score { font-size: 34px; font-weight: 700; line-height: 1; }
     .rc-hero-sub { font-size: 13px; color: #888; margin-top: 5px; }
+    .rc-hero-baseline { font-size: 13px; font-weight: 600; margin-top: 4px; }
+    #preRoundFocusOverlay { display: none; position: fixed; inset: 0; z-index: 1100; align-items: flex-end; justify-content: center; }
+    .prf-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: flex-end; justify-content: center; width: 100%; }
+    .prf-card { background: #fff; border-radius: 16px 16px 0 0; padding: 28px 20px 40px; width: 100%; max-width: 480px; position: relative; z-index: 1; }
+    .prf-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #888; margin-bottom: 12px; }
+    .prf-text { font-size: 17px; font-weight: 500; color: #1a1a1a; line-height: 1.5; margin-bottom: 24px; }
+    .prf-btn { width: 100%; padding: 14px; background: #1a1a1a; color: #fff; border: none; border-radius: 10px; font-size: 17px; font-weight: 600; cursor: pointer; }
+    .prf-btn.is-pressed { background: #444; transform: scale(0.98); }
     .rc-stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); }
     .rc-stat-cell { text-align: center; padding: 10px 6px 12px; border-right: 0.5px solid rgba(0,0,0,0.07); }
     .rc-stat-cell:last-child { border-right: none; }
@@ -1537,6 +1546,15 @@
     .hint-best-tag.safe       .hint-best-dot { background: #347a50; }
     .hint-best-tag.par3       .hint-best-dot { background: #686870; }
     .hint-best-rounds { font-size: 12px; color: #aaa; flex-shrink: 0; }
+
+    /* ── Strategy breakdown rows (My Stats + round-complete overlay) ── */
+    .strat-table-header { display: flex; align-items: center; gap: 8px; padding: 8px 0 6px; border-bottom: 0.5px solid rgba(0,0,0,0.07); margin-bottom: 4px; }
+    .strat-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 0.5px solid rgba(0,0,0,0.05); }
+    .strat-row:last-child { border-bottom: none; }
+    .strat-row--best { background: transparent; }
+    .strat-row .hint-best-tag { flex: 1; min-width: 0; }
+    .strat-row-count { font-size: 12px; color: #aaa; flex-shrink: 0; min-width: 48px; text-align: right; }
+    .strat-row-avg { font-size: 15px; font-weight: 700; flex-shrink: 0; min-width: 44px; text-align: right; }
 
     /* ── Strategy plan card (v3 — single card + switcher) ──── */
     .carousel-outer { overflow: hidden; margin: 0; padding: 0; background: #fff; border-radius: 12px; border: 0.5px solid rgba(0,0,0,0.07); }

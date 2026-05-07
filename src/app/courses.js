@@ -64,7 +64,7 @@ export function computeHoleBaseline(courseId, holeIdx) {
     acc.count++;
     return acc;
   }, { total: 0, count: 0 });
-  if (data.count < 5) return null;
+  if (data.count < 3) return null;
   const avgScore = data.total / data.count;
   return { avgScore, avgDiff: avgScore - par, rounds: data.count, par };
 }
@@ -72,7 +72,7 @@ export function computeHoleBaseline(courseId, holeIdx) {
 export function blendedScore(modelScore, courseId, holeIdx) {
   const bl = computeHoleBaseline(courseId, holeIdx);
   if (!bl) return { score: modelScore, blended: false };
-  const weight = Math.min(1, (bl.rounds - 5) / 7);
+  const weight = Math.min(1, (bl.rounds - 3) / 7);
   const score  = modelScore * (1 - weight) + bl.avgScore * weight;
   return { score, blended: true, rounds: bl.rounds, weight };
 }
@@ -101,6 +101,7 @@ export function loadCourseIntoPlay(id, gameFormat = 'strokes', hcpEnabled = true
   _svc.updateCalcButtonVisibility?.();
   const scores = loadScores(id);
   _svc.renderScoreEntry?.(id, 0, scores);
+  _svc.showPreRoundFocus?.(id);
   setTimeout(() => _svc.calculate?.(), 0);
 }
 

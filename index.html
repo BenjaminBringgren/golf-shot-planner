@@ -681,6 +681,19 @@
           <div class="mg-drilldown-arrow">›</div>
         </div>
 
+        <div class="mg-drilldown-btn" id="mgStatsGotoStrategy">
+          <div class="mg-drilldown-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+          </div>
+          <div class="mg-drilldown-text">
+            <div class="mg-drilldown-title">Strategy breakdown</div>
+            <div class="mg-drilldown-sub" id="mgDrillStrategySub"></div>
+          </div>
+          <div class="mg-drilldown-arrow">›</div>
+        </div>
+
         <div class="mg-drilldown-btn" id="mgStatsGotoHistory">
           <div class="mg-drilldown-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -726,6 +739,17 @@
         <h2>Personal baseline</h2>
       </div>
       <div style="padding:12px;display:flex;flex-direction:column;gap:12px;" id="mgBaselineContent">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- ── Strategy Breakdown sub-page ──────────────────────────────── -->
+    <div class="mg-sub" id="mgSubStrategy">
+      <div class="mg-sub-header">
+        <button class="mg-back-btn" id="mgBackStrategy">‹</button>
+        <h2>Strategy breakdown</h2>
+      </div>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px;" id="mgStrategyContent">
         <!-- populated by JS -->
       </div>
     </div>

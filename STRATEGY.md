@@ -194,10 +194,51 @@ Ranked by expected retention impact:
 | Improvement streak ("3 rounds below your avg") | Not built | Moderate — gamification |
 | "You beat your best score" notification | Not built | Moderate — celebration moment |
 | Pre-round focus prompt | Not built | High — behavioral priming |
-| Strategy vs outcome correlation | Data exists, not computed | High — unique to this app |
+| Strategy vs outcome correlation | Partial (per-hole hint only) | High — unique to this app |
 | GIR trend (getting better/worse over time) | Sparkline only | Moderate — needs trend annotation |
 
 The highest-impact unlock with zero new data capture: **round-vs-personal-baseline comparison** and **strategy effectiveness**. Both use data already stored.
+
+### 6a. Personal Baseline — Lower the 5-Round Gate
+
+**Code location:** `src/app/courses.js:67` — `if (data.count < 5) return null`
+
+Currently shows a "—" dash for any hole with fewer than 5 rounds. The 5-round minimum means a player needs nearly a full season before any baseline appears. Recommended change: lower to **3 rounds**. Three rounds is enough signal to show a directional average; a "low sample" visual indicator (lighter colour, asterisk) communicates uncertainty without hiding the data entirely. The display rendering is in `src/app/rounds.js:819-822`.
+
+### 6b. Round vs Personal Baseline Comparison
+
+**Code location:** No existing code. Insert into `src/ui/scorecard.js` in the `showRoundCompleteOverlay()` save button handler (~line 1393), immediately after the `roundData` object is assembled and before `saveRound()` is called.
+
+**Logic:**
+- For each hole in `roundScores`, call `computeHoleBaseline(courseId, holeIdx)` from `courses.js`
+- Compute `delta = holeScore.total − baseline.avgScore` per hole
+- Aggregate to a round-level delta: "You scored X strokes better/worse than your baseline today"
+- Display as a hero stat in the round-complete overlay alongside vs-par
+- Store as `baselineVsRound` in the round object for trend tracking
+
+**Edge cases:** If fewer than 3 holes have baseline data (first few rounds), suppress the comparison rather than show a misleading number.
+
+### 6c. Pre-Round Focus Prompt
+
+**Code location:** No existing code. Injection point is `src/app/courses.js:loadCourseIntoPlay()` between lines 96–98, after `saveActiveCourse()` but before `applyHoleToPlay()`. Alternatively inject as a dismissible card in `src/app/router.js` when `switchTab('play')` fires with an active course.
+
+**Logic:** Read last 3–5 rounds, run the stroke-loss attribution (section 7), find the biggest single leak, and surface it as a one-line prompt before hole 1:
+
+> "Last 3 rounds: 3-putts are costing you ~2 strokes/round. Focus on lag putting today."
+
+Dismissed with a single tap. Should not show if player has 0 rounds at this course.
+
+### 6d. Strategy vs Outcome Correlation — Full-Round Analysis
+
+**Existing code:** `src/ui/scorecard.js:588-629` — `renderLastRoundHint(holeIdx)` already reads all saved rounds, groups hole scores by committed strategy, and computes avg vs par per strategy. It displays a "Best here: [strategy]" hint on the hole scorecard during play.
+
+**What's missing:** This logic runs per-hole on demand. It is never run across the full round to produce a summary insight.
+
+**To build:** Extract the correlation logic into a standalone function in `src/app/rounds.js`, call it after save, and render in the round-complete overlay:
+
+> "When you play Conservative off the tee, your avg score on Par 4s is +0.4. Aggressive: +1.1. Conservative works for you."
+
+Strategy values are strings like `"Max distance · Driver"` or `"Controlled"`. `decodeStrategy()` in `src/engine/calculations.js:265` parses them. The full round's strategies are already saved in every `roundData.strategies` object in `golfRounds_v1`.
 
 ---
 
@@ -275,3 +316,29 @@ One recommendation, specific, actionable, derived from their actual data. This i
 1. **Wind calculation** — Live weather + GPS + compass + Trackman physics. No competitor does this without hardware or subscription.
 2. **Improvement loop** — Pre-shot plan connected to post-round stroke-loss attribution. No competitor closes this loop.
 3. **Visual strategy** _(Phase 3)_ — Shot landing on hole layout. Turns the calculator into a caddie.
+
+---
+
+## Build Checklist
+
+Items move from _Planned_ to _Done_ as they are implemented.
+
+### Phase 1 — Pre-launch (use existing data, no new tracking)
+- [ ] **Round-complete overlay: stroke-loss insight cards** — 2–3 behavioural findings from the round just played (FIR correlation, 3-putt cost, par type weakness)
+- [ ] **Post-round "one focus for next round"** — single actionable recommendation derived from stroke-loss pattern
+- [x] **Strategy vs outcome: full-round analysis** — extract `renderLastRoundHint` logic into a round-level summary; show in round-complete overlay _(see §6d)_
+- [x] **Personal baseline: lower gate from 5 → 3 rounds** — add low-sample indicator; `courses.js:67` + `rounds.js:819` _(see §6a)_
+- [x] **Round vs personal baseline delta** — hero stat in round-complete overlay: "X strokes vs your baseline" _(see §6b)_
+- [x] **Pre-round focus prompt** — one-card overlay before hole 1, derived from last 3–5 rounds stroke-loss _(see §6c)_
+- [ ] **Empty state: stats preview** — greyed-out example stats on home dashboard and My Stats when no rounds exist
+
+### Phase 2 — Early post-launch
+- [ ] **Course API integration** — replace manual course entry with search & select
+- [ ] **Yards/meters toggle** — bag setup, calculator, course distances
+- [ ] **Improvement streak** — "3 rounds below your avg" gamification hook
+- [ ] **"You beat your best score" celebration** — post-round notification
+
+### Phase 3 — Differentiation
+- [ ] **Hole layout visualisation** — shot landing overlay on course map using course API geometry
+- [ ] **Club selection per shot** — store club used per shot (unlocks distance-band analysis)
+- [ ] **Improvement streak gamification** — streaks, milestones, session goals

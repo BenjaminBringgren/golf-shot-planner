@@ -46,7 +46,7 @@ import {
 import {
   showMgSub, showMgHub, refreshMgHub,
   renderMgCarryBars, renderSavedRounds, refreshHomeStats,
-  initRoundsServices,
+  initRoundsServices, computePreRoundFocus,
 } from './rounds.js';
 import {
   initHoleFlowServices, setHoleExpected,
@@ -379,6 +379,7 @@ document.getElementById('tabPrepare')?.addEventListener('click', () => switchTab
   document.getElementById('mgBackPuttsBreakdown')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackAvgStrokes')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackBaseline')?.addEventListener('click', () => showMgSub('mgSubStats'));
+  document.getElementById('mgBackStrategy')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackRoundsHistory')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackCourses')?.addEventListener('click', showMgHub);
   // Edit bag toggle
@@ -456,6 +457,7 @@ initServices({
   clearGpsOverrides,
   calculate:           () => calculate(),
   renderSavedRounds,
+  showPreRoundFocus:   (id) => showPreRoundFocusUI(id),
 });
 
 
@@ -572,6 +574,32 @@ initServices({
       updateBagCompleteHint();
     });
   })();
+
+  // ── Pre-round focus prompt ────────────────────────────────────────────
+  function showPreRoundFocusUI(courseId) {
+    const text = computePreRoundFocus(courseId);
+    if (!text) return;
+    let el = document.getElementById('preRoundFocusOverlay');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'preRoundFocusOverlay';
+      document.body.appendChild(el);
+    }
+    el.innerHTML =
+      '<div class="prf-backdrop">' +
+        '<div class="prf-card">' +
+          '<div class="prf-eyebrow">Today\'s focus</div>' +
+          '<div class="prf-text">' + text + '</div>' +
+          '<button class="prf-btn" type="button">Got it →</button>' +
+        '</div>' +
+      '</div>';
+    el.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    el.querySelector('.prf-btn').addEventListener('click', () => {
+      el.style.display = 'none';
+      document.body.style.overflow = '';
+    });
+  }
 
   // ── Collapsible sections ──────────────────────────────────────────────
   function initCollapsible(sectionId, toggleId, openByDefault) {
