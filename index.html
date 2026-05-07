@@ -681,6 +681,19 @@
           <div class="mg-drilldown-arrow">›</div>
         </div>
 
+        <div class="mg-drilldown-btn" id="mgStatsGotoStrokeLoss">
+          <div class="mg-drilldown-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <div class="mg-drilldown-text">
+            <div class="mg-drilldown-title">Stroke loss</div>
+            <div class="mg-drilldown-sub" id="mgDrillStrokeLossSub"></div>
+          </div>
+          <div class="mg-drilldown-arrow">›</div>
+        </div>
+
         <div class="mg-drilldown-btn" id="mgStatsGotoStrategy">
           <div class="mg-drilldown-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -739,6 +752,17 @@
         <h2>Personal baseline</h2>
       </div>
       <div style="padding:12px;display:flex;flex-direction:column;gap:12px;" id="mgBaselineContent">
+        <!-- populated by JS -->
+      </div>
+    </div>
+
+    <!-- ── Stroke Loss sub-page ─────────────────────────────────────── -->
+    <div class="mg-sub" id="mgSubStrokeLoss">
+      <div class="mg-sub-header">
+        <button class="mg-back-btn" id="mgBackStrokeLoss">‹</button>
+        <h2>Stroke loss</h2>
+      </div>
+      <div style="padding:12px;display:flex;flex-direction:column;gap:12px;" id="mgStrokeLossContent">
         <!-- populated by JS -->
       </div>
     </div>

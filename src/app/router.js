@@ -46,7 +46,7 @@ import {
 import {
   showMgSub, showMgHub, refreshMgHub,
   renderMgCarryBars, renderSavedRounds, refreshHomeStats,
-  initRoundsServices, computePreRoundFocus,
+  initRoundsServices, computePreRoundFocus, renderMgStrokeLossBreakdown,
 } from './rounds.js';
 import {
   initHoleFlowServices, setHoleExpected,
@@ -379,6 +379,7 @@ document.getElementById('tabPrepare')?.addEventListener('click', () => switchTab
   document.getElementById('mgBackPuttsBreakdown')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackAvgStrokes')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackBaseline')?.addEventListener('click', () => showMgSub('mgSubStats'));
+  document.getElementById('mgBackStrokeLoss')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackStrategy')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackRoundsHistory')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackCourses')?.addEventListener('click', showMgHub);

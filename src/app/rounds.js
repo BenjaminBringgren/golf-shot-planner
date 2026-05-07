@@ -9,7 +9,7 @@ import {
   loadStatsRoundFilter, saveStatsRoundFilter,
 } from '../storage/storage.js';
 import { clubs } from '../engine/clubs.js';
-import { interpolate, decodeStrategy, courseHandicap, stablefordPoints } from '../engine/calculations.js';
+import { interpolate, decodeStrategy, courseHandicap, stablefordPoints, computeStrokeLoss } from '../engine/calculations.js';
 import { renderCourseList, computeHoleStrokeCounts } from './courses.js';
 
 // ── Services (injected by router.js) ─────────────────────────────────────────
@@ -20,52 +20,48 @@ export function initRoundsServices(svc) { _switchTab = svc.switchTab; }
 // Analyses last 5 rounds at this course and returns the single most important
 // behavioural focus for the upcoming round, or null if no data / no clear issue.
 export function computePreRoundFocus(courseId) {
-  const rounds = loadRounds(courseId);
-  if (!rounds.length) return null;
+  const courses = loadCourses ? loadCourses() : {};
+  const course  = courses[courseId];
+  const rounds  = loadRounds(courseId);
+  if (!rounds.length || !course) return null;
   const recent = rounds.slice(-5);
+  const n      = recent.length;
 
-  let totalHoles = 0, threePutts = 0;
-  let firOpp = 0, firHit = 0;
-  let girTotal = 0, girHit = 0;
-  let scrambOpp = 0, scrambMade = 0;
-  let penalties = 0;
-
+  // Aggregate stroke-loss across recent rounds
+  const totals = { driving: 0, approach: 0, shortGame: 0, putting: 0, penalties: 0 };
+  let validRounds = 0;
   recent.forEach(r => {
-    (r.scores || []).forEach(s => {
-      if (!s) return;
-      const strokes = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
-      if (!strokes) return;
-      totalHoles++;
-      if ((s.putts || 0) >= 3) threePutts++;
-      if (s.fir !== null && s.fir !== undefined) { firOpp++; if (s.fir) firHit++; }
-      girTotal++;
-      if (s.gir) girHit++;
-      if (s.gir === false && (s.putts || 0) > 0) { scrambOpp++; if (s.putts === 1) scrambMade++; }
-      penalties += s.penalties || 0;
-    });
+    if (!r.scores) return;
+    const sl = computeStrokeLoss(r.scores, course.holes || []);
+    if (!sl.holesPlayed) return;
+    validRounds++;
+    Object.keys(totals).forEach(k => { totals[k] += sl[k]; });
   });
+  if (!validRounds) return null;
 
-  if (totalHoles < 9) return null;
+  const avgs = {};
+  Object.keys(totals).forEach(k => { avgs[k] = totals[k] / validRounds; });
 
-  const threePuttRate = threePutts / totalHoles;
-  const firPct        = firOpp > 0 ? firHit / firOpp : null;
-  const girPct        = girTotal > 0 ? girHit / girTotal : null;
-  const scrambPct     = scrambOpp > 0 ? scrambMade / scrambOpp : null;
-  const penPerRound   = penalties / recent.length;
-  const n             = recent.length;
+  // Find the biggest leak (min threshold to avoid noise)
+  const top = Object.entries(avgs)
+    .filter(([, v]) => v >= 0.5)
+    .sort(([, a], [, b]) => b - a)[0];
 
-  if (threePuttRate >= 0.2)
-    return `${threePutts} three-putts across your last ${n} round${n > 1 ? 's' : ''} here. Aim for the centre of the green today.`;
-  if (firPct !== null && firPct < 0.4)
-    return `You're hitting ${Math.round(firPct * 100)}% of fairways here. Club down off the tee if it keeps you in play.`;
-  if (girPct !== null && girPct < 0.33)
-    return `${Math.round(girPct * 100)}% GIR in your last ${n} round${n > 1 ? 's' : ''} here. Leave yourself a full wedge distance into greens.`;
-  if (scrambPct !== null && scrambPct < 0.3)
-    return `Up-and-down at ${Math.round(scrambPct * 100)}% lately. Focus on getting chips close — one putt saves the hole.`;
-  if (penPerRound >= 0.5)
-    return `Averaging ${penPerRound.toFixed(1)} penalty stroke${penPerRound >= 1.5 ? 's' : ''} per round here. Play away from trouble today.`;
+  if (!top) return null;
 
-  return null;
+  const [key, val] = top;
+  const perRound = '+' + val.toFixed(1) + ' stroke' + (val >= 1.5 ? 's' : '') + '/round';
+  const suffix   = n > 1 ? ' in your last ' + n + ' rounds here' : ' last round here';
+
+  const messages = {
+    driving:   `Driving cost you ${perRound}${suffix}. Club down off the tee if it keeps you in play.`,
+    approach:  `Approach play cost you ${perRound}${suffix}. Leave yourself a full wedge distance into greens.`,
+    shortGame: `Short game cost you ${perRound}${suffix}. Focus on getting chips close — one putt saves the hole.`,
+    putting:   `Putting cost you ${perRound}${suffix}. Lag putt from distance — eliminate the three-putt.`,
+    penalties: `Penalties cost you ${perRound}${suffix}. Play away from trouble today.`,
+  };
+
+  return messages[key];
 }
 
 // ── Round filter state ────────────────────────────────────────────────────────
@@ -746,6 +742,23 @@ function _populateStatsDrillSubs(allRounds, courses, fullRounds) {
       : 'No rounds yet';
   }
 
+  // Stroke-loss sub
+  const slSub = document.getElementById('mgDrillStrokeLossSub');
+  if (slSub) {
+    const slData = _buildStrokeLossStats(courses, _statsFilter);
+    if (slData) {
+      const top = Object.entries(slData.avgs)
+        .map(([k, v]) => ({ key: k, avg: v }))
+        .filter(e => e.avg > 0.01)
+        .sort((a, b) => b.avg - a.avg)[0];
+      slSub.textContent = top
+        ? 'Biggest leak: ' + _SL_LABELS[top.key] + ' · +' + top.avg.toFixed(1) + '/round'
+        : 'No over-par strokes recorded';
+    } else {
+      slSub.textContent = 'No rounds saved yet';
+    }
+  }
+
   // Strategy sub
   const strategySub = document.getElementById('mgDrillStrategySub');
   if (strategySub) {
@@ -782,6 +795,7 @@ function _wireStatsDrillButtons() {
   wire('mgStatsGotoParType',        () => { renderMgAvgStrokesBreakdown(); showMgSub('mgSubAvgStrokes'); });
   wire('mgStatsGotoPutts',          () => { renderMgPuttsBreakdown();      showMgSub('mgSubPuttsBreakdown'); });
   wire('mgStatsGotoBaseline',       () => { renderMgBaseline();            showMgSub('mgSubBaseline'); });
+  wire('mgStatsGotoStrokeLoss',     () => { renderMgStrokeLossBreakdown(); showMgSub('mgSubStrokeLoss'); });
   wire('mgStatsGotoStrategy',       () => { renderMgStrategyBreakdown();   showMgSub('mgSubStrategy'); });
   wire('mgStatsGotoHistory',        () => { showMgSub('mgSubRoundsHistory'); });
 }
@@ -917,6 +931,80 @@ export function renderMgBaseline() {
   }).join('');
 }
 
+// ── Stroke-loss breakdown (My Stats) ─────────────────────────────────────────
+const _SL_LABELS = { driving: 'Driving', approach: 'Approach', shortGame: 'Short game', putting: 'Putting', penalties: 'Penalties' };
+const _SL_DESC   = {
+  driving:   'Over-par strokes on holes where you missed the fairway (par 4/5).',
+  approach:  'Over-par strokes on holes where you missed the green.',
+  shortGame: 'Over-par strokes on missed greens where you needed 2+ putts to finish.',
+  putting:   'Extra putts above a two-putt standard across all holes.',
+  penalties: 'Direct penalty strokes added to your score.',
+};
+
+function _buildStrokeLossStats(courses, statsFilter) {
+  const totals = { driving: 0, approach: 0, shortGame: 0, putting: 0, penalties: 0 };
+  let roundCount = 0;
+  Object.keys(courses).forEach(courseId => {
+    const course = courses[courseId];
+    const rounds = filterRounds(loadRounds ? loadRounds(courseId) : [], statsFilter);
+    rounds.forEach(round => {
+      if (!round.scores) return;
+      const sl = computeStrokeLoss(round.scores, course.holes || []);
+      if (!sl.holesPlayed) return;
+      roundCount++;
+      Object.keys(totals).forEach(k => { totals[k] += sl[k]; });
+    });
+  });
+  if (!roundCount) return null;
+  const avgs = {};
+  Object.keys(totals).forEach(k => { avgs[k] = totals[k] / roundCount; });
+  return { avgs, roundCount };
+}
+
+export function renderMgStrokeLossBreakdown() {
+  const el = document.getElementById('mgStrokeLossContent');
+  if (!el) return;
+  const courses = loadCourses ? loadCourses() : {};
+  const data    = _buildStrokeLossStats(courses, _statsFilter);
+
+  if (!data) {
+    el.innerHTML = '<div class="mg-breakdown-card"><div style="padding:12px 0 4px;color:#aaa;font-size:15px;">No rounds saved yet.</div></div>';
+    return;
+  }
+
+  const { avgs, roundCount } = data;
+  const sorted = Object.entries(_SL_LABELS)
+    .map(([k, lbl]) => ({ key: k, lbl, avg: avgs[k] }))
+    .filter(e => e.avg > 0.01)
+    .sort((a, b) => b.avg - a.avg);
+
+  if (!sorted.length) {
+    el.innerHTML = '<div class="mg-breakdown-card"><div style="padding:12px 0 4px;color:#aaa;font-size:15px;">No over-par strokes recorded — keep it up!</div></div>';
+    return;
+  }
+
+  const maxVal = sorted[0].avg;
+  const rows = sorted.map((e, idx) => {
+    const pct      = Math.round((e.avg / maxVal) * 100);
+    const topCls   = idx === 0 ? ' sl-row--top' : '';
+    const valColor = idx === 0 ? '#c0392b' : '#1a1a1a';
+    return '<div class="sl-stat-row' + topCls + '">' +
+      '<div class="sl-stat-header">' +
+        '<span class="sl-stat-lbl">' + e.lbl + '</span>' +
+        '<span class="sl-stat-val" style="color:' + valColor + '">+' + e.avg.toFixed(2) + '/round</span>' +
+      '</div>' +
+      '<div class="sl-bar-track"><div class="sl-bar-fill' + (idx === 0 ? ' sl-bar-fill--top' : '') + '" style="width:' + pct + '%"></div></div>' +
+      '<div class="sl-stat-desc">' + _SL_DESC[e.key] + '</div>' +
+    '</div>';
+  }).join('');
+
+  el.innerHTML =
+    '<div class="mg-breakdown-card">' +
+      '<div class="mg-breakdown-title">Avg stroke loss · per round · ' + roundCount + ' round' + (roundCount !== 1 ? 's' : '') + '</div>' +
+      '<div style="padding:8px 14px 12px;display:flex;flex-direction:column;gap:12px;">' + rows + '</div>' +
+    '</div>';
+}
+
 // ── Strategy breakdown ────────────────────────────────────────────────────────
 function _stratTagClass(type) {
   if (!type) return 'safe';
@@ -985,7 +1073,7 @@ export function renderMgStrategyBreakdown() {
         '<span class="strat-row-avg" style="font-size:11px;color:#aaa;font-weight:600;text-transform:uppercase;letter-spacing:0.4px">Avg</span>' +
       '</div>' +
       rows +
-      '<div style="padding:10px 0 4px;font-size:12px;color:#aaa;">Lower avg vs par is better. Min. 3 holes per strategy shown.</div>' +
+      '<div style="padding:10px 14px 4px;font-size:12px;color:#aaa;">Lower avg vs par is better. Min. 3 holes per strategy shown.</div>' +
     '</div>';
 }
 

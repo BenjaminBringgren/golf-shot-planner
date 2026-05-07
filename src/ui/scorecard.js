@@ -12,7 +12,7 @@ import {
   clearInProgressRound,
 } from '../storage/storage.js';
 import { teeMarked, completedShots, clearGpsState } from '../platform/gps.js';
-import { decodeStrategy, courseHandicap, stablefordPoints } from '../engine/calculations.js';
+import { decodeStrategy, courseHandicap, stablefordPoints, computeStrokeLoss } from '../engine/calculations.js';
 import { initHole } from '../app/holeFlow.js';
 import { computeHoleStrokeCounts, computeHoleBaseline } from '../app/courses.js';
 import { mountShotSheet }    from './shotSheet/index.js';
@@ -1369,6 +1369,29 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
     }
   }
 
+  // Stroke-loss attribution
+  const sl = computeStrokeLoss(scores, c.holes);
+  const slLabels = { driving: 'Driving', approach: 'Approach', shortGame: 'Short game', putting: 'Putting', penalties: 'Penalties' };
+  const slFocus  = { driving: 'Club down off the tee to keep it in play.', approach: 'Leave yourself full wedge distances — attack less.', shortGame: 'Focus on getting chips close, not holing them.', putting: 'Lag putt from distance — eliminate the three-putt.', penalties: 'Play away from trouble. A bogey beats a double every time.' };
+  const slEntries = Object.entries(slLabels)
+    .map(([k, lbl]) => ({ key: k, lbl, val: sl[k] }))
+    .filter(e => e.val > 0)
+    .sort((a, b) => b.val - a.val);
+  let strokeLossHtml = '';
+  if (slEntries.length) {
+    const topKey  = slEntries[0].key;
+    const rows    = slEntries.map((e, idx) => {
+      const bold  = idx === 0 ? ' sl-row--top' : '';
+      return `<div class="sl-row${bold}"><span class="sl-lbl">${e.lbl}</span><span class="sl-val">+${e.val.toFixed(1)}</span></div>`;
+    }).join('');
+    strokeLossHtml = `
+      <div class="rc-section" style="margin-top:10px;">
+        <div class="rc-section-label">Stroke loss</div>
+        <div class="sl-grid">${rows}</div>
+        <div class="sl-focus">${slFocus[topKey]}</div>
+      </div>`;
+  }
+
   // Score breakdown dots
   function dotStrip(count, bg, shape) {
     const r = shape === 'circle' ? '50%' : '2px';
@@ -1443,6 +1466,7 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
       ${bogeys > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Bogeys</span><span class="rc-bd-dots">${dotStrip(bogeys, '#e8a070', 'square')}</span><span class="rc-bd-count">${bogeys}</span></div>` : ''}
       ${doubles > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Doubles+</span><span class="rc-bd-dots">${dotStrip(doubles, '#888', 'square')}</span><span class="rc-bd-count">${doubles}</span></div>` : ''}
     </div>
+    ${strokeLossHtml}
     ${stratInsightHtml}
     <div class="${rcIsStableford ? 'sc2-stableford' : ''}" style="padding:10px 16px 8px;">${rcSc2Html}</div>
     <div class="rc-btn-row">

@@ -280,3 +280,25 @@ export function stablefordPoints(gross, par, strokesReceived) {
   const net = gross - strokesReceived;
   return Math.max(0, Math.min(5, 2 - (net - par)));
 }
+
+// ── Stroke-loss attribution ───────────────────────────────────────────────────
+// Attributes over-par strokes to five categories from per-hole score records.
+// Holes can contribute to multiple categories — shows the cascade, not a
+// mutually exclusive split. `holes` is the course holes array (for par per hole).
+export function computeStrokeLoss(scores, holes) {
+  const r = { driving: 0, approach: 0, shortGame: 0, putting: 0, penalties: 0, holesPlayed: 0 };
+  (scores || []).forEach((s, i) => {
+    if (!s) return;
+    const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
+    if (!total) return;
+    const par  = holes?.[i]?.par || 4;
+    const over = Math.max(0, total - par);
+    r.holesPlayed++;
+    if (par >= 4 && s.fir === false && over > 0)             r.driving   += over;
+    if (s.gir === false && over > 0)                         r.approach  += over;
+    if (s.gir === false && (s.putts || 0) >= 2 && over > 0) r.shortGame += over;
+    if ((s.putts || 0) >= 3)                                 r.putting   += (s.putts || 0) - 2;
+    if ((s.penalties || 0) > 0)                              r.penalties += s.penalties;
+  });
+  return r;
+}

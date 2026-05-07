@@ -1547,9 +1547,30 @@
     .hint-best-tag.par3       .hint-best-dot { background: #686870; }
     .hint-best-rounds { font-size: 12px; color: #aaa; flex-shrink: 0; }
 
+    /* ── Stroke-loss (round-complete overlay) ────────────────────────── */
+    .sl-grid { padding: 6px 14px 2px; display: flex; flex-direction: column; gap: 2px; }
+    .sl-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 0.5px solid rgba(0,0,0,0.05); }
+    .sl-row:last-child { border-bottom: none; }
+    .sl-row--top .sl-lbl { font-weight: 700; color: #1a1a1a; }
+    .sl-row--top .sl-val { color: #c0392b; font-weight: 800; }
+    .sl-lbl { font-size: 15px; color: #444; }
+    .sl-val { font-size: 17px; font-weight: 700; color: #1a1a1a; }
+    .sl-focus { font-size: 13px; color: #888; padding: 8px 14px 14px; line-height: 1.45; }
+
+    /* ── Stroke-loss (My Stats page) ─────────────────────────────────── */
+    .sl-stat-row { display: flex; flex-direction: column; gap: 5px; }
+    .sl-stat-row--top .sl-stat-lbl { font-weight: 700; color: #1a1a1a; }
+    .sl-stat-header { display: flex; align-items: center; justify-content: space-between; }
+    .sl-stat-lbl { font-size: 15px; color: #444; }
+    .sl-stat-val { font-size: 17px; font-weight: 700; }
+    .sl-bar-track { height: 6px; background: rgba(0,0,0,0.07); border-radius: 3px; overflow: hidden; }
+    .sl-bar-fill { height: 100%; border-radius: 3px; background: #d4c4b0; }
+    .sl-bar-fill--top { background: #c0392b; }
+    .sl-stat-desc { font-size: 12px; color: #aaa; line-height: 1.4; }
+
     /* ── Strategy breakdown rows (My Stats + round-complete overlay) ── */
-    .strat-table-header { display: flex; align-items: center; gap: 8px; padding: 8px 0 6px; border-bottom: 0.5px solid rgba(0,0,0,0.07); margin-bottom: 4px; }
-    .strat-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 0.5px solid rgba(0,0,0,0.05); }
+    .strat-table-header { display: flex; align-items: center; gap: 8px; padding: 8px 14px 6px; border-bottom: 0.5px solid rgba(0,0,0,0.07); margin-bottom: 4px; }
+    .strat-row { display: flex; align-items: center; gap: 8px; padding: 7px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.05); }
     .strat-row:last-child { border-bottom: none; }
     .strat-row--best { background: transparent; }
     .strat-row .hint-best-tag { flex: 1; min-width: 0; }

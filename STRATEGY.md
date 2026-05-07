@@ -324,12 +324,14 @@ One recommendation, specific, actionable, derived from their actual data. This i
 Items move from _Planned_ to _Done_ as they are implemented.
 
 ### Phase 1 — Pre-launch (use existing data, no new tracking)
-- [ ] **Round-complete overlay: stroke-loss insight cards** — 2–3 behavioural findings from the round just played (FIR correlation, 3-putt cost, par type weakness)
-- [ ] **Post-round "one focus for next round"** — single actionable recommendation derived from stroke-loss pattern
-- [x] **Strategy vs outcome: full-round analysis** — extract `renderLastRoundHint` logic into a round-level summary; show in round-complete overlay _(see §6d)_
-- [x] **Personal baseline: lower gate from 5 → 3 rounds** — add low-sample indicator; `courses.js:67` + `rounds.js:819` _(see §6a)_
-- [x] **Round vs personal baseline delta** — hero stat in round-complete overlay: "X strokes vs your baseline" _(see §6b)_
-- [x] **Pre-round focus prompt** — one-card overlay before hole 1, derived from last 3–5 rounds stroke-loss _(see §6c)_
+- [x] **Round-complete overlay: stroke-loss insight cards** — `computeStrokeLoss()` in `calculations.js`; 5-category attribution (Driving, Approach, Short game, Putting, Penalties); sorted by impact; top category highlighted red; actionable focus line below
+- [x] **Post-round "one focus for next round"** — inline focus line in stroke-loss section; top leak category maps to a specific behavioural tip
+- [x] **Stroke loss: My Stats permanent section** — `renderMgStrokeLossBreakdown()` in `rounds.js`; per-round avg per category with bar chart; subtitle shows biggest leak; respects round filter
+- [x] **Pre-round focus prompt: upgraded to stroke language** — `computePreRoundFocus()` now uses `computeStrokeLoss` across last 5 rounds; expresses insight as "+X strokes/round" not percentages
+- [x] **Strategy vs outcome: full-round analysis** — `_buildStrategyStats()` in `rounds.js`; permanent "Strategy breakdown" drill-down in My Stats (always up to date, respects round filter); compact insight section in round-complete overlay _(see §6d)_
+- [x] **Personal baseline: lower gate from 5 → 3 rounds** — `courses.js:67` + blending weight updated; dots with 1–2 rounds render at 50% opacity via `.low-sample` class _(see §6a)_
+- [x] **Round vs personal baseline delta** — computed in round-complete overlay; shown below score sub-line as bold coloured delta ("X vs your baseline"); suppressed if <50% of holes have baseline data _(see §6b)_
+- [x] **Pre-round focus prompt** — `computePreRoundFocus()` in `rounds.js`; bottom-sheet overlay injected by `loadCourseIntoPlay()` on new rounds only; checks 3-putt rate, FIR%, GIR%, scrambling, penalties in priority order _(see §6c)_
 - [ ] **Empty state: stats preview** — greyed-out example stats on home dashboard and My Stats when no rounds exist
 
 ### Phase 2 — Early post-launch
