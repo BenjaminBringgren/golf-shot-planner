@@ -88,7 +88,7 @@ export function computePreRoundFocus(courseId) {
     ],
     approach: [
       `Approach play cost you ${perRound}${suffix}. Leave yourself a full wedge distance into greens — don't over-press.`,
-      `Your approach shots have been leaking ${perRound}${suffix}. Aim for the fat part of the green, not the flag.`,
+      `Your approach shots have been leaking ${perRound}${suffix}. Aim for the center of the green, not the flag.`,
       `Missed greens are adding up (${perRound}${suffix}). Pick a conservative target and make clean contact.`,
     ],
     shortGame: [

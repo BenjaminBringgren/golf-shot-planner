@@ -1603,7 +1603,7 @@ initServices({
     }
     if (girRate < 0.25) {
       const pct = Math.round(girRate * 100);
-      return `Hole ${hNum} avg ${avgStr} — GIR only ${pct}% here. Pick a landing zone on the fat part of the green, not the flag.`;
+      return `Hole ${hNum} avg ${avgStr} — GIR only ${pct}% here. Pick a landing zone on the center of the green, not the flag.`;
     }
     if (girRate < 0.45 && avgVsPar > 0.5) {
       return `Hole ${hNum} avg ${avgStr} — approach shots are missing here. Leave yourself a full wedge into the green.`;
