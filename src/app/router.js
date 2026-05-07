@@ -1693,15 +1693,31 @@ initServices({
 
     // Action row: show when course active + result ready
     const actionRow = document.getElementById('playActionRow');
-    if (actionRow) actionRow.style.display = (courseActive && hasResult) ? 'flex' : 'none';
+    if (actionRow) {
+      actionRow.style.display = (courseActive && hasResult) ? 'flex' : 'none';
+      if (courseActive && hasResult) {
+        const _s = loadActiveCourse();
+        const _hi = _s.holeIdx ?? 0;
+        const _prev = document.getElementById('playPrevBtn');
+        const _nextTxt = document.getElementById('playNextBtn')?.querySelector('.play-next-btn-text');
+        if (_prev) _prev.disabled = _hi === 0;
+        if (_nextTxt) _nextTxt.textContent = _hi === 17 ? 'Finish round →' : 'Next hole →';
+      }
+    }
   }
   // ── Wire action row buttons ─────────────────────────────────────────────
   (function wireActionRow() {
     const nextBtn = document.getElementById('playNextBtn');
+    const prevBtn = document.getElementById('playPrevBtn');
     if (!nextBtn) return;
 
+    function syncActionRow(holeIdx) {
+      if (prevBtn) prevBtn.disabled = holeIdx === 0;
+      const nextText = nextBtn.querySelector('.play-next-btn-text');
+      if (nextText) nextText.textContent = holeIdx === 17 ? 'Finish round →' : 'Next hole →';
+    }
+
     nextBtn.addEventListener('click', () => {
-      // Advance to next hole via course bar
       const session = loadActiveCourse();
       if (!session.id) return;
       const { id, holeIdx } = session;
@@ -1709,19 +1725,37 @@ initServices({
       const c = courses[id];
       if (!c) return;
       if (holeIdx === 17) {
-        // Last hole — show round complete overlay instead of wrapping
         showRoundCompleteOverlay(id, holeIdx, buildCallbacks());
         return;
       }
       const nextIdx = holeIdx + 1;
       const { gameFormat: _nFmt = 'strokes', hcpEnabled: _nHcp = true } = loadActiveCourse();
       saveActiveCourse(id, nextIdx, _nFmt, _nHcp);
-      // Reset rough flag for new hole
       resetInRough();
-      // Trigger bar refresh
+      syncActionRow(nextIdx);
       const bar = document.getElementById('playCourseBar');
       if (bar?._navigateTo) bar._navigateTo(nextIdx);
     });
+
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        const session = loadActiveCourse();
+        if (!session.id) return;
+        const { id, holeIdx } = session;
+        if (holeIdx === 0) return;
+        const prevIdx = holeIdx - 1;
+        const { gameFormat: _pFmt = 'strokes', hcpEnabled: _pHcp = true } = loadActiveCourse();
+        saveActiveCourse(id, prevIdx, _pFmt, _pHcp);
+        resetInRough();
+        syncActionRow(prevIdx);
+        const bar = document.getElementById('playCourseBar');
+        if (bar?._navigateTo) bar._navigateTo(prevIdx);
+      });
+    }
+
+    // Sync state on initial render
+    const _arSession = loadActiveCourse();
+    if (_arSession.id) syncActionRow(_arSession.holeIdx ?? 0);
   })();
 
 

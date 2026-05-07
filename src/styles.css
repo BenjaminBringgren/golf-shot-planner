@@ -1785,11 +1785,23 @@
       padding: 0 12px 8px;
       z-index: 849;
       background: #f5f4f0;
+      display: flex; gap: 8px;
     }
+    .play-prev-btn {
+      background: #f0efeb !important; border-radius: 11px;
+      padding: 22px 0; width: 56px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; border: none; font-size: 22px; color: #555; font-family: inherit;
+      -webkit-tap-highlight-color: transparent;
+      transition: opacity 0.15s;
+    }
+    .play-prev-btn[disabled] { opacity: 0.28; pointer-events: none; }
+    @media (hover: hover) { .play-prev-btn:hover { background: #e5e3df !important; } }
+    .play-prev-btn.is-pressed { background: #e5e3df !important; }
     .play-next-btn {
       background: #f0efeb !important; border-radius: 11px;
       padding: 22px 15px; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; border: none; width: 100%; margin: 0; font-family: inherit;
+      cursor: pointer; border: none; flex: 1; margin: 0; font-family: inherit;
       -webkit-tap-highlight-color: transparent;
     }
     @media (hover: hover) { .play-next-btn:hover { background: #e5e3df !important; } }
