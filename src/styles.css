@@ -1624,7 +1624,7 @@
     .carousel-card.type-controlled    .cc-badge { color: #c07820; }
     .carousel-card.type-conservative  .cc-badge { color: #1e7a45; }
     .carousel-card.type-custom        .cc-badge { color: #888; }
-    .cc-type { font-size: 17px; font-weight: 700; color: #1a1a1a; }
+    .cc-type { font-size: 22px; font-weight: 700; color: #1a1a1a; }
     .cc-score-row { display: flex; align-items: baseline; gap: 6px; margin-top: 4px; }
     .cc-score-num { font-size: 34px; font-weight: 700; color: #1a1a1a; line-height: 1; letter-spacing: -0.5px; }
     .cc-score-vs  { font-size: 15px; color: #aaa; }
