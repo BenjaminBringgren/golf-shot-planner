@@ -1799,14 +1799,24 @@ initServices({
   ];
 
   function cycleQuote() {
+    const textEl   = document.getElementById('heroQuoteText');
+    const attribEl = document.getElementById('heroQuoteAttrib');
+    // Show personalised focus tip when there is an active course with enough round history
+    const activeCid = getActiveCourseId();
+    if (activeCid) {
+      const tip = computePreRoundFocus(activeCid);
+      if (tip) {
+        if (textEl)   textEl.textContent  = tip;
+        if (attribEl) attribEl.textContent = 'Your focus for today';
+        return;
+      }
+    }
     const lastIdx = parseInt(localStorage.getItem(KEY_HERO_QUOTE_IDX) ?? '-1', 10);
     let nextIdx;
     do { nextIdx = Math.floor(Math.random() * HERO_QUOTES.length); }
     while (nextIdx === lastIdx && HERO_QUOTES.length > 1);
     localStorage.setItem(KEY_HERO_QUOTE_IDX, nextIdx);
     const q = HERO_QUOTES[nextIdx];
-    const textEl  = document.getElementById('heroQuoteText');
-    const attribEl = document.getElementById('heroQuoteAttrib');
     if (textEl)   textEl.textContent  = q.text;
     if (attribEl) attribEl.textContent = q.attrib;
   }
@@ -1956,6 +1966,22 @@ initServices({
     document.getElementById('playHero')?.classList.add('hidden');
     document.getElementById('calcView')?.classList.add('open');
     document.getElementById('calcCloseBtn')?.classList.remove('hidden');
+
+    // New user (no bag set) — pre-fill a demo scenario to show the wind calculation live
+    const driverEl = document.getElementById('driverCarry');
+    if (driverEl && !driverEl.value && !getActiveCourseId()) {
+      driverEl.value = '230';
+      document.getElementById('i7Carry').value = '165';
+      document.getElementById('pwCarry').value = '110';
+      document.getElementById('holeLength').value = '380';
+      updateCarryLabels();
+      windState.holeDeg = 0;
+      setCompassAngle(0);
+      applyWindData(10, null, 0, 'Demo · 10 m/s headwind');
+      calculate();
+      // Show a brief hint so the user knows these are example values
+      showToast('Sample scenario — set your own distances in My Golf → Bag', 3500);
+    }
   });
 
   document.getElementById('calcCloseBtn')?.addEventListener('click', () => {

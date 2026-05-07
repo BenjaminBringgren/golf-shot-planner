@@ -1291,6 +1291,20 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
   const vsParColor = vsPar < 0 ? '#c0392b' : '#1a1a1a';
   const today = new Date().toLocaleDateString('sv-SE');
 
+  // Personal best check — compare to all saved 18-hole stroke-play rounds (before this one is saved)
+  let prevAllTimeBest = null;
+  if (holesPlayed >= 18 && !rcIsStableford) {
+    const allC = loadCourses();
+    Object.keys(allC).forEach(cid => {
+      loadRounds(cid).forEach(r => {
+        if ((r.holesPlayed ?? 0) >= 18 && r.gameFormat !== 'stableford' && r.totalStrokes) {
+          if (prevAllTimeBest === null || r.totalStrokes < prevAllTimeBest) prevAllTimeBest = r.totalStrokes;
+        }
+      });
+    });
+  }
+  const isNewBest = prevAllTimeBest !== null && totalStrokes < prevAllTimeBest;
+
   const firEligible  = played.filter(h => h.par >= 4 && h.total != null).length;
   const girPct       = holesPlayed > 0 ? Math.round(totalGIR / holesPlayed * 100) : '—';
   const firPct       = firEligible > 0 ? Math.round(totalFIR / firEligible * 100) : '—';
@@ -1445,6 +1459,7 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
         <div class="rc-header-sub">${c.name || 'Course'} · ${today}</div>
       </div>
     </div>
+    ${isNewBest ? `<div class="rc-best-banner"><span class="rc-best-trophy">🏆</span><div><div class="rc-best-headline">New personal best!</div><div class="rc-best-sub">Previous best: ${prevAllTimeBest} strokes</div></div></div>` : ''}
     <div class="rc-section">
       <div class="rc-hero">
         <div class="rc-hero-score" style="color:${rcIsStableford ? '#1a1a1a' : vsParColor}">${rcIsStableford ? rcTotalPoints + ' pts' : vsParStr}</div>

@@ -332,13 +332,15 @@ Items move from _Planned_ to _Done_ as they are implemented.
 - [x] **Personal baseline: lower gate from 5 → 3 rounds** — `courses.js:67` + blending weight updated; dots with 1–2 rounds render at 50% opacity via `.low-sample` class _(see §6a)_
 - [x] **Round vs personal baseline delta** — computed in round-complete overlay; shown below score sub-line as bold coloured delta ("X vs your baseline"); suppressed if <50% of holes have baseline data _(see §6b)_
 - [x] **Pre-round focus prompt** — `computePreRoundFocus()` in `rounds.js`; bottom-sheet overlay injected by `loadCourseIntoPlay()` on new rounds only; checks 3-putt rate, FIR%, GIR%, scrambling, penalties in priority order _(see §6c)_
-- [ ] **Empty state: stats preview** — greyed-out example stats on home dashboard and My Stats when no rounds exist
+- [x] **Empty state: stats preview** — Home dashboard shows greyed-out ghost card (score history placeholder + 4 stat slots); My Stats tiles show greyed preview tiles; both show "Play a round to unlock your stats" CTA
+- [x] **Section 8: Translating data into behavioural change** — Focus tip replaces hero quote on Home tab when active course has enough history (`computePreRoundFocus()` → hero quote area); attribution shows "Your focus for today"
 
 ### Phase 2 — Early post-launch
 - [ ] **Course API integration** — replace manual course entry with search & select
 - [ ] **Yards/meters toggle** — bag setup, calculator, course distances
 - [ ] **Improvement streak** — "3 rounds below your avg" gamification hook
-- [ ] **"You beat your best score" celebration** — post-round notification
+- [x] **"You beat your best score" celebration** — post-round overlay shows `rc-best-banner` (dark gold strip with trophy + previous best) when `totalStrokes < prevAllTimeBest` across all saved 18-hole stroke-play rounds
+- [x] **Instant calculator path** — new users with empty bag: "OPEN CALCULATOR" pre-fills 230/165/110m carries + 380m par 4 + 10 m/s headwind; triggers calculate(); shows toast "Sample scenario — set your own distances in My Golf → Bag"
 
 ### Phase 3 — Differentiation
 - [ ] **Hole layout visualisation** — shot landing overlay on course map using course API geometry

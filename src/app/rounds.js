@@ -200,7 +200,15 @@ export function renderMgStatTiles() {
   const allRounds = Object.keys(courses).flatMap(id =>
     (loadRounds ? loadRounds(id) : []).map(r => ({ ...r, _courseId: id }))
   );
-  if (!allRounds.length) { el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:15px;">No rounds saved yet.</div>'; return; }
+  if (!allRounds.length) {
+    const previewTiles = ['Rounds','Best score','Avg strokes','Putts / round','Scrambling','PAR%'];
+    el.innerHTML =
+      `<div class="stats-preview-note">Play a round to unlock your stats</div>` +
+      previewTiles.map(lbl =>
+        `<div class="mg-stat-tile stats-tile-preview"><div class="mg-stat-val">—</div><div class="mg-stat-lbl">${lbl}</div></div>`
+      ).join('');
+    return;
+  }
 
   const profile  = loadProfile();
   const hcpIndex = parseFloat(profile.handicap);
@@ -312,6 +320,21 @@ export function refreshHomeStats() {
   if (!recent8.length) {
     bodyEl.classList.add('hidden');
     emptyEl.classList.remove('hidden');
+    emptyEl.innerHTML =
+      `<div class="stats-preview-card">` +
+        `<div class="stats-preview-header">` +
+          `<span class="stats-preview-title">Score history</span>` +
+          `<div class="stats-preview-chips"><span class="stats-preview-chip">18H</span><span class="stats-preview-chip">9H</span><span class="stats-preview-chip">ALL</span></div>` +
+        `</div>` +
+        `<div class="stats-preview-chart"></div>` +
+        `<div class="stats-preview-strip">` +
+          `<div class="stats-preview-strip-item"><div class="stats-preview-val">—</div><div class="stats-preview-lbl">Rounds</div></div>` +
+          `<div class="stats-preview-strip-item"><div class="stats-preview-val">—</div><div class="stats-preview-lbl">Best</div></div>` +
+          `<div class="stats-preview-strip-item"><div class="stats-preview-val">—</div><div class="stats-preview-lbl">Avg</div></div>` +
+          `<div class="stats-preview-strip-item"><div class="stats-preview-val">—</div><div class="stats-preview-lbl">Trend</div></div>` +
+        `</div>` +
+      `</div>` +
+      `<p class="stats-preview-cta">Play a round to unlock your stats</p>`;
     return;
   }
   bodyEl.classList.remove('hidden');
