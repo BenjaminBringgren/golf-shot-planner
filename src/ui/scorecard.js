@@ -403,32 +403,8 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
       gridWrap.appendChild(halfGrid);
     }
 
-    // ── Hole nav pill ─────────────────────────────────────
-    bar.querySelector('.hole-nav-pill')?.remove();
-    const pill = document.createElement('div');
-    pill.className = 'hole-nav-pill';
-
-    const prevChev = document.createElement('button');
-    prevChev.type = 'button'; prevChev.className = 'hnp-chevron';
-    prevChev.textContent = '‹'; prevChev.disabled = holeIdx === 0;
-    prevChev.addEventListener('click', () => navigateTo(holeIdx - 1));
-
-    const holeNumSpan = document.createElement('span');
-    holeNumSpan.className = 'hnp-num';
-    holeNumSpan.textContent = String(holeIdx + 1);
-
-    const nextChev = document.createElement('button');
-    nextChev.type = 'button'; nextChev.className = 'hnp-chevron';
-    nextChev.textContent = '›'; nextChev.disabled = holeIdx === 17;
-    nextChev.addEventListener('click', () => navigateTo(holeIdx + 1));
-
-    pill.appendChild(prevChev);
-    pill.appendChild(holeNumSpan);
-    pill.appendChild(nextChev);
-    header.insertAdjacentElement('afterend', pill);
-
-    // Insert gridWrap after pill
-    pill.insertAdjacentElement('afterend', gridWrap);
+    // Insert gridWrap after header
+    lastRoundHint.insertAdjacentElement('afterend', gridWrap);
 
     // ── Last round hint ────────────────────────────────────
     renderLastRoundHint(holeIdx);

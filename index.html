@@ -489,9 +489,11 @@
     <div class="recalc-link" id="recalcLink"><a id="recalcAnchor">↺ Recalculate</a></div>
   </div>
   <div class="play-action-row" id="playActionRow" style="display:none;">
-    <button class="play-next-btn" id="playNextBtn" type="button">
-      <span class="play-next-btn-text">Next hole →</span>
-    </button>
+    <div class="play-hole-nav">
+      <button class="phn-chevron" id="playNavPrev" type="button" aria-label="Previous hole">‹</button>
+      <span class="phn-num" id="playNavNum">1</span>
+      <button class="phn-chevron" id="playNavNext" type="button" aria-label="Next hole">›</button>
+    </div>
   </div>
 
   <!-- ── Load course button (fixed above tab bar) ──────────────────────── -->

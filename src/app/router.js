@@ -1691,33 +1691,47 @@ initServices({
     const hasResult = !!document.getElementById('output').querySelector('.carousel-outer, .error, b');
     recalcLnk.classList.toggle('visible', courseActive && hasResult);
 
-    // Action row: show when course active + result ready
+    // Action row: show when course active + result ready; sync pill state
     const actionRow = document.getElementById('playActionRow');
-    if (actionRow) actionRow.style.display = (courseActive && hasResult) ? 'flex' : 'none';
+    if (actionRow) {
+      const _show = courseActive && hasResult;
+      actionRow.style.display = _show ? 'flex' : 'none';
+      if (_show) {
+        const _hi = loadActiveCourse().holeIdx ?? 0;
+        const _prev = document.getElementById('playNavPrev');
+        const _next = document.getElementById('playNavNext');
+        const _num  = document.getElementById('playNavNum');
+        if (_prev) _prev.disabled = _hi === 0;
+        if (_next) _next.disabled = false;
+        if (_num)  _num.textContent = String(_hi + 1);
+      }
+    }
   }
-  // ── Wire action row buttons ─────────────────────────────────────────────
-  (function wireActionRow() {
-    const nextBtn = document.getElementById('playNextBtn');
-    if (!nextBtn) return;
+  // ── Wire hole nav pill ──────────────────────────────────────────────────
+  (function wireHoleNav() {
+    const prevBtn = document.getElementById('playNavPrev');
+    const nextBtn = document.getElementById('playNavNext');
+    if (!prevBtn || !nextBtn) return;
 
-    nextBtn.addEventListener('click', () => {
+    function navTo(delta) {
       const session = loadActiveCourse();
       if (!session.id) return;
       const { id, holeIdx } = session;
-      const courses = loadCourses();
-      const c = courses[id];
-      if (!c) return;
-      if (holeIdx === 17) {
+      if (delta > 0 && holeIdx === 17) {
         showRoundCompleteOverlay(id, holeIdx, buildCallbacks());
         return;
       }
-      const nextIdx = holeIdx + 1;
-      const { gameFormat: _nFmt = 'strokes', hcpEnabled: _nHcp = true } = loadActiveCourse();
-      saveActiveCourse(id, nextIdx, _nFmt, _nHcp);
+      const newIdx = holeIdx + delta;
+      if (newIdx < 0 || newIdx > 17) return;
+      const { gameFormat: _fmt = 'strokes', hcpEnabled: _hcp = true } = loadActiveCourse();
+      saveActiveCourse(id, newIdx, _fmt, _hcp);
       resetInRough();
       const bar = document.getElementById('playCourseBar');
-      if (bar?._navigateTo) bar._navigateTo(nextIdx);
-    });
+      if (bar?._navigateTo) bar._navigateTo(newIdx);
+    }
+
+    prevBtn.addEventListener('click', () => navTo(-1));
+    nextBtn.addEventListener('click', () => navTo(+1));
   })();
 
 
