@@ -1700,10 +1700,8 @@ initServices({
         const _hi = loadActiveCourse().holeIdx ?? 0;
         const _prev = document.getElementById('playNavPrev');
         const _next = document.getElementById('playNavNext');
-        const _num  = document.getElementById('playNavNum');
         if (_prev) _prev.disabled = _hi === 0;
         if (_next) _next.disabled = false;
-        if (_num)  _num.textContent = String(_hi + 1);
       }
     }
   }
