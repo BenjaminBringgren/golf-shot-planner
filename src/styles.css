@@ -1785,13 +1785,10 @@
       padding: 0 12px 8px;
       z-index: 849;
       background: #f5f4f0;
-      display: flex; gap: 8px;
+      display: flex; justify-content: center;
     }
-    .play-action-row { justify-content: center; }
     .play-hole-nav {
       display: flex; align-items: center; gap: 52px;
-      background: #f0efeb; border-radius: 11px;
-      padding: 0 8px;
     }
     .phn-chevron {
       background: none; border: none; cursor: pointer; font-family: inherit;
@@ -1802,7 +1799,7 @@
     }
     .phn-chevron[disabled] { opacity: 0.2; pointer-events: none; }
     @media (hover: hover) { .phn-chevron:hover { background: #e5e3df; border-radius: 8px; } }
-    .phn-chevron.is-pressed { background: #e5e3df; border-radius: 8px; }
+    .phn-chevron.is-pressed { background: #e8e6e1; border-radius: 8px; }
     /* Compare table */
     .cc-compare-table {
       width: 100%; border-collapse: collapse; font-size: 15px; table-layout: fixed;
