@@ -137,6 +137,7 @@ export function showMgSub(id) {
   document.querySelectorAll('.mg-sub').forEach(s => s.classList.remove('active'));
   const sub = document.getElementById(id);
   if (sub) sub.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'instant' });
   if (id === 'mgSubStats') { renderMgStatsPage(); renderMgStatTiles(); }
   if (id === 'mgSubRoundsHistory') { renderSavedRounds(); }
   if (id === 'mgSubCourses') renderCourseList();
@@ -155,6 +156,7 @@ export function showMgSub(id) {
 export function showMgHub() {
   document.querySelectorAll('.mg-sub').forEach(s => s.classList.remove('active'));
   document.getElementById('mgHub').classList.remove('hidden');
+  window.scrollTo({ top: 0, behavior: 'instant' });
   refreshMgHub();
 }
 
@@ -742,34 +744,7 @@ function _renderStatsFilterChips() {
 }
 
 function _populateStatsDrillSubs(allRounds, courses, fullRounds) {
-  // Score distribution sub
-  const scoreSub = document.getElementById('mgDrillScoreSub');
-  if (scoreSub) {
-    let birdies = 0, bogeys = 0, doubles = 0, totalHoles = 0;
-    Object.keys(courses).forEach(courseId => {
-      const course = courses[courseId];
-      const rounds = filterRounds(loadRounds ? loadRounds(courseId) : [], _statsFilter);
-      rounds.forEach(round => {
-        if (!round.scores) return;
-        round.scores.forEach((s, i) => {
-          if (!s) return;
-          const par   = course.holes?.[i]?.par || 4;
-          const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
-          if (!total) return;
-          totalHoles++;
-          const diff = total - par;
-          if (diff <= -1) birdies++;
-          else if (diff === 1) bogeys++;
-          else if (diff >= 2) doubles++;
-        });
-      });
-    });
-    scoreSub.textContent = totalHoles
-      ? `Birdies ${birdies} · Bogeys ${bogeys} · Doubles ${doubles}`
-      : 'No data yet';
-  }
-
-  // Par type sub
+  // Par type sub (used for Scoring & Putting drilldown)
   const parSub = document.getElementById('mgDrillParSub');
   if (parSub) {
     const parData = { 3: { strokes: 0, holes: 0 }, 4: { strokes: 0, holes: 0 }, 5: { strokes: 0, holes: 0 } };
@@ -794,15 +769,6 @@ function _populateStatsDrillSubs(allRounds, courses, fullRounds) {
       return 'Par ' + p + ': ' + (diff > 0 ? '+' : '') + diff.toFixed(1);
     }).filter(Boolean);
     parSub.textContent = parts.length ? parts.join(' · ') : 'No data yet';
-  }
-
-  // Putting sub
-  const puttsSub = document.getElementById('mgDrillPuttsSub');
-  if (puttsSub) {
-    const avgPuttsRound = fullRounds.length > 0
-      ? (fullRounds.reduce((a, r) => a + (r.totalPutts ?? (r.scores||[]).reduce((x,sc)=>x+(sc?.putts||0),0)), 0) / fullRounds.length).toFixed(1)
-      : null;
-    puttsSub.textContent = avgPuttsRound ? `Avg ${avgPuttsRound} putts/round` : 'No data yet';
   }
 
   // Baseline sub
@@ -831,22 +797,6 @@ function _populateStatsDrillSubs(allRounds, courses, fullRounds) {
     }
   }
 
-  // Strategy sub
-  const strategySub = document.getElementById('mgDrillStrategySub');
-  if (strategySub) {
-    const sorted = _buildStrategyStats(courses, _statsFilter);
-    if (sorted.length >= 2) {
-      strategySub.textContent = sorted.slice(0, 2)
-        .map(d => d.type + ': ' + (Math.abs(d.avg) < 0.05 ? 'E' : (d.avg > 0 ? '+' : '') + d.avg.toFixed(1)))
-        .join(' · ');
-    } else if (sorted.length === 1) {
-      const d = sorted[0];
-      strategySub.textContent = d.type + ': ' + (Math.abs(d.avg) < 0.05 ? 'E' : (d.avg > 0 ? '+' : '') + d.avg.toFixed(1)) + ' avg vs par';
-    } else {
-      strategySub.textContent = 'Use the shot planner to track strategy outcomes';
-    }
-  }
-
   // History sub
   const historySub = document.getElementById('mgDrillHistorySub');
   if (historySub) {
@@ -863,12 +813,9 @@ function _wireStatsDrillButtons() {
     el.dataset.wired = '1';
     el.addEventListener('click', fn);
   }
-  wire('mgStatsGotoScoreBreakdown', () => { renderMgScoreBreakdown(); renderMgAvgStrokesBreakdown(); renderMgPuttsBreakdown(); showMgSub('mgSubScoring'); });
-  wire('mgStatsGotoParType',        () => { renderMgScoreBreakdown(); renderMgAvgStrokesBreakdown(); renderMgPuttsBreakdown(); showMgSub('mgSubScoring'); });
-  wire('mgStatsGotoPutts',          () => { renderMgScoreBreakdown(); renderMgAvgStrokesBreakdown(); renderMgPuttsBreakdown(); showMgSub('mgSubScoring'); });
-  wire('mgStatsGotoBaseline',       () => { renderMgBaseline();            showMgSub('mgSubBaseline'); });
-  wire('mgStatsGotoStrokeLoss',     () => { renderMgStrokeLossBreakdown(); renderMgStrategyBreakdown(); showMgSub('mgSubStrokeAnalysis'); });
-  wire('mgStatsGotoStrategy',       () => { renderMgStrokeLossBreakdown(); renderMgStrategyBreakdown(); showMgSub('mgSubStrokeAnalysis'); });
+  wire('mgStatsGotoParType',    () => { renderMgScoreBreakdown(); renderMgAvgStrokesBreakdown(); renderMgPuttsBreakdown(); showMgSub('mgSubScoring'); });
+  wire('mgStatsGotoBaseline',   () => { renderMgBaseline();            showMgSub('mgSubBaseline'); });
+  wire('mgStatsGotoStrokeLoss', () => { renderMgStrokeLossBreakdown(); renderMgStrategyBreakdown(); showMgSub('mgSubStrokeAnalysis'); });
   wire('mgStatsGotoHistory',        () => { showMgSub('mgSubRoundsHistory'); });
 }
 
@@ -938,7 +885,20 @@ export function renderMgScoreBreakdown() {
       '</div>';
   }).join('');
 
+  const parTiles = [3, 4, 5].map(p => {
+    const d       = parData[p];
+    const avg     = d.holes > 0 ? (d.strokes / d.holes).toFixed(1) : '—';
+    const diff    = d.holes > 0 ? (d.strokes / d.holes - p) : null;
+    const diffStr = diff === null ? '' : diff === 0 ? 'E' : (diff > 0 ? '+' : '') + diff.toFixed(1);
+    const diffClass = diff === null ? '' : diff > 0 ? ' pos' : diff < 0 ? ' neg' : '';
+    return '<div class="mg-par-tile"><div class="mg-par-lbl">Par ' + p + '</div>' +
+      '<div class="mg-par-val">' + avg + '</div>' +
+      '<div class="mg-par-sub' + diffClass + '">' + (diff !== null ? diffStr : '') + '</div></div>';
+  }).join('');
+
   el.innerHTML =
+    '<div class="mg-breakdown-card"><div class="mg-breakdown-title">Score by par type</div>' +
+    '<div style="padding:10px 12px 12px;"><div class="mg-par-grid">' + parTiles + '</div></div></div>' +
     '<div class="mg-breakdown-card"><div class="mg-breakdown-title">Score distribution · ' + totalHoles + ' holes</div>' +
     distRows + '</div>';
 }
@@ -1150,18 +1110,15 @@ export function renderMgStrategyBreakdown() {
     '</div>';
 }
 
-// ── Avg strokes breakdown ─────────────────────────────────────────────────────
+// ── Avg strokes breakdown (GIR + FIR) ─────────────────────────────────────────
 export function renderMgAvgStrokesBreakdown() {
   const el = document.getElementById('mgAvgStrokesContent');
   if (!el) return;
   const courses   = loadCourses ? loadCourses() : {};
   const allRounds = filterRounds(Object.keys(courses).flatMap(id => loadRounds ? loadRounds(id) : []), _statsFilter);
-  if (!allRounds.length) { el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:15px;">No rounds saved yet.</div>'; return; }
+  if (!allRounds.length) { el.innerHTML = ''; return; }
 
-  let parData = { 3: { strokes: 0, holes: 0 }, 4: { strokes: 0, holes: 0 }, 5: { strokes: 0, holes: 0 } };
-  let totalGIR = 0, totalHolesGIR = 0, totalPuttsOnGIR = 0;
-  let totalPutts = 0, totalPuttsHoles = 0;
-
+  let totalGIR = 0, totalHolesGIR = 0;
   Object.keys(courses).forEach(courseId => {
     const course = courses[courseId];
     const rounds = filterRounds(loadRounds ? loadRounds(courseId) : [], _statsFilter);
@@ -1169,13 +1126,10 @@ export function renderMgAvgStrokesBreakdown() {
       if (!round.scores) return;
       round.scores.forEach((s, i) => {
         if (!s) return;
-        const par   = course.holes?.[i]?.par || 4;
         const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
         if (!total) return;
-        if (parData[par]) { parData[par].strokes += total; parData[par].holes++; }
         totalHolesGIR++;
-        if (s.gir) { totalGIR++; if (s.putts != null) totalPuttsOnGIR += s.putts; }
-        if (s.putts != null && s.scoringMode !== 'simple') { totalPutts += s.putts; totalPuttsHoles++; }
+        if (s.gir) totalGIR++;
       });
     });
   });
@@ -1196,67 +1150,26 @@ export function renderMgAvgStrokesBreakdown() {
     });
   });
 
-  const girPct         = totalHolesGIR > 0 ? Math.round(totalGIR / totalHolesGIR * 100) : 0;
-  const girPerRound    = allRounds.length > 0 ? (totalGIR / allRounds.length).toFixed(1) : '—';
-  const avgPuttsGIR    = totalGIR > 0 ? (totalPuttsOnGIR / totalGIR).toFixed(1) : '—';
-  const firPct         = totalFIRHoles > 0 ? Math.round(totalFIR / totalFIRHoles * 100) : 0;
-  const firPerRound    = allRounds.length > 0 ? (totalFIR / allRounds.length).toFixed(1) : '—';
-  const fullRoundsForPutts = allRounds.filter(r => (r.holesPlayed ?? 0) >= 18);
-  const avgPuttsRound  = fullRoundsForPutts.length > 0
-    ? (fullRoundsForPutts.reduce((a, r) => a + (r.totalPutts ?? (r.scores||[]).reduce((x,sc)=>x+(sc?.putts||0),0)), 0) / fullRoundsForPutts.length).toFixed(1)
-    : '—';
-
-  const parTiles = [3, 4, 5].map(p => {
-    const d       = parData[p];
-    const avg     = d.holes > 0 ? (d.strokes / d.holes).toFixed(1) : '—';
-    const diff    = d.holes > 0 ? (d.strokes / d.holes - p) : null;
-    const diffStr = diff === null ? '' : diff === 0 ? 'E' : (diff > 0 ? '+' : '') + diff.toFixed(1);
-    const diffClass = diff === null ? '' : diff > 0 ? ' pos' : diff < 0 ? ' neg' : '';
-    return '<div class="mg-par-tile"><div class="mg-par-lbl">Par ' + p + '</div>' +
-      '<div class="mg-par-val">' + avg + '</div>' +
-      '<div class="mg-par-sub' + diffClass + '">' + (diff !== null ? diffStr : '') + '</div></div>';
-  }).join('');
+  const girPct      = totalHolesGIR > 0 ? Math.round(totalGIR / totalHolesGIR * 100) : 0;
+  const girPerRound = allRounds.length > 0 ? (totalGIR / allRounds.length).toFixed(1) : '—';
+  const firPct      = totalFIRHoles > 0 ? Math.round(totalFIR / totalFIRHoles * 100) : 0;
+  const firPerRound = allRounds.length > 0 ? (totalFIR / allRounds.length).toFixed(1) : '—';
 
   el.innerHTML =
-    '<div class="mg-breakdown-card"><div class="mg-breakdown-title">Score by par type</div>' +
-    '<div style="padding:10px 12px 12px;"><div class="mg-par-grid">' + parTiles + '</div></div></div>' +
-    '<div class="mg-breakdown-card"><div class="mg-breakdown-title">GIR</div>' +
+    '<div class="mg-breakdown-card"><div class="mg-breakdown-title">GIR · Greens in regulation</div>' +
     '<div style="display:flex;align-items:center;gap:14px;padding:9px 14px;">' +
     '<div style="font-size:28px;font-weight:700;color:#1a1a1a;">' + girPct + '%</div>' +
     '<div style="flex:1;height:8px;background:#ede9e3;border-radius:4px;overflow:hidden;">' +
     '<div style="width:' + girPct + '%;height:100%;background:#555;border-radius:4px;"></div></div></div>' +
     '<div style="font-size:12px;color:#aaa;padding:0 14px 10px;">' + girPerRound + ' of 18 greens hit per round</div>' +
     '</div>' +
-    '<div class="mg-breakdown-card"><div class="mg-breakdown-title">FIR</div>' +
+    '<div class="mg-breakdown-card"><div class="mg-breakdown-title">FIR · Fairways in regulation</div>' +
     '<div style="display:flex;align-items:center;gap:14px;padding:9px 14px;">' +
     '<div style="font-size:28px;font-weight:700;color:#1a1a1a;">' + firPct + '%</div>' +
     '<div style="flex:1;height:8px;background:#ede9e3;border-radius:4px;overflow:hidden;">' +
     '<div style="width:' + firPct + '%;height:100%;background:#555;border-radius:4px;"></div></div></div>' +
-    '<div style="font-size:12px;color:#aaa;padding:0 14px 10px;">' + firPerRound + ' of 14 par 4/5 fairways hit per round</div>' +
-    '</div>' +
-    '<div class="mg-breakdown-card"><div class="mg-breakdown-title">Putting</div>' +
-    '<div class="mg-breakdown-row" style="border-bottom:0.5px solid #f2f1ee;padding-bottom:8px;margin-bottom:8px;">' +
-    '<div class="mg-breakdown-label">Putts per round</div>' +
-    '<div class="mg-breakdown-val">' + avgPuttsRound + '</div></div>' +
-    '<div class="mg-breakdown-row">' +
-    '<div class="mg-breakdown-label">Putts per GIR hole</div>' +
-    '<div class="mg-breakdown-val">' + avgPuttsGIR + '</div></div>' +
+    '<div style="font-size:12px;color:#aaa;padding:0 14px 10px;">' + firPerRound + ' of par 4/5 fairways hit per round</div>' +
     '</div>';
-
-  const lastCard   = el.querySelector('.mg-breakdown-card:last-child');
-  const baselineBtn = document.createElement('div');
-  baselineBtn.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;border-top:0.5px solid rgba(0,0,0,0.06);margin-top:0;';
-  baselineBtn.innerHTML =
-    '<div style="width:32px;height:32px;border-radius:8px;background:#f5f4f0;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
-      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>' +
-    '</div>' +
-    '<div style="flex:1;">' +
-      '<div style="font-size:15px;font-weight:700;color:#1a1a1a;">Personal baseline</div>' +
-      '<div style="font-size:12px;color:#888;margin-top:2px;">Your shot model for this course</div>' +
-    '</div>' +
-    '<div style="font-size:17px;color:#ccc;font-weight:400;">›</div>';
-  baselineBtn.addEventListener('click', () => { renderMgBaseline(); showMgSub('mgSubBaseline'); });
-  (lastCard || el).appendChild(baselineBtn);
 }
 
 // ── Putts breakdown ───────────────────────────────────────────────────────────
@@ -1270,8 +1183,9 @@ export function renderMgPuttsBreakdown() {
     return;
   }
 
-  let counts     = { 1: 0, 2: 0, 3: 0, more: 0 };
+  let counts = { 1: 0, 2: 0, 3: 0, more: 0 };
   let totalHoles = 0;
+  let totalGIR = 0, totalPuttsOnGIR = 0;
   Object.keys(courses).forEach(courseId => {
     const rounds = filterRounds(loadRounds ? loadRounds(courseId) : [], _statsFilter);
     rounds.forEach(round => {
@@ -1284,14 +1198,21 @@ export function renderMgPuttsBreakdown() {
         else if (p === 2) counts[2]++;
         else if (p === 3) counts[3]++;
         else counts.more++;
+        if (s.gir) { totalGIR++; totalPuttsOnGIR += p; }
       });
     });
   });
 
-  const avgPutts = totalHoles > 0
+  const fullRounds    = allRounds.filter(r => (r.holesPlayed ?? 0) >= 18);
+  const avgPuttsRound = fullRounds.length > 0
+    ? (fullRounds.reduce((a, r) => a + (r.totalPutts ?? (r.scores||[]).reduce((x,sc)=>x+(sc?.putts||0),0)), 0) / fullRounds.length).toFixed(1)
+    : '—';
+  const avgPuttsGIR   = totalGIR > 0 ? (totalPuttsOnGIR / totalGIR).toFixed(1) : '—';
+  const avgPutts      = totalHoles > 0
     ? (Object.entries(counts).reduce((a, [k, v]) => a + (k === 'more' ? 4 : +k) * v, 0) / totalHoles).toFixed(2)
     : '—';
-  const rows     = [
+
+  const rows = [
     { label: '1 putt',   key: '1',    color: '#1e7a45' },
     { label: '2 putts',  key: '2',    color: '#888' },
     { label: '3 putts',  key: '3',    color: '#c07820' },
@@ -1300,8 +1221,16 @@ export function renderMgPuttsBreakdown() {
   const maxCount = Math.max(...rows.map(r => counts[r.key]), 1);
 
   el.innerHTML =
+    '<div class="mg-breakdown-card"><div class="mg-breakdown-title">Putting</div>' +
+    '<div class="mg-breakdown-row" style="border-bottom:0.5px solid #f2f1ee;padding-bottom:8px;margin-bottom:8px;">' +
+    '<div class="mg-breakdown-label">Putts per round</div>' +
+    '<div class="mg-breakdown-val">' + avgPuttsRound + '</div></div>' +
+    '<div class="mg-breakdown-row">' +
+    '<div class="mg-breakdown-label">Putts per GIR hole</div>' +
+    '<div class="mg-breakdown-val">' + avgPuttsGIR + '</div></div>' +
+    '</div>' +
     '<div class="mg-breakdown-card">' +
-    '<div class="mg-breakdown-title">Putts per hole · ' + totalHoles + ' holes · avg ' + avgPutts + '</div>' +
+    '<div class="mg-breakdown-title">Putt distribution · ' + totalHoles + ' holes · avg ' + avgPutts + '</div>' +
     rows.map(r => {
       const n    = counts[r.key];
       const pct  = totalHoles > 0 ? Math.round(n / totalHoles * 100) : 0;
