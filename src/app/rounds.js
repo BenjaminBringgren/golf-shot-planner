@@ -7,6 +7,7 @@ import {
   loadBag, loadProfile, saveProfile,
   loadHomeRoundFilter, saveHomeRoundFilter,
   loadStatsRoundFilter, saveStatsRoundFilter,
+  KEY_PRE_ROUND_FOCUS_IDX,
 } from '../storage/storage.js';
 import { clubs } from '../engine/clubs.js';
 import { interpolate, decodeStrategy, courseHandicap, stablefordPoints, computeStrokeLoss } from '../engine/calculations.js';
@@ -52,65 +53,110 @@ export function computePreRoundFocus(courseId) {
   });
   if (!validRounds) return null;
 
-  const avgs    = {};
+  const avgs     = {};
   Object.keys(totals).forEach(k => { avgs[k] = totals[k] / validRounds; });
-  const girPct  = girHoles > 0 ? totalGIR / girHoles : null;
-  const firPct  = firEligHoles > 0 ? totalFIR / firEligHoles : null;
+  const girPct   = girHoles > 0 ? totalGIR / girHoles : null;
+  const firPct   = firEligHoles > 0 ? totalFIR / firEligHoles : null;
   const avgPutts = puttHoles > 0 ? totalPutts / puttHoles : null;
 
-  // ── Strength tip when all leaks are small ─────────────────────────────────
+  // ── Build the message pool for this round ────────────────────────────────
   const maxLeak = Math.max(...Object.values(avgs));
+  let pool;
+
   if (maxLeak < 0.5) {
-    // Everything is under control — show a positive observation
-    if (girPct !== null && girPct > 0.55) return `Your approach game is working — GIR ${Math.round(girPct * 100)}% here. Keep attacking pins.`;
-    if (firPct !== null && firPct > 0.65) return `You're finding the fairway well at this course — ${Math.round(firPct * 100)}% FIR. That's your foundation today.`;
-    if (avgPutts !== null && avgPutts < 1.75) return `Your putting has been excellent here. Trust your read and commit to each stroke.`;
-    return null;
+    // Everything under control — positive observation
+    const strengthPool = [];
+    if (girPct !== null && girPct > 0.55) {
+      const pct = Math.round(girPct * 100);
+      strengthPool.push(
+        `Your approach game is working — GIR ${pct}% here. Keep attacking pins.`,
+        `You're hitting greens at ${pct}% here. Trust your iron play and go at flags you can hold.`,
+        `${pct}% GIR at this course. Your ball-striking is your edge today — use it.`,
+      );
+    }
+    if (firPct !== null && firPct > 0.65) {
+      const pct = Math.round(firPct * 100);
+      strengthPool.push(
+        `You're finding the fairway well here — ${pct}% FIR. That's your foundation today.`,
+        `${pct}% fairways here. Off-the-tee accuracy is a real strength — commit to the same routine.`,
+        `Driving has been reliable at this course (${pct}% FIR). Stay patient and let your irons do the work.`,
+      );
+    }
+    if (avgPutts !== null && avgPutts < 1.75) {
+      strengthPool.push(
+        `Your putting has been excellent here. Trust your read and commit to each stroke.`,
+        `You're rolling it well on these greens. Step up to every putt expecting to make it.`,
+        `Fewer than ${avgPutts.toFixed(1)} putts per hole here. Your speed control is dialled in — stay aggressive on makeable putts.`,
+      );
+    }
+    if (!strengthPool.length) return null;
+    pool = strengthPool;
+  } else {
+    // Find the biggest leak
+    const top = Object.entries(avgs)
+      .filter(([, v]) => v >= 0.5)
+      .sort(([, a], [, b]) => b - a)[0];
+    if (!top) return null;
+
+    const [key, val] = top;
+    const perRound = '+' + val.toFixed(1) + ' stroke' + (val >= 1.5 ? 's' : '') + '/round';
+    const suffix   = n > 1 ? ' over your last ' + n + ' rounds here' : ' last round here';
+
+    const messages = {
+      driving: [
+        `Driving cost you ${perRound}${suffix}. Club down off the tee — a fairway bogey beats a rough double.`,
+        `Off-the-tee errors have been costing ${perRound}${suffix}. Pick a smaller target and commit to it.`,
+        `Your driver has been expensive here (${perRound}${suffix}). Consider a 3-wood or long iron on tight holes.`,
+        `Tee shots are leaking ${perRound}${suffix}. Pick a club you can swing at 80% and put it in the short grass.`,
+        `${perRound}${suffix} lost off the tee. Aim at the widest part of the fairway, not the shortest route to the pin.`,
+        `Driving accuracy has been costing you here. Tee it down on par 4s if it helps you commit to a line.`,
+        `The rough is punishing you at this course (${perRound}${suffix}). Play a club shorter and stay in control.`,
+      ],
+      approach: [
+        `Approach play cost you ${perRound}${suffix}. Leave yourself a full wedge distance into greens — don't over-press.`,
+        `Your approach shots have been leaking ${perRound}${suffix}. Aim for the center of the green, not the flag.`,
+        `Missed greens are adding up (${perRound}${suffix}). Pick a conservative target and make clean contact.`,
+        `Irons have been costing you here (${perRound}${suffix}). One club more, smooth swing, middle of the green.`,
+        `${perRound}${suffix} lost on approaches. Short-siding yourself is costly — take the fat side of every pin.`,
+        `Approach play is your biggest leak today (${perRound}${suffix}). Commit to your yardage and don't second-guess mid-swing.`,
+        `Green misses are adding up (${perRound}${suffix}). Play to your yardage gaps — don't try to hit a club you can't fully commit to.`,
+      ],
+      shortGame: [
+        `Short game cost you ${perRound}${suffix}. Focus on getting chips close — one putt saves the hole.`,
+        `Around the green you've been losing ${perRound}${suffix}. Land the chip on the green early and let it roll.`,
+        `Scrambling has been tough here (${perRound}${suffix}). Bump-and-run over lob — take the lower-risk shot.`,
+        `Short game is the focus today (${perRound}${suffix}). Pick your landing spot before you pick your club.`,
+        `${perRound}${suffix} lost around the greens. Get it on the putting surface first — don't try to hero the flop.`,
+        `Chipping has been costing you here (${perRound}${suffix}). Use the most loft you need and no more — less spin, more predictable.`,
+        `Scrambling rate has been low (${perRound}${suffix}). When you miss a green, commit to a safe chip and rely on your putter.`,
+      ],
+      putting: [
+        `Putting cost you ${perRound}${suffix}. Lag from distance — your main goal is to avoid the three-putt.`,
+        `You've been leaving strokes on the greens here (${perRound}${suffix}). Read the break early and commit to speed.`,
+        `Three-putts are adding up (${perRound}${suffix}). On long putts, aim for a two-foot circle — not the hole.`,
+        `Greens have been tough here (${perRound}${suffix}). Walk the full line before you putt — don't rush the read.`,
+        `${perRound}${suffix} on the greens. Speed control is the priority today — distance first, line second.`,
+        `Putting is your biggest leak at this course (${perRound}${suffix}). Get your first putt within tap-in range and move on.`,
+        `The greens here have been costly (${perRound}${suffix}). Focus on your pre-putt routine — same process every time.`,
+      ],
+      penalties: [
+        `Penalties cost you ${perRound}${suffix}. Play well away from trouble today — a bogey beats a double every time.`,
+        `Risky shots have backfired here (${perRound}${suffix}). If it's not a comfortable carry, lay up.`,
+        `Penalty strokes are expensive (${perRound}${suffix}). Add an imaginary penalty stroke before each risky shot — does it still make sense?`,
+        `You've been losing ${perRound}${suffix} to penalty areas here. Know the safe bailout on every hole before you tee off.`,
+        `${perRound}${suffix} in penalties. Today's goal: no doubles. Take the conservative line and let your short game rescue par.`,
+        `Out-of-bounds and water have been costly here (${perRound}${suffix}). Tee up further from the trouble side and swing free.`,
+        `Penalty areas are punishing you (${perRound}${suffix}). If the aggressive line requires perfection, it's not the right line.`,
+      ],
+    };
+    pool = messages[key];
   }
 
-  // ── Find the biggest leak ─────────────────────────────────────────────────
-  const top = Object.entries(avgs)
-    .filter(([, v]) => v >= 0.5)
-    .sort(([, a], [, b]) => b - a)[0];
-
-  if (!top) return null;
-
-  const [key, val] = top;
-  const perRound = '+' + val.toFixed(1) + ' stroke' + (val >= 1.5 ? 's' : '') + '/round';
-  const suffix   = n > 1 ? ' over your last ' + n + ' rounds here' : ' last round here';
-
-  // Multiple message variants per category to avoid repetition
-  const messages = {
-    driving: [
-      `Driving cost you ${perRound}${suffix}. Club down off the tee — a fairway bogey beats a rough double.`,
-      `Off-the-tee errors have been costing ${perRound}${suffix}. Pick a smaller target and commit to it.`,
-      `Your driver has been expensive here (${perRound}${suffix}). Consider a 3-wood or long iron on tight holes.`,
-    ],
-    approach: [
-      `Approach play cost you ${perRound}${suffix}. Leave yourself a full wedge distance into greens — don't over-press.`,
-      `Your approach shots have been leaking ${perRound}${suffix}. Aim for the center of the green, not the flag.`,
-      `Missed greens are adding up (${perRound}${suffix}). Pick a conservative target and make clean contact.`,
-    ],
-    shortGame: [
-      `Short game cost you ${perRound}${suffix}. Focus on getting chips close — one putt saves the hole.`,
-      `Around the green you've been losing ${perRound}${suffix}. Land the chip on the green early and let it roll.`,
-      `Scrambling has been tough here (${perRound}${suffix}). Bump-and-run over lob — take the lower-risk shot.`,
-    ],
-    putting: [
-      `Putting cost you ${perRound}${suffix}. Lag from distance — your main goal is to avoid the three-putt.`,
-      `You've been leaving strokes on the greens here (${perRound}${suffix}). Read the break early and commit to speed.`,
-      `Three-putts are adding up (${perRound}${suffix}). On long putts, aim for a two-foot circle — not the hole.`,
-    ],
-    penalties: [
-      `Penalties cost you ${perRound}${suffix}. Play well away from trouble today — a bogey beats a double every time.`,
-      `Risky shots have backfired here (${perRound}${suffix}). If it's not a comfortable carry, lay up.`,
-      `Penalty strokes are expensive (${perRound}${suffix}). Add an imaginary penalty stroke before each risky shot.`,
-    ],
-  };
-
-  const pool = messages[key];
-  // Pick variant based on round count so it rotates across sessions
-  return pool[rounds.length % pool.length];
+  // Advance a per-category-neutral index in localStorage so each round start shows the next variant
+  const stored  = parseInt(localStorage.getItem(KEY_PRE_ROUND_FOCUS_IDX) ?? '0', 10);
+  const nextIdx = (stored + 1) % pool.length;
+  localStorage.setItem(KEY_PRE_ROUND_FOCUS_IDX, nextIdx);
+  return pool[nextIdx];
 }
 
 // ── Round filter state ────────────────────────────────────────────────────────

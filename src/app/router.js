@@ -1622,8 +1622,7 @@ initServices({
       const courses = loadCourses();
       const course  = courses[courseId];
       const rounds  = loadRounds(courseId);
-      const tip = _holeSpecificTip(course, rounds, holeIdx)
-               || computePreRoundFocus(courseId);
+      const tip = _holeSpecificTip(course, rounds, holeIdx);
       if (tip) {
         strip.dataset.tip = tip;
         strip.classList.remove('pfs-empty');
