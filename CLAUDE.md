@@ -105,9 +105,19 @@ round to the nearest step in the table above.
 These rules apply everywhere without exception: CSS classes,
 inline styles in HTML, and JS-generated HTML strings.
 
+Practical minimum for this app is 13px (Footnote). Caption 1
+(12px) and Caption 2 (11px) are technically permitted but should
+only be used in genuinely space-constrained situations — a unit
+glyph beside a large number, a table cell that can't grow. Default
+to 13px when in doubt. Never introduce 11px or 12px for a label
+that exists elsewhere at 13px.
+
 Permitted font-weight values: 400, 600, 700, 800 only.
 Never use 300 or 500. Primary buttons and actions: 700.
 Secondary buttons and actions: 600.
+All-caps tracking labels (badges, chips, eyebrows) use 700 —
+they read visually smaller due to letter-spacing, so the heavier
+weight is required to maintain legibility.
 
 ## Safari compatibility
 Hard requirement. Tested on Brave and Safari on iPhone.

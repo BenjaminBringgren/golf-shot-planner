@@ -95,7 +95,7 @@
     }
     #calcView > .card { margin: 0; border-radius: 12px; }
     #calcView > .collapsible { margin: 0; }
-    #calcView > .gps-warning { margin: -4px 0 0; font-size: 12px; }
+    #calcView > .gps-warning { margin: -4px 0 0; font-size: 13px; }
     #calcView > #calcButton { margin-top: 0; }
     #calcView > .collapsible + .gps-row { margin-top: 0; }
     #calcButton { margin: 0; width: 100%; border-radius: 11px; padding: 20px; font-size: 17px; }
@@ -251,7 +251,7 @@
       padding: 0 16px 14px;
     }
     .mg-hub-header h2 { margin: 0; font-size: 22px; font-weight: 700; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.4); }
-    .mg-hub-header p  { margin: 3px 0 0; font-size: 13px; color: rgba(255,255,255,0.8); text-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+    .mg-hub-header p  { margin: 3px 0 0; font-size: 15px; color: rgba(255,255,255,0.8); text-shadow: 0 1px 3px rgba(0,0,0,0.4); }
 
     /* Sub-page header — dark */
     .mg-sub-header {
@@ -284,12 +284,12 @@
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .mg-menu-title { font-size: 15px; font-weight: 700; color: #1a1a1a; margin: 0; }
-    .mg-menu-sub   { font-size: 12px; color: #888; margin: 2px 0 0; }
+    .mg-menu-sub   { font-size: 13px; color: #888; margin: 2px 0 0; }
     .mg-menu-arrow { margin-left: auto; color: #bbb; font-size: 17px; font-weight: 400; }
 
     .mg-baseline-grid { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 4px; padding: 4px 0; }
     .mg-baseline-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-    .mg-baseline-num { font-size: 11px; font-weight: 400; color: #888; }
+    .mg-baseline-num { font-size: 13px; font-weight: 400; color: #888; }
     .mg-baseline-dot { width: 100%; aspect-ratio: 1; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
     .mg-baseline-dot.none  { background: #f0efeb; }
     .mg-baseline-dot.under { background: #E1F5EE; }
@@ -297,14 +297,14 @@
     .mg-baseline-dot.over1 { background: #FAEEDA; }
     .mg-baseline-dot.over2 { background: #F5C4B3; }
     .mg-baseline-dot.over3 { background: #F09595; }
-    .mg-baseline-delta { font-size: 11px; font-weight: 600; line-height: 1; }
-    .mg-baseline-dot.none  .mg-baseline-delta { color: #bbb; font-size: 11px; }
+    .mg-baseline-delta { font-size: 13px; font-weight: 600; line-height: 1; }
+    .mg-baseline-dot.none  .mg-baseline-delta { color: #bbb; font-size: 13px; }
     .mg-baseline-dot.under .mg-baseline-delta { color: #085041; }
     .mg-baseline-dot.even  .mg-baseline-delta { color: #888; }
     .mg-baseline-dot.over1 .mg-baseline-delta { color: #633806; }
     .mg-baseline-dot.over2 .mg-baseline-delta { color: #712B13; }
     .mg-baseline-dot.over3 .mg-baseline-delta { color: #791F1F; }
-    .mg-baseline-rounds { font-size: 11px; line-height: 1; }
+    .mg-baseline-rounds { font-size: 13px; line-height: 1; }
     .mg-baseline-dot.none  .mg-baseline-rounds { color: #ccc; }
     .mg-baseline-dot.under .mg-baseline-rounds { color: #0F6E56; }
     .mg-baseline-dot.even  .mg-baseline-rounds { color: #aaa; }
@@ -319,8 +319,8 @@
     .mg-par-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; padding: 0 2px 2px; }
     .mg-par-tile { background: #f5f4f0; border-radius: 10px; padding: 14px 12px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .mg-par-val { font-size: 28px; font-weight: 400; color: #1a1a1a; line-height: 1; margin: 0; }
-    .mg-par-lbl { font-size: 11px; font-weight: 400; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin: 0; }
-    .mg-par-sub { font-size: 12px; color: #888; margin: 0; }
+    .mg-par-lbl { font-size: 13px; font-weight: 400; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin: 0; }
+    .mg-par-sub { font-size: 13px; color: #888; margin: 0; }
     .mg-par-sub.pos { color: #3a6fc4; }
     .mg-par-sub.neg { color: #c0392b; }
     .lrh-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 0.5px solid #f2f1ee; }
@@ -329,12 +329,12 @@
     @media (hover: hover) { .lrh-row.tappable:hover { background: #fafafa; } }
     .lrh-row.tappable.is-pressed { background: #edeae4; }
     .lrh-course { font-size: 15px; font-weight: 600; color: #1a1a1a; }
-    .lrh-date { font-size: 12px; color: #aaa; margin-top: 2px; }
+    .lrh-date { font-size: 13px; color: #aaa; margin-top: 2px; }
     .lrh-right { text-align: right; }
     .lrh-score { font-size: 17px; font-weight: 700; color: #1a1a1a; }
     .lrh-diff { font-size: 13px; font-weight: 600; margin-top: 1px; }
     .mg-breakdown-card { background: #fff; border-radius: 12px; border: 0.5px solid rgba(0,0,0,0.08); overflow: hidden; }
-    .mg-breakdown-title { font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em; padding: 12px 14px 8px; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+    .mg-breakdown-title { font-size: 13px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.05em; padding: 12px 14px 8px; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
     .mg-breakdown-row { display: flex; align-items: center; gap: 10px; padding: 9px 14px; border-bottom: 0.5px solid rgba(0,0,0,0.05); }
     .mg-breakdown-row:last-child { border-bottom: none; }
     .mg-breakdown-label { font-size: 13px; font-weight: 400; color: #1a1a1a; flex: 1; }
@@ -387,7 +387,7 @@
     .mg-hub-header-text { flex: 1; }
     .mg-profile-field { margin: 0 12px 10px; }
     .mg-profile-label {
-      font-size: 11px; font-weight: 700; color: #888;
+      font-size: 13px; font-weight: 700; color: #888;
       text-transform: uppercase; letter-spacing: 0.4px;
       margin-bottom: 5px; display: block;
     }
@@ -414,7 +414,7 @@
       display: block; margin: 0 12px 12px;
       padding: 17px; background: #f0efeb;
       border: none; border-radius: 9px;
-      text-align: center; font-size: 16px; font-weight: 700;
+      text-align: center; font-size: 17px; font-weight: 600;
       color: #1a1a1a; cursor: pointer;
     }
     .mg-edit-btn.is-pressed { background: #e8e6e1; }
@@ -902,13 +902,13 @@
     .wind-status-bar.visible { display: flex; }
     .wsb-left { display: flex; flex-direction: column; gap: 2px; }
     .wsb-speed { font-size: 16px; font-weight: 700; color: #1a1a1a; line-height: 1; }
-    .wsb-detail { font-size: 12px; color: #888; }
+    .wsb-detail { font-size: 13px; color: #888; }
     .wsb-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
     .wsb-badge {
-      font-size: 11px; font-weight: 600; color: #1a1a1a;
+      font-size: 13px; font-weight: 700; color: #1a1a1a;
       letter-spacing: 0.4px; text-transform: uppercase;
     }
-    .wsb-location { font-size: 12px; color: #555; }
+    .wsb-location { font-size: 13px; color: #555; }
 
     /* ── Wind breakdown rows ──────────────────────────────────── */
     /* Wind breakdown — 2×2 stat grid */
@@ -1083,7 +1083,7 @@
       border-top: 0.5px solid rgba(0,0,0,0.06);
     }
     .compass-label { display: none; }
-    .compass-location { font-size: 11px; color: #aaa; padding: 6px 14px 2px; }
+    .compass-location { font-size: 13px; color: #aaa; padding: 6px 14px 2px; }
     .compass-svg-wrap {
       position: relative; width: 96px; height: 96px; flex-shrink: 0;
       cursor: grab; user-select: none;
@@ -1092,7 +1092,7 @@
     .compass-svg-wrap:active { cursor: grabbing; }
     #compassSvg { width: 96px; height: 96px; transition: none; }
     .compass-deg-display { font-size: 22px; font-weight: 700; color: #185fa5; }
-    .compass-deg-label { font-size: 12px; color: #888; margin-top: 2px; }
+    .compass-deg-label { font-size: 13px; color: #888; margin-top: 2px; }
     .compass-lock-btn {
       padding: 0 14px; font-size: 13px; font-weight: 700;
       background: #1a1a1a !important; color: #fff !important;
@@ -1163,14 +1163,14 @@
     .gps-tile-indicator.idle { border: 1.5px solid #ccc; background: transparent; }
     .gps-tile-indicator.set  { background: #1e7a45; border: none; }
     .gps-tile-label { font-size: 15px; font-weight: 600; color: #1a1a1a; line-height: 1.2; }
-    .gps-tile-status { font-size: 12px; color: #bbb; margin-top: 2px; line-height: 1.2; }
+    .gps-tile-status { font-size: 13px; color: #bbb; margin-top: 2px; line-height: 1.2; }
     .gps-tile-status.ready { color: #1e7a45; }
     .gps-tile-status.tap   { color: #1e7a45; }
     .gps-tile-dist {
       font-size: 15px; font-weight: 700; color: #1a1a1a;
       margin-left: auto; flex-shrink: 0;
     }
-    .gps-tile-dist-unit { font-size: 11px; color: #aaa; font-weight: 400; }
+    .gps-tile-dist-unit { font-size: 13px; color: #aaa; font-weight: 400; }
     /* Keep old classes alive for JS that still refs them */
     .gps-btn { display: none !important; }
     .gps-ball-btn { display: none !important; }
@@ -1180,7 +1180,7 @@
       text-decoration: underline dotted;
     }
     @media (hover: hover) { .gps-reset-link:hover { color: #c00; } }
-    .gps-warning { font-size: 12px; color: #a06000; margin: 2px 0 4px; }
+    .gps-warning { font-size: 13px; color: #a06000; margin: 2px 0 4px; }
 
     /* ── Score FAB ───────────────────────────────────────────── */
     .score-fab {
@@ -1349,7 +1349,7 @@
       background: #ccc; flex-shrink: 0;
     }
     .wd-gps-dot--on { background: #1e7a45; }
-    .wd-gps-label  { font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+    .wd-gps-label  { font-size: 13px; color: #888; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
     .wd-gps-status { font-size: 13px; font-weight: 600; color: #1a1a1a; margin-top: 2px; }
 
     /* ── Scorecard full-page overlay ────────────────────────── */
@@ -1414,7 +1414,7 @@
     .sc2-section { margin-bottom: 24px; }
     .sc2-section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .sc2-section-title { font-size: 17px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.01em; }
-    .sc2-section-chip { font-size: 11px; font-weight: 700; color: #888; background: #f0efeb; border-radius: 6px; padding: 3px 10px; letter-spacing: 0.05em; text-transform: uppercase; }
+    .sc2-section-chip { font-size: 13px; font-weight: 700; color: #888; background: #f0efeb; border-radius: 6px; padding: 3px 10px; letter-spacing: 0.05em; text-transform: uppercase; }
 
     /* .sc2-card is the single grid container — subgrid guarantees pixel-perfect column alignment */
     .sc2-card { background: #fff; border-radius: 12px; overflow: hidden; border: 0.5px solid rgba(0,0,0,0.07); display: grid; grid-template-columns: 44px 1fr 1fr 28px 1px 1fr 1fr 1fr 1fr 1.4fr; }
@@ -1424,7 +1424,7 @@
     .sc2-col-hdr, .sc2-row, .sc2-sub { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; }
 
     .sc2-col-hdr { padding: 9px 0; background: #f0efeb; border-bottom: 0.5px solid rgba(0,0,0,0.07); }
-    .sc2-col-hdr > span { font-size: 11px; font-weight: 700; color: #888; letter-spacing: 0.06em; text-transform: uppercase; text-align: center; }
+    .sc2-col-hdr > span { font-size: 13px; font-weight: 700; color: #888; letter-spacing: 0.06em; text-transform: uppercase; text-align: center; }
     .sc2-col-hdr > span:first-child { text-align: left; padding-left: 14px; }
     .sc2-col-hdr .sc2-col-sep { background: transparent; }
 
@@ -1487,7 +1487,7 @@
     .sc2-sub--total .sc2-col-sep { background: rgba(255,255,255,0.2); }
     .sc2-sub--in .sc2-col-sep { background: rgba(0,0,0,0.08); }
 
-    .sc2-sub-lbl { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+    .sc2-sub-lbl { font-size: 13px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
     .sc2-sub--out   .sc2-sub-lbl { color: rgba(255,255,255,0.5); }
     .sc2-sub--in    .sc2-sub-lbl { color: #888; }
     .sc2-sub--total .sc2-sub-lbl { color: rgba(255,255,255,0.5); }
@@ -1497,14 +1497,14 @@
     .sc2-sub--in    .sc2-sub-num { color: #1a1a1a; }
     .sc2-sub--total .sc2-sub-num { color: #fff; }
 
-    .sc2-sub-diff { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; }
+    .sc2-sub-diff { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
     .sc2-sub--out   .sc2-sub-diff { color: #fff; }
     .sc2-sub--in    .sc2-sub-diff { color: #1a1a1a; }
     .sc2-sub--total .sc2-sub-diff { color: #fff; }
 
     .sc2-total-card { border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
 
-    .sc2-save-btn { width: 100%; margin-top: 20px; padding: 16px; font-size: 15px; font-weight: 700; background: #1a1a1a; color: #fff; border: none; border-radius: 10px; cursor: pointer; letter-spacing: 0.01em; }
+    .sc2-save-btn { width: 100%; margin-top: 20px; padding: 16px; font-size: 17px; font-weight: 700; background: #1a1a1a; color: #fff; border: none; border-radius: 10px; cursor: pointer; letter-spacing: 0.01em; }
     .sc2-save-btn:disabled { background: #aaa; color: #fff; cursor: default; }
 
     /* ── Stableford points column ────────────────────────────── */
@@ -1557,9 +1557,9 @@
     .sl-row:last-child { border-bottom: none; }
     .sl-row--top .sl-lbl { font-weight: 700; color: #1a1a1a; }
     .sl-row--top .sl-val { color: #c0392b; font-weight: 800; }
-    .sl-lbl { font-size: 15px; color: #444; }
+    .sl-lbl { font-size: 17px; color: #444; }
     .sl-val { font-size: 17px; font-weight: 700; color: #1a1a1a; }
-    .sl-focus { font-size: 13px; color: #888; padding: 8px 14px 14px; line-height: 1.45; }
+    .sl-focus { font-size: 15px; color: #888; padding: 8px 14px 14px; line-height: 1.45; }
 
     /* ── Stroke-loss (My Stats page) ─────────────────────────────────── */
     .sl-stat-row { display: flex; flex-direction: column; gap: 5px; }
@@ -1578,7 +1578,7 @@
     .strat-row:last-child { border-bottom: none; }
     .strat-row--best { background: transparent; }
     .strat-row .hint-best-tag { flex: 1; min-width: 0; }
-    .strat-row-count { font-size: 12px; color: #aaa; flex-shrink: 0; min-width: 48px; text-align: right; }
+    .strat-row-count { font-size: 13px; color: #aaa; flex-shrink: 0; min-width: 48px; text-align: right; }
     .strat-row-avg { font-size: 15px; font-weight: 700; flex-shrink: 0; min-width: 44px; text-align: right; }
 
     /* ── Strategy plan card (v3 — single card + switcher) ──── */
@@ -1628,7 +1628,7 @@
     .cc-score-row { display: flex; align-items: baseline; gap: 6px; margin-top: 4px; }
     .cc-score-num { font-size: 34px; font-weight: 700; color: #1a1a1a; line-height: 1; letter-spacing: -0.5px; }
     .cc-score-vs  { font-size: 15px; color: #aaa; }
-    .cc-sub  { font-size: 12px; color: #aaa; margin-top: 3px; }
+    .cc-sub  { font-size: 13px; color: #aaa; margin-top: 3px; }
     .cc-score-pill { display: none; }
     .cc-wind-pill {
       display: inline-flex; align-items: center;
@@ -1662,22 +1662,22 @@
     .carousel-card.type-controlled    .cc-shot-num { background: #fef3e2; color: #c07820; }
     .carousel-card.type-conservative  .cc-shot-num { background: #d4edda; color: #1e7a45; }
     .carousel-card.type-custom        .cc-shot-num { background: #f0f0f0; color: #888; }
-    .cc-shot-lbl { font-size: 11px; color: #aaa; margin-bottom: 1px; }
+    .cc-shot-lbl { font-size: 13px; color: #aaa; margin-bottom: 1px; }
     .cc-shot-lbl.tee-lbl { color: #aaa; font-weight: 400; }
     .cc-shot-club { font-size: 15px; font-weight: 700; color: #1a1a1a; }
-    .cc-shot-wind { font-size: 11px; margin-top: 2px; }
+    .cc-shot-wind { font-size: 13px; margin-top: 2px; }
     .cc-shot-wind.head { color: #c05000; }
     .cc-shot-wind.tail { color: #1e7a45; }
     .cc-shot-right { text-align: right; margin-left: auto; flex-shrink: 0; }
     .cc-shot-dist { font-size: 28px; font-weight: 700; color: #1a1a1a; line-height: 1; }
-    .cc-shot-unit { font-size: 12px; color: #bbb; }
-    .cc-shot-carry { font-size: 12px; color: #aaa; margin-top: 1px; }
+    .cc-shot-unit { font-size: 13px; color: #bbb; }
+    .cc-shot-carry { font-size: 13px; color: #aaa; margin-top: 1px; }
     .cc-shot-done {
       display: flex; align-items: center; gap: 10px;
       padding: 9px 0; border-bottom: 0.5px solid #f2f1ee; opacity: 0.45;
     }
     .cc-shot-done-club { font-size: 13px; font-weight: 600; color: #aaa; text-decoration: line-through; }
-    .cc-shot-done-badge { font-size: 11px; color: #1e7a45; font-weight: 700; margin-left: 6px; }
+    .cc-shot-done-badge { font-size: 13px; color: #1e7a45; font-weight: 700; margin-left: 6px; }
     .cc-shot-done-dist { font-size: 13px; color: #aaa; margin-left: auto; }
 
     /* Wind effect row */
@@ -1696,7 +1696,7 @@
       background: #f0f9f4; border-left: 3px solid #1e7a45;
       border-radius: 0 6px 6px 0; padding: 9px 14px;
     }
-    .cc-gps-label { font-size: 11px; color: #1e7a45; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
+    .cc-gps-label { font-size: 13px; color: #1e7a45; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
     .cc-gps-dist { font-size: 22px; font-weight: 700; color: #1a1a1a; }
 
     /* Approach + crosswind */
@@ -1704,11 +1704,11 @@
       background: #f8f8f6; padding: 10px 14px;
       border-top: 0.5px solid #f2f1ee;
     }
-    .cc-app-label { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+    .cc-app-label { font-size: 13px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
     .cc-app-dist  { font-size: 22px; font-weight: 700; color: #185fa5; line-height: 1; margin-bottom: 3px; }
     .cc-app-dist-unit { font-size: 13px; color: #aaa; margin-left: 2px; }
     .cc-app-club  { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
-    .cc-app-note  { font-size: 12px; color: #555; }
+    .cc-app-note  { font-size: 13px; color: #555; }
     .cc-crosswind {
       background: #fff8ec; border-left: 3px solid #e0a030;
       border-radius: 0 6px 6px 0; padding: 8px 14px;
@@ -1829,18 +1829,18 @@
     .cc-compare-table .cv-primary.safe     { color: #347a50; }
     .cc-compare-table .cv-club { font-size: 15px; font-weight: 600; color: #222; display: block; }
     .cc-compare-table .cv-dist { font-size: 13px; color: #888; display: block; }
-    .cc-compare-table .cv-wind { font-size: 12px; color: #c05000; display: block; }
+    .cc-compare-table .cv-wind { font-size: 13px; color: #c05000; display: block; }
     .cc-delta-section {
       padding: 12px 14px 4px; border-bottom: 1px solid #ece9e4;
     }
-    .cc-delta-label { font-size: 11px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
+    .cc-delta-label { font-size: 13px; font-weight: 700; color: #aaa; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; }
     .cc-delta-row {
       display: flex; align-items: center; gap: 0; margin-bottom: 7px;
     }
-    .cc-delta-name { width: 68px; font-size: 12px; color: #888; flex-shrink: 0; }
+    .cc-delta-name { width: 68px; font-size: 13px; color: #888; flex-shrink: 0; }
     .cc-delta-bar-wrap { flex: 1; display: flex; align-items: center; gap: 6px; }
     .cc-delta-bar { height: 7px; border-radius: 4px; min-width: 4px; }
-    .cc-delta-val { font-size: 12px; font-weight: 600; color: #333; white-space: nowrap; }
+    .cc-delta-val { font-size: 13px; font-weight: 600; color: #333; white-space: nowrap; }
     .cc-delta-val.best { color: #1e7a45; }
     .cc-delta-insight {
       font-size: 12px; color: #888; margin-top: 4px; padding-top: 6px;
@@ -1899,7 +1899,7 @@
       justify-content: space-between;
       border-bottom: 1px solid #ece9e4;
     }
-    .course-hdr-name { font-size: 16px; font-weight: 700; color: #1a1a1a; }
+    .course-hdr-name { font-size: 17px; font-weight: 700; color: #1a1a1a; }
     .course-hdr-meta { font-size: 13px; color: #888; margin-top: 3px; }
     .course-hdr-arr  { font-size: 15px; color: #aaa; }
     .course-body     { display: none; background: #fffffe; }
@@ -1917,10 +1917,10 @@
       user-select: none;
     }
     .subsection-hdr-label {
-      font-size: 12px; font-weight: 700; color: #555;
+      font-size: 13px; font-weight: 700; color: #555;
       text-transform: uppercase; letter-spacing: 0.05em;
     }
-    .subsection-hdr-arr { font-size: 12px; color: #aaa; }
+    .subsection-hdr-arr { font-size: 13px; color: #aaa; }
     .strat-body { display: block; }
     .strat-body.collapsed { display: none; }
 
@@ -1933,18 +1933,18 @@
     }
     .ch-strat {
       flex: 1; padding-left: 38px;
-      font-size: 12px; font-weight: 700; color: #aaa;
+      font-size: 13px; font-weight: 700; color: #aaa;
       text-transform: uppercase; letter-spacing: 0.04em;
     }
     .ch-avg {
       width: 44px; text-align: right;
-      font-size: 12px; font-weight: 700; color: #aaa;
+      font-size: 13px; font-weight: 700; color: #aaa;
       text-transform: uppercase; letter-spacing: 0.04em;
     }
     .ch-gap  { width: 20px; }
     .ch-rnd  {
       width: 44px; text-align: right;
-      font-size: 12px; font-weight: 700; color: #aaa;
+      font-size: 13px; font-weight: 700; color: #aaa;
       text-transform: uppercase; letter-spacing: 0.04em;
     }
     .ch-sp   { width: 20px; }
@@ -1989,7 +1989,7 @@
     .detail-table th {
       color: #888; font-weight: 700; padding: 4px 6px;
       text-align: right; border-bottom: 1px solid #ece9e4;
-      font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em;
+      font-size: 13px; text-transform: uppercase; letter-spacing: 0.03em;
     }
     .detail-table th:first-child { text-align: left; }
     .detail-table td {
@@ -2003,7 +2003,7 @@
     .dt-even { color: #555;    font-weight: 700; }
     .best-badge {
       display: inline-block; padding: 1px 5px; border-radius: 3px;
-      font-size: 11px; font-weight: 700;
+      font-size: 13px; font-weight: 700;
       background: #d0ead0; color: #0f5c2e;
       margin-left: 4px; vertical-align: middle;
     }
@@ -2023,7 +2023,7 @@
       display: inline-block;
       padding: 2px 8px;
       border-radius: 3px;
-      font-size: 12px; font-weight: 700;
+      font-size: 13px; font-weight: 700;
     }
     .pill.par3       { background: #e8e8ec; color: #38383f; white-space: nowrap; }
     .pill.aggressive { background: #f5e8e8; color: #5c2828; }
@@ -2048,14 +2048,14 @@
     .round-stat-val { font-size: 22px; font-weight: 700; color: #1a1a1a; line-height: 1; }
     .round-stat-val.good { color: #1e7a45; }
     .round-stat-val.info { color: #185fa5; }
-    .round-stat-lbl { font-size: 11px; color: #888; margin-top: 4px; font-weight: 400; letter-spacing: 0.2px; text-transform: uppercase; }
+    .round-stat-lbl { font-size: 13px; color: #888; margin-top: 4px; font-weight: 400; letter-spacing: 0.2px; text-transform: uppercase; }
     .round-meta { font-size: 12px; color: #aaa; margin-top: 2px; }
     .rh-course-hdr {
       padding: 13px 14px 10px; background: #fff;
       border-bottom: 0.5px solid rgba(0,0,0,0.07);
     }
     .rh-course-name { font-size: 17px; font-weight: 700; color: #1a1a1a; }
-    .rh-course-meta { font-size: 12px; color: #888; margin-top: 3px; }
+    .rh-course-meta { font-size: 13px; color: #888; margin-top: 3px; }
     .round-row {
       display: flex; align-items: center; justify-content: space-between;
       padding: 13px 16px; border-bottom: 0.5px solid rgba(0,0,0,0.07);
@@ -2864,7 +2864,7 @@
   display: flex; flex-direction: column; gap: 10px;
 }
 .arb-header {
-  font-size: 11px; font-weight: 700; color: #888;
+  font-size: 13px; font-weight: 700; color: #888;
   text-transform: uppercase; letter-spacing: 0.06em;
 }
 .arb-body {
@@ -2872,11 +2872,11 @@
 }
 .arb-text { flex: 1; min-width: 0; }
 .arb-title {
-  font-size: 15px; font-weight: 700; color: #1a1a1a;
+  font-size: 17px; font-weight: 700; color: #1a1a1a;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .arb-sub {
-  font-size: 13px; color: #888; margin-top: 2px;
+  font-size: 15px; color: #888; margin-top: 2px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .arb-resume-btn {
@@ -2884,7 +2884,7 @@
   background: #1a1a1a; color: #fff;
   border: none; border-radius: 8px;
   padding: 9px 16px;
-  font-size: 13px; font-weight: 600; font-family: inherit;
+  font-size: 17px; font-weight: 700; font-family: inherit;
   cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
 .arb-resume-btn.is-pressed { background: #333; }
@@ -2896,7 +2896,7 @@
   margin-bottom: 10px;
 }
 .home-stats-label {
-  font-size: 11px; font-weight: 700; color: #888;
+  font-size: 15px; font-weight: 700; color: #888;
   text-transform: uppercase; letter-spacing: 0.06em;
 }
 .home-stats-viewall {
@@ -2965,7 +2965,7 @@
   font-size: 20px; font-weight: 700; color: #1a1a1a; line-height: 1;
 }
 .home-stat-lbl {
-  font-size: 11px; font-weight: 600; color: #888;
+  font-size: 13px; font-weight: 600; color: #888;
   text-transform: uppercase; letter-spacing: 0.05em;
 }
 .home-insight {
@@ -2997,7 +2997,7 @@
 .mg-stat-tile.tappable { cursor: pointer; }
 .mg-stat-tile.tappable.is-pressed { background: #f5f4f0; }
 .mg-stat-val { font-size: 22px; font-weight: 700; color: #1a1a1a; line-height: 1; }
-.mg-stat-lbl { font-size: 11px; color: #888; margin-top: 4px; font-weight: 400; }
+.mg-stat-lbl { font-size: 13px; color: #888; margin-top: 4px; font-weight: 400; }
 .mg-drilldown-btn {
   display: flex; align-items: center; gap: 12px;
   background: #fff; border-radius: 12px;
@@ -3014,7 +3014,7 @@
 }
 .mg-drilldown-text { flex: 1; }
 .mg-drilldown-title { font-size: 15px; font-weight: 700; color: #1a1a1a; }
-.mg-drilldown-sub   { font-size: 12px; color: #888; margin-top: 2px; }
+.mg-drilldown-sub   { font-size: 13px; color: #888; margin-top: 2px; }
 .mg-drilldown-arrow { font-size: 17px; color: #ccc; font-weight: 400; flex-shrink: 0; }
 
 /* ── Demo hint banner (manual calc pre-filled for new users) ─────────────────── */
@@ -3082,7 +3082,7 @@
 }
 .stats-preview-strip-item { flex: 1; text-align: center; }
 .stats-preview-val { font-size: 20px; font-weight: 700; color: #ccc; line-height: 1; margin-bottom: 3px; }
-.stats-preview-lbl { font-size: 11px; font-weight: 600; color: #ccc; text-transform: uppercase; letter-spacing: 0.04em; }
+.stats-preview-lbl { font-size: 13px; font-weight: 600; color: #ccc; text-transform: uppercase; letter-spacing: 0.04em; }
 .stats-preview-cta { font-size: 13px; color: #aaa; text-align: center; padding: 2px 0 4px; margin: 0; }
 .stats-preview-note { font-size: 13px; color: #aaa; padding: 10px 4px 6px; font-style: italic; grid-column: 1 / -1; }
 .mg-stat-tile.stats-tile-preview { opacity: 0.4; pointer-events: none; }

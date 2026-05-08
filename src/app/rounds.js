@@ -1140,9 +1140,9 @@ export function renderMgStrategyBreakdown() {
     '<div class="mg-breakdown-card">' +
       '<div class="mg-breakdown-title">Strategy vs outcome · all rounds</div>' +
       '<div class="strat-table-header">' +
-        '<span style="flex:1;font-size:11px;color:#aaa;font-weight:600;text-transform:uppercase;letter-spacing:0.4px">Strategy</span>' +
-        '<span class="strat-row-count" style="font-size:11px;color:#aaa;font-weight:600;text-transform:uppercase;letter-spacing:0.4px">Holes</span>' +
-        '<span class="strat-row-avg" style="font-size:11px;color:#aaa;font-weight:600;text-transform:uppercase;letter-spacing:0.4px">Avg</span>' +
+        '<span style="flex:1;font-size:13px;color:#aaa;font-weight:600;text-transform:uppercase;letter-spacing:0.4px">Strategy</span>' +
+        '<span class="strat-row-count" style="font-size:13px;color:#aaa;font-weight:600;text-transform:uppercase;letter-spacing:0.4px">Holes</span>' +
+        '<span class="strat-row-avg" style="font-size:13px;color:#aaa;font-weight:600;text-transform:uppercase;letter-spacing:0.4px">Avg</span>' +
       '</div>' +
       rows +
       '<div style="padding:10px 14px 4px;font-size:12px;color:#aaa;">Lower avg vs par is better. Min. 3 holes per strategy shown.</div>' +
@@ -1390,7 +1390,7 @@ export function renderMgRecentRounds() {
   const avgStrokes = strokes.reduce((a, b) => a + b, 0) / strokes.length;
   const avgY       = (padY + (maxS - avgStrokes) * scale).toFixed(1);
   const avgLine    = `<line x1="0" y1="${avgY}" x2="${W}" y2="${avgY}" stroke="#ece9e4" stroke-width="1" stroke-dasharray="3,3"/>
-  <text x="2" y="${(parseFloat(avgY) - 3).toFixed(1)}" font-size="9" fill="#ccc" font-family="system-ui" font-weight="600">avg</text>`;
+  <text x="2" y="${(parseFloat(avgY) - 3).toFixed(1)}" font-size="11" fill="#ccc" font-family="system-ui" font-weight="600">avg</text>`;
   const lineBase    = `<polyline points="${pts}" fill="none" stroke="#e0ddd8" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>`;
   const lineColored = `<polyline points="${pts}" fill="none" stroke="#1a1a1a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
 
