@@ -337,16 +337,16 @@ export function renderMgStatTiles() {
     showMgSub('mgSubRoundsHistory');
   });
   document.getElementById('mgBestRoundTile')?.addEventListener('click', () => {
-    renderMgScoreBreakdown();
-    showMgSub('mgSubScoreBreakdown');
+    renderMgScoreBreakdown(); renderMgAvgStrokesBreakdown(); renderMgPuttsBreakdown();
+    showMgSub('mgSubScoring');
   });
   document.getElementById('mgAvgStrokesTile')?.addEventListener('click', () => {
-    renderMgAvgStrokesBreakdown();
-    showMgSub('mgSubAvgStrokes');
+    renderMgScoreBreakdown(); renderMgAvgStrokesBreakdown(); renderMgPuttsBreakdown();
+    showMgSub('mgSubScoring');
   });
   document.getElementById('mgPuttsTile')?.addEventListener('click', () => {
-    renderMgPuttsBreakdown();
-    showMgSub('mgSubPuttsBreakdown');
+    renderMgScoreBreakdown(); renderMgAvgStrokesBreakdown(); renderMgPuttsBreakdown();
+    showMgSub('mgSubScoring');
   });
 }
 
@@ -573,8 +573,8 @@ function _renderHomeStatTiles(allRounds, full, courses) {
       if (!_switchTab) return;
       const nav = tile.dataset.nav;
       _switchTab('prepare');
-      if (nav === 'avgStrokes') { renderMgAvgStrokesBreakdown(); showMgSub('mgSubAvgStrokes'); }
-      else if (nav === 'putts') { renderMgPuttsBreakdown(); showMgSub('mgSubPuttsBreakdown'); }
+      if (nav === 'avgStrokes') { renderMgScoreBreakdown(); renderMgAvgStrokesBreakdown(); renderMgPuttsBreakdown(); showMgSub('mgSubScoring'); }
+      else if (nav === 'putts') { renderMgScoreBreakdown(); renderMgAvgStrokesBreakdown(); renderMgPuttsBreakdown(); showMgSub('mgSubScoring'); }
       else if (nav === 'stats') { showMgSub('mgSubStats'); }
     });
   });
@@ -863,12 +863,12 @@ function _wireStatsDrillButtons() {
     el.dataset.wired = '1';
     el.addEventListener('click', fn);
   }
-  wire('mgStatsGotoScoreBreakdown', () => { renderMgScoreBreakdown();      showMgSub('mgSubScoreBreakdown'); });
-  wire('mgStatsGotoParType',        () => { renderMgAvgStrokesBreakdown(); showMgSub('mgSubAvgStrokes'); });
-  wire('mgStatsGotoPutts',          () => { renderMgPuttsBreakdown();      showMgSub('mgSubPuttsBreakdown'); });
+  wire('mgStatsGotoScoreBreakdown', () => { renderMgScoreBreakdown(); renderMgAvgStrokesBreakdown(); renderMgPuttsBreakdown(); showMgSub('mgSubScoring'); });
+  wire('mgStatsGotoParType',        () => { renderMgScoreBreakdown(); renderMgAvgStrokesBreakdown(); renderMgPuttsBreakdown(); showMgSub('mgSubScoring'); });
+  wire('mgStatsGotoPutts',          () => { renderMgScoreBreakdown(); renderMgAvgStrokesBreakdown(); renderMgPuttsBreakdown(); showMgSub('mgSubScoring'); });
   wire('mgStatsGotoBaseline',       () => { renderMgBaseline();            showMgSub('mgSubBaseline'); });
-  wire('mgStatsGotoStrokeLoss',     () => { renderMgStrokeLossBreakdown(); showMgSub('mgSubStrokeLoss'); });
-  wire('mgStatsGotoStrategy',       () => { renderMgStrategyBreakdown();   showMgSub('mgSubStrategy'); });
+  wire('mgStatsGotoStrokeLoss',     () => { renderMgStrokeLossBreakdown(); renderMgStrategyBreakdown(); showMgSub('mgSubStrokeAnalysis'); });
+  wire('mgStatsGotoStrategy',       () => { renderMgStrokeLossBreakdown(); renderMgStrategyBreakdown(); showMgSub('mgSubStrokeAnalysis'); });
   wire('mgStatsGotoHistory',        () => { showMgSub('mgSubRoundsHistory'); });
 }
 
@@ -1101,6 +1101,7 @@ function _buildStrategyStats(courses, statsFilter) {
         if (!total) return;
         const { type } = decodeStrategy(strat);
         const key = type || strat;
+        if (key && key.startsWith('Par 3')) return;
         if (!byType[key]) byType[key] = { totalDiff: 0, count: 0 };
         byType[key].totalDiff += total - par;
         byType[key].count++;

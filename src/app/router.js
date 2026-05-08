@@ -375,12 +375,9 @@ document.getElementById('tabPrepare')?.addEventListener('click', () => switchTab
   document.getElementById('mgBackProfile')?.addEventListener('click', showMgHub);
   document.getElementById('mgBackBag')?.addEventListener('click', showMgHub);
   document.getElementById('mgBackStats')?.addEventListener('click', showMgHub);
-  document.getElementById('mgBackScoreBreakdown')?.addEventListener('click', () => showMgSub('mgSubStats'));
-  document.getElementById('mgBackPuttsBreakdown')?.addEventListener('click', () => showMgSub('mgSubStats'));
-  document.getElementById('mgBackAvgStrokes')?.addEventListener('click', () => showMgSub('mgSubStats'));
+  document.getElementById('mgBackScoring')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackBaseline')?.addEventListener('click', () => showMgSub('mgSubStats'));
-  document.getElementById('mgBackStrokeLoss')?.addEventListener('click', () => showMgSub('mgSubStats'));
-  document.getElementById('mgBackStrategy')?.addEventListener('click', () => showMgSub('mgSubStats'));
+  document.getElementById('mgBackStrokeAnalysis')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackRoundsHistory')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackCourses')?.addEventListener('click', showMgHub);
   // Edit bag toggle
