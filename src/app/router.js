@@ -2008,7 +2008,7 @@ initServices({
     }
   }
 
-  // Patch switchTab so HOME always refreshes hero/quote/perf; My Golf gets same hero image
+  // Patch switchTab so HOME always refreshes hero/quote/perf
   const _origSwitchTabHome = switchTab;
   switchTab = function(name) {
     _origSwitchTabHome(name);
@@ -2017,8 +2017,6 @@ initServices({
       cycleQuote();
       refreshHomeStats();
       _renderActiveRoundBanner();
-    } else if (name === 'prepare') {
-      cycleHeroImage();
     } else if (name === 'play') {
       _renderActiveRoundBanner();
     }

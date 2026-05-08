@@ -248,28 +248,125 @@ export function openCoursePicker(onCourseSelect) {
   // ── Course list ───────────────────────────────────────────────────────────
   const courses = loadCourses();
   const ids     = Object.keys(courses);
-  list.innerHTML = '';
 
-  if (!ids.length) {
-    list.innerHTML = '<div class="course-picker-empty">No courses saved yet.<br>Add one in My Golf → My Courses.</div>';
-  } else {
+  function _renderCourseList() {
+    list.innerHTML = '';
+
+    if (!ids.length) {
+      list.innerHTML = '<div class="course-picker-empty">No courses saved yet.<br>Add one in My Golf → My Courses.</div>';
+      return;
+    }
+
     const coursesHdr = document.createElement('div');
     coursesHdr.className = 'picker-section-header';
     coursesHdr.textContent = 'Courses';
     list.appendChild(coursesHdr);
 
-    const withLastPlayed = ids.map(id => {
+    // Separate grouped and standalone
+    const groupMap   = {};
+    const standalone = [];
+    ids.forEach(id => {
+      const c = courses[id];
+      if (c.groupId) {
+        if (!groupMap[c.groupId]) groupMap[c.groupId] = [];
+        groupMap[c.groupId].push(id);
+      } else {
+        standalone.push(id);
+      }
+    });
+
+    // Last-played date for a group = most recent across all its tees
+    function _lastPlayedGroup(groupIds) {
+      return groupIds.reduce((best, id) => {
+        const rounds = loadRounds(id);
+        const last   = rounds.length ? rounds[0].date : null;
+        if (!last) return best;
+        return !best || last > best ? last : best;
+      }, null);
+    }
+
+    // Build flat list of entries to sort by last played
+    const entries = [];
+    Object.entries(groupMap).forEach(([, groupIds]) => {
+      const last = _lastPlayedGroup(groupIds);
+      entries.push({ type: 'group', groupIds, last });
+    });
+    standalone.forEach(id => {
       const rounds = loadRounds(id);
       const last   = rounds.length ? rounds[0].date : null;
-      return { id, course: courses[id], last };
-    }).sort((a, b) => {
+      entries.push({ type: 'standalone', id, last });
+    });
+    entries.sort((a, b) => {
       if (a.last && b.last) return b.last.localeCompare(a.last);
       if (a.last) return -1;
       if (b.last) return 1;
       return 0;
     });
 
-    withLastPlayed.forEach(({ id, course, last }) => {
+    entries.forEach(entry => {
+      if (entry.type === 'group') {
+        const { groupIds } = entry;
+        const groupName    = courses[groupIds[0]].groupName || courses[groupIds[0]].name;
+        const last         = entry.last;
+
+        const row = document.createElement('div');
+        row.className = 'course-picker-row';
+        row.innerHTML =
+          '<div class="course-picker-dot' + (last ? '' : ' unplayed') + '"></div>' +
+          '<div class="course-picker-info">' +
+            '<div class="course-picker-name">' + escHtml(groupName) + '</div>' +
+            '<div class="course-picker-meta">' + groupIds.length + ' tees' + (last ? ' · Last played ' + last : '') + '</div>' +
+          '</div>' +
+          '<button class="course-picker-play" type="button">Select tee ›</button>';
+        row.querySelector('.course-picker-play').addEventListener('click', () => {
+          _renderTeeList(groupIds, groupName);
+        });
+        list.appendChild(row);
+      } else {
+        const { id } = entry;
+        const course  = courses[id];
+        const last    = entry.last;
+        const filledHoles = course.holes.filter(h => h.length > 0).length;
+        const totalPar    = course.holes.reduce((s, h) => s + (h.par || 0), 0);
+        const meta        = [filledHoles + '/18 holes', totalPar ? 'Par ' + totalPar : null, last ? 'Last played ' + last : null].filter(Boolean).join(' · ');
+
+        const row = document.createElement('div');
+        row.className = 'course-picker-row';
+        row.innerHTML =
+          '<div class="course-picker-dot' + (last ? '' : ' unplayed') + '"></div>' +
+          '<div class="course-picker-info">' +
+            '<div class="course-picker-name">' + escHtml(course.name) + '</div>' +
+            '<div class="course-picker-meta">' + meta + '</div>' +
+          '</div>' +
+          '<button class="course-picker-play" type="button">Play</button>';
+        row.querySelector('.course-picker-play').addEventListener('click', () => {
+          closeCoursePicker();
+          onCourseSelect?.(id, fmt, fmt === 'stableford' ? true : hcpOn);
+        });
+        list.appendChild(row);
+      }
+    });
+  }
+
+  function _renderTeeList(groupIds, groupName) {
+    list.innerHTML = '';
+
+    const backRow = document.createElement('div');
+    backRow.className = 'picker-tee-back-row';
+    backRow.innerHTML = '<button class="picker-tee-back-btn" type="button">‹ Back</button>' +
+      '<span class="picker-tee-group-name">' + escHtml(groupName) + '</span>';
+    backRow.querySelector('.picker-tee-back-btn').addEventListener('click', _renderCourseList);
+    list.appendChild(backRow);
+
+    const teesHdr = document.createElement('div');
+    teesHdr.className = 'picker-section-header';
+    teesHdr.textContent = 'Select tee';
+    list.appendChild(teesHdr);
+
+    groupIds.forEach(id => {
+      const course      = courses[id];
+      const rounds      = loadRounds(id);
+      const last        = rounds.length ? rounds[0].date : null;
       const filledHoles = course.holes.filter(h => h.length > 0).length;
       const totalPar    = course.holes.reduce((s, h) => s + (h.par || 0), 0);
       const meta        = [filledHoles + '/18 holes', totalPar ? 'Par ' + totalPar : null, last ? 'Last played ' + last : null].filter(Boolean).join(' · ');
@@ -279,7 +376,7 @@ export function openCoursePicker(onCourseSelect) {
       row.innerHTML =
         '<div class="course-picker-dot' + (last ? '' : ' unplayed') + '"></div>' +
         '<div class="course-picker-info">' +
-          '<div class="course-picker-name">' + escHtml(course.name) + '</div>' +
+          '<div class="course-picker-name">' + escHtml(course.teeName || course.name) + '</div>' +
           '<div class="course-picker-meta">' + meta + '</div>' +
         '</div>' +
         '<button class="course-picker-play" type="button">Play</button>';
@@ -290,6 +387,8 @@ export function openCoursePicker(onCourseSelect) {
       list.appendChild(row);
     });
   }
+
+  _renderCourseList();
 
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';

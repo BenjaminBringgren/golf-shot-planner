@@ -132,6 +132,99 @@ export function deleteCourse(id) {
   renderCourseList();
 }
 
+// ── Tee grouping ──────────────────────────────────────────────────────────────
+
+function _groupCourses(id1, id2, groupName, teeName1, teeName2) {
+  const courses = loadCourses();
+  const groupId = newCourseId();
+  courses[id1] = { ...courses[id1], groupId, groupName, teeName: teeName1 };
+  courses[id2] = { ...courses[id2], groupId, groupName, teeName: teeName2 };
+  saveCourses(courses);
+  renderCourseList();
+}
+
+function _ungroupCourse(id) {
+  const courses = loadCourses();
+  if (!courses[id]) return;
+  const { groupId, groupName, teeName, ...rest } = courses[id];
+  courses[id] = rest;
+  saveCourses(courses);
+  renderCourseList();
+}
+
+function _renderTeeGroupSection(el, courseId, course) {
+  const courses     = loadCourses();
+  const otherIds    = Object.keys(courses).filter(id => id !== courseId && !courses[id].groupId);
+
+  if (course.groupId) {
+    // ── Already in a group ──────────────────────────────────────────────────
+    el.innerHTML =
+      `<div class="tee-group-section">` +
+        `<div class="tee-group-label">TEE GROUPING</div>` +
+        `<div class="tee-group-status">Part of <strong>${escHtml(course.groupName || '')}</strong></div>` +
+        `<div class="tee-group-row">` +
+          `<label class="tee-group-field-lbl">Tee name</label>` +
+          `<input id="teeGroupTeeName" class="tee-group-input" type="text" value="${escHtml(course.teeName || '')}" placeholder="e.g. 59, White, Back"/>` +
+        `</div>` +
+        `<button class="tee-group-leave-btn" id="teeGroupLeaveBtn" type="button">Remove from group</button>` +
+      `</div>`;
+    el.querySelector('#teeGroupLeaveBtn').addEventListener('click', () => {
+      _ungroupCourse(courseId);
+      _renderTeeGroupSection(el, courseId, loadCourses()[courseId] || course);
+    });
+  } else if (otherIds.length > 0) {
+    // ── Standalone, can group ───────────────────────────────────────────────
+    el.innerHTML =
+      `<div class="tee-group-section">` +
+        `<div class="tee-group-label">TEE GROUPING</div>` +
+        `<div class="tee-group-row">` +
+          `<label class="tee-group-field-lbl">This tee's name</label>` +
+          `<input id="teeGroupTeeName" class="tee-group-input" type="text" value="" placeholder="e.g. 59, White, Back"/>` +
+        `</div>` +
+        `<div class="tee-group-row">` +
+          `<label class="tee-group-field-lbl">Group with</label>` +
+          `<select id="teeGroupOtherCourse" class="tee-group-input">` +
+            `<option value="">— select a course —</option>` +
+            otherIds.map(id => `<option value="${id}">${escHtml(courses[id].name)}</option>`).join('') +
+          `</select>` +
+        `</div>` +
+        `<div class="tee-group-row" id="teeGroupOtherNameRow" style="display:none;">` +
+          `<label class="tee-group-field-lbl">Other tee's name</label>` +
+          `<input id="teeGroupOtherTeeName" class="tee-group-input" type="text" value="" placeholder="e.g. 56, Yellow, Front"/>` +
+        `</div>` +
+        `<div class="tee-group-row" id="teeGroupGroupNameRow" style="display:none;">` +
+          `<label class="tee-group-field-lbl">Group name</label>` +
+          `<input id="teeGroupGroupName" class="tee-group-input" type="text" value="" placeholder="e.g. Eslövs GK"/>` +
+        `</div>` +
+        `<button class="tee-group-create-btn" id="teeGroupCreateBtn" type="button" style="display:none;">Create group</button>` +
+      `</div>`;
+    el.querySelector('#teeGroupOtherCourse').addEventListener('change', e => {
+      const hasOther = !!e.target.value;
+      el.querySelector('#teeGroupOtherNameRow').style.display = hasOther ? '' : 'none';
+      el.querySelector('#teeGroupGroupNameRow').style.display = hasOther ? '' : 'none';
+      el.querySelector('#teeGroupCreateBtn').style.display    = hasOther ? '' : 'none';
+      if (hasOther && !el.querySelector('#teeGroupGroupName').value) {
+        const sharedBase = courses[e.target.value]?.name?.replace(/[\s\-–]\S+$/, '').trim() || '';
+        el.querySelector('#teeGroupGroupName').value = sharedBase;
+      }
+    });
+    el.querySelector('#teeGroupCreateBtn').addEventListener('click', () => {
+      const otherId    = el.querySelector('#teeGroupOtherCourse').value;
+      const teeName1   = el.querySelector('#teeGroupTeeName').value.trim();
+      const teeName2   = el.querySelector('#teeGroupOtherTeeName').value.trim();
+      const groupName  = el.querySelector('#teeGroupGroupName').value.trim();
+      if (!otherId)   { alert('Select a course to group with.'); return; }
+      if (!teeName1)  { alert('Enter a name for this tee.'); return; }
+      if (!teeName2)  { alert('Enter a name for the other tee.'); return; }
+      if (!groupName) { alert('Enter a group name.'); return; }
+      _groupCourses(courseId, otherId, groupName, teeName1, teeName2);
+      _renderTeeGroupSection(el, courseId, loadCourses()[courseId] || course);
+    });
+  } else {
+    el.innerHTML = '';
+  }
+}
+
 export function renderCourseList() {
   const courses = loadCourses();
   const list    = document.getElementById('courseList');
@@ -140,28 +233,25 @@ export function renderCourseList() {
   const ids = Object.keys(courses);
   if (ids.length === 0) {
     list.innerHTML = '<div style="color:#aaa;font-size:15px;padding:8px 0;">No courses yet — add one below.</div>';
+    _svc.renderSavedRounds?.();
     return;
   }
 
+  // Separate grouped and standalone courses
+  const groupMap   = {}; // groupId → courseId[]
+  const standalone = [];
   ids.forEach(id => {
-    const c           = courses[id];
-    const filledHoles = c.holes.filter(h => h.length > 0).length;
-    const totalPar    = c.holes.reduce((s, h) => s + (h.par || 0), 0);
+    const c = courses[id];
+    if (c.groupId) {
+      if (!groupMap[c.groupId]) groupMap[c.groupId] = [];
+      groupMap[c.groupId].push(id);
+    } else {
+      standalone.push(id);
+    }
+  });
 
-    const item = document.createElement('div');
-    item.className = 'course-item';
-    item.innerHTML =
-      `<div class="course-item-info">
-        <div class="course-item-name">${escHtml(c.name)}</div>
-        <div class="course-item-meta">${filledHoles}/18 holes · Par ${totalPar || '—'}</div>
-      </div>
-      <div class="course-item-actions">
-        <button class="course-action-btn" data-id="${id}" data-action="edit">Edit</button>
-        <button class="course-action-btn" data-id="${id}" data-action="load">▶ Play</button>
-        <button class="course-action-btn danger" data-id="${id}" data-action="delete">✕</button>
-      </div>`;
-
-    item.querySelectorAll('[data-action]').forEach(btn => {
+  function _wireActions(el, id) {
+    el.querySelectorAll('[data-action]').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
         const action = btn.dataset.action;
@@ -170,7 +260,65 @@ export function renderCourseList() {
         if (action === 'delete') deleteCourse(id);
       });
     });
+  }
 
+  // ── Grouped courses ─────────────────────────────────────────────────────
+  Object.values(groupMap).forEach(groupIds => {
+    const groupName = courses[groupIds[0]].groupName || courses[groupIds[0]].name;
+    const card = document.createElement('div');
+    card.className = 'course-group-card';
+
+    const hdr = document.createElement('div');
+    hdr.className = 'course-group-header';
+    hdr.innerHTML =
+      `<span class="course-group-name">${escHtml(groupName)}</span>` +
+      `<span class="course-group-count">${groupIds.length} tees</span>`;
+    card.appendChild(hdr);
+
+    groupIds.forEach(id => {
+      const c           = courses[id];
+      const filledHoles = c.holes.filter(h => h.length > 0).length;
+      const totalPar    = c.holes.reduce((s, h) => s + (h.par || 0), 0);
+      const teeRow = document.createElement('div');
+      teeRow.className = 'course-tee-row';
+      teeRow.innerHTML =
+        `<div class="course-tee-info" data-id="${id}" data-action-info="edit">` +
+          `<div class="course-tee-name">${escHtml(c.teeName || c.name)}</div>` +
+          `<div class="course-tee-meta">${filledHoles}/18 holes · Par ${totalPar || '—'}</div>` +
+        `</div>` +
+        `<div class="course-item-actions">` +
+          `<button class="course-action-btn" data-id="${id}" data-action="edit">Edit</button>` +
+          `<button class="course-action-btn" data-id="${id}" data-action="load">▶ Play</button>` +
+          `<button class="course-action-btn danger" data-id="${id}" data-action="delete">✕</button>` +
+        `</div>`;
+      teeRow.querySelector('[data-action-info="edit"]').addEventListener('click', () => openEditor(id));
+      _wireActions(teeRow, id);
+      card.appendChild(teeRow);
+    });
+
+    list.appendChild(card);
+  });
+
+  // ── Standalone courses ──────────────────────────────────────────────────
+  standalone.forEach(id => {
+    const c           = courses[id];
+    const filledHoles = c.holes.filter(h => h.length > 0).length;
+    const totalPar    = c.holes.reduce((s, h) => s + (h.par || 0), 0);
+
+    const item = document.createElement('div');
+    item.className = 'course-item';
+    item.innerHTML =
+      `<div class="course-item-info">` +
+        `<div class="course-item-name">${escHtml(c.name)}</div>` +
+        `<div class="course-item-meta">${filledHoles}/18 holes · Par ${totalPar || '—'}</div>` +
+      `</div>` +
+      `<div class="course-item-actions">` +
+        `<button class="course-action-btn" data-id="${id}" data-action="edit">Edit</button>` +
+        `<button class="course-action-btn" data-id="${id}" data-action="load">▶ Play</button>` +
+        `<button class="course-action-btn danger" data-id="${id}" data-action="delete">✕</button>` +
+      `</div>`;
+
+    _wireActions(item, id);
     item.querySelector('.course-item-info').addEventListener('click', () => openEditor(id));
     list.appendChild(item);
   });
@@ -228,6 +376,15 @@ export function openEditor(id) {
     }
   });
 
+  // ── Tee grouping section ──────────────────────────────────────────────────
+  let teeGroupSection = document.getElementById('teeGroupSection');
+  if (!teeGroupSection) {
+    teeGroupSection = document.createElement('div');
+    teeGroupSection.id = 'teeGroupSection';
+    document.getElementById('scorecardTable').parentElement.after(teeGroupSection);
+  }
+  _renderTeeGroupSection(teeGroupSection, courseId, course);
+
   document.getElementById('courseEditorSave').onclick = () => {
     const name = document.getElementById('courseNameInput').value.trim();
     if (!name) { alert('Please enter a course name.'); return; }
@@ -241,8 +398,19 @@ export function openEditor(id) {
     const courseRating = parseFloat(document.getElementById('courseRatingInput').value) || 0;
     const slopeRating  = parseInt(document.getElementById('slopeRatingInput').value)    || 0;
 
-    const updated = loadCourses();
+    // Read tee name from grouping section if present
+    const teeNameEl = document.getElementById('teeGroupTeeName');
+    const teeName   = teeNameEl ? teeNameEl.value.trim() : '';
+
+    // Preserve existing grouping fields
+    const existing = loadCourses()[courseId] || {};
+    const updated  = loadCourses();
     updated[courseId] = {
+      ...(existing.groupId   ? { groupId:   existing.groupId   } : {}),
+      ...(existing.groupName ? { groupName: existing.groupName } : {}),
+      ...(teeName            ? { teeName }
+          : existing.teeName ? { teeName: existing.teeName }
+          : {}),
       name, holes,
       ...(courseRating ? { courseRating } : {}),
       ...(slopeRating  ? { slopeRating  } : {}),

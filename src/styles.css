@@ -430,6 +430,69 @@
       font-size: 17px; font-weight: 700; color: #333; margin: 0;
     }
     .course-list { margin-bottom: 12px; margin-top: 16px; }
+    /* ── Course group card (My Courses list) ──────────────────────────── */
+    .course-group-card {
+      background: #fff; border-radius: 10px; overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .course-group-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px 8px; border-bottom: 0.5px solid rgba(0,0,0,0.07);
+    }
+    .course-group-name { font-size: 15px; font-weight: 700; color: #1a1a1a; }
+    .course-group-count { font-size: 12px; color: #aaa; font-weight: 600; }
+    .course-tee-row {
+      display: flex; align-items: stretch; justify-content: space-between;
+      border-bottom: 0.5px solid rgba(0,0,0,0.05);
+    }
+    .course-tee-row:last-child { border-bottom: none; }
+    .course-tee-info { padding: 10px 14px; flex: 1; cursor: pointer; }
+    .course-tee-name { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+    .course-tee-meta { font-size: 12px; color: #888; margin-top: 2px; }
+
+    /* ── Tee grouping section in course editor ─────────────────────────── */
+    .tee-group-section {
+      margin: 0 8px 10px; padding: 12px 14px;
+      background: #f5f4f0; border-radius: 8px;
+    }
+    .tee-group-label {
+      font-size: 11px; font-weight: 700; color: #aaa;
+      text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;
+    }
+    .tee-group-status { font-size: 15px; color: #1a1a1a; margin-bottom: 10px; }
+    .tee-group-row { display: flex; flex-direction: column; gap: 3px; margin-bottom: 8px; }
+    .tee-group-field-lbl { font-size: 12px; font-weight: 600; color: #888; }
+    .tee-group-input {
+      width: 100%; padding: 8px 10px; font-size: 15px;
+      border: none; border-radius: 6px; background: #fff;
+      color: #1a1a1a; font-family: inherit; box-sizing: border-box;
+    }
+    select.tee-group-input { appearance: none; -webkit-appearance: none; }
+    .tee-group-create-btn {
+      width: 100%; padding: 10px; font-size: 15px; font-weight: 700;
+      background: #1a1a1a; color: #fff; border: none; border-radius: 7px;
+      cursor: pointer; margin-top: 4px;
+    }
+    .tee-group-leave-btn {
+      width: 100%; padding: 10px; font-size: 15px; font-weight: 600;
+      background: transparent; color: #c0392b; border: none; border-radius: 7px;
+      cursor: pointer; margin-top: 4px; text-align: center;
+    }
+
+    /* ── Tee picker step (course picker sheet) ─────────────────────────── */
+    .picker-tee-back-row {
+      display: flex; align-items: center; gap: 4px;
+      padding: 10px 16px 6px;
+    }
+    .picker-tee-back-btn {
+      background: none; border: none; font-size: 17px; font-weight: 600;
+      color: #1a1a1a; cursor: pointer; padding: 4px 6px 4px 0; margin: 0;
+      width: auto; border-radius: 0;
+    }
+    .picker-tee-group-name {
+      font-size: 15px; font-weight: 700; color: #1a1a1a;
+    }
+
     .course-item {
       display: flex; align-items: stretch; justify-content: space-between;
       padding: 0; border: none; border-radius: 10px;
