@@ -1424,7 +1424,7 @@
     .sc2-col-hdr, .sc2-row, .sc2-sub { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; }
 
     .sc2-col-hdr { padding: 9px 0; background: #f0efeb; border-bottom: 0.5px solid rgba(0,0,0,0.07); }
-    .sc2-col-hdr > span { font-size: 13px; font-weight: 700; color: #888; letter-spacing: 0.06em; text-transform: uppercase; text-align: center; }
+    .sc2-col-hdr > span { font-size: 13px; font-weight: 400; color: #888; letter-spacing: 0.06em; text-transform: uppercase; text-align: center; }
     .sc2-col-hdr > span:first-child { text-align: left; padding-left: 14px; }
     .sc2-col-hdr .sc2-col-sep { background: transparent; }
 
@@ -2884,7 +2884,7 @@
   background: #1a1a1a; color: #fff;
   border: none; border-radius: 8px;
   padding: 9px 16px;
-  font-size: 17px; font-weight: 700; font-family: inherit;
+  font-size: 15px; font-weight: 700; font-family: inherit;
   cursor: pointer; -webkit-tap-highlight-color: transparent;
 }
 .arb-resume-btn.is-pressed { background: #333; }
@@ -2896,7 +2896,7 @@
   margin-bottom: 10px;
 }
 .home-stats-label {
-  font-size: 15px; font-weight: 700; color: #888;
+  font-size: 13px; font-weight: 700; color: #888;
   text-transform: uppercase; letter-spacing: 0.06em;
 }
 .home-stats-viewall {
