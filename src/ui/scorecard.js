@@ -426,8 +426,8 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     const back9StrokeCount  = holeStrokeCounts.slice(9).reduce((a, n) => a + n, 0);
     const totalStrokeCount  = front9StrokeCount + back9StrokeCount;
 
-    // ── Game format ───────────────────────────────────────────────────────────
-    const { gameFormat = 'strokes' } = loadActiveCourse();
+    // ── Game format / handicap ────────────────────────────────────────────────
+    const { gameFormat = 'strokes', hcpEnabled = true } = loadActiveCourse();
     const isStableford = gameFormat === 'stableford';
 
     let totalStrokes = 0, totalPar = 0, totalPutts = 0, totalGIR = 0, totalFIR = 0, totalFIRDenom = 0, holesPlayed = 0;
@@ -479,6 +479,8 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     const anyPlayed = front9Played || back9Played;
     if (isStableford) pageInner.classList.add('sc2-stableford');
     else              pageInner.classList.remove('sc2-stableford');
+    if (!hcpEnabled)  pageInner.classList.add('sc2-no-hcp');
+    else              pageInner.classList.remove('sc2-no-hcp');
     pageInner.innerHTML =
       _sectionHtml('Front 9', 'Out', 'out', 'OUT',
         _sectionRows(played, 0, 9, holeStrokeCounts, runningTotals),

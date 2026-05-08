@@ -1421,6 +1421,11 @@
     /* .sc2-card is the single grid container — subgrid guarantees pixel-perfect column alignment */
     .sc2-card { background: #fff; border-radius: 12px; overflow: hidden; border: 0.5px solid rgba(0,0,0,0.07); display: grid; grid-template-columns: 44px 1fr 1fr 28px 1px 1fr 1fr 1fr 1fr 1.4fr; }
     .sc2-stableford .sc2-card { grid-template-columns: 44px 1fr 1fr 28px 1px 1fr 1fr 1fr 1fr 1.4fr 1fr; }
+    .sc2-no-hcp .sc2-card { grid-template-columns: 44px 1fr 1fr 0px 1px 1fr 1fr 1fr 1fr 1.4fr; }
+    .sc2-no-hcp.sc2-stableford .sc2-card { grid-template-columns: 44px 1fr 1fr 0px 1px 1fr 1fr 1fr 1fr 1.4fr 1fr; }
+    .sc2-no-hcp .sc2-hcp-dots,
+    .sc2-no-hcp .sc2-col-hdr span:nth-child(4),
+    .sc2-no-hcp .sc2-sub span:nth-child(4) { overflow: hidden; padding: 0; pointer-events: none; }
 
     /* All row types span the full card and inherit its exact column positions */
     .sc2-col-hdr, .sc2-row, .sc2-sub { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; }
