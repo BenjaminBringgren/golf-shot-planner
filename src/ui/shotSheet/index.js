@@ -45,11 +45,13 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
     _render();
     overlay.classList.add('visible');
     drawer.classList.add('open');
+    document.body.style.overflow = 'hidden';
   }
 
   function closeDrawer() {
     drawer.classList.remove('open');
     overlay.classList.remove('visible');
+    document.body.style.overflow = '';
   }
 
   // ── FAB wiring ───────────────────────────────────────────────────────────
@@ -259,6 +261,7 @@ function _handleNext(state, isLastHole, courseId, holeIdx, callbacks) {
     // Close drawer, trigger round-complete overlay
     document.getElementById('scoreDrawer')?.classList.remove('open');
     document.getElementById('scoreDrawerOverlay')?.classList.remove('visible');
+    document.body.style.overflow = '';
     callbacks.showRoundComplete?.(courseId, holeIdx);
   } else {
     // Navigate the course bar to the next hole
@@ -266,6 +269,7 @@ function _handleNext(state, isLastHole, courseId, holeIdx, callbacks) {
     if (bar?._navigateTo) bar._navigateTo(nextIdx ?? holeIdx + 1);
     document.getElementById('scoreDrawer')?.classList.remove('open');
     document.getElementById('scoreDrawerOverlay')?.classList.remove('visible');
+    document.body.style.overflow = '';
   }
 }
 
@@ -331,6 +335,7 @@ function _buildModeToggle(courseId, holeIdx, callbacks) {
       saveScoringMode(mode);
       document.getElementById('scoreDrawer')?.classList.remove('open');
       document.getElementById('scoreDrawerOverlay')?.classList.remove('visible');
+      document.body.style.overflow = '';
       callbacks.renderScoreEntry?.(courseId, holeIdx, loadScores(courseId));
       document.getElementById('scoreFab')?.click();
     });

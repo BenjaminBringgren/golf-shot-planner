@@ -84,9 +84,9 @@ function _stratDotColor(stratStr) {
   if (!stratStr) return null;
   const { type } = decodeStrategy(stratStr);
   const t = type || stratStr;
-  if (t.startsWith('Par 3')) return '#aaa';
-  if (t === 'Max distance' || t === 'Aggressive' || t === 'Long') return '#c0392b';
-  if (t === 'Balanced'     || t === 'Controlled' || t === 'Medium') return '#e8a070';
+  if (t === 'Max distance') return '#c0392b';
+  if (t === 'Controlled')   return '#c07820';
+  if (t === 'Conservative') return '#1e7a45';
   return '#888';
 }
 
@@ -102,7 +102,7 @@ function _sectionRows(played, from, to, holeStrokeCounts, runningTotals, strateg
     const pts = isPlayed ? stablefordPoints(h.total, h.par, holeStrokeCounts[from + idx]) : null;
     const stratStr    = strategiesMap ? (strategiesMap[from + idx] ?? strategiesMap[String(from + idx)]) : null;
     const stratColor  = stratStr ? _stratDotColor(stratStr) : null;
-    const stratStyle  = stratColor ? ` style="box-shadow:inset 3px 0 0 ${stratColor}"` : '';
+    const stratStyle  = stratColor ? ` style="box-shadow:inset 4px 0 0 ${stratColor}"` : '';
     return `
       <div class="sc2-row">
         <div${stratStyle}><span class="sc2-hole ${holeCls}">${h.hole}</span></div>
@@ -1582,6 +1582,7 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
   // Wire back to round button
   el.querySelector('#rcBackBtn').addEventListener('click', () => {
     el.style.display = 'none';
+    document.body.style.overflow = '';
     const { gameFormat: _fmt = 'strokes', hcpEnabled: _hcp = true } = loadActiveCourse();
     saveActiveCourse(courseId, backHoleIdx, _fmt, _hcp);
     const bar = document.getElementById('playCourseBar');
