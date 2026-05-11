@@ -100,12 +100,12 @@ function _sectionRows(played, from, to, holeStrokeCounts, runningTotals, strateg
     const firCell  = h.par < 4 ? '<div class="sc2-fir sc2-fir--par3">—</div>'
       : `<div class="sc2-fir">${_girDot(firVal)}</div>`;
     const pts = isPlayed ? stablefordPoints(h.total, h.par, holeStrokeCounts[from + idx]) : null;
-    const stratStr  = strategiesMap ? (strategiesMap[from + idx] ?? strategiesMap[String(from + idx)]) : null;
-    const dotColor  = stratStr ? _stratDotColor(stratStr) : null;
-    const stratDot  = dotColor ? `<span class="sc2-strat-dot" style="background:${dotColor}"></span>` : '';
+    const stratStr    = strategiesMap ? (strategiesMap[from + idx] ?? strategiesMap[String(from + idx)]) : null;
+    const stratColor  = stratStr ? _stratDotColor(stratStr) : null;
+    const stratStyle  = stratColor ? ` style="box-shadow:inset 3px 0 0 ${stratColor}"` : '';
     return `
-      <div class="sc2-row">
-        <div><span class="sc2-hole ${holeCls}">${h.hole}</span>${stratDot}</div>
+      <div class="sc2-row"${stratStyle}>
+        <div><span class="sc2-hole ${holeCls}">${h.hole}</span></div>
         <div class="sc2-par">${h.par}</div>
         <div class="sc2-idx">${h.si ?? '—'}</div>
         <div class="sc2-hcp-dots">${_hcpDotsHtml(holeStrokeCounts[from + idx])}</div>
@@ -305,18 +305,25 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     const holePar    = hole.par || 4;
     const holeLen    = hole.length || 0;
     let totalStrokes = 0, totalPar = 0, holesPlayed = 0;
+    const cbHoleStrokeCounts = computeHoleStrokeCounts(courseId);
+    let playedHcpAdj = 0;
     scores.forEach((s, i) => {
       if (!s) return;
       totalStrokes += (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
       totalPar     += c.holes[i]?.par || 4;
+      playedHcpAdj += cbHoleStrokeCounts[i] ?? 0;
       holesPlayed++;
     });
-    const scoreDiff = holesPlayed ? totalStrokes - totalPar : null;
+    const cbIsStableford = (session.gameFormat ?? 'strokes') === 'stableford';
+    const hasHcpActive = playedHcpAdj > 0 && !cbIsStableford;
+    const grossDiff = holesPlayed ? totalStrokes - totalPar : null;
+    const netDiff   = grossDiff !== null && hasHcpActive ? grossDiff - playedHcpAdj : grossDiff;
+    const scoreDiff = netDiff;
     const scoreTxt  = scoreDiff === null ? 'E' : scoreDiff === 0 ? 'E' : (scoreDiff > 0 ? `+${scoreDiff}` : `${scoreDiff}`);
     const scoreCls  = scoreDiff === null || scoreDiff === 0 ? 'score-even' : scoreDiff > 0 ? 'score-over' : 'score-under';
+    const scoreLabel = hasHcpActive ? 'Net' : 'Score';
 
-
-    statsRow.appendChild(statItem('Score', scoreTxt, scoreCls));
+    statsRow.appendChild(statItem(scoreLabel, scoreTxt, scoreCls));
     rightCol.appendChild(statsRow);
     header.appendChild(rightCol);
 
@@ -1341,14 +1348,21 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
   const scrambPct = scrambOpp > 0 ? Math.round(scrambMade / scrambOpp * 100) : '—';
   const parPct    = holesPlayed > 0 ? Math.round((birdies + pars) / holesPlayed * 100) : '—';
 
-  // Baseline — handicap-adjusted: how did this round compare to what's expected for this handicap?
+  // Handicap-adjusted net score
   const rcHcpTotal = rcHoleStrokeCounts.reduce((a, n) => a + n, 0);
-  let baselineStr = null, baselineColor = '#888';
-  if (rcHcpTotal > 0) {
-    const netVsPar = vsPar - rcHcpTotal;
-    baselineStr = (netVsPar === 0 ? 'E' : (netVsPar > 0 ? '+' : '') + netVsPar) + ' vs handicap';
-    baselineColor = netVsPar < 0 ? '#c0392b' : '#1a1a1a';
-  }
+  const rcNetVsPar = rcHcpTotal > 0 && !rcIsStableford ? vsPar - rcHcpTotal : null;
+  const rcHeroScore = rcIsStableford
+    ? rcTotalPoints + ' pts'
+    : rcNetVsPar !== null
+      ? (rcNetVsPar === 0 ? 'E' : (rcNetVsPar > 0 ? '+' : '') + rcNetVsPar)
+      : vsParStr;
+  const rcHeroColor = rcIsStableford ? '#1a1a1a'
+    : rcNetVsPar !== null ? (rcNetVsPar < 0 ? '#c0392b' : '#1a1a1a')
+    : vsParColor;
+  // When showing net as hero, show gross in the sub-line
+  const rcHeroSub = rcNetVsPar !== null
+    ? `${vsParStr} gross · par ${totalPar} · ${holesPlayed} holes`
+    : `${totalStrokes} strokes · par ${totalPar} · ${holesPlayed} holes`;
 
   // Strategy insight — Par 4/5 strategies vs Par 3 performance, from saved rounds at this course
   let stratInsightHtml = '';
@@ -1485,9 +1499,8 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
     ${isNewBest ? `<div class="rc-best-banner"><span class="rc-best-trophy">🏆</span><div><div class="rc-best-headline">New personal best!</div><div class="rc-best-sub">Previous best: ${prevAllTimeBest} strokes</div></div></div>` : ''}
     <div class="rc-section">
       <div class="rc-hero">
-        <div class="rc-hero-score" style="color:${rcIsStableford ? '#1a1a1a' : vsParColor}">${rcIsStableford ? rcTotalPoints + ' pts' : vsParStr}</div>
-        <div class="rc-hero-sub">${totalStrokes} strokes · par ${totalPar} · ${holesPlayed} holes</div>
-        ${baselineStr ? `<div class="rc-hero-baseline" style="color:${baselineColor}">${baselineStr}</div>` : ''}
+        <div class="rc-hero-score" style="color:${rcHeroColor}">${rcHeroScore}</div>
+        <div class="rc-hero-sub">${rcHeroSub}</div>
       </div>
       <div class="rc-stat-grid">
         <div class="rc-stat-cell"><div class="rc-stat-val">${girPct !== '—' ? girPct + '%' : '—'}</div><div class="rc-stat-lbl">GIR</div></div>
@@ -1700,12 +1713,18 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
   const vsParColor = vsPar < 0 ? '#c0392b' : '#1a1a1a';
 
   const rdHcpTotal = rdHoleStrokeCounts.reduce((a, n) => a + n, 0);
-  let baselineStr = null, baselineColor = '#888';
-  if (rdHcpTotal > 0 && holesPlayed > 0) {
-    const netVsPar = vsPar - rdHcpTotal;
-    baselineStr = (netVsPar === 0 ? 'E' : (netVsPar > 0 ? '+' : '') + netVsPar) + ' vs handicap';
-    baselineColor = netVsPar < 0 ? '#c0392b' : '#1a1a1a';
-  }
+  const rdNetVsPar = rdHcpTotal > 0 && !rdIsStableford && holesPlayed > 0 ? vsPar - rdHcpTotal : null;
+  const rdHeroScore = rdIsStableford
+    ? rdTotalPoints + ' pts'
+    : rdNetVsPar !== null
+      ? (rdNetVsPar === 0 ? 'E' : (rdNetVsPar > 0 ? '+' : '') + rdNetVsPar)
+      : vsParStr;
+  const rdHeroColor = rdIsStableford ? '#1a1a1a'
+    : rdNetVsPar !== null ? (rdNetVsPar < 0 ? '#c0392b' : '#1a1a1a')
+    : vsParColor;
+  const rdHeroSub = rdNetVsPar !== null
+    ? `${vsParStr} gross · par ${totalPar} · ${holesPlayed} holes`
+    : `${totalStrokes} strokes · par ${totalPar} · ${holesPlayed} holes`;
 
   const firEligible = played.filter(h => h.par >= 4 && h.total != null).length;
   const girPct      = holesPlayed > 0 ? Math.round(totalGIR / holesPlayed * 100) : '—';
@@ -1847,9 +1866,8 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
     </div>
     <div class="rc-section">
       <div class="rc-hero">
-        <div class="rc-hero-score" style="color:${rdIsStableford ? '#1a1a1a' : vsParColor}">${rdIsStableford ? rdTotalPoints + ' pts' : vsParStr}</div>
-        <div class="rc-hero-sub">${totalStrokes} strokes · par ${totalPar} · ${holesPlayed} holes</div>
-        ${baselineStr ? `<div class="rc-hero-baseline" style="color:${baselineColor}">${baselineStr}</div>` : ''}
+        <div class="rc-hero-score" style="color:${rdHeroColor}">${rdHeroScore}</div>
+        <div class="rc-hero-sub">${rdHeroSub}</div>
       </div>
       <div class="rc-stat-grid">
         <div class="rc-stat-cell"><div class="rc-stat-val">${girPct !== '—' ? girPct + '%' : '—'}</div><div class="rc-stat-lbl">GIR</div></div>
