@@ -285,7 +285,7 @@
       width: 42px; height: 42px; border-radius: 9px;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
-    .mg-menu-title { font-size: 15px; font-weight: 700; color: #1a1a1a; margin: 0; }
+    .mg-menu-title { font-size: 15px; font-weight: 700; color: #1a1a1a; margin: 0; text-transform: uppercase; letter-spacing: 0.04em; }
     .mg-menu-sub   { font-size: 13px; color: #888; margin: 2px 0 0; }
     .mg-menu-arrow { margin-left: auto; color: #bbb; font-size: 17px; font-weight: 400; }
 
@@ -320,7 +320,7 @@
     .mg-baseline-legend-lbl { font-size: 11px; color: #888; }
     .mg-par-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 10px; padding: 0 2px 2px; }
     .mg-par-tile { background: #f5f4f0; border-radius: 10px; padding: 14px 12px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .mg-par-val { font-size: 28px; font-weight: 400; color: #1a1a1a; line-height: 1; margin: 0; }
+    .mg-par-val { font-size: 28px; font-weight: 700; color: #1a1a1a; line-height: 1; margin: 0; }
     .mg-par-lbl { font-size: 13px; font-weight: 400; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin: 0; }
     .mg-par-sub { font-size: 13px; color: #888; margin: 0; }
     .mg-par-sub.pos { color: #3a6fc4; }
@@ -3082,7 +3082,7 @@
   flex-shrink: 0;
 }
 .mg-drilldown-text { flex: 1; }
-.mg-drilldown-title { font-size: 15px; font-weight: 700; color: #1a1a1a; }
+.mg-drilldown-title { font-size: 15px; font-weight: 700; color: #1a1a1a; text-transform: uppercase; letter-spacing: 0.04em; }
 .mg-drilldown-sub   { font-size: 13px; color: #888; margin-top: 2px; }
 .mg-drilldown-arrow { font-size: 17px; color: #ccc; font-weight: 400; flex-shrink: 0; }
 

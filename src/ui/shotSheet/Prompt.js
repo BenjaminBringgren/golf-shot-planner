@@ -12,12 +12,13 @@ import { STAGE_SHOTS } from '../../app/holeFlow.js';
  * @param {number} opts.shotCount  _shots.length (tee position + completed shots)
  * @returns {HTMLElement}
  */
-export function renderPrompt({ stage, shotCount = 1 }) {
+export function renderPrompt({ stage, shotCount = 1, penaltyStrokes = 0 }) {
   const el = document.createElement('div');
   el.className = 'sh-prompt';
 
   if (stage === STAGE_SHOTS) {
-    const completed = shotCount - 1;
+    const completed = shotCount - 1 + penaltyStrokes;
+    const nextShot  = shotCount + penaltyStrokes;
 
     if (completed > 0) {
       const numEl = document.createElement('div');
@@ -28,7 +29,7 @@ export function renderPrompt({ stage, shotCount = 1 }) {
 
     const hint = document.createElement('span');
     hint.className = 'sh-prompt-hint';
-    hint.textContent = `tap where shot ${shotCount} landed`;
+    hint.textContent = `tap where shot ${nextShot} landed`;
     el.appendChild(hint);
   }
 

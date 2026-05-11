@@ -152,7 +152,7 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
 
     // ── Stage-specific content ──────────────────────────────────────────
     if (state.stage === STAGE_SHOTS) {
-      inner.appendChild(renderPrompt({ stage: STAGE_SHOTS, shotCount: state.shots.length }));
+      inner.appendChild(renderPrompt({ stage: STAGE_SHOTS, shotCount: state.shots.length, penaltyStrokes: state.penaltyStrokes ?? 0 }));
       inner.appendChild(renderLieGrid({
         onLie: (lie) => {
           callbacks.commitShot?.(lie);
@@ -176,7 +176,7 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
 
     } else if (state.stage === STAGE_PUTTS) {
       inner.appendChild(renderShotCountDisplay({
-        shots: state.shots.length, putts: state.putts,
+        shots: state.shots.length, putts: state.putts, penaltyStrokes: state.penaltyStrokes ?? 0,
         onAdd:    () => callbacks.addApproachShot?.('fw'),
         onRemove: () => callbacks.removeApproachShot?.(),
       }));
@@ -198,15 +198,16 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
 
     } else if (state.stage === STAGE_RESULT) {
       inner.appendChild(renderResultBar({
-        tier:          state.tier,
-        shots:         state.shots,
-        putts:         state.putts,
-        par:           holePar,
+        tier:           state.tier,
+        shots:          state.shots,
+        putts:          state.putts,
+        par:            holePar,
         holeIdx,
-        milestones:    state.milestones,
-        isFirstOfType: state.isFirstOfType,
+        milestones:     state.milestones,
+        isFirstOfType:  state.isFirstOfType,
         isLastHole,
-        onNext: null, // Next is always in ConfirmRow below
+        onNext:         null, // Next is always in ConfirmRow below
+        penaltyStrokes: state.penaltyStrokes ?? 0,
       }));
 
       // Haptic only for celebrations
@@ -215,7 +216,7 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
       }
 
       inner.appendChild(renderShotCountDisplay({
-        shots: state.shots.length, putts: state.putts,
+        shots: state.shots.length, putts: state.putts, penaltyStrokes: state.penaltyStrokes ?? 0,
         onAdd:    () => callbacks.addApproachShot?.('fw'),
         onRemove: () => callbacks.removeApproachShot?.(),
       }));

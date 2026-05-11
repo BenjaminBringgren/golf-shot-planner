@@ -48,8 +48,8 @@ function _autoFw(shots, par) {
  * @param {boolean}   opts.isLastHole
  * @param {Function}  opts.onNext
  */
-export function renderResultBar({ tier, shots, putts, par, holeIdx, milestones, isFirstOfType, isLastHole, onNext }) {
-  const totalShots = shots.length + putts;
+export function renderResultBar({ tier, shots, putts, par, holeIdx, milestones, isFirstOfType, isLastHole, onNext, penaltyStrokes }) {
+  const totalShots = shots.length + putts + (penaltyStrokes ?? 0);
   const gir = _autoGir(shots, par);
   const fw  = _autoFw(shots, par);
   const nextLabel = isLastHole ? 'Finish round' : `Hole ${holeIdx + 2}`;

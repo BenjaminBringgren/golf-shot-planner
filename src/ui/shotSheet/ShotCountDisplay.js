@@ -10,7 +10,7 @@
  * @param {Function} [opts.onRemove] called when − is tapped
  * @returns {HTMLElement}
  */
-export function renderShotCountDisplay({ shots, putts, onAdd, onRemove }) {
+export function renderShotCountDisplay({ shots, putts, onAdd, onRemove, penaltyStrokes }) {
   const el = document.createElement('div');
   el.className = 'sh-prompt';
 
@@ -26,7 +26,7 @@ export function renderShotCountDisplay({ shots, putts, onAdd, onRemove }) {
 
   const numEl = document.createElement('div');
   numEl.className = 'sh-shot-count';
-  numEl.textContent = shots + putts;
+  numEl.textContent = shots + putts + (penaltyStrokes ?? 0);
   row.appendChild(numEl);
 
   const plusBtn = document.createElement('button');

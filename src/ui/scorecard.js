@@ -104,8 +104,8 @@ function _sectionRows(played, from, to, holeStrokeCounts, runningTotals, strateg
     const stratColor  = stratStr ? _stratDotColor(stratStr) : null;
     const stratStyle  = stratColor ? ` style="box-shadow:inset 3px 0 0 ${stratColor}"` : '';
     return `
-      <div class="sc2-row"${stratStyle}>
-        <div><span class="sc2-hole ${holeCls}">${h.hole}</span></div>
+      <div class="sc2-row">
+        <div${stratStyle}><span class="sc2-hole ${holeCls}">${h.hole}</span></div>
         <div class="sc2-par">${h.par}</div>
         <div class="sc2-idx">${h.si ?? '—'}</div>
         <div class="sc2-hcp-dots">${_hcpDotsHtml(holeStrokeCounts[from + idx])}</div>
@@ -133,7 +133,7 @@ function _sectionHtml(title, chip, subCls, subLbl, rowsHtml,
       </div>
       <div class="sc2-card">
         <div class="sc2-col-hdr">
-          <span>Hole</span><span>Par</span><span>Hcp</span><span>+</span><span class="sc2-col-sep"></span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span class="sc2-total-col">Total</span><span class="sc2-pts">Pts</span>
+          <span>Hole</span><span>Par</span><span>Hcp</span><span>+</span><span class="sc2-col-sep"></span><span>Strokes</span><span>GIR</span><span>FIR</span><span>Putts</span><span class="sc2-total-col">Tot</span><span class="sc2-pts">Pts</span>
         </div>
         ${rowsHtml}
         <div class="sc2-sub sc2-sub--${subCls}">
@@ -521,7 +521,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
         back9Strokes, back9Played ? back9Strokes - back9Par : null, back9StrokeCount, back9Pts) +
       `<div class="sc2-card sc2-total-card">
         <div class="sc2-sub sc2-sub--total">
-          <span class="sc2-sub-lbl">Total</span>
+          <span class="sc2-sub-lbl">Tot</span>
           <span class="sc2-sub-num">${anyPlayed ? front9Par + back9Par : '—'}</span>
           <span class="sc2-sub-num">—</span>
           <span class="sc2-sub-num">${totalStrokeCount > 0 ? totalStrokeCount : '—'}</span>
@@ -1280,7 +1280,7 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
   }));
 
   let totalStrokes = 0, totalPar = 0, totalFW = 0, totalPutts = 0, totalGIR = 0, totalFIR = 0, holesPlayed = 0;
-  let birdies = 0, pars = 0, bogeys = 0, doubles = 0;
+  let hios = 0, albatrosses = 0, eagles = 0, birdies = 0, pars = 0, bogeys = 0, doubles = 0;
   played.forEach(h => {
     if (h.total != null) {
       totalStrokes += h.total; totalPar += h.par;
@@ -1289,10 +1289,13 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
       if (h.fir === true) totalFIR++;
       holesPlayed++;
       const d = h.total - h.par;
-      if (d <= -1) birdies++;
-      else if (d === 0) pars++;
-      else if (d === 1) bogeys++;
-      else doubles++;
+      if (h.total === 1)  hios++;
+      else if (d <= -3)   albatrosses++;
+      else if (d === -2)  eagles++;
+      else if (d === -1)  birdies++;
+      else if (d === 0)   pars++;
+      else if (d === 1)   bogeys++;
+      else                doubles++;
     }
   });
 
@@ -1352,7 +1355,7 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
     if (h.gir === false && h.putts != null && h.putts > 0) { scrambOpp++; if (h.putts === 1) scrambMade++; }
   });
   const scrambPct = scrambOpp > 0 ? Math.round(scrambMade / scrambOpp * 100) : '—';
-  const parPct    = holesPlayed > 0 ? Math.round((birdies + pars) / holesPlayed * 100) : '—';
+  const parPct    = holesPlayed > 0 ? Math.round((hios + albatrosses + eagles + birdies + pars) / holesPlayed * 100) : '—';
 
   // Handicap-adjusted net score — only holes actually played
   const rcHcpTotal = played.reduce((sum, h, i) => h.total != null ? sum + rcHoleStrokeCounts[i] : sum, 0);
@@ -1477,7 +1480,7 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
       rcBack9StrokeCount, rcBack9Pts) +
     `<div class="sc2-card sc2-total-card">
       <div class="sc2-sub sc2-sub--total">
-        <span class="sc2-sub-lbl">Total</span>
+        <span class="sc2-sub-lbl">Tot</span>
         <span class="sc2-sub-num">${holesPlayed ? totalPar : '—'}</span>
         <span class="sc2-sub-num">—</span>
         <span class="sc2-sub-num">${rcTotalStrokeCount > 0 ? rcTotalStrokeCount : '—'}</span>
@@ -1518,10 +1521,13 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
     </div>
     <div class="rc-section" style="margin-top:10px;">
       <div class="rc-section-label">Score breakdown</div>
-      ${birdies > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Birdies</span><span class="rc-bd-dots">${_dotStrip(birdies, '#c0392b', 'circle')}</span><span class="rc-bd-count" style="color:#c0392b">${birdies}</span></div>` : ''}
-      ${pars > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Pars</span><span class="rc-bd-dots">${_dotStrip(pars, '#c8c6c0', 'square')}</span><span class="rc-bd-count">${pars}</span></div>` : ''}
-      ${bogeys > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Bogeys</span><span class="rc-bd-dots">${_dotStrip(bogeys, '#e8a070', 'square')}</span><span class="rc-bd-count">${bogeys}</span></div>` : ''}
-      ${doubles > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Doubles+</span><span class="rc-bd-dots">${_dotStrip(doubles, '#888', 'square')}</span><span class="rc-bd-count">${doubles}</span></div>` : ''}
+      ${hios > 0        ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Hole in one</span><span class="rc-bd-dots">${_dotStrip(hios,        '#f5c400', 'circle')}</span><span class="rc-bd-count" style="color:#f5c400">${hios}</span></div>` : ''}
+      ${albatrosses > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Albatross</span><span class="rc-bd-dots">${_dotStrip(albatrosses, '#7b2fff', 'circle')}</span><span class="rc-bd-count" style="color:#7b2fff">${albatrosses}</span></div>` : ''}
+      ${eagles > 0      ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Eagles</span><span class="rc-bd-dots">${_dotStrip(eagles,      '#f07020', 'circle')}</span><span class="rc-bd-count" style="color:#f07020">${eagles}</span></div>` : ''}
+      ${birdies > 0     ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Birdies</span><span class="rc-bd-dots">${_dotStrip(birdies,     '#c0392b', 'circle')}</span><span class="rc-bd-count" style="color:#c0392b">${birdies}</span></div>` : ''}
+      ${pars > 0        ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Pars</span><span class="rc-bd-dots">${_dotStrip(pars,        '#888',    'circle')}</span><span class="rc-bd-count">${pars}</span></div>` : ''}
+      ${bogeys > 0      ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Bogeys</span><span class="rc-bd-dots">${_dotStrip(bogeys,      '#3a6fc4', 'square')}</span><span class="rc-bd-count">${bogeys}</span></div>` : ''}
+      ${doubles > 0     ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Doubles+</span><span class="rc-bd-dots">${_dotStrip(doubles,    '#1a3a7a', 'square')}</span><span class="rc-bd-count">${doubles}</span></div>` : ''}
     </div>
     ${strokeLossHtml}
     ${stratInsightHtml}
@@ -1668,7 +1674,7 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
   }));
 
   let totalStrokes = 0, totalPar = 0, totalPutts = 0, totalGIR = 0, totalFIR = 0, holesPlayed = 0;
-  let birdies = 0, pars = 0, bogeys = 0, doubles = 0;
+  let hios = 0, albatrosses = 0, eagles = 0, birdies = 0, pars = 0, bogeys = 0, doubles = 0;
   played.forEach(h => {
     if (h.total != null) {
       totalStrokes += h.total; totalPar += h.par; totalPutts += h.putts;
@@ -1676,10 +1682,13 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
       if (h.fir === true) totalFIR++;
       holesPlayed++;
       const d = h.total - h.par;
-      if (d <= -1) birdies++;
-      else if (d === 0) pars++;
-      else if (d === 1) bogeys++;
-      else doubles++;
+      if (h.total === 1)  hios++;
+      else if (d <= -3)   albatrosses++;
+      else if (d === -2)  eagles++;
+      else if (d === -1)  birdies++;
+      else if (d === 0)   pars++;
+      else if (d === 1)   bogeys++;
+      else                doubles++;
     }
   });
 
@@ -1744,7 +1753,7 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
     if (h.gir === false && h.putts != null && h.putts > 0) { scrambOpp++; if (h.putts === 1) scrambMade++; }
   });
   const scrambPct = scrambOpp > 0 ? Math.round(scrambMade / scrambOpp * 100) : '—';
-  const parPct    = holesPlayed > 0 ? Math.round((birdies + pars) / holesPlayed * 100) : '—';
+  const parPct    = holesPlayed > 0 ? Math.round((hios + albatrosses + eagles + birdies + pars) / holesPlayed * 100) : '—';
 
   // Stroke loss
   const sl = computeStrokeLoss(savedRound.scores, c.holes);
@@ -1848,7 +1857,7 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
       rdBack9SC, rdBack9Pts) +
     `<div class="sc2-card sc2-total-card">
       <div class="sc2-sub sc2-sub--total">
-        <span class="sc2-sub-lbl">Total</span>
+        <span class="sc2-sub-lbl">Tot</span>
         <span class="sc2-sub-num">${holesPlayed ? totalPar : '—'}</span>
         <span class="sc2-sub-num">—</span>
         <span class="sc2-sub-num">${rdTotalSC > 0 ? rdTotalSC : '—'}</span>
@@ -1888,10 +1897,13 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
     </div>
     <div class="rc-section" style="margin-top:10px;">
       <div class="rc-section-label">Score breakdown</div>
-      ${birdies > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Birdies</span><span class="rc-bd-dots">${_dotStrip(birdies, '#c0392b', 'circle')}</span><span class="rc-bd-count" style="color:#c0392b">${birdies}</span></div>` : ''}
-      ${pars > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Pars</span><span class="rc-bd-dots">${_dotStrip(pars, '#c8c6c0', 'square')}</span><span class="rc-bd-count">${pars}</span></div>` : ''}
-      ${bogeys > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Bogeys</span><span class="rc-bd-dots">${_dotStrip(bogeys, '#e8a070', 'square')}</span><span class="rc-bd-count">${bogeys}</span></div>` : ''}
-      ${doubles > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Doubles+</span><span class="rc-bd-dots">${_dotStrip(doubles, '#888', 'square')}</span><span class="rc-bd-count">${doubles}</span></div>` : ''}
+      ${hios > 0        ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Hole in one</span><span class="rc-bd-dots">${_dotStrip(hios,        '#f5c400', 'circle')}</span><span class="rc-bd-count" style="color:#f5c400">${hios}</span></div>` : ''}
+      ${albatrosses > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Albatross</span><span class="rc-bd-dots">${_dotStrip(albatrosses, '#7b2fff', 'circle')}</span><span class="rc-bd-count" style="color:#7b2fff">${albatrosses}</span></div>` : ''}
+      ${eagles > 0      ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Eagles</span><span class="rc-bd-dots">${_dotStrip(eagles,      '#f07020', 'circle')}</span><span class="rc-bd-count" style="color:#f07020">${eagles}</span></div>` : ''}
+      ${birdies > 0     ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Birdies</span><span class="rc-bd-dots">${_dotStrip(birdies,     '#c0392b', 'circle')}</span><span class="rc-bd-count" style="color:#c0392b">${birdies}</span></div>` : ''}
+      ${pars > 0        ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Pars</span><span class="rc-bd-dots">${_dotStrip(pars,        '#888',    'circle')}</span><span class="rc-bd-count">${pars}</span></div>` : ''}
+      ${bogeys > 0      ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Bogeys</span><span class="rc-bd-dots">${_dotStrip(bogeys,      '#3a6fc4', 'square')}</span><span class="rc-bd-count">${bogeys}</span></div>` : ''}
+      ${doubles > 0     ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Doubles+</span><span class="rc-bd-dots">${_dotStrip(doubles,    '#1a3a7a', 'square')}</span><span class="rc-bd-count">${doubles}</span></div>` : ''}
     </div>
     ${strokeLossHtml}
     ${stratInsightHtml}

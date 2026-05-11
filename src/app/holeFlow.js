@@ -376,6 +376,7 @@ export function getState() {
     isFirstOfType: isFirst,
     getExpectedStrokes: _getExpectedStrokes,
     holeExpected: _holeExpected,
+    penaltyStrokes: _penaltyStrokes,
     // Penalty state: true = last shot was penalty and relief not yet taken → show "OB / Drop +1"
     penaltyPending: _shots[_shots.length - 1] === 'penalty' && !_penaltyRelief,
   };
