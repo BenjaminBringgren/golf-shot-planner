@@ -1542,7 +1542,11 @@ export function renderSavedRounds() {
       entries.forEach(({ courseId, roundIdx, round, course }) => {
         const isStblf    = round.gameFormat === 'stableford' || (((round.totalPoints ?? 0) > 0) && !round.gameFormat);
         const pts        = round.totalPoints ?? 0;
-        const diff       = (round.totalStrokes || 0) - (round.totalPar || 0);
+        const gross      = (round.totalStrokes || 0) - (round.totalPar || 0);
+        // Use hcpTotal saved at round time — frozen, not affected by later handicap changes
+        const savedHcp   = round.hcpTotal ?? 0;
+        const netDiff    = savedHcp > 0 && !isStblf ? gross - savedHcp : null;
+        const diff       = netDiff !== null ? netDiff : gross;
         const diffStr    = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : String(diff));
         const diffCls    = diff < 0 ? 'under' : '';
         const displayStr = isStblf ? pts + ' pts' : diffStr;

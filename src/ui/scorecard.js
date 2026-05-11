@@ -573,15 +573,21 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     scores = loadScores(courseId);
 
     // Compute score summary for the subtitle
-    let totalStrokes = 0, totalPar = 0, holesPlayed = 0;
+    const { gameFormat: _scFmt = 'strokes' } = loadActiveCourse();
+    const _scIsStableford = _scFmt === 'stableford';
+    const _scHoleCounts   = computeHoleStrokeCounts(courseId);
+    let totalStrokes = 0, totalPar = 0, holesPlayed = 0, _scHcpAdj = 0;
     scores.forEach((s, i) => {
       if (!s) return;
       totalStrokes += (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
       totalPar     += c.holes[i]?.par || 4;
+      _scHcpAdj    += _scHoleCounts[i] ?? 0;
       holesPlayed++;
     });
-    const scoreDiff = holesPlayed ? totalStrokes - totalPar : null;
-    const scoreTxt  = scoreDiff === null ? '' : scoreDiff === 0 ? 'E' : (scoreDiff > 0 ? `+${scoreDiff}` : `${scoreDiff}`);
+    const grossDiff  = holesPlayed ? totalStrokes - totalPar : null;
+    const hasNet     = _scHcpAdj > 0 && !_scIsStableford;
+    const scoreDiff  = grossDiff !== null && hasNet ? grossDiff - _scHcpAdj : grossDiff;
+    const scoreTxt   = scoreDiff === null ? '' : scoreDiff === 0 ? 'E' : (scoreDiff > 0 ? `+${scoreDiff}` : `${scoreDiff}`);
 
     const titleEl    = document.getElementById('scorecardPageTitle');
     const subtitleEl = document.getElementById('scorecardPageSubtitle');
@@ -1348,8 +1354,8 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
   const scrambPct = scrambOpp > 0 ? Math.round(scrambMade / scrambOpp * 100) : '—';
   const parPct    = holesPlayed > 0 ? Math.round((birdies + pars) / holesPlayed * 100) : '—';
 
-  // Handicap-adjusted net score
-  const rcHcpTotal = rcHoleStrokeCounts.reduce((a, n) => a + n, 0);
+  // Handicap-adjusted net score — only holes actually played
+  const rcHcpTotal = played.reduce((sum, h, i) => h.total != null ? sum + rcHoleStrokeCounts[i] : sum, 0);
   const rcNetVsPar = rcHcpTotal > 0 && !rcIsStableford ? vsPar - rcHcpTotal : null;
   const rcHeroScore = rcIsStableford
     ? rcTotalPoints + ' pts'
@@ -1545,6 +1551,7 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
       totalGIR:     holesPlayed ? totalGIR     : 0,
       gameFormat,
       totalPoints:  rcIsStableford ? rcTotalPoints : 0,
+      hcpTotal:     rcHcpTotal,
     };
     saveRound(courseId, roundData);
 
@@ -1712,8 +1719,10 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
   const vsParStr  = vsPar === 0 ? 'E' : (vsPar > 0 ? '+' + vsPar : '' + vsPar);
   const vsParColor = vsPar < 0 ? '#c0392b' : '#1a1a1a';
 
-  const rdHcpTotal = rdHoleStrokeCounts.reduce((a, n) => a + n, 0);
-  const rdNetVsPar = rdHcpTotal > 0 && !rdIsStableford && holesPlayed > 0 ? vsPar - rdHcpTotal : null;
+  // Use hcpTotal saved at round time — immune to later handicap changes.
+  // Old rounds without the field show gross only (no retroactive net).
+  const rdHcpTotal = savedRound.hcpTotal ?? 0;
+  const rdNetVsPar = rdHcpTotal > 0 && !rdIsStableford ? vsPar - rdHcpTotal : null;
   const rdHeroScore = rdIsStableford
     ? rdTotalPoints + ' pts'
     : rdNetVsPar !== null
