@@ -4,7 +4,7 @@
 // Rendering and event binding only. No business logic.
 
 import {
-  loadCourses, loadScores, saveScores, loadRounds, saveRound, clearScores,
+  loadCourses, loadScores, saveScores, loadRounds, saveRound, deleteRound, clearScores,
   loadActiveCourse, saveActiveCourse, clearActiveCourse,
   getScoringMode,
   getCommittedStrategies, removeCommittedStrategies,
@@ -14,7 +14,7 @@ import {
 import { teeMarked, completedShots, clearGpsState } from '../platform/gps.js';
 import { decodeStrategy, courseHandicap, stablefordPoints, computeStrokeLoss } from '../engine/calculations.js';
 import { initHole } from '../app/holeFlow.js';
-import { computeHoleStrokeCounts, computeHoleBaseline } from '../app/courses.js';
+import { computeHoleStrokeCounts } from '../app/courses.js';
 import { mountShotSheet }    from './shotSheet/index.js';
 import { mountSimpleCounter } from './shotSheet/SimpleCounter.js';
 import { mountWidgetSheet, hideWidgetFab } from './widgetSheet.js';
@@ -73,7 +73,24 @@ function _subDiff(diff) {
   return diff === 0 ? 'E' : (diff > 0 ? `+${diff}` : `${diff}`);
 }
 
-function _sectionRows(played, from, to, holeStrokeCounts, runningTotals) {
+function _dotStrip(count, bg, shape) {
+  const r = shape === 'circle' ? '50%' : '2px';
+  return Array.from({ length: count }, () =>
+    `<span style="display:inline-block;width:10px;height:10px;border-radius:${r};background:${bg};margin:0 2px;"></span>`
+  ).join('');
+}
+
+function _stratDotColor(stratStr) {
+  if (!stratStr) return null;
+  const { type } = decodeStrategy(stratStr);
+  const t = type || stratStr;
+  if (t.startsWith('Par 3')) return '#aaa';
+  if (t === 'Max distance' || t === 'Aggressive' || t === 'Long') return '#c0392b';
+  if (t === 'Balanced'     || t === 'Controlled' || t === 'Medium') return '#e8a070';
+  return '#888';
+}
+
+function _sectionRows(played, from, to, holeStrokeCounts, runningTotals, strategiesMap) {
   return played.slice(from, to).map((h, idx) => {
     const isPlayed = h.total != null;
     const holeCls  = isPlayed ? 'sc2-hole--played' : 'sc2-hole--unplayed';
@@ -83,9 +100,12 @@ function _sectionRows(played, from, to, holeStrokeCounts, runningTotals) {
     const firCell  = h.par < 4 ? '<div class="sc2-fir sc2-fir--par3">—</div>'
       : `<div class="sc2-fir">${_girDot(firVal)}</div>`;
     const pts = isPlayed ? stablefordPoints(h.total, h.par, holeStrokeCounts[from + idx]) : null;
+    const stratStr  = strategiesMap ? (strategiesMap[from + idx] ?? strategiesMap[String(from + idx)]) : null;
+    const dotColor  = stratStr ? _stratDotColor(stratStr) : null;
+    const stratDot  = dotColor ? `<span class="sc2-strat-dot" style="background:${dotColor}"></span>` : '';
     return `
       <div class="sc2-row">
-        <div><span class="sc2-hole ${holeCls}">${h.hole}</span></div>
+        <div><span class="sc2-hole ${holeCls}">${h.hole}</span>${stratDot}</div>
         <div class="sc2-par">${h.par}</div>
         <div class="sc2-idx">${h.si ?? '—'}</div>
         <div class="sc2-hcp-dots">${_hcpDotsHtml(holeStrokeCounts[from + idx])}</div>
@@ -1321,56 +1341,50 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
   const scrambPct = scrambOpp > 0 ? Math.round(scrambMade / scrambOpp * 100) : '—';
   const parPct    = holesPlayed > 0 ? Math.round((birdies + pars) / holesPlayed * 100) : '—';
 
-  // Baseline comparison — how did this round compare to the player's per-hole averages?
-  let baselineDelta = null, baselineHolesCount = 0;
-  played.forEach((h, i) => {
-    if (h.total == null) return;
-    const bl = computeHoleBaseline(courseId, i);
-    if (!bl) return;
-    baselineDelta = (baselineDelta || 0) + (h.total - bl.avgScore);
-    baselineHolesCount++;
-  });
+  // Baseline — handicap-adjusted: how did this round compare to what's expected for this handicap?
+  const rcHcpTotal = rcHoleStrokeCounts.reduce((a, n) => a + n, 0);
   let baselineStr = null, baselineColor = '#888';
-  if (baselineDelta !== null && baselineHolesCount >= Math.ceil(holesPlayed / 2)) {
-    if (Math.abs(baselineDelta) < 0.1) {
-      baselineStr = 'E vs your baseline';
-    } else if (baselineDelta < 0) {
-      baselineStr = baselineDelta.toFixed(1) + ' vs your baseline';
-      baselineColor = '#c0392b';
-    } else {
-      baselineStr = '+' + baselineDelta.toFixed(1) + ' vs your baseline';
-      baselineColor = '#1a1a1a';
-    }
+  if (rcHcpTotal > 0) {
+    const netVsPar = vsPar - rcHcpTotal;
+    baselineStr = (netVsPar === 0 ? 'E' : (netVsPar > 0 ? '+' : '') + netVsPar) + ' vs handicap';
+    baselineColor = netVsPar < 0 ? '#c0392b' : '#1a1a1a';
   }
 
-  // Strategy insight — best-performing strategy type at this course from saved rounds
+  // Strategy insight — Par 4/5 strategies vs Par 3 performance, from saved rounds at this course
   let stratInsightHtml = '';
   {
     const savedRounds = loadRounds(courseId);
     if (savedRounds.length) {
-      const byType = {};
+      const byPar45 = {};
+      let par3Total = 0, par3Count = 0;
       savedRounds.forEach(r => {
         if (!r.scores || !r.strategies) return;
         r.scores.forEach((s, i) => {
           if (!s) return;
-          const strat = r.strategies[i];
-          if (!strat) return;
           const par   = c.holes[i]?.par || 4;
           const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
           if (!total) return;
-          const { type } = decodeStrategy(strat);
-          const key = type || strat;
-          if (!byType[key]) byType[key] = { totalDiff: 0, count: 0 };
-          byType[key].totalDiff += total - par;
-          byType[key].count++;
+          const strat = r.strategies[i];
+          if (par <= 3) {
+            par3Total += total - par;
+            par3Count++;
+          } else if (strat) {
+            const { type } = decodeStrategy(strat);
+            const key = type || strat;
+            if (!byPar45[key]) byPar45[key] = { totalDiff: 0, count: 0 };
+            byPar45[key].totalDiff += total - par;
+            byPar45[key].count++;
+          }
         });
       });
-      const sorted = Object.entries(byType)
+      const sorted45 = Object.entries(byPar45)
         .map(([type, d]) => ({ type, avg: d.totalDiff / d.count, count: d.count }))
         .filter(d => d.count >= 3)
         .sort((a, b) => a.avg - b.avg);
-      if (sorted.length >= 2) {
-        const rows = sorted.slice(0, 3).map(d => {
+      const hasPar45 = sorted45.length >= 1;
+      const hasPar3  = par3Count >= 1;
+      if (hasPar45 || hasPar3) {
+        const par45Rows = sorted45.slice(0, 3).map(d => {
           const avgStr   = Math.abs(d.avg) < 0.05 ? 'E' : (d.avg > 0 ? '+' : '') + d.avg.toFixed(1);
           const avgColor = d.avg < -0.05 ? '#c0392b' : '#888';
           const tagClass = (d.type === 'Max distance' || d.type === 'Aggressive' || d.type === 'Long') ? 'aggressive'
@@ -1379,10 +1393,22 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
             `<span class="strat-row-count">${d.count} hole${d.count !== 1 ? 's' : ''}</span>` +
             `<span class="strat-row-avg" style="color:${avgColor}">${avgStr}</span></div>`;
         }).join('');
+        let par3Row = '';
+        if (hasPar3) {
+          const par3Avg = par3Total / par3Count;
+          const par3AvgStr   = Math.abs(par3Avg) < 0.05 ? 'E' : (par3Avg > 0 ? '+' : '') + par3Avg.toFixed(1);
+          const par3AvgColor = par3Avg < -0.05 ? '#c0392b' : '#888';
+          par3Row = `<div class="strat-row"><span class="hint-best-tag par3"><span class="hint-best-dot"></span>Par 3</span>` +
+            `<span class="strat-row-count">${par3Count} hole${par3Count !== 1 ? 's' : ''}</span>` +
+            `<span class="strat-row-avg" style="color:${par3AvgColor}">${par3AvgStr}</span></div>`;
+        }
         stratInsightHtml = `
           <div class="rc-section" style="margin-top:10px;">
             <div class="rc-section-label">Strategy insight</div>
-            <div style="padding:4px 14px 14px;">${rows}</div>
+            <div style="padding:4px 14px 2px;">
+              ${hasPar45 ? `<div class="strat-subhdr">Par 4/5</div>${par45Rows}` : ''}
+              ${hasPar3  ? `<div class="strat-subhdr" style="${hasPar45 ? 'margin-top:10px;' : ''}">Par 3</div>${par3Row}` : ''}
+            </div>
           </div>`;
       }
     }
@@ -1409,14 +1435,6 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
         <div class="sl-grid">${rows}</div>
         <div class="sl-focus">${slFocus[topKey]}</div>
       </div>`;
-  }
-
-  // Score breakdown dots
-  function dotStrip(count, bg, shape) {
-    const r = shape === 'circle' ? '50%' : '2px';
-    return Array.from({ length: count }, () =>
-      `<span style="display:inline-block;width:10px;height:10px;border-radius:${r};background:${bg};margin:0 2px;"></span>`
-    ).join('');
   }
 
   // sc2 grid scorecard — shared helpers used here
@@ -1481,10 +1499,10 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
     </div>
     <div class="rc-section" style="margin-top:10px;">
       <div class="rc-section-label">Score breakdown</div>
-      ${birdies > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Birdies</span><span class="rc-bd-dots">${dotStrip(birdies, '#c0392b', 'circle')}</span><span class="rc-bd-count" style="color:#c0392b">${birdies}</span></div>` : ''}
-      ${pars > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Pars</span><span class="rc-bd-dots">${dotStrip(pars, '#c8c6c0', 'square')}</span><span class="rc-bd-count">${pars}</span></div>` : ''}
-      ${bogeys > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Bogeys</span><span class="rc-bd-dots">${dotStrip(bogeys, '#e8a070', 'square')}</span><span class="rc-bd-count">${bogeys}</span></div>` : ''}
-      ${doubles > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Doubles+</span><span class="rc-bd-dots">${dotStrip(doubles, '#888', 'square')}</span><span class="rc-bd-count">${doubles}</span></div>` : ''}
+      ${birdies > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Birdies</span><span class="rc-bd-dots">${_dotStrip(birdies, '#c0392b', 'circle')}</span><span class="rc-bd-count" style="color:#c0392b">${birdies}</span></div>` : ''}
+      ${pars > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Pars</span><span class="rc-bd-dots">${_dotStrip(pars, '#c8c6c0', 'square')}</span><span class="rc-bd-count">${pars}</span></div>` : ''}
+      ${bogeys > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Bogeys</span><span class="rc-bd-dots">${_dotStrip(bogeys, '#e8a070', 'square')}</span><span class="rc-bd-count">${bogeys}</span></div>` : ''}
+      ${doubles > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Doubles+</span><span class="rc-bd-dots">${_dotStrip(doubles, '#888', 'square')}</span><span class="rc-bd-count">${doubles}</span></div>` : ''}
     </div>
     ${strokeLossHtml}
     ${stratInsightHtml}
@@ -1610,6 +1628,273 @@ function _dismissRoundComplete(courseId, callbacks = {}) {
   callbacks.updateHoleCardMode?.();
   callbacks.updateCalcButtonVisibility?.();
   callbacks.navigateHome?.();
+}
+
+// ── Saved round detail page — mirrors showRoundCompleteOverlay but reads saved data ──
+export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks = {}) {
+  const courses = loadCourses();
+  const c = courses[courseId];
+  if (!c || !savedRound) return;
+
+  const rdIsStableford = savedRound.gameFormat === 'stableford'
+    || (((savedRound.totalPoints ?? 0) > 0) && !savedRound.gameFormat);
+  const rdHoleStrokeCounts = computeHoleStrokeCounts(courseId);
+
+  const played = (savedRound.scores || []).map((s, i) => ({
+    hole: i + 1, par: c.holes[i]?.par || 4, si: c.holes[i]?.si || null,
+    total: s ? (s.fairway || 0) + (s.rough || 0) + (s.putts || 0) : null,
+    fairway: s?.fairway ?? null, rough: s?.rough ?? null,
+    putts: s?.putts ?? null, gir: s?.gir ?? null, fir: s?.fir ?? null,
+  }));
+
+  let totalStrokes = 0, totalPar = 0, totalPutts = 0, totalGIR = 0, totalFIR = 0, holesPlayed = 0;
+  let birdies = 0, pars = 0, bogeys = 0, doubles = 0;
+  played.forEach(h => {
+    if (h.total != null) {
+      totalStrokes += h.total; totalPar += h.par; totalPutts += h.putts;
+      if (h.gir === true) totalGIR++;
+      if (h.fir === true) totalFIR++;
+      holesPlayed++;
+      const d = h.total - h.par;
+      if (d <= -1) birdies++;
+      else if (d === 0) pars++;
+      else if (d === 1) bogeys++;
+      else doubles++;
+    }
+  });
+
+  let front9Par = 0, front9Strokes = 0, front9Putts = 0, front9GIR = 0, front9FIR = 0, front9Played = 0;
+  played.slice(0, 9).forEach(h => {
+    front9Par += h.par;
+    if (h.total != null) { front9Strokes += h.total; front9Putts += h.putts; if (h.gir === true) front9GIR++; if (h.par >= 4 && h.fir === true) front9FIR++; front9Played++; }
+  });
+  let back9Par = 0, back9Strokes = 0, back9Putts = 0, back9GIR = 0, back9FIR = 0, back9Played = 0;
+  played.slice(9, 18).forEach(h => {
+    back9Par += h.par;
+    if (h.total != null) { back9Strokes += h.total; back9Putts += h.putts; if (h.gir === true) back9GIR++; if (h.par >= 4 && h.fir === true) back9FIR++; back9Played++; }
+  });
+  const rdFront9FIRTotal = played.slice(0, 9).filter(h => h.par >= 4).length;
+  const rdBack9FIRTotal  = played.slice(9, 18).filter(h => h.par >= 4).length;
+
+  let rdRunAcc = 0;
+  const rdRunningTotals = played.map(h => {
+    if (h.total == null) return null;
+    rdRunAcc += h.total - h.par;
+    return rdRunAcc;
+  });
+
+  const rdTotalPoints = rdIsStableford
+    ? played.reduce((sum, h, i) => h.total != null ? sum + stablefordPoints(h.total, h.par, rdHoleStrokeCounts[i]) : sum, 0)
+    : (savedRound.totalPoints ?? 0);
+  const rdFront9Pts = played.slice(0, 9).reduce((sum, h, i) =>
+    h.total != null ? sum + stablefordPoints(h.total, h.par, rdHoleStrokeCounts[i]) : sum, 0);
+  const rdBack9Pts = played.slice(9, 18).reduce((sum, h, i) =>
+    h.total != null ? sum + stablefordPoints(h.total, h.par, rdHoleStrokeCounts[9 + i]) : sum, 0);
+
+  const rdFront9SC = rdHoleStrokeCounts.slice(0, 9).reduce((a, n) => a + n, 0);
+  const rdBack9SC  = rdHoleStrokeCounts.slice(9).reduce((a, n) => a + n, 0);
+  const rdTotalSC  = rdFront9SC + rdBack9SC;
+
+  const vsPar     = totalStrokes - totalPar;
+  const vsParStr  = vsPar === 0 ? 'E' : (vsPar > 0 ? '+' + vsPar : '' + vsPar);
+  const vsParColor = vsPar < 0 ? '#c0392b' : '#1a1a1a';
+
+  const rdHcpTotal = rdHoleStrokeCounts.reduce((a, n) => a + n, 0);
+  let baselineStr = null, baselineColor = '#888';
+  if (rdHcpTotal > 0 && holesPlayed > 0) {
+    const netVsPar = vsPar - rdHcpTotal;
+    baselineStr = (netVsPar === 0 ? 'E' : (netVsPar > 0 ? '+' : '') + netVsPar) + ' vs handicap';
+    baselineColor = netVsPar < 0 ? '#c0392b' : '#1a1a1a';
+  }
+
+  const firEligible = played.filter(h => h.par >= 4 && h.total != null).length;
+  const girPct      = holesPlayed > 0 ? Math.round(totalGIR / holesPlayed * 100) : '—';
+  const firPct      = firEligible > 0 ? Math.round(totalFIR / firEligible * 100) : '—';
+  let scrambOpp = 0, scrambMade = 0;
+  played.forEach(h => {
+    if (h.total == null) return;
+    if (h.gir === false && h.putts != null && h.putts > 0) { scrambOpp++; if (h.putts === 1) scrambMade++; }
+  });
+  const scrambPct = scrambOpp > 0 ? Math.round(scrambMade / scrambOpp * 100) : '—';
+  const parPct    = holesPlayed > 0 ? Math.round((birdies + pars) / holesPlayed * 100) : '—';
+
+  // Stroke loss
+  const sl = computeStrokeLoss(savedRound.scores, c.holes);
+  const slLabels = { driving: 'Driving', approach: 'Approach', shortGame: 'Short game', putting: 'Putting', penalties: 'Penalties' };
+  const slFocus  = { driving: 'Club down off the tee to keep it in play.', approach: 'Leave yourself full wedge distances — attack less.', shortGame: 'Focus on getting chips close, not holing them.', putting: 'Lag putt from distance — eliminate the three-putt.', penalties: 'Play away from trouble. A bogey beats a double every time.' };
+  const slEntries = Object.entries(slLabels)
+    .map(([k, lbl]) => ({ key: k, lbl, val: sl[k] }))
+    .filter(e => e.val > 0)
+    .sort((a, b) => b.val - a.val);
+  let strokeLossHtml = '';
+  if (slEntries.length) {
+    const topKey = slEntries[0].key;
+    const rows = slEntries.map((e, idx) => {
+      const bold = idx === 0 ? ' sl-row--top' : '';
+      return `<div class="sl-row${bold}"><span class="sl-lbl">${e.lbl}</span><span class="sl-val">+${e.val.toFixed(1)}</span></div>`;
+    }).join('');
+    strokeLossHtml = `
+      <div class="rc-section" style="margin-top:10px;">
+        <div class="rc-section-label">Stroke loss</div>
+        <div class="sl-grid">${rows}</div>
+        <div class="sl-focus">${slFocus[topKey]}</div>
+      </div>`;
+  }
+
+  // Strategy insight — Par 4/5 strategies + Par 3 aggregate from all saved rounds at this course
+  let stratInsightHtml = '';
+  {
+    const allRounds = loadRounds(courseId);
+    if (allRounds.length) {
+      const byPar45 = {};
+      let par3Total = 0, par3Count = 0;
+      allRounds.forEach(r => {
+        if (!r.scores || !r.strategies) return;
+        r.scores.forEach((s, i) => {
+          if (!s) return;
+          const par   = c.holes[i]?.par || 4;
+          const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
+          if (!total) return;
+          const strat = r.strategies[i];
+          if (par <= 3) {
+            par3Total += total - par; par3Count++;
+          } else if (strat) {
+            const { type } = decodeStrategy(strat);
+            const key = type || strat;
+            if (!byPar45[key]) byPar45[key] = { totalDiff: 0, count: 0 };
+            byPar45[key].totalDiff += total - par;
+            byPar45[key].count++;
+          }
+        });
+      });
+      const sorted45 = Object.entries(byPar45)
+        .map(([type, d]) => ({ type, avg: d.totalDiff / d.count, count: d.count }))
+        .filter(d => d.count >= 3)
+        .sort((a, b) => a.avg - b.avg);
+      const hasPar45 = sorted45.length >= 1;
+      const hasPar3  = par3Count >= 1;
+      if (hasPar45 || hasPar3) {
+        const par45Rows = sorted45.slice(0, 3).map(d => {
+          const avgStr   = Math.abs(d.avg) < 0.05 ? 'E' : (d.avg > 0 ? '+' : '') + d.avg.toFixed(1);
+          const avgColor = d.avg < -0.05 ? '#c0392b' : '#888';
+          const tagClass = (d.type === 'Max distance' || d.type === 'Aggressive' || d.type === 'Long') ? 'aggressive'
+            : (d.type === 'Controlled' || d.type === 'Balanced' || d.type === 'Medium') ? 'balanced' : 'safe';
+          return `<div class="strat-row"><span class="hint-best-tag ${tagClass}"><span class="hint-best-dot"></span>${d.type}</span>` +
+            `<span class="strat-row-count">${d.count} hole${d.count !== 1 ? 's' : ''}</span>` +
+            `<span class="strat-row-avg" style="color:${avgColor}">${avgStr}</span></div>`;
+        }).join('');
+        let par3Row = '';
+        if (hasPar3) {
+          const par3Avg = par3Total / par3Count;
+          const par3AvgStr   = Math.abs(par3Avg) < 0.05 ? 'E' : (par3Avg > 0 ? '+' : '') + par3Avg.toFixed(1);
+          const par3AvgColor = par3Avg < -0.05 ? '#c0392b' : '#888';
+          par3Row = `<div class="strat-row"><span class="hint-best-tag par3"><span class="hint-best-dot"></span>Par 3</span>` +
+            `<span class="strat-row-count">${par3Count} hole${par3Count !== 1 ? 's' : ''}</span>` +
+            `<span class="strat-row-avg" style="color:${par3AvgColor}">${par3AvgStr}</span></div>`;
+        }
+        stratInsightHtml = `
+          <div class="rc-section" style="margin-top:10px;">
+            <div class="rc-section-label">Strategy insight</div>
+            <div style="padding:4px 14px 2px;">
+              ${hasPar45 ? `<div class="strat-subhdr">Par 4/5</div>${par45Rows}` : ''}
+              ${hasPar3  ? `<div class="strat-subhdr"${hasPar45 ? ' style="margin-top:10px;"' : ''}>Par 3</div>${par3Row}` : ''}
+            </div>
+          </div>`;
+      }
+    }
+  }
+
+  // sc2 scorecard
+  const rdSc2Html =
+    _sectionHtml('Front 9', 'Out', 'out', 'OUT',
+      _sectionRows(played, 0, 9, rdHoleStrokeCounts, rdRunningTotals, savedRound.strategies),
+      front9Par, front9Putts, front9Played, front9GIR, 9,
+      front9FIR, rdFront9FIRTotal,
+      front9Strokes, front9Played ? front9Strokes - front9Par : null,
+      rdFront9SC, rdFront9Pts) +
+    _sectionHtml('Back 9', 'In', 'in', 'IN',
+      _sectionRows(played, 9, 18, rdHoleStrokeCounts, rdRunningTotals, savedRound.strategies),
+      back9Par, back9Putts, back9Played, back9GIR, 9,
+      back9FIR, rdBack9FIRTotal,
+      back9Strokes, back9Played ? back9Strokes - back9Par : null,
+      rdBack9SC, rdBack9Pts) +
+    `<div class="sc2-card sc2-total-card">
+      <div class="sc2-sub sc2-sub--total">
+        <span class="sc2-sub-lbl">Total</span>
+        <span class="sc2-sub-num">${holesPlayed ? totalPar : '—'}</span>
+        <span class="sc2-sub-num">—</span>
+        <span class="sc2-sub-num">${rdTotalSC > 0 ? rdTotalSC : '—'}</span>
+        <span class="sc2-col-sep"></span>
+        <span class="sc2-sub-num">${holesPlayed ? totalStrokes : '—'}</span>
+        <span class="sc2-sub-num">${holesPlayed ? totalGIR + '/' + holesPlayed : '—'}</span>
+        <span class="sc2-sub-num">${holesPlayed ? totalFIR + '/' + played.filter(h => h.par >= 4).length : '—'}</span>
+        <span class="sc2-sub-num">${holesPlayed ? totalPutts : '—'}</span>
+        <span class="sc2-sub-diff sc2-total-col">${holesPlayed ? _subDiff(totalStrokes - totalPar) : '—'}</span>
+        <span class="sc2-sub-num sc2-pts">${holesPlayed ? rdTotalPoints : '—'}</span>
+      </div>
+    </div>`;
+
+  const _heroSrc = document.getElementById('mgHeroImg')?.src || '';
+
+  const el = document.getElementById('roundDetailContent');
+  el.innerHTML = `
+    <div class="rc-header">
+      <img src="${_heroSrc}" alt="" />
+      <div class="rc-header-overlay">
+        <div class="rc-header-title">Round summary</div>
+        <div class="rc-header-sub">${c.name || 'Course'} · ${savedRound.date || ''}</div>
+      </div>
+    </div>
+    <div class="rc-section">
+      <div class="rc-hero">
+        <div class="rc-hero-score" style="color:${rdIsStableford ? '#1a1a1a' : vsParColor}">${rdIsStableford ? rdTotalPoints + ' pts' : vsParStr}</div>
+        <div class="rc-hero-sub">${totalStrokes} strokes · par ${totalPar} · ${holesPlayed} holes</div>
+        ${baselineStr ? `<div class="rc-hero-baseline" style="color:${baselineColor}">${baselineStr}</div>` : ''}
+      </div>
+      <div class="rc-stat-grid">
+        <div class="rc-stat-cell"><div class="rc-stat-val">${girPct !== '—' ? girPct + '%' : '—'}</div><div class="rc-stat-lbl">GIR</div></div>
+        <div class="rc-stat-cell"><div class="rc-stat-val">${firPct !== '—' ? firPct + '%' : '—'}</div><div class="rc-stat-lbl">FIR</div></div>
+        <div class="rc-stat-cell"><div class="rc-stat-val">${totalPutts || '—'}</div><div class="rc-stat-lbl">Putts</div></div>
+        <div class="rc-stat-cell"><div class="rc-stat-val">${scrambPct !== '—' ? scrambPct + '%' : '—'}</div><div class="rc-stat-lbl">Scrambling</div></div>
+        <div class="rc-stat-cell"><div class="rc-stat-val">${parPct !== '—' ? parPct + '%' : '—'}</div><div class="rc-stat-lbl">PAR%</div></div>
+      </div>
+    </div>
+    <div class="rc-section" style="margin-top:10px;">
+      <div class="rc-section-label">Score breakdown</div>
+      ${birdies > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Birdies</span><span class="rc-bd-dots">${_dotStrip(birdies, '#c0392b', 'circle')}</span><span class="rc-bd-count" style="color:#c0392b">${birdies}</span></div>` : ''}
+      ${pars > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Pars</span><span class="rc-bd-dots">${_dotStrip(pars, '#c8c6c0', 'square')}</span><span class="rc-bd-count">${pars}</span></div>` : ''}
+      ${bogeys > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Bogeys</span><span class="rc-bd-dots">${_dotStrip(bogeys, '#e8a070', 'square')}</span><span class="rc-bd-count">${bogeys}</span></div>` : ''}
+      ${doubles > 0 ? `<div class="rc-breakdown-row"><span class="rc-bd-label">Doubles+</span><span class="rc-bd-dots">${_dotStrip(doubles, '#888', 'square')}</span><span class="rc-bd-count">${doubles}</span></div>` : ''}
+    </div>
+    ${strokeLossHtml}
+    ${stratInsightHtml}
+    <div class="${rdIsStableford ? 'sc2-stableford' : ''}" style="padding:10px 16px 8px;">${rdSc2Html}</div>
+    <div style="padding:12px 16px 24px;">
+      <button class="rc-btn-delete" id="rdDeleteBtn" type="button">Delete round</button>
+    </div>
+  `;
+
+  const deleteBtn = el.querySelector('#rdDeleteBtn');
+  let deleteArmed = false;
+  deleteBtn.addEventListener('click', () => {
+    if (!deleteArmed) {
+      deleteArmed = true;
+      deleteBtn.textContent = 'Tap again to confirm delete';
+      deleteBtn.style.background = '#c00';
+      deleteBtn.style.color = '#fff';
+      setTimeout(() => {
+        if (deleteArmed) {
+          deleteArmed = false;
+          deleteBtn.textContent = 'Delete round';
+          deleteBtn.style.background = '';
+          deleteBtn.style.color = '';
+        }
+      }, 3000);
+    } else {
+      deleteRound(courseId, roundIdx);
+      callbacks.onDelete?.();
+    }
+  });
 }
 
 // ── Hide FABs when no course is active ────────────────────────────────────

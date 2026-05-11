@@ -35,8 +35,8 @@ import { renderPlan, updateWindSectionStatus as _uwss, updateWindBreakdown as _u
          syncChipRow, wireChipRow, crosswindSide } from '../ui/carousel.js';
 import { openClubPicker, closeClubPicker,
          openCoursePicker, closeCoursePicker, wireCoursePickerEvents } from '../ui/sheets.js';
-import { renderPlayCourseBar, renderScoreEntry, showRoundCompleteOverlay, hideScorefab,
-         getInRough, resetInRough } from '../ui/scorecard.js';
+import { renderPlayCourseBar, renderScoreEntry, showRoundCompleteOverlay, renderSavedRoundDetail,
+         hideScorefab, getInRough, resetInRough } from '../ui/scorecard.js';
 import {
   computeHoleBaseline, blendedScore,
   applyHoleToPlay, loadCourseIntoPlay, resumeRoundInPlay,
@@ -350,7 +350,7 @@ function switchTab(name) {
 // ── Global press-state fix (iOS/WKWebView :active stuck state) ───────────────
 // Safari and WKWebView don't reliably clear :active on touchend when the DOM
 // changes during the gesture. All button feedback uses .is-pressed instead.
-const _PRESS_SEL = 'button, .mg-menu-row, .gps-tile, .club-picker-item, .sh-lie, .picker-fmt-card, .mg-stat-tile.tappable, .mg-drilldown-btn, .arb-resume-btn, .home-stat-tile.tappable, .lrh-row.tappable';
+const _PRESS_SEL = 'button, .mg-menu-row, .gps-tile, .club-picker-item, .sh-lie, .picker-fmt-card, .mg-stat-tile.tappable, .mg-drilldown-btn, .arb-resume-btn, .home-stat-tile.tappable, .lrh-row.tappable, .rh-round-row, .rh-year-sep';
 document.addEventListener('touchstart', e => {
   e.target.closest(_PRESS_SEL)?.classList.add('is-pressed');
 }, { passive: true });
@@ -379,6 +379,7 @@ document.getElementById('tabPrepare')?.addEventListener('click', () => switchTab
   document.getElementById('mgBackBaseline')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackStrokeAnalysis')?.addEventListener('click', () => showMgSub('mgSubStats'));
   document.getElementById('mgBackRoundsHistory')?.addEventListener('click', () => showMgSub('mgSubStats'));
+  document.getElementById('mgBackRoundDetail')?.addEventListener('click', () => showMgSub('mgSubRoundsHistory'));
   document.getElementById('mgBackCourses')?.addEventListener('click', showMgHub);
   // Edit bag toggle
   document.getElementById('mgEditBagBtn')?.addEventListener('click', () => {
@@ -2022,7 +2023,16 @@ initServices({
     }
   };
 
-  initRoundsServices({ switchTab });
+  initRoundsServices({
+    switchTab,
+    openRoundDetail: (courseId, roundIdx) => {
+      const round = loadRounds(courseId)[roundIdx];
+      renderSavedRoundDetail(courseId, round, roundIdx, {
+        onDelete: () => { renderSavedRounds(); showMgSub('mgSubRoundsHistory'); },
+      });
+      showMgSub('mgSubRoundDetail');
+    },
+  });
 
   // Switch to Play pane as soon as a course bar is injected into #calcView
   (function watchForCourseLoad() {

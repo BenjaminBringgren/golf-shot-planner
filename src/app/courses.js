@@ -21,18 +21,23 @@ export function computeHoleStrokeCounts(courseId) {
   const c        = courses[courseId];
   const prof     = loadProfile();
   const hcpIdx   = parseFloat(prof?.handicap);
-  const slope    = parseInt(c?.slopeRating);
-  const rating   = parseFloat(c?.courseRating);
-  const totalPar = (c?.holes || []).reduce((a, h) => a + (h.par || 4), 0);
-  const allSI    = (c?.holes || []).map(h => h.si || 0);
-  const siOk     = allSI.length === 18 && allSI.every(si => si >= 1 && si <= 18);
   const counts   = new Array(18).fill(0);
-  if (!isNaN(hcpIdx) && hcpIdx > 0 && slope > 0 && rating > 0 && siOk) {
-    const ch   = courseHandicap(hcpIdx, slope, rating, totalPar);
-    const full = Math.floor(ch / 18);
-    const rem  = ch % 18;
-    allSI.forEach((si, i) => { counts[i] = full + (si <= rem ? 1 : 0); });
-  }
+  if (isNaN(hcpIdx) || hcpIdx <= 0) return counts;
+
+  const totalPar = (c?.holes || []).reduce((a, h) => a + (h.par || 4), 0);
+
+  // Fall back to slope=113/rating=par when not entered — gives CH = HcpIndex
+  const slope  = parseInt(c?.slopeRating)  || 113;
+  const rating = parseFloat(c?.courseRating) || totalPar;
+
+  // Map missing/invalid SI values to 18 (lowest allocation priority)
+  const siValues = (c?.holes || []).map(h => (h.si >= 1 && h.si <= 18) ? h.si : 18);
+  if (siValues.length !== 18) return counts;
+
+  const ch   = courseHandicap(hcpIdx, slope, rating, totalPar);
+  const full = Math.floor(ch / 18);
+  const rem  = ch % 18;
+  siValues.forEach((si, i) => { counts[i] = full + (si <= rem ? 1 : 0); });
   return counts;
 }
 
