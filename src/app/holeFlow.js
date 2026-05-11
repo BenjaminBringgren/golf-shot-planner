@@ -235,7 +235,7 @@ export function pickUp(maxScore) {
   if (_stage === STAGE_RESULT) return;
   // Pad shots to reach the target total (shots + penaltyStrokes + putts = maxScore)
   _putts = 0;
-  while (_shots.length + _penaltyStrokes < maxScore) _shots.push('fw');
+  while (_shots.length + _penaltyStrokes < maxScore) _shots.push('rough');
   _holedFromLie = 'pickup';
   _stage = STAGE_RESULT;
   const scores = loadScores(_courseId);
