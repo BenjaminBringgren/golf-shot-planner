@@ -178,6 +178,35 @@ export function mountSimpleCounter({ courseId, holeIdx, par, callbacks }) {
     counterArea.appendChild(btnRow);
     inner.appendChild(counterArea);
 
+    // ── Pick up row (stableford only) ────────────────────────────────────
+    const _active    = loadActiveCourse();
+    const _isStblf   = (_active?.gameFormat ?? 'strokes') === 'stableford';
+    if (_isStblf) {
+      const _hcpCounts = computeHoleStrokeCounts(courseId);
+      const _maxScore  = par + (_hcpCounts[holeIdx] ?? 0) + 2;
+      const pickRow = document.createElement('div');
+      pickRow.className = 'sh-confirm-row sh-confirm-row--single';
+      const pickBtn = document.createElement('button');
+      pickBtn.className = 'sh-btn-secondary';
+      pickBtn.type = 'button';
+      pickBtn.textContent = `Pick up (${_maxScore})`;
+      pickBtn.addEventListener('click', () => {
+        _count = _maxScore;
+        _save();
+        _updateFab();
+        closeDrawer();
+        const bar = document.getElementById('playCourseBar');
+        if (bar?._refreshGrid) bar._refreshGrid();
+        if (isLastHole) {
+          callbacks.showRoundComplete?.(courseId, holeIdx);
+        } else {
+          if (bar?._navigateTo) bar._navigateTo(holeIdx + 1);
+        }
+      });
+      pickRow.appendChild(pickBtn);
+      inner.appendChild(pickRow);
+    }
+
     // ── Confirm row ─────────────────────────────────────────────────────
     const confirmRow = document.createElement('div');
     confirmRow.className = 'sh-confirm-row sh-confirm-row--single';

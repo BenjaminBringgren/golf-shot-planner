@@ -266,7 +266,7 @@
       font-weight: 400; width: auto; margin: 0;
     }
     @media (hover: hover) { .mg-back-btn:hover { background: none; color: #fff; } }
-    .mg-sub-header h2 { margin: 0; font-size: 17px; font-weight: 700; color: #fff; }
+    .mg-sub-header h2 { margin: 0; font-size: 17px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.05em; }
 
     /* Hub menu card */
     .mg-hub { background: #f5f4f0; min-height: 100vh; }
@@ -2615,6 +2615,7 @@
   .sh-sec-btn.is-pressed { transform: scale(0.97); }
   .sh-sec-btn.penalty { background: var(--sh-penalty); color: var(--sh-penalty-ink); }
   .sh-sec-btn.holed   { background: var(--sh-holed);   color: #fff; }
+  .sh-sec-btn.pickup  { background: #f0efeb; color: #1a1a1a; }
   .sh-sec-btn svg { width: 18px; height: 18px; }
 
   /* ── Putts card ──────────────────────────────────────────────────────────── */
@@ -2699,6 +2700,15 @@
     -webkit-tap-highlight-color: transparent; width: auto; margin: 0;
   }
   .sh-btn-primary svg { width: 16px; height: 16px; }
+  .sh-btn-secondary {
+    height: 50px; border-radius: 16px; border: none;
+    background: #f0efeb; color: #1a1a1a; font-family: inherit;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    letter-spacing: -0.01em;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    -webkit-tap-highlight-color: transparent; width: auto; margin: 0;
+  }
+  .sh-btn-secondary.is-pressed { background: #e8e4df; }
 
   /* ── Result bar — slim ───────────────────────────────────────────────────── */
   .sh-result-slim {
@@ -3056,7 +3066,7 @@
 .mg-stat-tile.tappable { cursor: pointer; }
 .mg-stat-tile.tappable.is-pressed { background: #f5f4f0; }
 .mg-stat-val { font-size: 22px; font-weight: 700; color: #1a1a1a; line-height: 1; }
-.mg-stat-lbl { font-size: 13px; color: #888; margin-top: 4px; font-weight: 400; }
+.mg-stat-lbl { font-size: 13px; color: #888; margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
 .mg-drilldown-btn {
   display: flex; align-items: center; gap: 12px;
   background: #fff; border-radius: 12px;

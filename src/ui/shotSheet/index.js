@@ -159,9 +159,18 @@ export function mountShotSheet({ courseId, holeIdx, callbacks }) {
           // Re-render is triggered by the subscriber
         },
       }));
+      const _fmt      = loadActiveCourse()?.gameFormat ?? 'strokes';
+      const _isStblf  = _fmt === 'stableford';
+      const _maxScore = _isStblf
+        ? holePar + (computeHoleStrokeCounts(courseId)[holeIdx] ?? 0) + 2
+        : 0;
       inner.appendChild(renderSecondaryActions({
-        onPenalty:  () => callbacks.penaltyShot?.(),
-        onHoledOut: () => callbacks.holeOut?.(),
+        onPenalty:       () => callbacks.penaltyShot?.(),
+        onPenaltyRelief: () => callbacks.penaltyRelief?.(),
+        onHoledOut:      () => callbacks.holeOut?.(),
+        showPickUp:      _isStblf,
+        onPickUp:        () => callbacks.pickUp?.(_maxScore),
+        penaltyPending:  state.penaltyPending ?? false,
       }));
       inner.appendChild(renderStatsBar({ vsExpected, roundScore: runDiff, animate: false }));
 

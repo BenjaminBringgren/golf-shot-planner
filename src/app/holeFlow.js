@@ -24,6 +24,8 @@ let _par       = 4;
 let _stage     = STAGE_SHOTS;
 let _shots     = [];   // string[] of lie names, e.g. ['tee', 'rough', 'fw', 'green']
 let _putts     = 2;
+let _penaltyStrokes = 0; // extra strokes from penalty relief (+1 per relief taken)
+let _penaltyRelief  = false; // true after penalty lie recorded, before relief/next shot decision
 let _holedFromLie = null; // lie of the shot that holed out (non-putt path)
 let _milestones   = [];
 
@@ -75,12 +77,14 @@ export function initHole(courseId, holeIdx, par, gpsShotCount) {
   // Try resuming from persisted mid-hole state first
   const saved = loadHoleFlowState(courseId, holeIdx);
   if (saved && saved.stage) {
-    _stage        = saved.stage;
-    _shots        = saved.shots?.length > 0 ? saved.shots : ['tee'];
-    _putts        = saved.putts ?? 2;
-    _holedFromLie = saved.holedFromLie ?? null;
-    _milestones   = saved.milestones ?? [];
-    _holeExpected = saved.holeExpected ?? null;
+    _stage          = saved.stage;
+    _shots          = saved.shots?.length > 0 ? saved.shots : ['tee'];
+    _putts          = saved.putts ?? 2;
+    _penaltyStrokes = saved.penaltyStrokes ?? 0;
+    _penaltyRelief  = saved.penaltyRelief  ?? false;
+    _holedFromLie   = saved.holedFromLie ?? null;
+    _milestones     = saved.milestones ?? [];
+    _holeExpected   = saved.holeExpected ?? null;
     _notify();
     return;
   }
@@ -89,20 +93,24 @@ export function initHole(courseId, holeIdx, par, gpsShotCount) {
   const roundScores = loadScores(courseId);
   const done = roundScores[holeIdx];
   if (done?.scoringMode === 'advanced' && Array.isArray(done.shots)) {
-    _stage        = STAGE_RESULT;
-    _shots        = [...done.shots];
-    _putts        = done.putts ?? 0;
-    _holedFromLie = done.holedFromLie ?? 'green';
-    _milestones   = done.milestones ?? [];
+    _stage          = STAGE_RESULT;
+    _shots          = [...done.shots];
+    _putts          = done.putts ?? 0;
+    _penaltyStrokes = 0;
+    _penaltyRelief  = false;
+    _holedFromLie   = done.holedFromLie ?? 'green';
+    _milestones     = done.milestones ?? [];
     _notify();
     return;
   }
 
   // Fresh hole — auto-log Tee as shot 1
-  _stage        = STAGE_SHOTS;
-  _holedFromLie = null;
-  _holeExpected = null;
-  _shots        = ['tee'];
+  _stage          = STAGE_SHOTS;
+  _holedFromLie   = null;
+  _holeExpected   = null;
+  _penaltyStrokes = 0;
+  _penaltyRelief  = false;
+  _shots          = ['tee'];
 
   // GPS pre-fill: if GPS tracked N shots, pre-fill shots 2..N as 'fw'
   if (gpsShotCount > 1) {
@@ -128,7 +136,7 @@ function _inRough() {
   return _derivedRough() > 0;
 }
 function _totalShots() {
-  return _shots.length + _putts;
+  return _shots.length + _penaltyStrokes + _putts;
 }
 function _remaining(holeLengthM) {
   // Rough approximation for stats bar — caller supplies hole length if available
@@ -140,6 +148,7 @@ function _persist() {
   if (!_courseId) return;
   saveHoleFlowState(_courseId, _holeIdx, {
     stage: _stage, shots: _shots, putts: _putts,
+    penaltyStrokes: _penaltyStrokes, penaltyRelief: _penaltyRelief,
     holedFromLie: _holedFromLie, milestones: _milestones,
     holeExpected: _holeExpected,
   });
@@ -154,12 +163,12 @@ function _commitHole(scores) {
   // Detect milestones against the in-progress round
   const holeRecord = {
     par: _par, shots: [..._shots], putts: _putts,
-    penalties: _shots.filter(s => s === 'penalty').length,
+    penalties: _shots.filter(s => s === 'penalty').length + _penaltyStrokes,
     holedFromLie: _holedFromLie ?? _shots[_shots.length - 1] ?? 'green',
     milestones: [],
     completedAt: Date.now(),
-    // Legacy fields
-    fairway, rough, gir, fir: _autoFir(), scoringMode: 'advanced',
+    // Legacy fields — rough includes automatic penalty strokes so total = fairway+rough+putts is correct
+    fairway, rough: rough + _penaltyStrokes, gir, fir: _autoFir(), scoringMode: 'advanced',
   };
 
   const allHoles = [...scores];
@@ -179,6 +188,7 @@ function _commitHole(scores) {
 /** Tap a lie tile in STAGE_SHOTS. */
 export function commitShot(lie) {
   if (_stage !== STAGE_SHOTS) return;
+  _penaltyRelief = false; // player chose a lie — penalty decision resolved
   if (lie === 'green') {
     // 'green' is the destination of the last shot, not a shot played from green.
     // Don't append to _shots — it would inflate the stroke count.
@@ -202,11 +212,34 @@ export function holeOut() {
   _notify();
 }
 
-/** "Penalty" secondary action — log a penalty shot and stay in STAGE_SHOTS. */
+/** First tap: log a penalty lie. Button then shows "OB / Drop +1" for the optional second tap. */
 export function penaltyShot() {
   if (_stage !== STAGE_SHOTS) return;
   _shots.push('penalty');
+  _penaltyRelief = false; // arms the "OB / Drop +1" prompt
   _persist();
+  _notify();
+}
+
+/** Second tap: player chose to take relief — add the +1 rule penalty stroke. */
+export function penaltyRelief() {
+  if (_stage !== STAGE_SHOTS) return;
+  _penaltyStrokes++;
+  _penaltyRelief = true; // disarms the prompt until next penalty shot
+  _persist();
+  _notify();
+}
+
+/** "Pick up" — record the max stableford score (net double bogey = 0 pts) and finish hole. */
+export function pickUp(maxScore) {
+  if (_stage === STAGE_RESULT) return;
+  // Pad shots to reach the target total (shots + penaltyStrokes + putts = maxScore)
+  _putts = 0;
+  while (_shots.length + _penaltyStrokes < maxScore) _shots.push('fw');
+  _holedFromLie = 'pickup';
+  _stage = STAGE_RESULT;
+  const scores = loadScores(_courseId);
+  _commitHole(scores);
   _notify();
 }
 
@@ -275,7 +308,6 @@ export function removeApproachShot() {
 /** Undo the last shot. Works from STAGE_SHOTS and STAGE_PUTTS. */
 export function undoLastShot() {
   if (_stage === STAGE_PUTTS) {
-    // Pop the last approach shot and return to shot entry
     if (_shots.length > 1) _shots.pop();
     _stage = STAGE_SHOTS;
     _persist();
@@ -285,8 +317,14 @@ export function undoLastShot() {
   if (_stage !== STAGE_SHOTS) return;
   if (_shots.length <= 1) {
     _shots = ['tee'];
+    _penaltyStrokes = 0;
+    _penaltyRelief  = false;
   } else {
-    _shots.pop();
+    const removed = _shots.pop();
+    if (removed === 'penalty') {
+      _penaltyStrokes = Math.max(0, _penaltyStrokes - 1);
+      _penaltyRelief  = false;
+    }
   }
   _persist();
   _notify();
@@ -294,7 +332,7 @@ export function undoLastShot() {
 
 // ── State snapshot ────────────────────────────────────────────────────────────
 export function getState() {
-  const totalShotsCount = _shots.length + (_stage === STAGE_PUTTS || _stage === STAGE_RESULT ? _putts : 0);
+  const totalShotsCount = _shots.length + _penaltyStrokes + (_stage === STAGE_PUTTS || _stage === STAGE_RESULT ? _putts : 0);
   const inRough = _inRough();
 
   // Expected strokes — requires hole length from calling context;
@@ -338,5 +376,7 @@ export function getState() {
     isFirstOfType: isFirst,
     getExpectedStrokes: _getExpectedStrokes,
     holeExpected: _holeExpected,
+    // Penalty state: true = last shot was penalty and relief not yet taken → show "OB / Drop +1"
+    penaltyPending: _shots[_shots.length - 1] === 'penalty' && !_penaltyRelief,
   };
 }

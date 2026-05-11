@@ -50,7 +50,7 @@ import {
 } from './rounds.js';
 import {
   initHoleFlowServices, setHoleExpected,
-  commitShot, holeOut, penaltyShot, setPutts, finishHole,
+  commitShot, holeOut, penaltyShot, penaltyRelief, pickUp, setPutts, finishHole,
   back as _flowBack, edit as _flowEdit, nextHole, undoLastShot,
   addApproachShot, removeApproachShot,
   getState as getHoleFlowState, subscribe as subscribeHoleFlow,
@@ -229,6 +229,8 @@ function buildCallbacks() {
     commitShot:        (lie)    => commitShot(lie),
     holeOut:           ()       => holeOut(),
     penaltyShot:       ()       => penaltyShot(),
+    penaltyRelief:     ()       => penaltyRelief(),
+    pickUp:            (max)   => pickUp(max),
     setPutts:          (n)      => setPutts(n),
     finishHole:        ()       => finishHole(),
     backToPutts:       ()       => _flowBack(),
