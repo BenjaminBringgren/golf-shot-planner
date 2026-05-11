@@ -3066,7 +3066,7 @@
 }
 .mg-stat-tile.tappable { cursor: pointer; }
 .mg-stat-tile.tappable.is-pressed { background: #f5f4f0; }
-.mg-stat-val { font-size: 22px; font-weight: 700; color: #1a1a1a; line-height: 1; }
+.mg-stat-val { font-size: 22px; font-weight: 700; color: #1a1a1a; line-height: 1; font-family: Georgia, 'Times New Roman', serif; }
 .mg-stat-lbl { font-size: 13px; color: #888; margin-top: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
 .mg-drilldown-btn {
   display: flex; align-items: center; gap: 12px;
