@@ -188,6 +188,8 @@ export function showMgSub(id) {
   const sub = document.getElementById(id);
   if (sub) sub.classList.add('active');
   window.scrollTo({ top: 0, behavior: 'instant' });
+  const pane = document.getElementById('panePrepare');
+  if (pane) pane.scrollTop = 0;
   if (id === 'mgSubStats') { renderMgStatsPage(); renderMgStatTiles(); }
   if (id === 'mgSubRoundsHistory') { renderSavedRounds(); }
   if (id === 'mgSubCourses') renderCourseList();
@@ -1086,28 +1088,23 @@ function _stratTagClass(type) {
 
 function _buildStrategyStats(courses, statsFilter) {
   const byPar45 = {};
-  let par3Total = 0, par3Count = 0;
   Object.keys(courses).forEach(courseId => {
     const course = courses[courseId];
     const rounds = filterRounds(loadRounds ? loadRounds(courseId) : [], statsFilter);
     rounds.forEach(round => {
-      if (!round.scores) return;
+      if (!round.scores || !round.strategies) return;
       round.scores.forEach((s, i) => {
         if (!s) return;
         const par   = course.holes?.[i]?.par || 4;
         const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
-        if (!total) return;
-        if (par <= 3) {
-          par3Total += total - par; par3Count++;
-        } else if (round.strategies) {
-          const strat = round.strategies[i];
-          if (!strat) return;
-          const { type } = decodeStrategy(strat);
-          const key = type || strat;
-          if (!byPar45[key]) byPar45[key] = { totalDiff: 0, count: 0 };
-          byPar45[key].totalDiff += total - par;
-          byPar45[key].count++;
-        }
+        if (!total || par <= 3) return;
+        const strat = round.strategies[i];
+        if (!strat) return;
+        const { type } = decodeStrategy(strat);
+        const key = type || strat;
+        if (!byPar45[key]) byPar45[key] = { totalDiff: 0, count: 0 };
+        byPar45[key].totalDiff += total - par;
+        byPar45[key].count++;
       });
     });
   });
@@ -1115,17 +1112,16 @@ function _buildStrategyStats(courses, statsFilter) {
     .map(([type, d]) => ({ type, avg: d.totalDiff / d.count, count: d.count }))
     .filter(d => d.count >= 3)
     .sort((a, b) => a.avg - b.avg);
-  const par3 = par3Count >= 1 ? { avg: par3Total / par3Count, count: par3Count } : null;
-  return { par45, par3 };
+  return { par45 };
 }
 
 export function renderMgStrategyBreakdown() {
   const el = document.getElementById('mgStrategyContent');
   if (!el) return;
   const courses = loadCourses ? loadCourses() : {};
-  const { par45, par3 } = _buildStrategyStats(courses, _statsFilter);
+  const { par45 } = _buildStrategyStats(courses, _statsFilter);
 
-  if (!par45.length && !par3) {
+  if (!par45.length) {
     el.innerHTML = '<div class="mg-breakdown-card"><div style="padding:12px 0 4px;color:#aaa;font-size:15px;">No strategy data yet.<br>Use the shot planner during your rounds to see which approach works best for you.</div></div>';
     return;
   }
@@ -1137,40 +1133,23 @@ export function renderMgStrategyBreakdown() {
       '<span class="strat-row-avg" style="font-size:13px;color:#aaa;font-weight:600;text-transform:uppercase;letter-spacing:0.4px">Avg</span>' +
     '</div>';
 
-  let par45Html = '';
-  if (par45.length) {
-    const rows = par45.map((d, idx) => {
-      const avgStr   = Math.abs(d.avg) < 0.05 ? 'E' : (d.avg > 0 ? '+' : '') + d.avg.toFixed(2);
-      const avgColor = d.avg < -0.05 ? '#c0392b' : '#1a1a1a';
-      const tagClass = _stratTagClass(d.type);
-      const medal    = idx === 0 ? ' strat-row--best' : '';
-      return '<div class="strat-row' + medal + '">' +
-        '<span class="hint-best-tag ' + tagClass + '"><span class="hint-best-dot"></span>' + d.type + '</span>' +
-        '<span class="strat-row-count">' + d.count + ' hole' + (d.count !== 1 ? 's' : '') + '</span>' +
-        '<span class="strat-row-avg" style="color:' + avgColor + '">' + avgStr + '</span>' +
-      '</div>';
-    }).join('');
-    par45Html = '<div class="strat-subhdr" style="padding:8px 14px 2px;">Par 4/5</div>' + rows;
-  }
-
-  let par3Html = '';
-  if (par3) {
-    const avgStr   = Math.abs(par3.avg) < 0.05 ? 'E' : (par3.avg > 0 ? '+' : '') + par3.avg.toFixed(2);
-    const avgColor = par3.avg < -0.05 ? '#c0392b' : '#1a1a1a';
-    par3Html = '<div class="strat-subhdr" style="padding:' + (par45.length ? '10px' : '8px') + ' 14px 2px;">Par 3</div>' +
-      '<div class="strat-row">' +
-        '<span class="hint-best-tag par3"><span class="hint-best-dot"></span>Par 3</span>' +
-        '<span class="strat-row-count">' + par3.count + ' hole' + (par3.count !== 1 ? 's' : '') + '</span>' +
-        '<span class="strat-row-avg" style="color:' + avgColor + '">' + avgStr + '</span>' +
-      '</div>';
-  }
+  const par45Html = par45.map((d, idx) => {
+    const avgStr   = Math.abs(d.avg) < 0.05 ? 'E' : (d.avg > 0 ? '+' : '') + d.avg.toFixed(2);
+    const avgColor = d.avg < -0.05 ? '#c0392b' : '#1a1a1a';
+    const tagClass = _stratTagClass(d.type);
+    const medal    = idx === 0 ? ' strat-row--best' : '';
+    return '<div class="strat-row' + medal + '">' +
+      '<span class="hint-best-tag ' + tagClass + '"><span class="hint-best-dot"></span>' + d.type + '</span>' +
+      '<span class="strat-row-count">' + d.count + ' hole' + (d.count !== 1 ? 's' : '') + '</span>' +
+      '<span class="strat-row-avg" style="color:' + avgColor + '">' + avgStr + '</span>' +
+    '</div>';
+  }).join('');
 
   el.innerHTML =
     '<div class="mg-breakdown-card">' +
       '<div class="mg-breakdown-title">Strategy vs outcome · all rounds</div>' +
       hdrHtml +
       par45Html +
-      par3Html +
       '<div style="padding:10px 14px 4px;font-size:12px;color:#aaa;">Lower avg vs par is better. Min. 3 holes per strategy shown.</div>' +
     '</div>';
 }
@@ -1541,16 +1520,15 @@ export function renderSavedRounds() {
 
       entries.forEach(({ courseId, roundIdx, round, course }) => {
         const isStblf    = round.gameFormat === 'stableford' || (((round.totalPoints ?? 0) > 0) && !round.gameFormat);
-        const pts        = round.totalPoints ?? 0;
         const gross      = (round.totalStrokes || 0) - (round.totalPar || 0);
         // Use hcpTotal saved at round time — frozen, not affected by later handicap changes
         const savedHcp   = round.hcpTotal ?? 0;
-        const netDiff    = savedHcp > 0 && !isStblf ? gross - savedHcp : null;
+        const netDiff    = savedHcp > 0 ? gross - savedHcp : null;
         const diff       = netDiff !== null ? netDiff : gross;
         const diffStr    = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : String(diff));
         const diffCls    = diff < 0 ? 'under' : '';
-        const displayStr = isStblf ? pts + ' pts' : diffStr;
-        const displayCls = isStblf ? '' : diffCls;
+        const displayStr = diffStr;
+        const displayCls = diffCls;
 
         const rPutts  = round.totalPutts ?? (round.scores||[]).reduce((a,s)=>a+(s?.putts||0),0);
         const rGIR    = round.totalGIR   ?? (round.scores||[]).filter(s=>s?.gir).length;
@@ -1559,9 +1537,10 @@ export function renderSavedRounds() {
         const girPctR = holesP > 0 ? Math.round(rGIR / holesP * 100) : 0;
         const firPctR = holesP > 0 ? Math.round(rFIR / holesP * 100) : 0;
 
-        const day = (round.date || '').slice(8, 10).replace(/^0/, '') || '—';
-        const tee = course.teeName ? ' · ' + escHtml(course.teeName) : '';
-        const primaryText = escHtml(day) + ', ' + escHtml(course.name || '—') + tee;
+        const day       = (round.date || '').slice(8, 10).replace(/^0/, '') || '—';
+        const shortMon  = monthIdx >= 0 ? MONTH_NAMES[monthIdx].slice(0, 3) : '';
+        const tee       = course.teeName ? ' · ' + escHtml(course.teeName) : '';
+        const primaryText = escHtml(day + (shortMon ? ' ' + shortMon : '')) + ', ' + escHtml(course.name || '—') + tee;
 
         const row = document.createElement('div');
         row.className = 'rh-round-row';

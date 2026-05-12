@@ -4,6 +4,7 @@
 // Rendering and event binding only. No business logic.
 
 import { clubMap, idx7 } from '../engine/clubs.js';
+import { computeHoleStrokeCounts } from '../app/courses.js';
 import {
   loadCourses, loadRounds,
   loadGameFormat, saveGameFormat,
@@ -326,9 +327,10 @@ export function openCoursePicker(onCourseSelect) {
         const { id } = entry;
         const course  = courses[id];
         const last    = entry.last;
-        const filledHoles = course.holes.filter(h => h.length > 0).length;
+        const totalHoles  = course.holes.length;
         const totalPar    = course.holes.reduce((s, h) => s + (h.par || 0), 0);
-        const meta        = [filledHoles + '/18 holes', totalPar ? 'Par ' + totalPar : null, last ? 'Last played ' + last : null].filter(Boolean).join(' · ');
+        const playingHcp  = computeHoleStrokeCounts(id).reduce((a, n) => a + n, 0);
+        const meta        = [totalHoles + ' holes', totalPar ? 'Par ' + totalPar : null, playingHcp > 0 ? 'HCP ' + playingHcp : null, last ? 'Last played ' + last : null].filter(Boolean).join(' · ');
 
         const row = document.createElement('div');
         row.className = 'course-picker-row';
@@ -367,9 +369,10 @@ export function openCoursePicker(onCourseSelect) {
       const course      = courses[id];
       const rounds      = loadRounds(id);
       const last        = rounds.length ? rounds[0].date : null;
-      const filledHoles = course.holes.filter(h => h.length > 0).length;
+      const totalHoles  = course.holes.length;
       const totalPar    = course.holes.reduce((s, h) => s + (h.par || 0), 0);
-      const meta        = [filledHoles + '/18 holes', totalPar ? 'Par ' + totalPar : null, last ? 'Last played ' + last : null].filter(Boolean).join(' · ');
+      const playingHcp  = computeHoleStrokeCounts(id).reduce((a, n) => a + n, 0);
+      const meta        = [totalHoles + ' holes', totalPar ? 'Par ' + totalPar : null, playingHcp > 0 ? 'HCP ' + playingHcp : null, last ? 'Last played ' + last : null].filter(Boolean).join(' · ');
 
       const row = document.createElement('div');
       row.className = 'course-picker-row';

@@ -102,7 +102,7 @@ function _sectionRows(played, from, to, holeStrokeCounts, runningTotals, strateg
     const pts = isPlayed ? stablefordPoints(h.total, h.par, holeStrokeCounts[from + idx]) : null;
     const stratStr    = strategiesMap ? (strategiesMap[from + idx] ?? strategiesMap[String(from + idx)]) : null;
     const stratColor  = stratStr ? _stratDotColor(stratStr) : null;
-    const stratStyle  = stratColor ? ` style="box-shadow:inset 4px 0 0 ${stratColor}"` : '';
+    const stratStyle  = stratColor ? ` style="box-shadow:inset 6px 0 0 ${stratColor}"` : '';
     return `
       <div class="sc2-row">
         <div${stratStyle}><span class="sc2-hole ${holeCls}">${h.hole}</span></div>
@@ -1379,59 +1379,40 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
     const savedRounds = loadRounds(courseId);
     if (savedRounds.length) {
       const byPar45 = {};
-      let par3Total = 0, par3Count = 0;
       savedRounds.forEach(r => {
         if (!r.scores || !r.strategies) return;
         r.scores.forEach((s, i) => {
           if (!s) return;
           const par   = c.holes[i]?.par || 4;
           const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
-          if (!total) return;
+          if (!total || par <= 3) return;
           const strat = r.strategies[i];
-          if (par <= 3) {
-            par3Total += total - par;
-            par3Count++;
-          } else if (strat) {
-            const { type } = decodeStrategy(strat);
-            const key = type || strat;
-            if (!byPar45[key]) byPar45[key] = { totalDiff: 0, count: 0 };
-            byPar45[key].totalDiff += total - par;
-            byPar45[key].count++;
-          }
+          if (!strat) return;
+          const { type } = decodeStrategy(strat);
+          const key = type || strat;
+          if (!byPar45[key]) byPar45[key] = { totalDiff: 0, count: 0 };
+          byPar45[key].totalDiff += total - par;
+          byPar45[key].count++;
         });
       });
       const sorted45 = Object.entries(byPar45)
         .map(([type, d]) => ({ type, avg: d.totalDiff / d.count, count: d.count }))
         .filter(d => d.count >= 3)
         .sort((a, b) => a.avg - b.avg);
-      const hasPar45 = sorted45.length >= 1;
-      const hasPar3  = par3Count >= 1;
-      if (hasPar45 || hasPar3) {
+      if (sorted45.length >= 1) {
         const par45Rows = sorted45.slice(0, 3).map(d => {
           const avgStr   = Math.abs(d.avg) < 0.05 ? 'E' : (d.avg > 0 ? '+' : '') + d.avg.toFixed(1);
           const avgColor = d.avg < -0.05 ? '#c0392b' : '#888';
-          const tagClass = (d.type === 'Max distance' || d.type === 'Aggressive' || d.type === 'Long') ? 'aggressive'
-            : (d.type === 'Controlled' || d.type === 'Balanced' || d.type === 'Medium') ? 'balanced' : 'safe';
+          const tagClass = d.type === 'Max distance' ? 'aggressive'
+            : d.type === 'Controlled' ? 'balanced' : 'safe';
           return `<div class="strat-row"><span class="hint-best-tag ${tagClass}"><span class="hint-best-dot"></span>${d.type}</span>` +
             `<span class="strat-row-count">${d.count} hole${d.count !== 1 ? 's' : ''}</span>` +
             `<span class="strat-row-avg" style="color:${avgColor}">${avgStr}</span></div>`;
         }).join('');
-        let par3Row = '';
-        if (hasPar3) {
-          const par3Avg = par3Total / par3Count;
-          const par3AvgStr   = Math.abs(par3Avg) < 0.05 ? 'E' : (par3Avg > 0 ? '+' : '') + par3Avg.toFixed(1);
-          const par3AvgColor = par3Avg < -0.05 ? '#c0392b' : '#888';
-          par3Row = `<div class="strat-row"><span class="hint-best-tag par3"><span class="hint-best-dot"></span>Par 3</span>` +
-            `<span class="strat-row-count">${par3Count} hole${par3Count !== 1 ? 's' : ''}</span>` +
-            `<span class="strat-row-avg" style="color:${par3AvgColor}">${par3AvgStr}</span></div>`;
-        }
         stratInsightHtml = `
           <div class="rc-section" style="margin-top:10px;">
             <div class="rc-section-label">Strategy insight</div>
-            <div style="padding:4px 14px 2px;">
-              ${hasPar45 ? `<div class="strat-subhdr">Par 4/5</div>${par45Rows}` : ''}
-              ${hasPar3  ? `<div class="strat-subhdr" style="${hasPar45 ? 'margin-top:10px;' : ''}">Par 3</div>${par3Row}` : ''}
-            </div>
+            <div style="padding:4px 14px 2px;">${par45Rows}</div>
           </div>`;
       }
     }
@@ -1785,58 +1766,40 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
     const allRounds = loadRounds(courseId);
     if (allRounds.length) {
       const byPar45 = {};
-      let par3Total = 0, par3Count = 0;
       allRounds.forEach(r => {
         if (!r.scores || !r.strategies) return;
         r.scores.forEach((s, i) => {
           if (!s) return;
           const par   = c.holes[i]?.par || 4;
           const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
-          if (!total) return;
+          if (!total || par <= 3) return;
           const strat = r.strategies[i];
-          if (par <= 3) {
-            par3Total += total - par; par3Count++;
-          } else if (strat) {
-            const { type } = decodeStrategy(strat);
-            const key = type || strat;
-            if (!byPar45[key]) byPar45[key] = { totalDiff: 0, count: 0 };
-            byPar45[key].totalDiff += total - par;
-            byPar45[key].count++;
-          }
+          if (!strat) return;
+          const { type } = decodeStrategy(strat);
+          const key = type || strat;
+          if (!byPar45[key]) byPar45[key] = { totalDiff: 0, count: 0 };
+          byPar45[key].totalDiff += total - par;
+          byPar45[key].count++;
         });
       });
       const sorted45 = Object.entries(byPar45)
         .map(([type, d]) => ({ type, avg: d.totalDiff / d.count, count: d.count }))
         .filter(d => d.count >= 3)
         .sort((a, b) => a.avg - b.avg);
-      const hasPar45 = sorted45.length >= 1;
-      const hasPar3  = par3Count >= 1;
-      if (hasPar45 || hasPar3) {
+      if (sorted45.length >= 1) {
         const par45Rows = sorted45.slice(0, 3).map(d => {
           const avgStr   = Math.abs(d.avg) < 0.05 ? 'E' : (d.avg > 0 ? '+' : '') + d.avg.toFixed(1);
           const avgColor = d.avg < -0.05 ? '#c0392b' : '#888';
-          const tagClass = (d.type === 'Max distance' || d.type === 'Aggressive' || d.type === 'Long') ? 'aggressive'
-            : (d.type === 'Controlled' || d.type === 'Balanced' || d.type === 'Medium') ? 'balanced' : 'safe';
+          const tagClass = d.type === 'Max distance' ? 'aggressive'
+            : d.type === 'Controlled' ? 'balanced' : 'safe';
           return `<div class="strat-row"><span class="hint-best-tag ${tagClass}"><span class="hint-best-dot"></span>${d.type}</span>` +
             `<span class="strat-row-count">${d.count} hole${d.count !== 1 ? 's' : ''}</span>` +
             `<span class="strat-row-avg" style="color:${avgColor}">${avgStr}</span></div>`;
         }).join('');
-        let par3Row = '';
-        if (hasPar3) {
-          const par3Avg = par3Total / par3Count;
-          const par3AvgStr   = Math.abs(par3Avg) < 0.05 ? 'E' : (par3Avg > 0 ? '+' : '') + par3Avg.toFixed(1);
-          const par3AvgColor = par3Avg < -0.05 ? '#c0392b' : '#888';
-          par3Row = `<div class="strat-row"><span class="hint-best-tag par3"><span class="hint-best-dot"></span>Par 3</span>` +
-            `<span class="strat-row-count">${par3Count} hole${par3Count !== 1 ? 's' : ''}</span>` +
-            `<span class="strat-row-avg" style="color:${par3AvgColor}">${par3AvgStr}</span></div>`;
-        }
         stratInsightHtml = `
           <div class="rc-section" style="margin-top:10px;">
             <div class="rc-section-label">Strategy insight</div>
-            <div style="padding:4px 14px 2px;">
-              ${hasPar45 ? `<div class="strat-subhdr">Par 4/5</div>${par45Rows}` : ''}
-              ${hasPar3  ? `<div class="strat-subhdr"${hasPar45 ? ' style="margin-top:10px;"' : ''}>Par 3</div>${par3Row}` : ''}
-            </div>
+            <div style="padding:4px 14px 2px;">${par45Rows}</div>
           </div>`;
       }
     }
