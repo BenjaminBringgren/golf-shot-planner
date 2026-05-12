@@ -1373,48 +1373,42 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
     ? `${vsParStr} gross · par ${totalPar} · ${holesPlayed} holes`
     : `${totalStrokes} strokes · par ${totalPar} · ${holesPlayed} holes`;
 
-  // Strategy insight — Par 4/5 strategies vs Par 3 performance, from saved rounds at this course
+  // Strategy insight — this round's Par 4/5 holes grouped by strategy
   let stratInsightHtml = '';
   {
-    const savedRounds = loadRounds(courseId);
-    if (savedRounds.length) {
-      const byPar45 = {};
-      savedRounds.forEach(r => {
-        if (!r.scores || !r.strategies) return;
-        r.scores.forEach((s, i) => {
-          if (!s) return;
-          const par   = c.holes[i]?.par || 4;
-          const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
-          if (!total || par <= 3) return;
-          const strat = r.strategies[i];
-          if (!strat) return;
-          const { type } = decodeStrategy(strat);
-          const key = type || strat;
-          if (!byPar45[key]) byPar45[key] = { totalDiff: 0, count: 0 };
-          byPar45[key].totalDiff += total - par;
-          byPar45[key].count++;
-        });
-      });
-      const sorted45 = Object.entries(byPar45)
-        .map(([type, d]) => ({ type, avg: d.totalDiff / d.count, count: d.count }))
-        .filter(d => d.count >= 3)
-        .sort((a, b) => a.avg - b.avg);
-      if (sorted45.length >= 1) {
-        const par45Rows = sorted45.slice(0, 3).map(d => {
-          const avgStr   = Math.abs(d.avg) < 0.05 ? 'E' : (d.avg > 0 ? '+' : '') + d.avg.toFixed(1);
-          const avgColor = d.avg < -0.05 ? '#c0392b' : '#888';
-          const tagClass = d.type === 'Max distance' ? 'aggressive'
-            : d.type === 'Controlled' ? 'balanced' : 'safe';
-          return `<div class="strat-row"><span class="hint-best-tag ${tagClass}"><span class="hint-best-dot"></span>${d.type}</span>` +
-            `<span class="strat-row-count">${d.count} hole${d.count !== 1 ? 's' : ''}</span>` +
-            `<span class="strat-row-avg" style="color:${avgColor}">${avgStr}</span></div>`;
-        }).join('');
-        stratInsightHtml = `
-          <div class="rc-section" style="margin-top:10px;">
-            <div class="rc-section-label">Strategy insight</div>
-            <div style="padding:4px 14px 2px;">${par45Rows}</div>
-          </div>`;
-      }
+    const roundStrategies = getCommittedStrategies();
+    const byStrat = {};
+    scores.forEach((s, i) => {
+      if (!s) return;
+      const par   = c.holes[i]?.par || 4;
+      const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
+      if (!total || par <= 3) return;
+      const strat = roundStrategies?.[i];
+      if (!strat) return;
+      const { type } = decodeStrategy(strat);
+      const key = type || strat;
+      if (!byStrat[key]) byStrat[key] = { totalDiff: 0, count: 0 };
+      byStrat[key].totalDiff += total - par;
+      byStrat[key].count++;
+    });
+    const sorted = Object.entries(byStrat)
+      .map(([type, d]) => ({ type, avg: d.totalDiff / d.count, count: d.count }))
+      .sort((a, b) => a.avg - b.avg);
+    if (sorted.length >= 1) {
+      const rows = sorted.slice(0, 3).map(d => {
+        const avgStr   = Math.abs(d.avg) < 0.05 ? 'E' : (d.avg > 0 ? '+' : '') + d.avg.toFixed(1);
+        const avgColor = d.avg < -0.05 ? '#c0392b' : '#888';
+        const tagClass = d.type === 'Max distance' ? 'aggressive'
+          : d.type === 'Controlled' ? 'balanced' : 'safe';
+        return `<div class="strat-row"><span class="hint-best-tag ${tagClass}"><span class="hint-best-dot"></span>${d.type}</span>` +
+          `<span class="strat-row-count">${d.count} hole${d.count !== 1 ? 's' : ''}</span>` +
+          `<span class="strat-row-avg" style="color:${avgColor}">${avgStr}</span></div>`;
+      }).join('');
+      stratInsightHtml = `
+        <div class="rc-section" style="margin-top:10px;">
+          <div class="rc-section-label">Strategy insight</div>
+          <div style="padding:4px 14px 2px;">${rows}</div>
+        </div>`;
     }
   }
 
@@ -1760,48 +1754,41 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
       </div>`;
   }
 
-  // Strategy insight — Par 4/5 strategies + Par 3 aggregate from all saved rounds at this course
+  // Strategy insight — this round's Par 4/5 holes grouped by strategy
   let stratInsightHtml = '';
   {
-    const allRounds = loadRounds(courseId);
-    if (allRounds.length) {
-      const byPar45 = {};
-      allRounds.forEach(r => {
-        if (!r.scores || !r.strategies) return;
-        r.scores.forEach((s, i) => {
-          if (!s) return;
-          const par   = c.holes[i]?.par || 4;
-          const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
-          if (!total || par <= 3) return;
-          const strat = r.strategies[i];
-          if (!strat) return;
-          const { type } = decodeStrategy(strat);
-          const key = type || strat;
-          if (!byPar45[key]) byPar45[key] = { totalDiff: 0, count: 0 };
-          byPar45[key].totalDiff += total - par;
-          byPar45[key].count++;
-        });
-      });
-      const sorted45 = Object.entries(byPar45)
-        .map(([type, d]) => ({ type, avg: d.totalDiff / d.count, count: d.count }))
-        .filter(d => d.count >= 3)
-        .sort((a, b) => a.avg - b.avg);
-      if (sorted45.length >= 1) {
-        const par45Rows = sorted45.slice(0, 3).map(d => {
-          const avgStr   = Math.abs(d.avg) < 0.05 ? 'E' : (d.avg > 0 ? '+' : '') + d.avg.toFixed(1);
-          const avgColor = d.avg < -0.05 ? '#c0392b' : '#888';
-          const tagClass = d.type === 'Max distance' ? 'aggressive'
-            : d.type === 'Controlled' ? 'balanced' : 'safe';
-          return `<div class="strat-row"><span class="hint-best-tag ${tagClass}"><span class="hint-best-dot"></span>${d.type}</span>` +
-            `<span class="strat-row-count">${d.count} hole${d.count !== 1 ? 's' : ''}</span>` +
-            `<span class="strat-row-avg" style="color:${avgColor}">${avgStr}</span></div>`;
-        }).join('');
-        stratInsightHtml = `
-          <div class="rc-section" style="margin-top:10px;">
-            <div class="rc-section-label">Strategy insight</div>
-            <div style="padding:4px 14px 2px;">${par45Rows}</div>
-          </div>`;
-      }
+    const byStrat = {};
+    savedRound.scores?.forEach((s, i) => {
+      if (!s) return;
+      const par   = c.holes[i]?.par || 4;
+      const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
+      if (!total || par <= 3) return;
+      const strat = savedRound.strategies?.[i];
+      if (!strat) return;
+      const { type } = decodeStrategy(strat);
+      const key = type || strat;
+      if (!byStrat[key]) byStrat[key] = { totalDiff: 0, count: 0 };
+      byStrat[key].totalDiff += total - par;
+      byStrat[key].count++;
+    });
+    const sorted = Object.entries(byStrat)
+      .map(([type, d]) => ({ type, avg: d.totalDiff / d.count, count: d.count }))
+      .sort((a, b) => a.avg - b.avg);
+    if (sorted.length >= 1) {
+      const rows = sorted.slice(0, 3).map(d => {
+        const avgStr   = Math.abs(d.avg) < 0.05 ? 'E' : (d.avg > 0 ? '+' : '') + d.avg.toFixed(1);
+        const avgColor = d.avg < -0.05 ? '#c0392b' : '#888';
+        const tagClass = d.type === 'Max distance' ? 'aggressive'
+          : d.type === 'Controlled' ? 'balanced' : 'safe';
+        return `<div class="strat-row"><span class="hint-best-tag ${tagClass}"><span class="hint-best-dot"></span>${d.type}</span>` +
+          `<span class="strat-row-count">${d.count} hole${d.count !== 1 ? 's' : ''}</span>` +
+          `<span class="strat-row-avg" style="color:${avgColor}">${avgStr}</span></div>`;
+      }).join('');
+      stratInsightHtml = `
+        <div class="rc-section" style="margin-top:10px;">
+          <div class="rc-section-label">Strategy insight</div>
+          <div style="padding:4px 14px 2px;">${rows}</div>
+        </div>`;
     }
   }
 
