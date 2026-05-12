@@ -519,7 +519,8 @@ function _renderHomeSparkline(recent, courses) {
   const trendDown  = diffs.length >= 4
     ? (diffs.slice(-3).reduce((a,b)=>a+b,0)/3) < (diffs.slice(0,3).reduce((a,b)=>a+b,0)/3)
     : best < 0;
-  const trendArrow = trendDown ? '↗' : '↘';
+  const trendArrow = trendDown ? '↘' : '↗';
+  const trendLbl   = trendDown ? 'Improving' : 'Worsening';
   const trendCol   = trendDown ? '#c0392b' : '#1a1a1a';
 
   const chips = ['18H', '9H', 'ALL'].map(label => {
@@ -545,7 +546,7 @@ function _renderHomeSparkline(recent, courses) {
     `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val">${recent.length}</div><div class="mg-chart-strip-lbl">Rounds</div></div>` +
     `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val">${bestStr}</div><div class="mg-chart-strip-lbl">Best</div></div>` +
     `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val">${Math.round(avgStrokes)}</div><div class="mg-chart-strip-lbl">Avg</div></div>` +
-    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${trendCol};">${trendArrow}</div><div class="mg-chart-strip-lbl">Trend</div></div>` +
+    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${trendCol};">${trendArrow}</div><div class="mg-chart-strip-lbl">${trendLbl}</div></div>` +
     `</div>`;
 
   el.querySelectorAll('.rfc-chip').forEach(btn => {
@@ -1399,7 +1400,8 @@ export function renderMgRecentRounds() {
   const trendDown  = diffs.length >= 4
     ? (diffs.slice(-3).reduce((a,b)=>a+b,0)/3) < (diffs.slice(0,3).reduce((a,b)=>a+b,0)/3)
     : best < 0;
-  const trendArrow = trendDown ? '↗' : '↘';
+  const trendArrow = trendDown ? '↘' : '↗';
+  const trendLbl   = trendDown ? 'Improving' : 'Worsening';
   const trendCol   = trendDown ? '#c0392b' : '#1a1a1a';
   const bestCol    = best < 0 ? '#c0392b' : '#1a1a1a';
   const avgCol     = avg  < 0 ? '#c0392b' : '#1a1a1a';
@@ -1415,7 +1417,7 @@ export function renderMgRecentRounds() {
     `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val">${recent.length}</div><div class="mg-chart-strip-lbl">Rounds</div></div>` +
     `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${bestCol};">${bestStr}</div><div class="mg-chart-strip-lbl">Best</div></div>` +
     `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${avgCol};">${avgStr}</div><div class="mg-chart-strip-lbl">Avg</div></div>` +
-    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${trendCol};">${trendArrow}</div><div class="mg-chart-strip-lbl">Trend</div></div>` +
+    `<div class="mg-chart-strip-item"><div class="mg-chart-strip-val" style="color:${trendCol};">${trendArrow}</div><div class="mg-chart-strip-lbl">${trendLbl}</div></div>` +
     `</div>`;
 }
 
