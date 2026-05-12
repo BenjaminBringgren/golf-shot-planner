@@ -67,12 +67,14 @@ Phase 3 (if it grows): Expo / React Native native rebuild
 
 | File | Layer | Role |
 |---|---|---|
-| `index.html` | entry | 683-line markup + single script tag |
+| `index.html` | entry | Pure markup + single script tag |
 | `src/app/router.js` | app | Entry point. calculate(), GPS, wind, compass, override state, switchTab, wireMgNav, bridge assignments |
-| `src/app/courses.js` | app | Course CRUD, hole-to-play logic, course editor, blendedScore |
-| `src/app/rounds.js` | app | Round stats, score rendering, My Golf sub-pages |
+| `src/app/courses.js` | app | Course CRUD, hole-to-play logic, course editor, blendedScore, computeHoleStrokeCounts |
+| `src/app/holeFlow.js` | app | Stage machine for advanced score entry: STAGE_SHOTS → STAGE_PUTTS → STAGE_RESULT. Owns penalty/relief logic and pick-up |
+| `src/app/rounds.js` | app | Round stats, score rendering, My Golf sub-pages, showMgSub |
 | `src/ui/carousel.js` | ui | Strategy carousel, wind breakdown, chip row sync |
-| `src/ui/scorecard.js` | ui | Score drawer, hole grid, round complete overlay |
+| `src/ui/scorecard.js` | ui | Active round scorecard, round complete overlay, saved round detail |
+| `src/ui/shotSheet/` | ui | Shot-by-shot entry UI components (index.js orchestrates; LieGrid, ShotChips, PuttsCard, ResultBar, etc.) |
 | `src/ui/sheets.js` | ui | Club picker sheet, course picker sheet |
 | `src/engine/calculations.js` | engine | Shot planning math, wind/temp adjustment, expected strokes |
 | `src/engine/clubs.js` | engine | Club table, carry interpolation, roll factors |
@@ -106,18 +108,60 @@ These rules apply everywhere without exception: CSS classes,
 inline styles in HTML, and JS-generated HTML strings.
 
 Practical minimum for this app is 13px (Footnote). Caption 1
-(12px) and Caption 2 (11px) are technically permitted but should
-only be used in genuinely space-constrained situations — a unit
-glyph beside a large number, a table cell that can't grow. Default
-to 13px when in doubt. Never introduce 11px or 12px for a label
+(12px) is permitted only in scorecards and genuinely
+space-constrained table cells. Caption 2 (11px) only for unit
+glyphs beside large numbers. Never use 11px or 12px for a label
 that exists elsewhere at 13px.
 
 Permitted font-weight values: 400, 600, 700, 800 only.
 Never use 300 or 500. Primary buttons and actions: 700.
 Secondary buttons and actions: 600.
-All-caps tracking labels (badges, chips, eyebrows) use 700 —
-they read visually smaller due to letter-spacing, so the heavier
-weight is required to maintain legibility.
+All-caps tracking labels (badges, chips, section headers, menu
+titles) use `text-transform: uppercase; letter-spacing: 0.04–0.05em`
+and must use font-weight: 700 — they read visually smaller due to
+letter-spacing, so the heavier weight is required for legibility.
+
+## Score color convention
+Never use green or blue for score values. Always:
+- Under par → `#c0392b` (red)
+- Over par or even → `#1a1a1a` (black)
+
+This applies everywhere: score pills, FAB labels, round history
+rows, hero numbers, stat tiles.
+
+## Strategy types
+Three strategy types exist with exact string keys stored in
+localStorage. Never rename them — they are storage keys.
+
+| Type | Color |
+|---|---|
+| `Max distance` | `#c0392b` |
+| `Controlled` | `#c07820` |
+| `Conservative` | `#1e7a45` |
+
+Custom/Par 3 fallback color: `#888`. Strategy colors are also
+used as the left-border stripe in saved round scorecards
+(`box-shadow: inset 6px 0 0 ${color}` on the hole cell).
+
+## Scroll lock rule
+Every overlay and drawer open must set:
+  document.body.style.overflow = 'hidden';
+Every close path — including "back" buttons and programmatic
+closes that bypass the normal close function — must reset it:
+  document.body.style.overflow = '';
+
+Recurring bug pattern: "Back to round", mode-toggle closes, and
+next-hole navigation all bypass the normal closeDrawer() and have
+historically forgotten to reset overflow, leaving the page
+unscrollable until a tab switch.
+
+## Sub-page navigation (MY GOLF)
+All MY GOLF sub-page transitions go through showMgSub(id) in
+src/app/rounds.js. It must always reset both scroll targets:
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  document.getElementById('panePrepare').scrollTop = 0;
+If only window is reset, content rendered into a previously
+scrolled sub-page will open mid-scroll.
 
 ## Safari compatibility
 Hard requirement. Tested on Brave and Safari on iPhone.
