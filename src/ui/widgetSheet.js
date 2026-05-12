@@ -116,12 +116,7 @@ function _buildFocusCard(visible) {
 }
 
 function _focusBody() {
-  const strip = document.getElementById('playFocusStrip');
-  const tip   = strip?.dataset?.tip || '';
-  if (!tip) {
-    return `<div class="wd-card-empty">Play more rounds to unlock your focus tips.</div>`;
-  }
-  return `<div class="wd-focus-body"><div class="wd-focus-text">${tip}</div></div>`;
+  return `<div class="wd-card-desc">Shows a personalised pre-round focus tip based on your recent rounds at this course — your biggest scoring leak or a strength to build on.</div>`;
 }
 
 // ── Weather card ──────────────────────────────────────────────────────────────
@@ -155,7 +150,6 @@ function _buildWeatherCard(visible) {
     p.weather = toggle.checked;
     saveWidgetPrefs(p.weather, p.gps, p.focus);
     _applyPrefs(p);
-    body.innerHTML = _weatherBody();
   });
 
   card.appendChild(header);
@@ -164,35 +158,7 @@ function _buildWeatherCard(visible) {
 }
 
 function _weatherBody() {
-  const speed     = document.getElementById('wsbSpeed')?.textContent     || '';
-  const detail    = document.getElementById('wsbDetail')?.textContent    || '';
-  const head      = document.getElementById('wbrHead')?.textContent      || '';
-  const cross     = document.getElementById('wbrCross')?.textContent     || '';
-  const effect    = document.getElementById('wbrEffect')?.textContent    || '';
-  const feelsLike = document.getElementById('wbrFeelsLike')?.textContent || '';
-  const rain      = document.getElementById('wbrRain')?.textContent      || '';
-
-  if (!speed || speed === '—') {
-    return `<div class="wd-card-empty">Fetch wind from the Play page first.</div>`;
-  }
-
-  const rows = [
-    { label: 'Wind',        val: [speed, detail].filter(Boolean).join(' · ') },
-    { label: 'Head / Tail', val: head },
-    { label: 'Crosswind',   val: cross },
-    { label: 'Carry effect',val: effect },
-    { label: 'Temp · carry',val: feelsLike },
-    { label: 'Rain',        val: rain },
-  ].filter(r => r.val && r.val !== '—');
-
-  return `<div class="wd-stat-list">${
-    rows.map(r =>
-      `<div class="wd-stat-row">
-         <span class="wd-stat-label">${r.label}</span>
-         <span class="wd-stat-val">${r.val}</span>
-       </div>`
-    ).join('')
-  }</div>`;
+  return `<div class="wd-card-desc">Shows live wind speed, direction, head/tail component, crosswind, carry effect, and temperature adjustment — fetched from your current location.</div>`;
 }
 
 // ── GPS card ──────────────────────────────────────────────────────────────────
@@ -226,7 +192,6 @@ function _buildGpsCard(visible) {
     p.gps = toggle.checked;
     saveWidgetPrefs(p.weather, p.gps, p.focus);
     _applyPrefs(p);
-    body.innerHTML = _gpsBody();
   });
 
   card.appendChild(header);
@@ -235,30 +200,7 @@ function _buildGpsCard(visible) {
 }
 
 function _gpsBody() {
-  const teeStatus  = document.getElementById('gpsTeeStatus')?.textContent  || 'Tap to mark';
-  const ballStatus = document.getElementById('gpsBallStatus')?.textContent || 'Mark tee first';
-  const ballDist   = document.getElementById('gpsBallDist')?.textContent   || '';
-
-  const teeMarked  = teeStatus !== 'Tap to mark';
-  const ballMarked = ballDist !== '';
-  const ballDisplay = ballMarked ? ballDist : ballStatus;
-
-  return `<div class="wd-gps-row">
-    <div class="wd-gps-tile ${teeMarked ? 'wd-gps-tile--marked' : ''}">
-      <div class="wd-gps-dot ${teeMarked ? 'wd-gps-dot--on' : ''}"></div>
-      <div>
-        <div class="wd-gps-label">Tee location</div>
-        <div class="wd-gps-status">${teeStatus}</div>
-      </div>
-    </div>
-    <div class="wd-gps-tile ${!teeMarked ? 'wd-gps-tile--dim' : ballMarked ? 'wd-gps-tile--marked' : ''}">
-      <div class="wd-gps-dot ${ballMarked ? 'wd-gps-dot--on' : ''}"></div>
-      <div>
-        <div class="wd-gps-label">Ball position</div>
-        <div class="wd-gps-status">${ballDisplay}</div>
-      </div>
-    </div>
-  </div>`;
+  return `<div class="wd-card-desc">Mark your tee and ball positions to measure exact shot distances. Distances update as you move and feed into your shot planning.</div>`;
 }
 
 // ── Swipe-down to close ───────────────────────────────────────────────────────

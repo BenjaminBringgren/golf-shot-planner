@@ -1381,6 +1381,9 @@
     .wd-card-empty {
       padding: 12px 14px; font-size: 13px; color: #aaa;
     }
+    .wd-card-desc {
+      padding: 10px 14px 12px; font-size: 13px; color: #666; line-height: 1.5;
+    }
 
     /* Weather stats list */
     .wd-stat-list { padding: 4px 0 2px; }
