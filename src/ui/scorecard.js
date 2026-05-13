@@ -80,6 +80,30 @@ function _dotStrip(count, bg, shape) {
   ).join('');
 }
 
+const _STRAT_LEGEND_ORDER = [
+  { type: 'Max distance', color: '#c0392b' },
+  { type: 'Controlled',   color: '#c07820' },
+  { type: 'Conservative', color: '#1e7a45' },
+];
+
+function _stratLegendHtml(strategiesObj) {
+  if (!strategiesObj) return '';
+  const used = new Set();
+  Object.values(strategiesObj).forEach(s => {
+    if (!s) return;
+    const { type } = decodeStrategy(s);
+    if (type) used.add(type);
+  });
+  const present = _STRAT_LEGEND_ORDER.filter(s => used.has(s.type));
+  if (!present.length) return '';
+  const items = present.map(s =>
+    `<span class="sc2-strat-leg-item">` +
+    `<span class="sc2-strat-leg-bar" style="background:${s.color}"></span>` +
+    `${s.type}</span>`
+  ).join('');
+  return `<div class="sc2-strat-legend">${items}</div>`;
+}
+
 function _stratDotColor(stratStr) {
   if (!stratStr) return null;
   const { type } = decodeStrategy(stratStr);
@@ -1858,6 +1882,7 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
     </div>
     ${strokeLossHtml}
     ${stratInsightHtml}
+    ${_stratLegendHtml(savedRound.strategies)}
     <div class="${rdIsStableford ? 'sc2-stableford' : ''}" style="padding:10px 16px 8px;">${rdSc2Html}</div>
     <div style="padding:12px 16px 24px;">
       <button class="rc-btn-delete" id="rdDeleteBtn" type="button">Delete round</button>
