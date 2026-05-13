@@ -127,8 +127,19 @@ function _sectionRows(played, from, to, holeStrokeCounts, runningTotals, strateg
     const stratStr    = strategiesMap ? (strategiesMap[from + idx] ?? strategiesMap[String(from + idx)]) : null;
     const stratColor  = stratStr ? _stratDotColor(stratStr) : null;
     const stratStyle  = stratColor ? ` style="box-shadow:inset 6px 0 0 ${stratColor}"` : '';
+    const rowExpandAttr = stratStr ? ' data-has-sub="1"' : '';
+    let subRow = '';
+    if (stratStr) {
+      const { type: sType, club: sClub } = decodeStrategy(stratStr);
+      const sColor = stratColor || '#888';
+      const sLabel = sClub ? `${sType} · ${sClub}` : (sType || stratStr);
+      const sDist  = h.teeShotDist ? `<span class="sc2-hole-sub-dist">${h.teeShotDist}m tee shot</span>` : '';
+      subRow = `<div class="sc2-hole-sub" style="display:none;grid-column:1/-1">` +
+        `<span class="sc2-hole-sub-dot" style="color:${sColor}">●</span>` +
+        `<span class="sc2-hole-sub-label">${sLabel}</span>${sDist}</div>`;
+    }
     return `
-      <div class="sc2-row">
+      <div class="sc2-row"${rowExpandAttr}>
         <div${stratStyle}><span class="sc2-hole ${holeCls}">${h.hole}</span></div>
         <div class="sc2-par">${h.par}</div>
         <div class="sc2-idx">${h.si ?? '—'}</div>
@@ -140,7 +151,7 @@ function _sectionRows(played, from, to, holeStrokeCounts, runningTotals, strateg
         <div class="sc2-putts">${isPlayed ? h.putts : '—'}</div>
         <div class="sc2-total-col">${_runTotalHtml(runningTotals[from + idx])}</div>
         <div class="sc2-pts">${pts !== null ? pts : '—'}</div>
-      </div>`;
+      </div>${subRow}`;
   }).join('');
 }
 
@@ -1020,7 +1031,8 @@ export function renderScoreEntry(courseId, holeIdx, scores, callbacks = {}) {
       scores[holeIdx] = {
         fairway: derivedFairway(), rough: derivedRough(),
         putts, gir: autoGir(), fir: autoFir(), scoringMode: 'advanced',
-        shots: shots.map(s => s.lie)
+        shots: shots.map(s => s.lie),
+        teeShotDist: completedShots[0]?.dist ?? null,
       };
       _inRough = derivedRough() > 0;
     }
@@ -1671,6 +1683,7 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
     total: s ? (s.fairway || 0) + (s.rough || 0) + (s.putts || 0) : null,
     fairway: s?.fairway ?? null, rough: s?.rough ?? null,
     putts: s?.putts ?? null, gir: s?.gir ?? null, fir: s?.fir ?? null,
+    teeShotDist: s?.teeShotDist ?? null,
   }));
 
   let totalStrokes = 0, totalPar = 0, totalPutts = 0, totalGIR = 0, totalFIR = 0, holesPlayed = 0;
@@ -1888,6 +1901,17 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
       <button class="rc-btn-delete" id="rdDeleteBtn" type="button">Delete round</button>
     </div>
   `;
+
+  el.querySelectorAll('.sc2-card').forEach(card => {
+    card.addEventListener('click', e => {
+      const row = e.target.closest('.sc2-row[data-has-sub]');
+      if (!row) return;
+      const sub = row.nextElementSibling;
+      if (sub?.classList.contains('sc2-hole-sub')) {
+        sub.style.display = sub.style.display === 'none' ? 'flex' : 'none';
+      }
+    });
+  });
 
   const deleteBtn = el.querySelector('#rdDeleteBtn');
   let deleteArmed = false;

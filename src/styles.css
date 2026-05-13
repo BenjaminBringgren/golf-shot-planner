@@ -1581,6 +1581,11 @@
     .sc2-strat-leg-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #aaa; font-weight: 600; }
     .sc2-strat-leg-bar { width: 4px; height: 13px; border-radius: 2px; flex-shrink: 0; }
 
+    .sc2-hole-sub { align-items: center; gap: 8px; padding: 8px 14px; background: #f7f6f2; border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+    .sc2-hole-sub-dot { font-size: 11px; flex-shrink: 0; }
+    .sc2-hole-sub-label { font-size: 13px; font-weight: 600; color: #3a3a3a; flex: 1; }
+    .sc2-hole-sub-dist { font-size: 13px; font-weight: 600; color: #888; }
+
     .sc2-save-btn { width: 100%; margin-top: 20px; padding: 16px; font-size: 17px; font-weight: 700; background: #1a1a1a; color: #fff; border: none; border-radius: 10px; cursor: pointer; letter-spacing: 0.01em; }
     .sc2-save-btn:disabled { background: #aaa; color: #fff; cursor: default; }
 
