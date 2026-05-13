@@ -1882,8 +1882,8 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
     </div>
     ${strokeLossHtml}
     ${stratInsightHtml}
-    ${_stratLegendHtml(savedRound.strategies)}
     <div class="${rdIsStableford ? 'sc2-stableford' : ''}" style="padding:10px 16px 8px;">${rdSc2Html}</div>
+    ${_stratLegendHtml(savedRound.strategies)}
     <div style="padding:12px 16px 24px;">
       <button class="rc-btn-delete" id="rdDeleteBtn" type="button">Delete round</button>
     </div>
