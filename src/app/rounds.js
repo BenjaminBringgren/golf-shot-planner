@@ -1532,12 +1532,13 @@ export function renderSavedRounds() {
         const displayStr = diffStr;
         const displayCls = diffCls;
 
-        const rPutts  = round.totalPutts ?? (round.scores||[]).reduce((a,s)=>a+(s?.putts||0),0);
-        const rGIR    = round.totalGIR   ?? (round.scores||[]).filter(s=>s?.gir).length;
-        const rFIR    = (round.scores||[]).filter(s=>s?.fir===true).length;
-        const holesP  = round.holesPlayed || 0;
-        const girPctR = holesP > 0 ? Math.round(rGIR / holesP * 100) : 0;
-        const firPctR = holesP > 0 ? Math.round(rFIR / holesP * 100) : 0;
+        const rPutts     = round.totalPutts ?? (round.scores||[]).reduce((a,s)=>a+(s?.putts||0),0);
+        const rGIR       = round.totalGIR   ?? (round.scores||[]).filter(s=>s?.gir).length;
+        const rFIR       = (round.scores||[]).filter(s=>s?.fir===true).length;
+        const holesP     = round.holesPlayed || 0;
+        const firEligR   = (round.scores||[]).filter((s, i) => s != null && (course.holes?.[i]?.par ?? 4) >= 4).length;
+        const girPctR    = holesP > 0 ? Math.round(rGIR / holesP * 100) : 0;
+        const firPctR    = firEligR > 0 ? Math.round(rFIR / firEligR * 100) : 0;
 
         const day       = (round.date || '').slice(8, 10).replace(/^0/, '') || '—';
         const shortMon  = monthIdx >= 0 ? MONTH_NAMES[monthIdx].slice(0, 3) : '';
