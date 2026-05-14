@@ -348,14 +348,13 @@ export function openCoursePicker(onCourseSelect) {
 
     const backRow = document.createElement('div');
     backRow.className = 'picker-tee-back-row';
-    backRow.innerHTML = '<button class="picker-tee-back-btn" type="button">‹ Back</button>' +
-      '<span class="picker-tee-group-name">' + escHtml(groupName) + '</span>';
+    backRow.innerHTML = '<button class="picker-tee-back-btn" type="button">‹ Back</button>';
     backRow.querySelector('.picker-tee-back-btn').addEventListener('click', _renderCourseList);
     list.appendChild(backRow);
 
     const teesHdr = document.createElement('div');
     teesHdr.className = 'picker-section-header';
-    teesHdr.textContent = 'Select tee';
+    teesHdr.textContent = 'Select tee — ' + groupName;
     list.appendChild(teesHdr);
 
     groupIds.forEach(id => {

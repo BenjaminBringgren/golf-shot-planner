@@ -483,16 +483,12 @@
 
     /* ── Tee picker step (course picker sheet) ─────────────────────────── */
     .picker-tee-back-row {
-      display: flex; align-items: center; gap: 4px;
-      padding: 10px 16px 6px;
+      padding: 10px 16px 4px;
     }
     .picker-tee-back-btn {
       background: none; border: none; font-size: 17px; font-weight: 600;
       color: #1a1a1a; cursor: pointer; padding: 4px 6px 4px 0; margin: 0;
-      width: auto; border-radius: 0;
-    }
-    .picker-tee-group-name {
-      font-size: 15px; font-weight: 700; color: #1a1a1a;
+      min-height: 44px; width: auto; border-radius: 0;
     }
 
     .course-item {
