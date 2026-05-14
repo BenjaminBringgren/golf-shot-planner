@@ -1467,7 +1467,7 @@
     }
     .sc2-close-btn {
       flex-shrink: 0;
-      width: 44px; height: 44px; border-radius: 50%;
+      width: 44px; height: 44px; border-radius: 8px;
       background: #f0efeb; border: none; cursor: pointer;
       font-size: 13px; color: #555;
       display: flex; align-items: center; justify-content: center;
