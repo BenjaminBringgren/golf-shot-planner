@@ -2988,9 +2988,9 @@
   background: none; border: none; padding: 10px 0; margin: -10px 0;
   width: auto; cursor: pointer; min-height: 44px;
   display: inline-flex; align-items: center;
-  border-bottom: 1px solid #1a1a1a; border-radius: 0; line-height: 1.2;
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px;
 }
-@media (hover: hover) { .home-stats-viewall:hover { color: #555; border-bottom-color: #555; } }
+@media (hover: hover) { .home-stats-viewall:hover { color: #555; } }
 .home-stats-empty { padding: 0; }
 .home-stats-body { display: flex; flex-direction: column; gap: 8px; }
 .home-stats-body.hidden, .home-stats-empty.hidden { display: none; }
