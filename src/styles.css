@@ -1464,7 +1464,7 @@
       display: flex; align-items: center; justify-content: center;
       touch-action: manipulation;
     }
-    .sc2-close-btn svg { display: block; width: 22px; height: 22px; flex-shrink: 0; }
+    .sc2-close-btn svg { display: block; width: 20px; height: 20px; flex-shrink: 0; }
 
     .scorecard-page-inner {
       flex: 1; overflow-y: auto;
