@@ -1742,10 +1742,12 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
   const vsParColor = vsPar < 0 ? '#c0392b' : '#1a1a1a';
 
   // Use hcpTotal saved at round time — immune to later handicap changes.
-  // Old rounds without the field show gross only (no retroactive net).
-  const rdHcpTotal = savedRound.hcpTotal ?? 0;
-  const rdShowNet  = (callbacks.netMode ?? false) && rdHcpTotal > 0 && !rdIsStableford;
-  const rdNetVsPar = rdShowNet ? vsPar - rdHcpTotal : null;
+  // Old rounds without the field fall back to current profile HCP (approximation only).
+  const rdHcpSaved    = savedRound.hcpTotal ?? 0;
+  const rdHcpFallback = rdHcpSaved > 0 ? rdHcpSaved
+    : played.reduce((sum, h, i) => h.total != null ? sum + rdHoleStrokeCounts[i] : sum, 0);
+  const rdShowNet  = (callbacks.netMode ?? false) && rdHcpFallback > 0 && !rdIsStableford;
+  const rdNetVsPar = rdShowNet ? vsPar - rdHcpFallback : null;
   const rdHeroScore = rdIsStableford
     ? rdTotalPoints + ' pts'
     : rdNetVsPar !== null
