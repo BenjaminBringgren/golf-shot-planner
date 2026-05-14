@@ -1106,17 +1106,7 @@
     .wind-strip-btn.is-pressed { transform: scale(0.93); background: #d8d8d5; }
     .wind-strip-btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
     .wind-strip-btn.locking { background: #e8f0fb !important; border-color: #185fa5 !important; color: #185fa5; }
-    .wind-strip-btn.locked { background: #1a1a1a; border-color: transparent; }
-    @keyframes wli-spin { to { transform: rotate(360deg); } }
-    .wind-strip-btn .wli-needle { fill: #555; stroke: #555; }
-    .wind-strip-btn .wli-stem   { stroke: #555; }
-    .wind-strip-btn .wli-n      { stroke: #555; }
-    .wind-strip-btn.locking .wli-needle { fill: #185fa5; stroke: #185fa5; }
-    .wind-strip-btn.locking .wli-stem   { stroke: #185fa5; }
-    .wind-strip-btn.locking .wli-n      { stroke: #185fa5; }
-    .wind-strip-btn.locked .wli-needle { fill: #fff; stroke: #fff; }
-    .wind-strip-btn.locked .wli-stem   { stroke: #fff; }
-    .wind-strip-btn.locked .wli-n      { stroke: #fff; }
+    .wind-strip-btn.locked { background: #1a1a1a; border-color: transparent; color: #fff; }
     .wind-strip-btn.locking #windLockIcon { animation: none; transition: transform 0.2s ease; }
     .wind-strip-btn.locked  #windLockIcon { transition: transform 0.3s ease; }
 
@@ -1710,7 +1700,7 @@
     .carousel-card.type-conservative  .cc-badge { color: #1e7a45; }
     .carousel-card.type-custom        .cc-badge { color: #888; }
 
-    .cc-score-row { display: flex; align-items: baseline; gap: 6px; margin-top: 4px; }
+    .cc-score-row { display: flex; align-items: baseline; gap: 6px; margin-top: 4px; width: fit-content; border-bottom: 1.5px dashed #ccc; padding-bottom: 2px; cursor: pointer; }
     .cc-score-num { font-size: 34px; font-weight: 700; color: #1a1a1a; line-height: 1; letter-spacing: -0.5px; }
     .cc-score-vs  { font-size: 15px; color: #aaa; }
     .cc-sub  { font-size: 13px; color: #aaa; margin-top: 3px; }
