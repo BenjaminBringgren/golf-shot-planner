@@ -782,6 +782,7 @@ function _renderStatsFilterChips() {
     _statsNetMode = !_statsNetMode;
     renderMgStatsPage();
     renderMgStatTiles();
+    renderSavedRounds();
   });
 }
 
@@ -1526,7 +1527,7 @@ export function renderSavedRounds() {
         // Use hcpTotal saved at round time — frozen, not affected by later handicap changes
         const savedHcp   = round.hcpTotal ?? 0;
         const netDiff    = savedHcp > 0 ? gross - savedHcp : null;
-        const diff       = netDiff !== null ? netDiff : gross;
+        const diff       = (_statsNetMode && netDiff !== null) ? netDiff : gross;
         const diffStr    = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : String(diff));
         const diffCls    = diff < 0 ? 'under' : '';
         const displayStr = diffStr;
