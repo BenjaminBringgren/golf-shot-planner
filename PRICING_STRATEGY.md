@@ -108,26 +108,30 @@ Note: SEK and USD are separate App Store price tiers. Swedish users pay 349 SEK 
 
 ## Subscriber Milestone Revenue
 
-Year 2+ net rates, after App Store cut, before marketing.
+**How to read this table:** Each row is a total subscriber count. The Apple cut and churn loss columns use the 50/50 mix (half Swedish, half international) — the most realistic scenario for a global launch. The final three net columns show what you actually keep depending on your mix.
 
-**How to read this table:** Each row represents that many *total* subscribers. The three annual revenue columns show what you'd earn depending on your subscriber mix:
-- **SEK-only** — all subscribers are Swedish (349 SEK/yr plan)
-- **USD-only** — all subscribers are international ($49.99/yr plan, ~515 SEK equivalent)
-- **50/50 Combined** — half Swedish, half international (most likely scenario for a global launch)
+Churn note: Annual subscribers pay upfront — their churn shows at renewal, not within the year. Churn loss below applies to monthly subscribers (30% of base) who leave mid-year at ~6%/month, averaging 8.7 months paid instead of 12.
 
-Net per subscriber per year: SEK market = 360 SEK · USD market = 494 SEK · Blended 50/50 = 427 SEK
+### Per-subscriber annual breakdown (year 2+, 70% annual / 30% monthly)
 
-| Total Subs | Annual — SEK only | Annual — USD only | **Annual — 50/50 Combined** |
+| | SEK market | USD market | 50/50 blended |
 |---|---|---|---|
-| 1,000 | 360,000 SEK | 494,000 SEK | **427,000 SEK** (~$41,500) |
-| 2,000 | 720,000 SEK | 989,000 SEK | **854,000 SEK** (~$82,900) |
-| 3,000 | 1,080,000 SEK | 1,483,000 SEK | **1,282,000 SEK** (~$124,500) |
-| 5,000 | 1,800,000 SEK | 2,472,000 SEK | **2,136,000 SEK** (~$207,400) |
-| 10,000 | 3,600,000 SEK | 4,944,000 SEK | **4,272,000 SEK** (~$414,800) |
-| 15,000 | 5,400,000 SEK | 7,416,000 SEK | **6,408,000 SEK** (~$622,100) |
-| 20,000 | 7,200,000 SEK | 9,888,000 SEK | **8,544,000 SEK** (~$829,500) |
+| Gross revenue | 421 SEK | 582 SEK | 502 SEK |
+| Apple cut (15%) | −63 SEK | −87 SEK | −75 SEK |
+| Churn loss (net) | −41 SEK | −51 SEK | −46 SEK |
+| **Net per subscriber / yr** | **317 SEK** | **444 SEK** | **381 SEK** |
 
-If your subscriber mix skews more international (e.g. 30% SEK / 70% USD), annual revenue per sub rises to ~462 SEK — roughly 8% above the 50/50 column.
+### Annual revenue at subscriber milestones
+
+| Total Subs | Gross (50/50) | Apple Cut | Churn Loss | **Net (50/50)** | Net (SEK-only) | Net (USD-only) |
+|---|---|---|---|---|---|---|
+| 1,000 | 502,000 SEK | −75,000 SEK | −46,000 SEK | **381,000 SEK** (~$37,000) | 317,000 SEK | 444,000 SEK (~$43,100) |
+| 2,000 | 1,004,000 SEK | −150,000 SEK | −92,000 SEK | **762,000 SEK** (~$74,000) | 634,000 SEK | 888,000 SEK (~$86,200) |
+| 3,000 | 1,506,000 SEK | −225,000 SEK | −138,000 SEK | **1,143,000 SEK** (~$111,000) | 951,000 SEK | 1,332,000 SEK (~$129,300) |
+| 5,000 | 2,510,000 SEK | −375,000 SEK | −230,000 SEK | **1,905,000 SEK** (~$185,000) | 1,585,000 SEK | 2,220,000 SEK (~$215,500) |
+| 10,000 | 5,020,000 SEK | −750,000 SEK | −460,000 SEK | **3,810,000 SEK** (~$370,000) | 3,170,000 SEK | 4,440,000 SEK (~$431,100) |
+| 15,000 | 7,530,000 SEK | −1,125,000 SEK | −690,000 SEK | **5,715,000 SEK** (~$555,000) | 4,755,000 SEK | 6,660,000 SEK (~$646,600) |
+| 20,000 | 10,040,000 SEK | −1,500,000 SEK | −920,000 SEK | **7,620,000 SEK** (~$740,000) | 6,340,000 SEK | 8,880,000 SEK (~$861,900) |
 
 ---
 
