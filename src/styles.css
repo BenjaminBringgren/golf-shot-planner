@@ -1141,11 +1141,11 @@
     .compass-label { display: none; }
     .compass-location { font-size: 13px; color: #aaa; padding: 6px 14px 2px; }
     .compass-svg-wrap {
-      position: relative; width: 120px; height: 195px; flex-shrink: 0;
+      position: relative; width: 120px; height: 225px; flex-shrink: 0;
       cursor: grab; user-select: none;
     }
     .compass-svg-wrap:active { cursor: grabbing; }
-    #compassSvg { width: 120px; height: 195px; transition: none; }
+    #compassSvg { width: 120px; height: 225px; transition: none; }
     .compass-deg-display { font-size: 22px; font-weight: 700; color: #185fa5; }
     .compass-deg-label { font-size: 13px; color: #888; margin-top: 2px; }
     .compass-lock-btn {
