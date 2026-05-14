@@ -1604,6 +1604,7 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
       girPct, firPct, totalPutts, scrambPct,
       hios, albatrosses, eagles, birdies, pars, bogeys, doubles,
       slEntries,
+      played,
     });
   });
 
@@ -1693,7 +1694,7 @@ function _fmtShareDate(iso) {
   return `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1]} ${y}`;
 }
 
-function _drawShareCard({ courseName, date, heroScore, heroColor, heroSub, girPct, firPct, totalPutts, scrambPct, hios, albatrosses, eagles, birdies, pars, bogeys, doubles, slEntries }) {
+function _drawShareCard({ courseName, date, heroScore, heroColor, heroSub, girPct, firPct, totalPutts, scrambPct, hios, albatrosses, eagles, birdies, pars, bogeys, doubles, slEntries, played }) {
   const W = 1080;
   const breakdownItems = [
     hios > 0        && { label: 'Hole in one', count: hios,        color: '#f5c400' },
@@ -1705,7 +1706,8 @@ function _drawShareCard({ courseName, date, heroScore, heroColor, heroSub, girPc
     doubles > 0     && { label: 'Doubles+',     count: doubles,     color: '#1a3a7a' },
   ].filter(Boolean);
 
-  const H = 796 + breakdownItems.length * 58 + (slEntries.length > 0 ? 150 : 0);
+  const hasScorecard = played && played.some(h => h.total != null);
+  const H = 796 + breakdownItems.length * 58 + (slEntries.length > 0 ? 150 : 0) + (hasScorecard ? 330 : 0);
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
@@ -1858,6 +1860,67 @@ function _drawShareCard({ courseName, date, heroScore, heroColor, heroSub, girPc
     ctx.fillStyle = '#c0392b';
     ctx.textAlign = 'right';
     ctx.fillText(`+${slEntries[0].val.toFixed(1)} strokes`, W - 60, y);
+  }
+
+  // Per-hole scorecard grid
+  if (hasScorecard) {
+    y += 48;
+    rule(y);
+    y += 42;
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = '700 26px system-ui, -apple-system, Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('SCORECARD', W / 2, y);
+
+    const cellW = W / 9;
+    const badgeR = 23;
+
+    const _scoreColor = (h) => {
+      if (h.total == null) return null;
+      const d = h.total - h.par;
+      if (h.total === 1)  return { color: '#f5c400', shape: 'circle' };
+      if (d <= -2)        return { color: '#f07020', shape: 'circle' };
+      if (d === -1)       return { color: '#c0392b', shape: 'circle' };
+      if (d === 0)        return { color: '#cccccc', shape: 'circle' };
+      if (d === 1)        return { color: '#3a6fc4', shape: 'square' };
+      return              { color: '#1a3a7a', shape: 'square' };
+    };
+
+    [played.slice(0, 9), played.slice(9, 18)].forEach(nine => {
+      y += 96;
+      const rowY = y;
+      nine.forEach((h, i) => {
+        const cx = cellW * i + cellW / 2;
+        const badge = _scoreColor(h);
+        if (badge) {
+          ctx.fillStyle = badge.color;
+          if (badge.shape === 'circle') {
+            ctx.beginPath();
+            ctx.arc(cx, rowY, badgeR, 0, Math.PI * 2);
+            ctx.fill();
+          } else {
+            ctx.fillRect(cx - badgeR, rowY - badgeR, badgeR * 2, badgeR * 2);
+          }
+          // Score number in badge
+          const textColor = badge.color === '#cccccc' ? '#666666' : '#ffffff';
+          ctx.fillStyle = textColor;
+          ctx.font = '700 28px system-ui, -apple-system, Arial, sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(String(h.total), cx, rowY + 10);
+        } else {
+          // Unplayed
+          ctx.fillStyle = '#eeeeee';
+          ctx.beginPath();
+          ctx.arc(cx, rowY, badgeR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        // Hole number below badge
+        ctx.fillStyle = '#aaaaaa';
+        ctx.font = '24px system-ui, -apple-system, Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(String(h.hole), cx, rowY + badgeR + 20);
+      });
+    });
   }
 
   // Watermark
@@ -2164,6 +2227,7 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
       girPct, firPct, totalPutts, scrambPct,
       hios, albatrosses, eagles, birdies, pars, bogeys, doubles,
       slEntries,
+      played,
     });
   });
 

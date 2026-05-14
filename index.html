@@ -392,6 +392,36 @@
 
         <!-- Stat grid — always visible once wind is fetched -->
         <div id="windStatGrid" style="display:none;">
+
+          <!-- Compass rose — shown once hole direction is locked -->
+          <div id="windRoseRow" style="display:none;padding:10px 0 6px;border-bottom:0.5px solid rgba(0,0,0,0.06);">
+            <svg id="windCompassRose" width="88" height="88" viewBox="-44 -44 88 88" style="display:block;margin:0 auto;overflow:visible;">
+              <circle r="40" fill="#f5f4f0" stroke="#ddd" stroke-width="1"/>
+              <g stroke="#d0cdc8" stroke-width="1">
+                <line x1="0" y1="-40" x2="0" y2="-34"/>
+                <line x1="40" y1="0" x2="34" y2="0"/>
+                <line x1="0" y1="40" x2="0" y2="34"/>
+                <line x1="-40" y1="0" x2="-34" y2="0"/>
+              </g>
+              <g stroke="#e0ddd8" stroke-width="1">
+                <line x1="28" y1="-28" x2="24" y2="-24"/>
+                <line x1="28" y1="28" x2="24" y2="24"/>
+                <line x1="-28" y1="28" x2="-24" y2="24"/>
+                <line x1="-28" y1="-28" x2="-24" y2="-24"/>
+              </g>
+              <!-- Hole direction: fixed arrow up (tee → green) -->
+              <line x1="0" y1="8" x2="0" y2="-26" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+              <polygon points="0,-33 -4,-26 4,-26" fill="#1a1a1a"/>
+              <!-- Wind arrow: rotates to show wind source; arrowhead toward center -->
+              <g id="wcrWind" transform="rotate(0)">
+                <line id="wcrWindLine" x1="0" y1="-36" x2="0" y2="-10" stroke="#c0392b" stroke-width="2.5" stroke-linecap="round"/>
+                <polygon id="wcrWindHead" points="0,-8 -4.5,-16 4.5,-16" fill="#c0392b"/>
+              </g>
+              <circle r="3.5" fill="#1a1a1a"/>
+            </svg>
+            <div id="windRoseLabel" style="text-align:center;font-size:11px;color:#aaa;margin-top:3px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Wind · hole</div>
+          </div>
+
           <div style="display:grid;grid-template-columns:1fr 1fr;">
             <div style="padding:8px 12px;border-bottom:0.5px solid rgba(0,0,0,0.06);border-right:0.5px solid rgba(0,0,0,0.06);">
               <span class="wbr-label">Headwind / Tailwind</span>

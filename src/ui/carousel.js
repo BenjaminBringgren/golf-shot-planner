@@ -171,6 +171,23 @@ export function updateWindBreakdown(windState, lockPhase) {
     rainEl.className = 'wbr-val';
     rainEl.style.color = windState.rainPct > 50 ? '#185fa5' : '';
   }
+
+  // Compass rose — rotate wind arrow to show wind source relative to hole direction
+  const roseRow    = document.getElementById('windRoseRow');
+  const wcrWind    = document.getElementById('wcrWind');
+  const wcrWindLine = document.getElementById('wcrWindLine');
+  const wcrWindHead = document.getElementById('wcrWindHead');
+  if (roseRow) {
+    roseRow.style.display = hasLock ? 'block' : 'none';
+    if (hasLock && wcrWind && windState.dirDeg != null) {
+      const relAngle = ((windState.dirDeg - windState.holeDeg) % 360 + 360) % 360;
+      wcrWind.setAttribute('transform', `rotate(${relAngle})`);
+      const hw = windState.headwind;
+      const windColor = hw > 1 ? '#c0392b' : hw < -1 ? '#1e7a45' : '#c07820';
+      if (wcrWindLine) wcrWindLine.setAttribute('stroke', windColor);
+      if (wcrWindHead) wcrWindHead.setAttribute('fill', windColor);
+    }
+  }
 }
 
 // ── Strategy carousel ───────────────────────────────────────────────────────
