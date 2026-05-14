@@ -108,19 +108,26 @@ Note: SEK and USD are separate App Store price tiers. Swedish users pay 349 SEK 
 
 ## Subscriber Milestone Revenue
 
-Revenue at steady subscriber counts (year 2+ net rates, after App Store cut, before marketing).
+Year 2+ net rates, after App Store cut, before marketing.
 
-| Active Subs | Monthly Net — SEK market | **Annual Revenue — SEK market** | Monthly Net — USD market | **Annual Revenue — USD market** |
-|---|---|---|---|---|
-| 1,000 | 30,000 SEK | **360,000 SEK** | $4,000 | **$48,000 (~494,000 SEK)** |
-| 2,000 | 60,000 SEK | **720,000 SEK** | $8,000 | **$96,000 (~989,000 SEK)** |
-| 3,000 | 90,000 SEK | **1,080,000 SEK** | $12,000 | **$144,000 (~1,483,000 SEK)** |
-| 5,000 | 150,000 SEK | **1,800,000 SEK** | $20,000 | **$240,000 (~2,472,000 SEK)** |
-| 10,000 | 300,000 SEK | **3,600,000 SEK** | $40,000 | **$480,000 (~4,944,000 SEK)** |
-| 15,000 | 450,000 SEK | **5,400,000 SEK** | $60,000 | **$720,000 (~7,416,000 SEK)** |
-| 20,000 | 600,000 SEK | **7,200,000 SEK** | $80,000 | **$960,000 (~9,888,000 SEK)** |
+**How to read this table:** Each row represents that many *total* subscribers. The three annual revenue columns show what you'd earn depending on your subscriber mix:
+- **SEK-only** — all subscribers are Swedish (349 SEK/yr plan)
+- **USD-only** — all subscribers are international ($49.99/yr plan, ~515 SEK equivalent)
+- **50/50 Combined** — half Swedish, half international (most likely scenario for a global launch)
 
-A real-world global subscriber base will be a mix of SEK and USD subscribers. USD subscribers pay more per head — at a 50/50 split, blended annual revenue per subscriber is ~420 SEK on the SEK market vs ~510 SEK equivalent on the USD market.
+Net per subscriber per year: SEK market = 360 SEK · USD market = 494 SEK · Blended 50/50 = 427 SEK
+
+| Total Subs | Annual — SEK only | Annual — USD only | **Annual — 50/50 Combined** |
+|---|---|---|---|
+| 1,000 | 360,000 SEK | 494,000 SEK | **427,000 SEK** (~$41,500) |
+| 2,000 | 720,000 SEK | 989,000 SEK | **854,000 SEK** (~$82,900) |
+| 3,000 | 1,080,000 SEK | 1,483,000 SEK | **1,282,000 SEK** (~$124,500) |
+| 5,000 | 1,800,000 SEK | 2,472,000 SEK | **2,136,000 SEK** (~$207,400) |
+| 10,000 | 3,600,000 SEK | 4,944,000 SEK | **4,272,000 SEK** (~$414,800) |
+| 15,000 | 5,400,000 SEK | 7,416,000 SEK | **6,408,000 SEK** (~$622,100) |
+| 20,000 | 7,200,000 SEK | 9,888,000 SEK | **8,544,000 SEK** (~$829,500) |
+
+If your subscriber mix skews more international (e.g. 30% SEK / 70% USD), annual revenue per sub rises to ~462 SEK — roughly 8% above the 50/50 column.
 
 ---
 
