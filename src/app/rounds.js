@@ -214,7 +214,7 @@ export function showMgHub() {
 
 export function navigateToRound(courseId, roundIdx) {
   if (_switchTab) _switchTab('prepare');
-  _openRoundDetail?.(courseId, roundIdx);
+  _openRoundDetail?.(courseId, roundIdx, _statsNetMode);
 }
 
 export function refreshMgHub() {
@@ -1555,7 +1555,7 @@ export function renderSavedRounds() {
           </div>
           <div class="rh-round-score ${displayCls}">${displayStr}</div>`;
 
-        row.addEventListener('click', () => _openRoundDetail?.(courseId, roundIdx));
+        row.addEventListener('click', () => _openRoundDetail?.(courseId, roundIdx, _statsNetMode));
         yearBody.appendChild(row);
       });
     });

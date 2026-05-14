@@ -1744,7 +1744,8 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
   // Use hcpTotal saved at round time — immune to later handicap changes.
   // Old rounds without the field show gross only (no retroactive net).
   const rdHcpTotal = savedRound.hcpTotal ?? 0;
-  const rdNetVsPar = rdHcpTotal > 0 && !rdIsStableford ? vsPar - rdHcpTotal : null;
+  const rdShowNet  = (callbacks.netMode ?? false) && rdHcpTotal > 0 && !rdIsStableford;
+  const rdNetVsPar = rdShowNet ? vsPar - rdHcpTotal : null;
   const rdHeroScore = rdIsStableford
     ? rdTotalPoints + ' pts'
     : rdNetVsPar !== null

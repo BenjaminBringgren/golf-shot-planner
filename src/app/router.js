@@ -2028,10 +2028,11 @@ initServices({
 
   initRoundsServices({
     switchTab,
-    openRoundDetail: (courseId, roundIdx) => {
+    openRoundDetail: (courseId, roundIdx, netMode = false) => {
       const round = loadRounds(courseId)[roundIdx];
       renderSavedRoundDetail(courseId, round, roundIdx, {
         onDelete: () => { renderSavedRounds(); showMgSub('mgSubRoundsHistory'); },
+        netMode,
       });
       showMgSub('mgSubRoundDetail');
     },
