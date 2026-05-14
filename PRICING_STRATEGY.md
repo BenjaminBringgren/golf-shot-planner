@@ -366,3 +366,113 @@ Target: 5–10 creators, 1 reel/TikTok + 2 stories each.
 | Churn defence | Push notifications in Mar–May and Aug–Oct to re-engage lapsed users |
 
 **The shot strategy carousel exists nowhere else at any price point.** Competitors charge $99.99/yr for less. At 349 SEK / $49.99 you are priced to grow fast.
+
+---
+
+## Competitive Honesty: Hooks, Gaps, and Brutal Truth
+
+### What are the strongest conversion hooks?
+
+These are the moments where a user feels the app is genuinely earning their attention.
+
+**1. The wind + physics calculation**
+This is the strongest hook. Wind speed, direction, temperature, and altitude all feed into carry adjustments derived from Trackman data. Altitude scaling is even adjusted per handicap tier — amateurs hit flatter ball flights, so altitude benefits them less than scratch players. No free-tier competitor does this with this level of calibration. When a user enters 12 m/s headwind on a 175m par 3 and the app says "your 7i doesn't reach — take 6i, adjusted carry 164m, 3m crosswind drift right" — that's a moment of genuine value.
+
+**2. Shot strategy with expected strokes per option**
+The carousel showing Max Distance / Controlled / Conservative with "+0.2 vs par" per option is a real decision-making tool. Golfers who think about course management will immediately understand the value. It answers "which club off the tee actually gives me the best chance of a par?" — a question no other app frames this clearly.
+
+**3. Shot-by-shot lie capture**
+Logging fairway, rough, sand, and penalty per shot with a full hole flow is more granular than most competitors' scorecard apps. For a golfer who wants to know *why* they scored badly, not just *that* they scored badly, this is compelling.
+
+**4. Stroke loss attribution**
+Showing "you lost 2.1 strokes to short game this round" broken into driving / approach / short game / putting / penalties is actionable in a way that a raw score is not. Most free-tier apps show your score. This shows where the score came from.
+
+**5. The app works without GPS hardware or sensors**
+Arccos requires $200 in sensors. This is free to download and works immediately with manual input. For golfers who won't commit to hardware, this is the entire value proposition.
+
+---
+
+### What are the weaknesses — brutal honesty
+
+**The #1 killer: No course database.**
+Every competing app lets a user find their course in under 10 seconds. This app requires manual entry of 18 holes including par and length before anything works. On a realistic 18-hole course, that's 5–10 minutes of data entry before the user sees a single useful output. Most users will not do this. They will delete the app.
+
+This is not a minor UX issue — it is the single largest barrier to adoption and the most likely reason early users will churn before ever paying.
+
+**The shot strategy carousel is less unique than it sounds.**
+The three strategy options (Max / Controlled / Conservative) map directly to the 1st, 2nd, and 3rd longest tee clubs available. The expected strokes values behind them come from a static 6×4 lookup table, not a player-specific model. An 18-handicap and a 5-handicap playing the same hole from 165m get meaningfully different numbers — but only because of a simple handicap multiplier, not because the model knows anything about how *you* actually play. SwingU and 18Birdies both have expected-stroke models in their premium tiers. They don't call it a "strategy carousel" — but the underlying math is comparable.
+
+**"Expected strokes" is not Strokes Gained.**
+Strokes Gained is a measurement of your performance relative to a baseline — it tells you whether you gained or lost strokes against expectation on each shot. This app's "expected strokes remaining" is a lookup table of what an average golfer at your handicap *should* take from a given distance. That's useful for decision-making but it's not the same metric. Calling it anything close to Strokes Gained in marketing would be misleading and experienced golfers will notice.
+
+**Pre-round coaching is template text, not coaching.**
+The "pre-round focus" feature identifies your biggest stat leak from the last 5 rounds and returns one of ~7 pre-written advice strings. "Tee shots are leaking — swing at 80%." This is accurate but it's closer to a fortune cookie than coaching. Arccos and 18Birdies have AI-personalised drill recommendations tied to video libraries. This is not competitive with those in its current state. It should not be marketed as "coaching."
+
+**7 taps to log one hole is too many for casual play.**
+Advanced mode requires roughly 7 taps per hole (lie selection for each shot + putt count + save). That is acceptable for a statistics-obsessed 5-handicap who wants granular data. It is a chore for a 22-handicap playing a casual Saturday round. Arccos logs the same data automatically with zero taps. The app needs a simpler entry path to compete for the casual-golfer segment.
+
+**No validation that the expected strokes table is accurate.**
+The static table values (e.g. 2.95 strokes remaining from 60m for an 18-handicap) are not publicly sourced or validated against PGA/amateur tour data. If serious golfers question the numbers, there is no published methodology to point to.
+
+---
+
+### What the app has that no competitor has
+
+These are genuine differentiators — not marketing copy, actual gaps in the market.
+
+| Feature | This app | Closest competitor |
+|---|---|---|
+| Strategy carousel showing expected score per tee option | ✅ | ❌ none |
+| Per-strategy historical performance tracking | ✅ | ❌ none |
+| Altitude wind scaling adjusted by handicap tier | ✅ | ❌ none (competitors apply flat altitude factor) |
+| Temperature carry correction (air density model) | ✅ | Partially — 18Birdies shows temp but doesn't adjust carry |
+| WHS stroke-index-aware expected strokes per hole | ✅ | ❌ none at this price point |
+| Manual course entry for any course, anywhere, any format | ✅ | ❌ competitors locked to their database |
+| Full hole flow: lie per shot + penalty relief workflow + pick-up tracking | ✅ | Partial — Arccos captures club/distance but not lie type |
+| Offline-capable wind fallback with manual entry | ✅ | ❌ most fail silently offline |
+
+---
+
+### What gap does this app realistically fill?
+
+The app fits one specific golfer profile: **the 8–20 handicap who thinks analytically about their game, plays regular courses they're willing to set up once, and wants more than a scorecard but less than a $200 sensor system.**
+
+That player exists. They're the golfer who reads about Strokes Gained, has tried to use a rangefinder, and wishes their GPS app told them which club to hit instead of just how far away the pin is. There are millions of them. But they are not the median golfer.
+
+The median golfer wants to open an app, tap their course, and start tracking a score. This app does not serve them yet.
+
+**The realistic beachhead market:** Golfers who play the same 1–3 courses regularly and are willing to spend 10 minutes setting up those courses in exchange for better shot planning. Once set up, the per-round experience is genuinely better than anything at this price. The setup cost is front-loaded; the value is recurring.
+
+---
+
+### How can it compete — what needs to be true
+
+For the app to retain users against established competitors, at least one of the following must be true:
+
+**Option A — Niche depth**
+Double down on the shot planning differentiator. Make the strategy carousel genuinely smarter: factor in player's personal miss pattern ("you tend to go short with 7i"), play-to-a-number logic ("leave yourself 120m — your best approach distance"), hazard awareness ("layup to avoid OB left"). No competitor does this at depth. This is a defensible niche that premium golfers will pay for.
+
+**Option B — Remove the setup wall**
+Integrate a course database API (OpenGolfCourses, golfbert, or similar). Even a 5,000-course library covering Sweden, UK, and Ireland at launch removes the biggest drop-off point. Wind physics and strategy carousel become immediately accessible on day one. This is the single highest-leverage technical investment.
+
+**Option C — Own the serious amateur segment explicitly**
+Position the app as *not* for casual golfers. Market it as the tool for golfers who take their handicap seriously, play the same courses, and want genuine course management — not score tracking. Price it accordingly. Accept a smaller but more loyal paying user base. This is viable as a lifestyle business at Scenario A/B revenue.
+
+**What will fail:**
+Trying to compete with Arccos, 18Birdies, or Hole19 on breadth. They have years of data, hardware integrations, marketing budgets, and course databases that cannot be replicated quickly. Competing head-on on features is a losing game. The shot planning angle is the only credible differentiator and it needs to be deeper and more personal to justify subscription revenue at scale.
+
+---
+
+### Feature additions with the highest conversion impact
+
+Ranked by estimated user acquisition and retention effect:
+
+| Priority | Feature | Why | Effort |
+|---|---|---|---|
+| 1 | **Course database integration** | Eliminates the #1 drop-off. Without it, most users never reach the value moment. | High |
+| 2 | **Play-to-a-number strategy** ("leave 120m — your best club") | Genuinely unique. No competitor shows the shot that leaves you at your optimal approach distance. | Medium |
+| 3 | **Club performance history** ("your 7i averaged 147m last 5 rounds") | Turns the strategy carousel personal. Numbers adapt to actual performance, not generic interpolation. | Medium |
+| 4 | **Visual wind compass on screen** | Wind direction as a compass rose with the hole drawn relative to it. The calculation is already there — the visualisation is missing. Makes the wind value immediately legible to a new user watching a creator video. | Low |
+| 5 | **Shareable round card** | One-tap image export of score + key stats. Golf is inherently social. This drives organic acquisition every time someone shares a result. Competitors all have this. | Low |
+| 6 | **Dispersion zone per club** ("your driver: ±12m carry, bias 4m right") | Once enough rounds are logged, the app knows your actual carry distribution. Strategy recommendations can adjust for it. Only Arccos does this, and only with hardware. | High |
+| 7 | **Apple Watch scorecard** | Single biggest retention driver for iPhone users playing a round. Keeps the phone in the bag. | High |
