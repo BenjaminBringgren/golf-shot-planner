@@ -95,8 +95,14 @@ export function updateWindBreakdown(windState, lockPhase) {
 
   // Show stat grid once wind is fetched
   statGrid.style.display    = hasWind ? 'block' : 'none';
-  // Show compass only while actively locking
-  if (compassWrap) compassWrap.style.display = isLocking ? 'flex' : 'none';
+  // Show compass wrap while locking or after lock; hide degree info when just viewing
+  if (compassWrap) compassWrap.style.display = (hasWind && (isLocking || hasLock)) ? 'flex' : 'none';
+  const compassDegDisplay = document.getElementById('compassDegDisplay');
+  const compassDegLabel   = document.getElementById('compassDegLabel');
+  const compassLiveBadge  = document.getElementById('compassLiveBadge');
+  if (compassDegDisplay) compassDegDisplay.style.display = isLocking ? '' : 'none';
+  if (compassDegLabel)   compassDegLabel.style.display   = isLocking ? '' : 'none';
+  if (compassLiveBadge)  compassLiveBadge.style.display  = isLocking ? '' : 'none';
   // Show lock prompt when wind is fetched but not yet locked and not locking
   if (lockPrompt) lockPrompt.style.display = (hasWind && !hasLock && !isLocking) ? 'flex' : 'none';
 
@@ -172,14 +178,12 @@ export function updateWindBreakdown(windState, lockPhase) {
     rainEl.style.color = windState.rainPct > 50 ? '#185fa5' : '';
   }
 
-  // Compass rose — rotate wind arrow to show wind source relative to hole direction
-  const roseRow    = document.getElementById('windRoseRow');
-  const wcrWind    = document.getElementById('wcrWind');
-  const wcrWindLine = document.getElementById('wcrWindLine');
-  const wcrWindHead = document.getElementById('wcrWindHead');
-  if (roseRow) {
-    roseRow.style.display = hasLock ? 'block' : 'none';
-    if (hasLock && wcrWind && windState.dirDeg != null) {
+  // Wind arrow in hole-view SVG — update when locked (not locking; locking is handled by setCompassAngle in router.js)
+  if (!isLocking && hasLock && windState.dirDeg != null) {
+    const wcrWind     = document.getElementById('wcrWind');
+    const wcrWindLine = document.getElementById('wcrWindLine');
+    const wcrWindHead = document.getElementById('wcrWindHead');
+    if (wcrWind) {
       const relAngle = ((windState.dirDeg - windState.holeDeg) % 360 + 360) % 360;
       wcrWind.setAttribute('transform', `rotate(${relAngle},0,-14)`);
       const hw = windState.headwind;

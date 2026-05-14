@@ -272,118 +272,31 @@
           </div>
         </div>
 
-        <!-- Compass — shown only while locking -->
-        <div id="windCompassWrap" style="display:none;flex-direction:row;align-items:center;gap:14px;padding:10px 14px;border-bottom:0.5px solid rgba(0,0,0,0.06);">
-          <div class="compass-svg-wrap" id="compassSvgWrap"><svg id="compassSvg" viewBox="0 0 160 160" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <filter id="needleShadow" x="-40%" y="-40%" width="180%" height="180%">
-                <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#00000028"/>
-              </filter>
-              <radialGradient id="discGrad" cx="40%" cy="35%" r="65%">
-                <stop offset="0%"   stop-color="#ffffff"/>
-                <stop offset="100%" stop-color="#ececec"/>
-              </radialGradient>
-              <radialGradient id="capGrad" cx="35%" cy="30%" r="70%">
-                <stop offset="0%"   stop-color="#ffffff"/>
-                <stop offset="100%" stop-color="#dddddd"/>
-              </radialGradient>
-            </defs>
-
-            <!-- Bezel shadow ring -->
-            <circle cx="80" cy="80" r="79" fill="none" stroke="#d0d0d0" stroke-width="2"/>
-            <!-- Disc -->
-            <circle cx="80" cy="80" r="76" fill="url(#discGrad)"/>
-
-            <!-- ── Tick ring ─────────────────────────────────────────────
-                 All ticks emanate from r=76 inward.
-                 Minor (22.5°): 5px long, very faint
-                 Inter-cardinal (45°): 8px, light
-                 Cardinal (0/90/180/270°): 13px, medium — stops at r=63, well
-                 outside the label ring at r=52                            -->
-
-            <!-- Minor ticks at 22.5° steps (skip cardinals + intercardinals) -->
-            <g stroke="#ddd" stroke-width="0.75" stroke-linecap="round">
-              <line x1="80" y1="4" x2="80" y2="9"   transform="rotate(22.5  80 80)"/>
-              <line x1="80" y1="4" x2="80" y2="9"   transform="rotate(67.5  80 80)"/>
-              <line x1="80" y1="4" x2="80" y2="9"   transform="rotate(112.5 80 80)"/>
-              <line x1="80" y1="4" x2="80" y2="9"   transform="rotate(157.5 80 80)"/>
-              <line x1="80" y1="4" x2="80" y2="9"   transform="rotate(202.5 80 80)"/>
-              <line x1="80" y1="4" x2="80" y2="9"   transform="rotate(247.5 80 80)"/>
-              <line x1="80" y1="4" x2="80" y2="9"   transform="rotate(292.5 80 80)"/>
-              <line x1="80" y1="4" x2="80" y2="9"   transform="rotate(337.5 80 80)"/>
-            </g>
-
-            <!-- Intercardinal ticks -->
-            <g stroke="#bbb" stroke-width="1" stroke-linecap="round">
-              <line x1="80" y1="4" x2="80" y2="12"  transform="rotate(45  80 80)"/>
-              <line x1="80" y1="4" x2="80" y2="12"  transform="rotate(135 80 80)"/>
-              <line x1="80" y1="4" x2="80" y2="12"  transform="rotate(225 80 80)"/>
-              <line x1="80" y1="4" x2="80" y2="12"  transform="rotate(315 80 80)"/>
-            </g>
-
-            <!-- Cardinal ticks — end at y=17 → r=63, labels at r=52 — no overlap -->
-            <g stroke="#999" stroke-width="1.5" stroke-linecap="round">
-              <line x1="80" y1="4" x2="80" y2="17"/>
-              <line x1="80" y1="4" x2="80" y2="17" transform="rotate(90  80 80)"/>
-              <line x1="80" y1="4" x2="80" y2="17" transform="rotate(180 80 80)"/>
-              <line x1="80" y1="4" x2="80" y2="17" transform="rotate(270 80 80)"/>
-            </g>
-
-            <!-- ── Labels at r=52 — all four cardinals on the same ring ──
-                 N at (80, 28)  = 80 - 52 = 28 ✓
-                 S at (80, 132) = 80 + 52 = 132 ✓
-                 E at (132, 80) ✓   W at (28, 80) ✓
-                 Intercardinals at r=52 diagonal positions, smaller          -->
-
-            <!-- Intercardinal labels — subtle, same ring -->
-            <text x="116.8" y="46.7" text-anchor="middle" dominant-baseline="middle"
-                  font-size="7.5" font-weight="400" fill="#c0c0c0"
-                  font-family="'Helvetica Neue',Arial,sans-serif">NE</text>
-            <text x="116.8" y="113.3" text-anchor="middle" dominant-baseline="middle"
-                  font-size="7.5" font-weight="400" fill="#c0c0c0"
-                  font-family="'Helvetica Neue',Arial,sans-serif">SE</text>
-            <text x="43.2"  y="113.3" text-anchor="middle" dominant-baseline="middle"
-                  font-size="7.5" font-weight="400" fill="#c0c0c0"
-                  font-family="'Helvetica Neue',Arial,sans-serif">SW</text>
-            <text x="43.2"  y="46.7"  text-anchor="middle" dominant-baseline="middle"
-                  font-size="7.5" font-weight="400" fill="#c0c0c0"
-                  font-family="'Helvetica Neue',Arial,sans-serif">NW</text>
-
-            <!-- Cardinal labels — all at r=52 from centre -->
-            <!-- N — red, bold, Apple Maps style -->
-            <text x="80" y="28" text-anchor="middle" dominant-baseline="middle"
-                  font-size="13" font-weight="700"
-                  fill="#d42b2b" font-family="'Helvetica Neue',Arial,sans-serif">N</text>
-            <!-- S, E, W — same size, muted charcoal -->
-            <text x="80"   y="132" text-anchor="middle" dominant-baseline="middle"
-                  font-size="12" font-weight="600" fill="#666"
-                  font-family="'Helvetica Neue',Arial,sans-serif">S</text>
-            <text x="132"  y="80"  text-anchor="middle" dominant-baseline="middle"
-                  font-size="12" font-weight="600" fill="#666"
-                  font-family="'Helvetica Neue',Arial,sans-serif">E</text>
-            <text x="28"   y="80"  text-anchor="middle" dominant-baseline="middle"
-                  font-size="12" font-weight="600" fill="#666"
-                  font-family="'Helvetica Neue',Arial,sans-serif">W</text>
-
-            <!-- ── Needle — Apple Maps lozenge style ──────────────────────
-                 Tip at r=36 (y=44): 8px inside label ring — clear gap
-                 Tail at r=34 (y=114): proportional
-                 Widest point 7px either side of centre at y=76/84        -->
-            <g filter="url(#needleShadow)">
-              <!-- North lobe — green (hole direction) -->
-              <path d="M80,76 L73,80 L80,44 L87,80 Z" fill="#1e8c45"/>
-              <!-- South lobe — red -->
-              <path d="M80,84 L73,80 L80,116 L87,80 Z" fill="#c0392b"/>
-            </g>
-
-            <!-- Centre pivot cap -->
-            <circle cx="80" cy="80" r="7"   fill="url(#capGrad)" stroke="#c8c8c8" stroke-width="1"/>
-            <circle cx="80" cy="80" r="2.5" fill="#888"/>
-          </svg></div>
-          <div>
+        <!-- Compass/wind-view — shown while locking direction or after lock -->
+        <div id="windCompassWrap" style="display:none;flex-direction:column;align-items:center;padding:14px 14px 10px;border-bottom:0.5px solid rgba(0,0,0,0.06);">
+          <div class="compass-svg-wrap" id="compassSvgWrap">
+            <svg id="compassSvg" viewBox="-80 -130 160 260" width="120" height="195" style="display:block;overflow:visible;">
+              <!-- Flagpole -->
+              <line x1="0" y1="-83" x2="0" y2="-100" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+              <!-- Flag (SF Symbol flag.svg path, scaled and positioned at pole top) -->
+              <path d="M15.0879 2.92969C16.8945 2.92969 18.3594 1.46484 18.3594-0.341797L18.3594-20.9961C19.2383-21.4844 22.8516-22.8027 28.2227-22.8027C42.5781-22.8027 51.6602-15.8203 65.1367-15.8203C71.2891-15.8203 73.4375-16.4551 76.4648-17.8223C79.248-19.043 81.0547-21.2402 81.0547-25.0977L81.0547-64.4531C81.0547-66.6504 79.1016-67.9688 76.6113-67.9688C74.707-67.9688 71.1914-66.4062 64.6484-66.4062C51.1719-66.4062 42.0898-73.3887 27.7344-73.3887C21.582-73.3887 19.4336-72.7539 16.4062-71.3867C13.623-70.166 11.7676-67.9688 11.7676-64.0625L11.7676-0.341797C11.7676 1.41602 13.2812 2.92969 15.0879 2.92969ZM65.1367-22.4121C52.5391-22.4121 43.2617-29.3457 28.2227-29.3457C23.877-29.3457 19.9707-28.8086 18.3594-28.0762L18.3594-63.8184C18.8477-64.9902 21.7773-66.7969 27.7344-66.7969C41.2109-66.7969 50.4883-59.8145 64.6484-59.8145C68.9941-59.8145 72.4121-60.3516 74.5117-60.9375L74.5117-25.3906C73.9746-24.1699 71.0938-22.4121 65.1367-22.4121Z" fill="#1a1a1a" transform="translate(-5.7,-101) scale(0.38)"/>
+              <!-- Pin circle (ball at base of flag) -->
+              <circle cx="0" cy="-83" r="5.5" fill="#1a1a1a"/>
+              <!-- Dashed shot line (pin to golfer) -->
+              <line x1="0" y1="-77" x2="0" y2="41" stroke="#c8c5be" stroke-width="2" stroke-dasharray="6,5" stroke-linecap="round"/>
+              <!-- Golfer (person SF Symbol, centered at the ring position) -->
+              <path d="M19.8242 0.488281L67.0898 0.488281C73.9258 0.488281 77.1484-1.51367 77.1484-5.9082C77.1484-15.9668 64.4531-30.6641 43.457-30.6641C22.5098-30.6641 9.76562-15.9668 9.76562-5.9082C9.76562-1.51367 13.0371 0.488281 19.8242 0.488281ZM17.627-6.10352C17.0898-6.10352 16.7969-6.25 16.7969-6.78711C16.7969-12.5 26.1719-24.0723 43.457-24.0723C60.7422-24.0723 70.1172-12.5 70.1172-6.78711C70.1172-6.25 69.8242-6.10352 69.2871-6.10352ZM43.457-35.1562C52.6855-35.1562 60.2539-43.4082 60.2539-53.3203C60.2539-63.2324 52.7832-70.9961 43.457-70.9961C34.2285-70.9961 26.6602-63.0859 26.6602-53.2227C26.6602-43.3594 34.2773-35.1562 43.457-35.1562ZM43.457-41.6992C38.2812-41.6992 33.6914-46.8262 33.6914-53.2227C33.6914-59.6191 38.1348-64.4043 43.457-64.4043C48.8281-64.4043 53.2227-59.7168 53.2227-53.3203C53.2227-46.9238 48.7305-41.6992 43.457-41.6992Z" fill="#1a1a1a" transform="translate(-11.3,62.2) scale(0.26)"/>
+              <!-- Wind arrow: rotates around shot-line midpoint to show wind source direction -->
+              <g id="wcrWind" transform="rotate(0,0,-14)">
+                <line id="wcrWindLine" x1="0" y1="-126" x2="0" y2="-46" stroke="#c0392b" stroke-width="4" stroke-linecap="round"/>
+                <polygon id="wcrWindHead" points="0,-41 -9,-55 9,-55" fill="#c0392b"/>
+              </g>
+            </svg>
+          </div>
+          <div style="text-align:center;margin-top:8px;">
             <div class="compass-deg-display" id="compassDegDisplay">0°</div>
             <div class="compass-deg-label" id="compassDegLabel">North</div>
-            <div class="wind-live-pill" id="compassLiveBadge" style="margin-top:6px;">
+            <div class="wind-live-pill" id="compassLiveBadge" style="margin-top:6px;justify-content:center;">
               <div class="wind-live-dot"></div>
               LIVE
             </div>
@@ -392,29 +305,6 @@
 
         <!-- Stat grid — always visible once wind is fetched -->
         <div id="windStatGrid" style="display:none;">
-
-          <!-- Wind hole-view — shown once hole direction is locked -->
-          <div id="windRoseRow" style="display:none;padding:14px 0 10px;border-bottom:0.5px solid rgba(0,0,0,0.06);">
-            <svg id="windCompassRose" viewBox="-80 -130 160 260" width="120" height="195" style="display:block;margin:0 auto;overflow:visible;">
-              <!-- Flagpole -->
-              <line x1="0" y1="-83" x2="0" y2="-100" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
-              <!-- Flag (SF Symbol flag.svg path, scaled and positioned at pole top) -->
-              <path d="M15.0879 2.92969C16.8945 2.92969 18.3594 1.46484 18.3594-0.341797L18.3594-20.9961C19.2383-21.4844 22.8516-22.8027 28.2227-22.8027C42.5781-22.8027 51.6602-15.8203 65.1367-15.8203C71.2891-15.8203 73.4375-16.4551 76.4648-17.8223C79.248-19.043 81.0547-21.2402 81.0547-25.0977L81.0547-64.4531C81.0547-66.6504 79.1016-67.9688 76.6113-67.9688C74.707-67.9688 71.1914-66.4062 64.6484-66.4062C51.1719-66.4062 42.0898-73.3887 27.7344-73.3887C21.582-73.3887 19.4336-72.7539 16.4062-71.3867C13.623-70.166 11.7676-67.9688 11.7676-64.0625L11.7676-0.341797C11.7676 1.41602 13.2812 2.92969 15.0879 2.92969ZM65.1367-22.4121C52.5391-22.4121 43.2617-29.3457 28.2227-29.3457C23.877-29.3457 19.9707-28.8086 18.3594-28.0762L18.3594-63.8184C18.8477-64.9902 21.7773-66.7969 27.7344-66.7969C41.2109-66.7969 50.4883-59.8145 64.6484-59.8145C68.9941-59.8145 72.4121-60.3516 74.5117-60.9375L74.5117-25.3906C73.9746-24.1699 71.0938-22.4121 65.1367-22.4121Z" fill="#1a1a1a" transform="translate(-4.5,-101) scale(0.29)"/>
-              <!-- Pin circle (ball at base of flag) -->
-              <circle cx="0" cy="-83" r="5.5" fill="#1a1a1a"/>
-              <!-- Dashed shot line (pin to golfer) -->
-              <line x1="0" y1="-77" x2="0" y2="48" stroke="#c8c5be" stroke-width="2" stroke-dasharray="6,5" stroke-linecap="round"/>
-              <!-- Golfer ring -->
-              <circle cx="0" cy="53" r="11" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
-              <!-- "you" label -->
-              <text x="0" y="76" text-anchor="middle" font-family="system-ui,-apple-system,Arial,sans-serif" font-size="13" fill="#888">you</text>
-              <!-- Wind arrow: rotates around shot-line midpoint to show wind source direction -->
-              <g id="wcrWind" transform="rotate(0,0,-14)">
-                <line id="wcrWindLine" x1="0" y1="-126" x2="0" y2="-46" stroke="#c0392b" stroke-width="4" stroke-linecap="round"/>
-                <polygon id="wcrWindHead" points="0,-41 -9,-55 9,-55" fill="#c0392b"/>
-              </g>
-            </svg>
-          </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;">
             <div style="padding:8px 12px;border-bottom:0.5px solid rgba(0,0,0,0.06);border-right:0.5px solid rgba(0,0,0,0.06);">

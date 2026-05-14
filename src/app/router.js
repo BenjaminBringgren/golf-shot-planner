@@ -694,15 +694,25 @@ initServices({
   let _absOrientFired       = false;
 
   // ── Compass rotation helpers ───────────────────────────────────────────
-  // The SVG arrow points UP (0° = North). To show hole direction D,
-  // we rotate the entire SVG disc by -D so the arrow points toward D.
-  // E.g. hole going East (90°): rotate disc -90° so arrow points right.
+  // The hole-view SVG is static (flag at top = hole direction).
+  // We update the wind arrow's rotation to reflect wind relative to hole.
   function setCompassAngle(deg) {
     const d = ((deg % 360) + 360) % 360;
-    compassSvgWrap.querySelector('svg').style.transform = `rotate(${d}deg)`;
     compassDegDisplay.textContent = `${Math.round(d)}°`;
     const dirs = ['N','NE','E','SE','S','SW','W','NW'];
     compassDegLabel.textContent = dirs[Math.round(d / 45) % 8];
+    // Rotate wind arrow to show wind source relative to the (in-progress) hole direction
+    const wcrWind = document.getElementById('wcrWind');
+    const wcrWindLine = document.getElementById('wcrWindLine');
+    const wcrWindHead = document.getElementById('wcrWindHead');
+    if (wcrWind && windState.dirDeg != null) {
+      const relAngle = ((windState.dirDeg - d) % 360 + 360) % 360;
+      wcrWind.setAttribute('transform', `rotate(${relAngle},0,-14)`);
+      const hw = windState.speedMs * Math.cos(relAngle * Math.PI / 180);
+      const windColor = hw > 1 ? '#c0392b' : hw < -1 ? '#1e7a45' : '#c07820';
+      if (wcrWindLine) wcrWindLine.setAttribute('stroke', windColor);
+      if (wcrWindHead) wcrWindHead.setAttribute('fill', windColor);
+    }
   }
 
   // ── Manual drag-to-rotate ──────────────────────────────────────────────
