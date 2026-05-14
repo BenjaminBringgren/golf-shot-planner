@@ -393,33 +393,27 @@
         <!-- Stat grid — always visible once wind is fetched -->
         <div id="windStatGrid" style="display:none;">
 
-          <!-- Compass rose — shown once hole direction is locked -->
-          <div id="windRoseRow" style="display:none;padding:10px 0 6px;border-bottom:0.5px solid rgba(0,0,0,0.06);">
-            <svg id="windCompassRose" width="88" height="88" viewBox="-44 -44 88 88" style="display:block;margin:0 auto;overflow:visible;">
-              <circle r="40" fill="#f5f4f0" stroke="#ddd" stroke-width="1"/>
-              <g stroke="#d0cdc8" stroke-width="1">
-                <line x1="0" y1="-40" x2="0" y2="-34"/>
-                <line x1="40" y1="0" x2="34" y2="0"/>
-                <line x1="0" y1="40" x2="0" y2="34"/>
-                <line x1="-40" y1="0" x2="-34" y2="0"/>
+          <!-- Wind hole-view — shown once hole direction is locked -->
+          <div id="windRoseRow" style="display:none;padding:14px 0 10px;border-bottom:0.5px solid rgba(0,0,0,0.06);">
+            <svg id="windCompassRose" viewBox="-80 -130 160 260" width="120" height="195" style="display:block;margin:0 auto;overflow:visible;">
+              <!-- Flagpole -->
+              <line x1="0" y1="-83" x2="0" y2="-100" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+              <!-- Flag (SF Symbol flag.svg path, scaled and positioned at pole top) -->
+              <path d="M15.0879 2.92969C16.8945 2.92969 18.3594 1.46484 18.3594-0.341797L18.3594-20.9961C19.2383-21.4844 22.8516-22.8027 28.2227-22.8027C42.5781-22.8027 51.6602-15.8203 65.1367-15.8203C71.2891-15.8203 73.4375-16.4551 76.4648-17.8223C79.248-19.043 81.0547-21.2402 81.0547-25.0977L81.0547-64.4531C81.0547-66.6504 79.1016-67.9688 76.6113-67.9688C74.707-67.9688 71.1914-66.4062 64.6484-66.4062C51.1719-66.4062 42.0898-73.3887 27.7344-73.3887C21.582-73.3887 19.4336-72.7539 16.4062-71.3867C13.623-70.166 11.7676-67.9688 11.7676-64.0625L11.7676-0.341797C11.7676 1.41602 13.2812 2.92969 15.0879 2.92969ZM65.1367-22.4121C52.5391-22.4121 43.2617-29.3457 28.2227-29.3457C23.877-29.3457 19.9707-28.8086 18.3594-28.0762L18.3594-63.8184C18.8477-64.9902 21.7773-66.7969 27.7344-66.7969C41.2109-66.7969 50.4883-59.8145 64.6484-59.8145C68.9941-59.8145 72.4121-60.3516 74.5117-60.9375L74.5117-25.3906C73.9746-24.1699 71.0938-22.4121 65.1367-22.4121Z" fill="#1a1a1a" transform="translate(-4.5,-101) scale(0.29)"/>
+              <!-- Pin circle (ball at base of flag) -->
+              <circle cx="0" cy="-83" r="5.5" fill="#1a1a1a"/>
+              <!-- Dashed shot line (pin to golfer) -->
+              <line x1="0" y1="-77" x2="0" y2="48" stroke="#c8c5be" stroke-width="2" stroke-dasharray="6,5" stroke-linecap="round"/>
+              <!-- Golfer ring -->
+              <circle cx="0" cy="53" r="11" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
+              <!-- "you" label -->
+              <text x="0" y="76" text-anchor="middle" font-family="system-ui,-apple-system,Arial,sans-serif" font-size="13" fill="#888">you</text>
+              <!-- Wind arrow: rotates around shot-line midpoint to show wind source direction -->
+              <g id="wcrWind" transform="rotate(0,0,-14)">
+                <line id="wcrWindLine" x1="0" y1="-126" x2="0" y2="-46" stroke="#c0392b" stroke-width="4" stroke-linecap="round"/>
+                <polygon id="wcrWindHead" points="0,-41 -9,-55 9,-55" fill="#c0392b"/>
               </g>
-              <g stroke="#e0ddd8" stroke-width="1">
-                <line x1="28" y1="-28" x2="24" y2="-24"/>
-                <line x1="28" y1="28" x2="24" y2="24"/>
-                <line x1="-28" y1="28" x2="-24" y2="24"/>
-                <line x1="-28" y1="-28" x2="-24" y2="-24"/>
-              </g>
-              <!-- Hole direction: fixed arrow up (tee → green) -->
-              <line x1="0" y1="8" x2="0" y2="-26" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
-              <polygon points="0,-33 -4,-26 4,-26" fill="#1a1a1a"/>
-              <!-- Wind arrow: rotates to show wind source; arrowhead toward center -->
-              <g id="wcrWind" transform="rotate(0)">
-                <line id="wcrWindLine" x1="0" y1="-36" x2="0" y2="-10" stroke="#c0392b" stroke-width="2.5" stroke-linecap="round"/>
-                <polygon id="wcrWindHead" points="0,-8 -4.5,-16 4.5,-16" fill="#c0392b"/>
-              </g>
-              <circle r="3.5" fill="#1a1a1a"/>
             </svg>
-            <div id="windRoseLabel" style="text-align:center;font-size:11px;color:#aaa;margin-top:3px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Wind · hole</div>
           </div>
 
           <div style="display:grid;grid-template-columns:1fr 1fr;">

@@ -181,7 +181,7 @@ export function updateWindBreakdown(windState, lockPhase) {
     roseRow.style.display = hasLock ? 'block' : 'none';
     if (hasLock && wcrWind && windState.dirDeg != null) {
       const relAngle = ((windState.dirDeg - windState.holeDeg) % 360 + 360) % 360;
-      wcrWind.setAttribute('transform', `rotate(${relAngle})`);
+      wcrWind.setAttribute('transform', `rotate(${relAngle},0,-14)`);
       const hw = windState.headwind;
       const windColor = hw > 1 ? '#c0392b' : hw < -1 ? '#1e7a45' : '#c07820';
       if (wcrWindLine) wcrWindLine.setAttribute('stroke', windColor);

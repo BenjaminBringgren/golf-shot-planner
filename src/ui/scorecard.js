@@ -1707,7 +1707,7 @@ function _drawShareCard({ courseName, date, heroScore, heroColor, heroSub, girPc
   ].filter(Boolean);
 
   const hasScorecard = played && played.some(h => h.total != null);
-  const H = 796 + breakdownItems.length * 58 + (slEntries.length > 0 ? 150 : 0) + (hasScorecard ? 330 : 0);
+  const H = 796 + breakdownItems.length * 58 + (slEntries.length > 0 ? 150 : 0) + (hasScorecard ? 390 : 0);
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
@@ -1873,7 +1873,7 @@ function _drawShareCard({ courseName, date, heroScore, heroColor, heroSub, girPc
     ctx.fillText('SCORECARD', W / 2, y);
 
     const cellW = W / 9;
-    const badgeR = 23;
+    const badgeR = 36;
 
     const _scoreColor = (h) => {
       if (h.total == null) return null;
@@ -1887,7 +1887,7 @@ function _drawShareCard({ courseName, date, heroScore, heroColor, heroSub, girPc
     };
 
     [played.slice(0, 9), played.slice(9, 18)].forEach(nine => {
-      y += 96;
+      y += 126;
       const rowY = y;
       nine.forEach((h, i) => {
         const cx = cellW * i + cellW / 2;
@@ -1904,9 +1904,9 @@ function _drawShareCard({ courseName, date, heroScore, heroColor, heroSub, girPc
           // Score number in badge
           const textColor = badge.color === '#cccccc' ? '#666666' : '#ffffff';
           ctx.fillStyle = textColor;
-          ctx.font = '700 28px system-ui, -apple-system, Arial, sans-serif';
+          ctx.font = '700 42px system-ui, -apple-system, Arial, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText(String(h.total), cx, rowY + 10);
+          ctx.fillText(String(h.total), cx, rowY + 15);
         } else {
           // Unplayed
           ctx.fillStyle = '#eeeeee';
@@ -1916,9 +1916,9 @@ function _drawShareCard({ courseName, date, heroScore, heroColor, heroSub, girPc
         }
         // Hole number below badge
         ctx.fillStyle = '#aaaaaa';
-        ctx.font = '24px system-ui, -apple-system, Arial, sans-serif';
+        ctx.font = '28px system-ui, -apple-system, Arial, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(String(h.hole), cx, rowY + badgeR + 20);
+        ctx.fillText(String(h.hole), cx, rowY + badgeR + 24);
       });
     });
   }
