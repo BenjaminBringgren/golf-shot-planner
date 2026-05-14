@@ -1547,6 +1547,9 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
       <button class="rc-btn-primary" id="rcSaveBtn" type="button">Save round</button>
       <button class="rc-btn-secondary" id="rcBackBtn" type="button">Back to round</button>
     </div>
+    <div class="rc-btn-row" style="padding-top:10px;">
+      <button class="rc-btn-secondary" id="rcShareBtn" type="button">Share round</button>
+    </div>
     <button class="rc-btn-delete" id="rcDeleteBtn" type="button">Delete round</button>
     <div class="rc-footnote">Saving adds this round to My Golf stats</div>
   `;
@@ -1588,6 +1591,20 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
 
     // Auto-dismiss and clean up after short delay
     setTimeout(() => _dismissRoundComplete(courseId, callbacks), 700);
+  });
+
+  // Wire share button
+  el.querySelector('#rcShareBtn').addEventListener('click', () => {
+    _shareRound({
+      courseName: c.name || 'Course',
+      date: _fmtShareDate(today),
+      heroScore: rcHeroScore,
+      heroColor: rcHeroColor,
+      heroSub: rcHeroSub,
+      girPct, firPct, totalPutts, scrambPct,
+      hios, albatrosses, eagles, birdies, pars, bogeys, doubles,
+      slEntries,
+    });
   });
 
   // Wire back to round button
@@ -1666,6 +1683,224 @@ function _dismissRoundComplete(courseId, callbacks = {}) {
   callbacks.updateHoleCardMode?.();
   callbacks.updateCalcButtonVisibility?.();
   callbacks.navigateHome?.();
+}
+
+// ── Share-card helpers ────────────────────────────────────────────────────────
+function _fmtShareDate(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1]} ${y}`;
+}
+
+function _drawShareCard({ courseName, date, heroScore, heroColor, heroSub, girPct, firPct, totalPutts, scrambPct, hios, albatrosses, eagles, birdies, pars, bogeys, doubles, slEntries }) {
+  const W = 1080;
+  const breakdownItems = [
+    hios > 0        && { label: 'Hole in one', count: hios,        color: '#f5c400' },
+    albatrosses > 0 && { label: 'Albatross',   count: albatrosses, color: '#7b2fff' },
+    eagles > 0      && { label: 'Eagles',       count: eagles,      color: '#f07020' },
+    birdies > 0     && { label: 'Birdies',      count: birdies,     color: '#c0392b' },
+    pars > 0        && { label: 'Pars',         count: pars,        color: '#888888' },
+    bogeys > 0      && { label: 'Bogeys',       count: bogeys,      color: '#3a6fc4' },
+    doubles > 0     && { label: 'Doubles+',     count: doubles,     color: '#1a3a7a' },
+  ].filter(Boolean);
+
+  const H = 796 + breakdownItems.length * 58 + (slEntries.length > 0 ? 150 : 0);
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const rule = (y) => {
+    ctx.strokeStyle = '#ececec';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(60, y);
+    ctx.lineTo(W - 60, y);
+    ctx.stroke();
+  };
+
+  // Background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // Top stripe
+  ctx.fillStyle = '#1e7a45';
+  ctx.fillRect(0, 0, W, 10);
+
+  let y = 10;
+
+  // App label
+  y += 54;
+  ctx.fillStyle = '#aaaaaa';
+  ctx.font = '700 26px system-ui, -apple-system, Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('GOLF SHOT PLANNER', W / 2, y);
+
+  // Course name (auto-scale for long names)
+  y += 58;
+  let cfs = 54;
+  ctx.font = `700 ${cfs}px system-ui, -apple-system, Arial, sans-serif`;
+  while (ctx.measureText(courseName).width > W - 100 && cfs > 34) {
+    cfs -= 2;
+    ctx.font = `700 ${cfs}px system-ui, -apple-system, Arial, sans-serif`;
+  }
+  ctx.fillStyle = '#1a1a1a';
+  ctx.textAlign = 'center';
+  ctx.fillText(courseName, W / 2, y);
+
+  // Date
+  y += 46;
+  ctx.fillStyle = '#888888';
+  ctx.font = '32px system-ui, -apple-system, Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(date, W / 2, y);
+
+  y += 36;
+  rule(y);
+
+  // Hero score
+  y += 140;
+  let hfs = 150;
+  ctx.font = `700 ${hfs}px system-ui, -apple-system, Arial, sans-serif`;
+  while (ctx.measureText(heroScore).width > W - 120 && hfs > 80) {
+    hfs -= 4;
+    ctx.font = `700 ${hfs}px system-ui, -apple-system, Arial, sans-serif`;
+  }
+  ctx.fillStyle = heroColor;
+  ctx.textAlign = 'center';
+  ctx.fillText(heroScore, W / 2, y);
+
+  // Hero sub
+  y += 50;
+  ctx.fillStyle = '#888888';
+  ctx.font = '32px system-ui, -apple-system, Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(heroSub, W / 2, y);
+
+  y += 42;
+  rule(y);
+
+  // Stats label
+  y += 42;
+  ctx.fillStyle = '#aaaaaa';
+  ctx.font = '700 26px system-ui, -apple-system, Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('KEY STATS', W / 2, y);
+
+  // Stat values + labels
+  y += 70;
+  const cellW = W / 4;
+  [
+    { val: girPct !== '—' ? `${girPct}%` : '—',    lbl: 'GIR' },
+    { val: firPct !== '—' ? `${firPct}%` : '—',    lbl: 'FIR' },
+    { val: totalPutts ? String(totalPutts) : '—',   lbl: 'Putts' },
+    { val: scrambPct !== '—' ? `${scrambPct}%` : '—', lbl: 'Scrambling' },
+  ].forEach((s, i) => {
+    const cx = cellW * i + cellW / 2;
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = '700 50px system-ui, -apple-system, Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(s.val, cx, y);
+    ctx.fillStyle = '#888888';
+    ctx.font = '28px system-ui, -apple-system, Arial, sans-serif';
+    ctx.fillText(s.lbl, cx, y + 40);
+  });
+
+  y += 96;
+  rule(y);
+
+  // Breakdown label
+  y += 42;
+  ctx.fillStyle = '#aaaaaa';
+  ctx.font = '700 26px system-ui, -apple-system, Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('SCORE BREAKDOWN', W / 2, y);
+
+  // Breakdown rows
+  const maxCount = Math.max(...breakdownItems.map(b => b.count), 1);
+  const barX = 500, barMaxW = 360;
+  breakdownItems.forEach(b => {
+    y += 58;
+    ctx.fillStyle = b.color;
+    ctx.beginPath();
+    ctx.arc(70, y - 8, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = '34px system-ui, -apple-system, Arial, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(b.label, 94, y);
+    const barW = Math.max((b.count / maxCount) * barMaxW, 6);
+    ctx.fillStyle = b.color + '28';
+    ctx.fillRect(barX, y - 26, barW, 18);
+    ctx.fillStyle = b.color;
+    ctx.fillRect(barX, y - 26, 4, 18);
+    ctx.font = '700 34px system-ui, -apple-system, Arial, sans-serif';
+    ctx.fillStyle = b.color;
+    ctx.textAlign = 'right';
+    ctx.fillText(String(b.count), W - 60, y);
+  });
+
+  // Stroke loss
+  if (slEntries.length > 0) {
+    y += 48;
+    rule(y);
+    y += 42;
+    ctx.fillStyle = '#aaaaaa';
+    ctx.font = '700 26px system-ui, -apple-system, Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('BIGGEST LEAK', W / 2, y);
+    y += 60;
+    ctx.fillStyle = '#1a1a1a';
+    ctx.font = '700 44px system-ui, -apple-system, Arial, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(slEntries[0].lbl, 60, y);
+    ctx.fillStyle = '#c0392b';
+    ctx.textAlign = 'right';
+    ctx.fillText(`+${slEntries[0].val.toFixed(1)} strokes`, W - 60, y);
+  }
+
+  // Watermark
+  ctx.fillStyle = '#cccccc';
+  ctx.font = '28px system-ui, -apple-system, Arial, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Golf Shot Planner', W / 2, H - 50);
+
+  // Bottom stripe
+  ctx.fillStyle = '#1e7a45';
+  ctx.fillRect(0, H - 10, W, 10);
+
+  return canvas;
+}
+
+async function _shareRound(data) {
+  const canvas = _drawShareCard(data);
+  if (navigator.share && navigator.canShare) {
+    return new Promise(resolve => {
+      canvas.toBlob(async blob => {
+        const file = new File([blob], 'golf-round.png', { type: 'image/png' });
+        try {
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: 'My round — Golf Shot Planner' });
+          } else {
+            _downloadCanvas(canvas);
+          }
+        } catch (e) {
+          if (e.name !== 'AbortError') _downloadCanvas(canvas);
+        }
+        resolve();
+      }, 'image/png');
+    });
+  } else {
+    _downloadCanvas(canvas);
+  }
+}
+
+function _downloadCanvas(canvas) {
+  const a = document.createElement('a');
+  a.download = 'golf-round.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
 }
 
 // ── Saved round detail page — mirrors showRoundCompleteOverlay but reads saved data ──
@@ -1900,7 +2135,10 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
     ${stratInsightHtml}
     <div class="${rdIsStableford ? 'sc2-stableford' : ''}" style="padding:10px 16px 8px;">${rdSc2Html}</div>
     ${_stratLegendHtml(savedRound.strategies)}
-    <div style="padding:12px 16px 24px;">
+    <div class="rc-btn-row" style="padding-top:16px;">
+      <button class="rc-btn-secondary" id="rdShareBtn" type="button">Share round</button>
+    </div>
+    <div style="padding:10px 16px 24px;">
       <button class="rc-btn-delete" id="rdDeleteBtn" type="button">Delete round</button>
     </div>
   `;
@@ -1913,6 +2151,19 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
       if (sub?.classList.contains('sc2-hole-sub')) {
         sub.style.display = sub.style.display === 'none' ? 'flex' : 'none';
       }
+    });
+  });
+
+  el.querySelector('#rdShareBtn').addEventListener('click', () => {
+    _shareRound({
+      courseName: c.name || 'Course',
+      date: _fmtShareDate(savedRound.date),
+      heroScore: rdHeroScore,
+      heroColor: rdHeroColor,
+      heroSub: rdHeroSub,
+      girPct, firPct, totalPutts, scrambPct,
+      hios, albatrosses, eagles, birdies, pars, bogeys, doubles,
+      slEntries,
     });
   });
 
