@@ -262,8 +262,10 @@
     }
     .mg-back-btn {
       background: none; border: none; color: rgba(255,255,255,0.6);
-      font-size: 22px; line-height: 1; cursor: pointer; padding: 0 4px 0 0;
-      font-weight: 400; width: auto; margin: 0;
+      font-size: 22px; line-height: 1; cursor: pointer; padding: 0;
+      font-weight: 400; margin: 0;
+      min-width: 44px; min-height: 44px;
+      display: flex; align-items: center; justify-content: flex-start;
     }
     @media (hover: hover) { .mg-back-btn:hover { background: none; color: #fff; } }
     .mg-sub-header h2 { margin: 0; font-size: 17px; font-weight: 700; color: #fff; text-transform: uppercase; letter-spacing: 0.05em; }
@@ -520,12 +522,12 @@
     .course-action-btn.danger { color: #c0392b; }
     @media (hover: hover) { .course-action-btn.danger:hover { background: rgba(0,0,0,0.05); color: #a32d2d; } }
     /* ── iOS touch target minimums ───────────────────────────── */
-    .course-action-btn { min-height: 42px; padding: 11px 16px; }
+    .course-action-btn { min-height: 44px; padding: 11px 16px; }
     /* hole-cell sizing controlled by main rule below */
-    .collapsible-header { min-height: 42px; }
+    .collapsible-header { min-height: 44px; }
     /* gps-btn height handled by main rule */
     /* .wind-strip-btn touch target handled in main rule */
-    .course-bar-btn { width: 42px; height: 42px; }
+    .course-bar-btn { width: 44px; height: 44px; }
 
 
 
@@ -676,7 +678,7 @@
     .course-bar-btn {
       background: #f0efeb; color: #555;
       border: none; border-radius: 8px; cursor: pointer; flex-shrink: 0;
-      font-size: 17px; padding: 0; width: 42px; height: 42px; margin: 0;
+      font-size: 17px; padding: 0; width: 44px; height: 44px; margin: 0;
       display: flex; align-items: center; justify-content: center;
     }
     .course-bar-btn.is-pressed { background: #e5e3df; }
@@ -1094,10 +1096,10 @@
     .wind-strip-btn {
       font-size: 13px; color: #555; cursor: pointer;
       background: #f0f0ee; border: 1.5px solid transparent;
-      border-radius: 7px; width: 42px; margin: 0;
+      border-radius: 7px; width: 44px; margin: 0;
       white-space: nowrap; flex-shrink: 0; font-weight: 600;
       display: flex; align-items: center; justify-content: center;
-      padding: 0; height: 42px; min-height: 42px;
+      padding: 0; height: 44px; min-height: 44px;
       transition: background 0.15s, border-color 0.15s, transform 0.1s;
     }
     @media (hover: hover) { .wind-strip-btn:hover { background: #e5e5e2; } }
@@ -1465,7 +1467,7 @@
     }
     .sc2-close-btn {
       flex-shrink: 0;
-      width: 32px; height: 32px; border-radius: 50%;
+      width: 44px; height: 44px; border-radius: 50%;
       background: #f0efeb; border: none; cursor: pointer;
       font-size: 13px; color: #555;
       display: flex; align-items: center; justify-content: center;
@@ -2331,7 +2333,7 @@
     .chip-control-row { display: flex; gap: 6px; }
     .chip-control-btn {
       background: #eeede9 !important; border: none !important;
-      border-radius: 7px; padding: 0; width: 42px; height: 42px; flex-shrink: 0;
+      border-radius: 7px; padding: 0; width: 44px; height: 44px; flex-shrink: 0;
       font-size: 13px; font-weight: 600; color: #999 !important;
       cursor: pointer; font-family: inherit;
       margin: 0; line-height: 1;
@@ -2396,7 +2398,7 @@
   .sh-mode-row { display:flex; align-items:center; justify-content:space-between; padding:12px 18px 8px; gap:12px; }
   .sh-mode-label { font-size:13px; color:#888; flex-shrink:0; }
   .score-mode-toggle { display:flex; gap:4px; }
-  .score-mode-btn { padding:6px 14px; background:none; border:none; font-size:13px; color:#aaa; cursor:pointer; border-radius:8px; }
+  .score-mode-btn { padding:6px 14px; min-height:44px; background:none; border:none; font-size:13px; color:#aaa; cursor:pointer; border-radius:8px; }
   .score-mode-btn.active { color:#1a1a1a; font-weight:600; }
 
   /* ── Score drawer — Direction 2.1 tile grid ──────────────────────────── */
@@ -2440,8 +2442,9 @@
   }
   #bagCompleteHintBtn {
     background: none; border: none; font-size: 13px;
-    color: #2a6e3f; font-weight: 600; padding: 0; cursor: pointer;
-    white-space: nowrap; margin-left: 8px;
+    color: #2a6e3f; font-weight: 600; padding: 10px 0; cursor: pointer;
+    white-space: nowrap; margin-left: 8px; min-height: 44px;
+    display: inline-flex; align-items: center;
   }
 
   /* ── Shot sheet tokens ──────────────────────────────────────────────────── */
@@ -2926,7 +2929,7 @@
 .calc-close-btn {
   background: #f0efeb; color: #bbb;
   border: none; border-radius: 8px; cursor: pointer;
-  font-size: 17px; padding: 0; width: 42px; height: 42px; margin: 0;
+  font-size: 17px; padding: 0; width: 44px; height: 44px; margin: 0;
   display: flex; align-items: center; justify-content: center;
   -webkit-tap-highlight-color: transparent; font-family: inherit;
 }
@@ -2982,8 +2985,9 @@
 }
 .home-stats-viewall {
   font-size: 13px; font-weight: 600; color: #1a1a1a;
-  background: none; border: none; padding: 0; margin: 0;
-  width: auto; cursor: pointer;
+  background: none; border: none; padding: 10px 0; margin: -10px 0;
+  width: auto; cursor: pointer; min-height: 44px;
+  display: inline-flex; align-items: center;
   border-bottom: 1px solid #1a1a1a; border-radius: 0; line-height: 1.2;
 }
 @media (hover: hover) { .home-stats-viewall:hover { color: #555; border-bottom-color: #555; } }
