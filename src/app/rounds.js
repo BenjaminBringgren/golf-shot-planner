@@ -3,14 +3,14 @@
 // LAYER 2 — app — My Golf stats, rounds history, carry bars, sub-page navigation.
 
 import {
-  loadCourses, loadRounds, deleteRound,
+  loadCourses, loadRounds, loadAllRounds, deleteRound,
   loadBag, loadProfile, saveProfile,
   loadHomeRoundFilter, saveHomeRoundFilter,
   loadStatsRoundFilter, saveStatsRoundFilter,
   KEY_PRE_ROUND_FOCUS_IDX,
 } from '../storage/storage.js';
 import { clubs } from '../engine/clubs.js';
-import { interpolate, decodeStrategy, courseHandicap, stablefordPoints, computeStrokeLoss } from '../engine/calculations.js';
+import { interpolate, decodeStrategy, courseHandicap, stablefordPoints, computeStrokeLoss, analyzeApproachDistances } from '../engine/calculations.js';
 import { renderCourseList, computeHoleStrokeCounts } from './courses.js';
 
 // ── Services (injected by router.js) ─────────────────────────────────────────
@@ -863,7 +863,7 @@ function _wireStatsDrillButtons() {
   }
   wire('mgStatsGotoParType',    () => { renderMgScoreBreakdown(); renderMgAvgStrokesBreakdown(); renderMgPuttsBreakdown(); showMgSub('mgSubScoring'); });
   wire('mgStatsGotoBaseline',   () => { renderMgBaseline();            showMgSub('mgSubBaseline'); });
-  wire('mgStatsGotoStrokeLoss', () => { renderMgStrokeLossBreakdown(); renderMgStrategyBreakdown(); showMgSub('mgSubStrokeAnalysis'); });
+  wire('mgStatsGotoStrokeLoss', () => { renderMgStrokeLossBreakdown(); renderMgStrategyBreakdown(); renderMgScoringZone(); showMgSub('mgSubStrokeAnalysis'); });
   wire('mgStatsGotoHistory',        () => { showMgSub('mgSubRoundsHistory'); });
 }
 
@@ -1158,6 +1158,36 @@ export function renderMgStrategyBreakdown() {
       hdrHtml +
       par45Html +
       '<div style="padding:10px 14px 4px;font-size:12px;color:#aaa;">Lower avg vs par is better. Min. 3 holes per strategy shown.</div>' +
+    '</div>';
+}
+
+// ── Approach distance scoring zone ───────────────────────────────────────────
+export function renderMgScoringZone() {
+  const el = document.getElementById('mgScoringZoneContent');
+  if (!el) return;
+
+  const result = analyzeApproachDistances(loadAllRounds());
+
+  if (!result) {
+    el.innerHTML =
+      '<div class="mg-breakdown-card">' +
+        '<div class="mg-breakdown-title">Approach distance · scoring zone</div>' +
+        '<div style="padding:4px 0 8px;color:#aaa;font-size:15px;">Not enough data yet.<br>Recorded automatically from your next round.</div>' +
+      '</div>';
+    return;
+  }
+
+  const { scoringZone, avgToPar } = result;
+  const avgStr = avgToPar <= 0 ? avgToPar.toFixed(2) : '+' + avgToPar.toFixed(2);
+
+  el.innerHTML =
+    '<div class="mg-breakdown-card">' +
+      '<div class="mg-breakdown-title">Approach distance · scoring zone</div>' +
+      '<div style="display:flex;align-items:baseline;gap:8px;padding:6px 0 10px;">' +
+        '<span style="font-size:28px;font-weight:700;color:#1a1a1a;">' + scoringZone[0] + '–' + scoringZone[1] + 'm</span>' +
+        '<span style="font-size:15px;font-weight:600;color:' + (avgToPar < 0 ? '#c0392b' : '#1a1a1a') + ';">' + avgStr + ' avg</span>' +
+      '</div>' +
+      '<div style="font-size:13px;color:#888;padding-bottom:8px;">You score best from this distance. The strategy carousel highlights it when an approach lands here.</div>' +
     '</div>';
 }
 
