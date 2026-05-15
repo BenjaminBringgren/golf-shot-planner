@@ -35,7 +35,8 @@ export function mountSimpleCounter({ courseId, holeIdx, par, callbacks }) {
   }
 
   const _saved = _savedTotal();
-  let _count = _saved > 0 ? _saved : par;
+  let _count   = _saved > 0 ? _saved : par;
+  let _touched = _saved > 0; // true once user has opened drawer or score already exists
 
   function _save() {
     const scores = loadScores(courseId);
@@ -46,7 +47,7 @@ export function mountSimpleCounter({ courseId, holeIdx, par, callbacks }) {
   function _updateFab() {
     const fab = document.getElementById('scoreFab');
     if (!fab) return;
-    const hasScore = _count > 0;
+    const hasScore = _touched && _count > 0;
     fab.classList.toggle('has-score', hasScore);
 
     // Rebuild inner DOM — never use textContent (it destroys child nodes)
@@ -73,6 +74,7 @@ export function mountSimpleCounter({ courseId, holeIdx, par, callbacks }) {
 
   // ── Open / close ─────────────────────────────────────────────────────────
   function openDrawer() {
+    _touched = true;
     _render();
     overlay.classList.add('visible');
     drawer.classList.add('open');
