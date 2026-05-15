@@ -34,7 +34,8 @@ export function mountSimpleCounter({ courseId, holeIdx, par, callbacks }) {
     return 0;
   }
 
-  let _count = _savedTotal();
+  const _saved = _savedTotal();
+  let _count = _saved > 0 ? _saved : par;
 
   function _save() {
     const scores = loadScores(courseId);
