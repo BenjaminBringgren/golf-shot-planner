@@ -82,6 +82,9 @@ export function saveCourses(data) {
 export function loadRounds(courseId) {
   try { const all = JSON.parse(localStorage.getItem(KEY_ROUNDS)) || {}; return all[courseId] || []; } catch(e) { return []; }
 }
+export function loadAllRounds() {
+  try { return Object.values(JSON.parse(localStorage.getItem(KEY_ROUNDS)) || {}).flat(); } catch(e) { return []; }
+}
 export function saveRound(courseId, roundData) {
   try {
     const all = JSON.parse(localStorage.getItem(KEY_ROUNDS)) || {};

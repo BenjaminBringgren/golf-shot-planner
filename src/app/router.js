@@ -9,7 +9,7 @@ import {
   loadWindEnabled, saveWindEnabled, loadWindPrefs, saveWindPrefs as _saveWindPrefs,
   loadActiveCourse, saveActiveCourse, clearActiveCourse, getActiveCourseId,
   getCommittedStrategies, setCommittedStrategies, removeCommittedStrategies,
-  loadCourses, loadScores, loadRounds, loadProfile, loadWidgetPrefs,
+  loadCourses, loadScores, loadRounds, loadAllRounds, loadProfile, loadWidgetPrefs,
   loadInProgressRound, clearInProgressRound,
   saveProfile, getScoringMode,
   loadCollapseState, saveCollapseState,
@@ -30,6 +30,7 @@ import {
   interpolate, expectedStrokesRemaining,
   getValidTeeClubs, findBestContinuation, calcPar3,
   decodeStrategy, strategyDisplayName,
+  analyzeHoleStrategies, analyzeApproachDistances,
 } from '../engine/calculations.js';
 import { renderPlan, updateWindSectionStatus as _uwss, updateWindBreakdown as _uwbd,
          syncChipRow, wireChipRow, crosswindSide } from '../ui/carousel.js';
@@ -1532,6 +1533,18 @@ initServices({
       }
     } catch(e) {}
 
+    // Component 1: best historical strategy for this hole on this course
+    let holeStrategyRec = null;
+    try {
+      if (sessionCourseId && sessionHoleIdx !== null) {
+        holeStrategyRec = analyzeHoleStrategies(loadRounds(sessionCourseId), sessionHoleIdx);
+      }
+    } catch(e) {}
+
+    // Component 2: cross-course approach distance scoring zone
+    let scoringZone = null;
+    try { scoringZone = analyzeApproachDistances(loadAllRounds()); } catch(e) {}
+
     return {
       isError: false, isPar3: false,
       parValue, hole, driver, conditions, isFirm,
@@ -1539,6 +1552,7 @@ initServices({
       teeMarked, completedShots, inRough, handicap,
       ordered, activePlanType,
       _blCourseId, _blHoleIdx,
+      holeStrategyRec, scoringZone,
     };
   }
 

@@ -211,7 +211,8 @@ export function renderPlan(_result, ctx) {
           clubsList, driverClub, driverCarry, driverTotal,
           teeMarked, completedShots, inRough, handicap,
           ordered, activePlanType,
-          _blCourseId, _blHoleIdx } = _result;
+          _blCourseId, _blHoleIdx,
+          holeStrategyRec, scoringZone } = _result;
   const { windState, _holeHcpAdj, _overrideCourseId, _overrideHoleIdx,
           par3ClubOverrides, teeOverrides, shot2Overrides, approachOverrides, gpsShot2Overrides,
           par3Override, _hk,
@@ -511,9 +512,10 @@ export function renderPlan(_result, ctx) {
     return cw >= 2 ? `${hwLabel} · ${cw.toFixed(1)} m/s cross` : hwLabel;
   }
 
-  function encodeStrategy(type, teeClubKey) {
-    const clubLabel = clubMap[teeClubKey]?.label ?? teeClubKey;
-    return `${type} · ${clubLabel}`;
+  function encodeStrategy(type, teeClubKey, approachM) {
+    const clubLabel = teeClubKey ? (clubMap[teeClubKey]?.label ?? teeClubKey) : null;
+    const base = clubLabel ? `${type} · ${clubLabel}` : type;
+    return approachM != null ? `${base} · ${Math.round(approachM)}` : base;
   }
 
   function strategyShortName(type) {
@@ -632,6 +634,15 @@ export function renderPlan(_result, ctx) {
           }
         }
       } catch(e) {}
+    }
+    if (holeStrategyRec && basePlan.type === holeStrategyRec.bestStrategy) {
+      const holeHint = document.createElement('div');
+      holeHint.style.cssText = 'font-size:11px;color:#1e7a45;font-weight:600;margin-top:1px;';
+      const avgStr = holeStrategyRec.avgToPar <= 0
+        ? holeStrategyRec.avgToPar.toFixed(1)
+        : `+${holeStrategyRec.avgToPar.toFixed(1)}`;
+      holeHint.textContent = `Best on this hole · ${holeStrategyRec.sampleSize}r · ${avgStr} avg`;
+      badgeLeft.appendChild(holeHint);
     }
     badgeDiv.appendChild(badgeLeft);
 
@@ -1127,11 +1138,14 @@ export function renderPlan(_result, ctx) {
     if (rec) {
       const appDiv = document.createElement('div');
       appDiv.className = 'cc-approach';
+      const _inZone = scoringZone && activePlan.approach >= scoringZone[0] && activePlan.approach < scoringZone[1];
+      const _zoneHtml = _inZone ? `<div class="cc-app-zone">Your scoring zone</div>` : '';
       appDiv.innerHTML =
         `<div class="cc-app-label">${completedShots.length > 0 ? 'Approach · adjusted' : 'Approach'}</div>` +
         `<div class="cc-app-dist">${activePlan.approach.toFixed(0)}<span class="cc-app-dist-unit">m</span></div>` +
         `<div class="cc-app-club">${rec.lbl} — ${rec.carry}m carry${rec.windNote}</div>` +
-        `<div class="cc-app-note">${rec.aimNote}</div>`;
+        `<div class="cc-app-note">${rec.aimNote}</div>` +
+        _zoneHtml;
       body.appendChild(appDiv);
     }
 
@@ -1501,9 +1515,8 @@ export function renderPlan(_result, ctx) {
           if (_goType) {
             const _goPlan = ordered.find(p => p.type === _goType);
             const _goTeeKey = teeOverrides[_hk(_goType)] || (_goPlan?.shots[0]?.key ?? null);
-            committed[holeIdx] = _goTeeKey
-              ? encodeStrategy(_goType, _goTeeKey)
-              : _goType;
+            const _goApproach = _goPlan?.approach ?? null;
+            committed[holeIdx] = encodeStrategy(_goType, _goTeeKey, _goApproach);
           }
           setCommittedStrategies(null, committed);
         }
@@ -1567,7 +1580,8 @@ export function renderPlan(_result, ctx) {
         const { holeIdx } = sess;
         const _activePlan = ordered.find(p => p.type === planType);
         const _teeKey = teeOverrides[_hk(planType)] || (_activePlan?.shots[0]?.key ?? null);
-        committed[holeIdx] = _teeKey ? encodeStrategy(planType, _teeKey) : planType;
+        const _switchApproach = _activePlan?.approach ?? null;
+        committed[holeIdx] = encodeStrategy(planType, _teeKey, _switchApproach);
         setCommittedStrategies(null, committed);
       }
     } catch(e) {}

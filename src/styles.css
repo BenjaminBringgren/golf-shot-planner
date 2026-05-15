@@ -1769,6 +1769,7 @@
     .cc-app-dist-unit { font-size: 13px; color: #aaa; margin-left: 2px; }
     .cc-app-club  { font-size: 16px; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
     .cc-app-note  { font-size: 13px; color: #555; }
+    .cc-app-zone  { font-size: 11px; font-weight: 600; color: #1e7a45; margin-top: 4px; }
     .cc-crosswind {
       background: #fff8ec; border-left: 3px solid #e0a030;
       border-radius: 0 6px 6px 0; padding: 8px 14px;

@@ -263,10 +263,75 @@ export function crosswindDrift(crosswindMs, carryM) {
 }
 
 export function decodeStrategy(stored) {
-  if (!stored) return { type: null, club: null };
+  if (!stored) return { type: null, club: null, approachM: null };
   const parts = stored.split(' · ');
-  if (parts.length >= 2) return { type: parts[0], club: parts.slice(1).join(' · ') };
-  return { type: stored, club: null };
+  const type = parts[0] || null;
+  const club = parts.length >= 2 ? parts[1] : null;
+  const approachRaw = parts.length >= 3 ? parseInt(parts[2], 10) : null;
+  const approachM = (approachRaw != null && !isNaN(approachRaw)) ? approachRaw : null;
+  return { type, club, approachM };
+}
+
+// ── Historical strategy analysis ─────────────────────────────────────────────
+
+// Returns the strategy type that produced the best avg score on a specific hole,
+// or null if fewer than 2 rounds with any single strategy.
+export function analyzeHoleStrategies(rounds, holeIdx) {
+  const byType = {};
+  for (const round of rounds) {
+    const stratStr = round.strategies?.[holeIdx];
+    const holeScore = round.scores?.[holeIdx];
+    if (!stratStr || !holeScore) continue;
+    const { type } = decodeStrategy(stratStr);
+    if (!type || type === 'Par 3') continue;
+    const shots = (holeScore.shots?.length ?? 0) + (holeScore.putts ?? 0) + (holeScore.penalties ?? 0);
+    const par = holeScore.par;
+    if (!shots || !par) continue;
+    if (!byType[type]) byType[type] = { sum: 0, count: 0 };
+    byType[type].sum += shots - par;
+    byType[type].count++;
+  }
+  let best = null;
+  for (const [type, { sum, count }] of Object.entries(byType)) {
+    if (count < 2) continue;
+    const avg = sum / count;
+    if (!best || avg < best.avg) best = { type, avg, count };
+  }
+  return best ? { bestStrategy: best.type, avgToPar: best.avg, sampleSize: best.count } : null;
+}
+
+// Returns the approach distance band (20m buckets) in which the player scores best,
+// across all courses. Requires approach distance encoded in the strategy string.
+// Returns { scoringZone: [low, high], avgToPar } or null if data is insufficient.
+export function analyzeApproachDistances(allRoundsFlat) {
+  const BAND = 20;
+  const bands = {};
+  for (const round of allRoundsFlat) {
+    const strategies = round.strategies || {};
+    const scores = round.scores || [];
+    for (const [idxStr, stratStr] of Object.entries(strategies)) {
+      const { approachM } = decodeStrategy(stratStr);
+      if (approachM == null) continue;
+      const holeScore = scores[parseInt(idxStr, 10)];
+      if (!holeScore) continue;
+      const shots = (holeScore.shots?.length ?? 0) + (holeScore.putts ?? 0) + (holeScore.penalties ?? 0);
+      const par = holeScore.par;
+      if (!shots || !par) continue;
+      const bandKey = Math.floor(approachM / BAND);
+      if (!bands[bandKey]) bands[bandKey] = { sum: 0, count: 0 };
+      bands[bandKey].sum += shots - par;
+      bands[bandKey].count++;
+    }
+  }
+  const valid = Object.entries(bands)
+    .filter(([, { count }]) => count >= 3)
+    .map(([k, { sum, count }]) => {
+      const low = parseInt(k, 10) * BAND;
+      return { low, high: low + BAND, avg: sum / count, count };
+    });
+  if (valid.length < 2) return null;
+  valid.sort((a, b) => a.avg - b.avg);
+  return { scoringZone: [valid[0].low, valid[0].high], avgToPar: valid[0].avg };
 }
 
 // WHS course handicap: strokes received on a specific course.
