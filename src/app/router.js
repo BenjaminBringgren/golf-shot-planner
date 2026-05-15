@@ -786,6 +786,7 @@ initServices({
   }
 
   function updateWindEffectNote() {
+    if (!windEffectNote) return;
     if (!windState.active) { windEffectNote.classList.remove('visible'); return; }
     const hw  = windState.headwind;
     const cw  = windState.crosswind;

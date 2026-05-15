@@ -117,9 +117,11 @@ export function updateWindBreakdown(windState, lockPhase) {
     const hw = windState.headwind;
     const cw = windState.crosswind;
     if (headEl) {
+      const hwAlt = hw * (ALT_FACTORS?.['mid_iron'] ?? 1.12);
+      const altSuffix = Math.abs(hw) >= 0.5 ? ` · ${Math.abs(hwAlt).toFixed(1)} at height` : '';
       if (Math.abs(hw) < 0.5) { headEl.textContent = 'Calm'; headEl.className = 'wbr-val'; }
-      else if (hw > 0) { headEl.textContent = `↓ ${hw.toFixed(1)} m/s`; headEl.className = 'wbr-val head'; }
-      else { headEl.textContent = `↑ ${Math.abs(hw).toFixed(1)} m/s`; headEl.className = 'wbr-val tail'; }
+      else if (hw > 0) { headEl.textContent = `↓ ${hw.toFixed(1)} m/s${altSuffix}`; headEl.className = 'wbr-val head'; }
+      else { headEl.textContent = `↑ ${Math.abs(hw).toFixed(1)} m/s${altSuffix}`; headEl.className = 'wbr-val tail'; }
     }
     if (crossEl) {
       const side = crosswindSide(windState);

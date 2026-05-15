@@ -214,7 +214,7 @@ export function showMgHub() {
 
 export function navigateToRound(courseId, roundIdx) {
   if (_switchTab) _switchTab('prepare');
-  _openRoundDetail?.(courseId, roundIdx, _statsNetMode);
+  _openRoundDetail?.(courseId, roundIdx, _homeNetMode);
 }
 
 export function refreshMgHub() {
@@ -685,13 +685,18 @@ function _renderHomeRecentRounds(allRounds, courses) {
   if (!shown.length) { el.innerHTML = ''; return; }
 
   el.innerHTML = shown.map(r => {
-    const diff    = (r.totalStrokes || 0) - (r.totalPar || 0);
+    const isStblf  = r.gameFormat === 'stableford' || ((r.totalPoints ?? 0) > 0 && !r.gameFormat);
+    const savedHcp = r.hcpTotal ?? 0;
+    const hasNet   = _homeNetMode && savedHcp > 0 && !isStblf;
+    const grossDiff = (r.totalStrokes || 0) - (r.totalPar || 0);
+    const diff    = hasNet ? grossDiff - savedHcp : grossDiff;
+    const strokes = hasNet ? (r.totalStrokes || 0) - savedHcp : (r.totalStrokes || 0);
     const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : diff);
     const color   = diff < 0 ? '#c0392b' : '#1a1a1a';
     return '<div class="lrh-row tappable" data-course-id="' + escHtml(r._courseId) + '" data-round-idx="' + r._roundIdx + '">' +
       '<div class="lrh-left"><div class="lrh-course">' + (r.courseName || '—') + '</div>' +
       '<div class="lrh-date">' + (r.date || '—') + '</div></div>' +
-      '<div class="lrh-right"><div class="lrh-score">' + (r.totalStrokes || '—') + '</div>' +
+      '<div class="lrh-right"><div class="lrh-score">' + (strokes || '—') + '</div>' +
       '<div class="lrh-diff" style="color:' + color + '">' + diffStr + '</div></div></div>';
   }).join('');
 

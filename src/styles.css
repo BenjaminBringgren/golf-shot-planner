@@ -1173,13 +1173,6 @@
     .wbr-val.tail { color: #1e7a45; }
     .wbr-val.cross { color: #1a1a1a; }
 
-    .wind-effect-note {
-      margin: 6px 12px 8px; font-size: 11px; color: #666;
-      padding: 6px 10px; background: #f5f4f0;
-      border-radius: 7px; display: none; line-height: 1.4;
-    }
-    .wind-effect-note.visible { display: block; }
-
     .wind-live-pill {
       display: none; align-items: center; gap: 4px;
       background: #f0f9f4; border-radius: 5px;
@@ -1191,13 +1184,6 @@
       animation: pulse 1.2s ease-in-out infinite;
     }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-    .wind-effect-note {
-      margin: 4px 14px 10px; font-size: 12px; color: #555;
-      padding: 8px 12px; background: #f5f4f0;
-      border-radius: 8px; display: none; line-height: 1.5;
-    }
-    .wind-effect-note.visible { display: block; }
 
     /* ── GPS Distance Tracker ───────────────────────────────── */
     /* ── GPS tiles ───────────────────────────────────────────── */
