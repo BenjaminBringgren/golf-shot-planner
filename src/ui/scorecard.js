@@ -543,14 +543,15 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
     else              pageInner.classList.remove('sc2-stableford');
     if (!hcpEnabled)  pageInner.classList.add('sc2-no-hcp');
     else              pageInner.classList.remove('sc2-no-hcp');
+    const activeStrategies = getCommittedStrategies();
     pageInner.innerHTML =
       _sectionHtml('Front 9', 'Out', 'out', 'OUT',
-        _sectionRows(played, 0, 9, holeStrokeCounts, runningTotals),
+        _sectionRows(played, 0, 9, holeStrokeCounts, runningTotals, activeStrategies),
         front9Par, front9Putts, front9Played, front9GIR, 9,
         front9FIR, front9FIRTotal,
         front9Strokes, front9Played ? front9Strokes - front9Par : null, front9StrokeCount, front9Pts) +
       _sectionHtml('Back 9', 'In', 'in', 'IN',
-        _sectionRows(played, 9, 18, holeStrokeCounts, runningTotals),
+        _sectionRows(played, 9, 18, holeStrokeCounts, runningTotals, activeStrategies),
         back9Par, back9Putts, back9Played, back9GIR, 9,
         back9FIR, back9FIRTotal,
         back9Strokes, back9Played ? back9Strokes - back9Par : null, back9StrokeCount, back9Pts) +
@@ -1478,13 +1479,13 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
 
   const rcSc2Html =
     _sectionHtml('Front 9', 'Out', 'out', 'OUT',
-      _sectionRows(played, 0, 9, rcHoleStrokeCounts, rcRunningTotals),
+      _sectionRows(played, 0, 9, rcHoleStrokeCounts, rcRunningTotals, roundStrategies),
       front9Par, front9Putts, front9Played, front9GIR, 9,
       front9FIR, rcFront9FIRTotal,
       front9Strokes, front9Played ? front9Strokes - front9Par : null,
       rcFront9StrokeCount, rcFront9Pts) +
     _sectionHtml('Back 9', 'In', 'in', 'IN',
-      _sectionRows(played, 9, 18, rcHoleStrokeCounts, rcRunningTotals),
+      _sectionRows(played, 9, 18, rcHoleStrokeCounts, rcRunningTotals, roundStrategies),
       back9Par, back9Putts, back9Played, back9GIR, 9,
       back9FIR, rcBack9FIRTotal,
       back9Strokes, back9Played ? back9Strokes - back9Par : null,
