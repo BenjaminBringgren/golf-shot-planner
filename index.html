@@ -275,70 +275,51 @@
         <!-- Compass/wind-view — shown while locking direction or after lock -->
         <div id="windCompassWrap" style="display:none;flex-direction:column;align-items:center;padding:14px 14px 10px;border-bottom:0.5px solid rgba(0,0,0,0.06);">
           <div class="compass-svg-wrap" id="compassSvgWrap">
-            <svg id="compassSvg" viewBox="-80 -145 160 300" width="120" height="225" style="display:block;overflow:visible;">
+            <svg id="compassSvg" viewBox="-80 -145 160 300" width="150" height="280" style="display:block;overflow:visible;">
               <defs>
-                <radialGradient id="wcGreenShade" cx="46%" cy="55%" r="62%">
-                  <stop offset="0%"   stop-color="#bdcca1"/>
-                  <stop offset="55%"  stop-color="#acbc89"/>
-                  <stop offset="100%" stop-color="#92a674"/>
+                <!-- Green fill — userSpaceOnUse so coords match source SVG paths inside the landscape group -->
+                <radialGradient id="wcGreen" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(643.888 345.382) scale(632.098 220.24)">
+                  <stop stop-color="#C4D2A7"/>
+                  <stop offset="0.55" stop-color="#ABBB86"/>
+                  <stop offset="1" stop-color="#8A9D6A"/>
                 </radialGradient>
-                <radialGradient id="wcGreenInner" cx="40%" cy="55%" r="45%">
-                  <stop offset="0%"   stop-color="#cad7ad" stop-opacity="0.95"/>
-                  <stop offset="100%" stop-color="#cad7ad" stop-opacity="0"/>
+                <!-- Inner highlight -->
+                <radialGradient id="wcGreenInner" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(555 335) scale(400 110)">
+                  <stop stop-color="#DDE6C0" stop-opacity="0.9"/>
+                  <stop offset="1" stop-color="#DDE6C0" stop-opacity="0"/>
                 </radialGradient>
-                <radialGradient id="wcBunkerShade" cx="50%" cy="35%" r="70%">
-                  <stop offset="0%"   stop-color="#f0e4c6"/>
-                  <stop offset="100%" stop-color="#d3c094"/>
-                </radialGradient>
+                <!-- Ground ellipse (objectBoundingBox — compass coords) -->
                 <radialGradient id="wcGroundShade" cx="50%" cy="50%" r="60%">
                   <stop offset="0%"   stop-color="#e2e6d6"/>
                   <stop offset="100%" stop-color="#ced4be"/>
                 </radialGradient>
-                <linearGradient id="wcTreeShade" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%"   stop-color="#92a87c"/>
-                  <stop offset="55%"  stop-color="#82986c"/>
-                  <stop offset="100%" stop-color="#6c8158"/>
-                </linearGradient>
+                <!-- Clips inner green details to the green outline shape -->
+                <mask id="wcMask" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="179" y="209" width="930" height="325">
+                  <path d="M180 378C170 318 245 256 365 232C495 206 645 202 790 222C905 238 1018 272 1080 318C1112 342 1116 376 1098 406C1080 432 1042 450 992 460C928 472 858 486 790 500C722 514 656 528 588 532C522 536 460 530 410 518C360 506 320 492 270 470C218 448 188 418 188 388C188 384 188 381 180 378Z" fill="white"/>
+                </mask>
               </defs>
-              <!-- Scene: source SVG coords mapped via translate(-95.1,-144.5) scale(0.15)
-                   Maps source green centre (634,410) → compass (0,−83) -->
-              <g transform="translate(-95.1,-144.5) scale(0.15)">
+              <!-- Scene: translate(-96,-125.5) scale(0.15) — green centre (640,370)→(0,−70) -->
+              <g transform="translate(-96,-125.5) scale(0.15)">
                 <!-- Clouds -->
-                <g fill="#dcdcdc">
-                  <path d="M270,225 c-26,0 -46,12 -54,30 c-12,-3 -28,3 -34,15 c-6,12 -2,24 12,28 h200 c16,0 28,-10 28,-24 c0,-12 -10,-22 -22,-24 c-4,-14 -20,-22 -36,-22 c-32,0 -60,-3 -94,-3z"/>
-                  <path d="M915,160 c-22,0 -38,10 -44,24 c-10,-2 -22,3 -26,12 c-4,10 -2,20 10,22 h158 c14,0 24,-8 24,-20 c0,-10 -10,-18 -22,-20 c-2,-12 -16,-18 -30,-18 c-22,0 -46,0 -70,0z"/>
+                <path d="M270 185C244 185 224 197 216 215C204 212 188 218 182 230C176 242 180 254 194 258H394C410 258 422 248 422 234C422 222 412 212 400 210C396 196 380 188 364 188C332 188 304 185 270 185Z" fill="#DCDCDC"/>
+                <path d="M915 160C893 160 877 170 871 184C861 182 849 187 845 196C841 206 843 216 855 218H1013C1027 218 1037 210 1037 198C1037 188 1027 180 1015 178C1013 166 999 160 985 160C963 160 939 160 915 160Z" fill="#DCDCDC"/>
+                <!-- Green fill -->
+                <path d="M180 378C170 318 245 256 365 232C495 206 645 202 790 222C905 238 1018 272 1080 318C1112 342 1116 376 1098 406C1080 432 1042 450 992 460C928 472 858 486 790 500C722 514 656 528 588 532C522 536 460 530 410 518C360 506 320 492 270 470C218 448 188 418 188 388C188 384 188 381 180 378Z" fill="url(#wcGreen)"/>
+                <!-- Inner details clipped to green shape -->
+                <g mask="url(#wcMask)">
+                  <path d="M555 445C775.914 445 955 395.751 955 335C955 274.249 775.914 225 555 225C334.086 225 155 274.249 155 335C155 395.751 334.086 445 555 445Z" fill="url(#wcGreenInner)"/>
+                  <path opacity="0.18" d="M780 570C967.777 570 1120 543.137 1120 510C1120 476.863 967.777 450 780 450C592.223 450 440 476.863 440 510C440 543.137 592.223 570 780 570Z" fill="#7E9265"/>
+                  <g opacity="0.06">
+                    <path d="M610 356C847.482 356 1040 353.314 1040 350C1040 346.686 847.482 344 610 344C372.518 344 180 346.686 180 350C180 353.314 372.518 356 610 356Z" fill="#4F6238"/>
+                    <path d="M610 396C847.482 396 1040 393.314 1040 390C1040 386.686 847.482 384 610 384C372.518 384 180 386.686 180 390C180 393.314 372.518 396 610 396Z" fill="#4F6238"/>
+                    <path d="M610 436C847.482 436 1040 433.314 1040 430C1040 426.686 847.482 424 610 424C372.518 424 180 426.686 180 430C180 433.314 372.518 436 610 436Z" fill="#4F6238"/>
+                    <path d="M610 476C847.482 476 1040 473.314 1040 470C1040 466.686 847.482 464 610 464C372.518 464 180 466.686 180 470C180 473.314 372.518 476 610 476Z" fill="#4F6238"/>
+                  </g>
+                  <path opacity="0.55" fill="none" d="M250 396C310 308 470 256 640 256C800 258 930 294 1030 344C1062 360 1086 378 1100 394" stroke="#7E9265" stroke-width="2.5" stroke-linecap="round"/>
+                  <path opacity="0.35" fill="none" d="M180 378C170 318 245 256 365 232C495 206 645 202 790 222C905 238 1018 272 1080 318C1112 342 1116 376 1098 406C1080 432 1042 450 992 460C928 472 858 486 790 500C722 514 656 528 588 532C522 536 460 530 410 518C360 506 320 492 270 470C218 448 188 418 188 388C188 384 188 381 180 378Z" stroke="#7E9265" stroke-width="10"/>
                 </g>
-                <!-- Green -->
-                <path d="M168,408 C158,360 210,316 290,304 C342,296 388,312 450,308 C520,302 590,296 670,298 C748,300 832,310 908,322 C990,334 1060,354 1094,388 C1120,414 1108,448 1068,472 C1006,500 916,514 820,520 C720,524 612,524 506,518 C418,512 336,506 264,494 C194,480 156,452 168,408 Z" fill="url(#wcGreenShade)"/>
-                <ellipse cx="490" cy="398" rx="345" ry="78" fill="url(#wcGreenInner)"/>
-                <g fill="none" stroke="#8fa172" stroke-linecap="round">
-                  <path d="M232,438 C258,378 360,344 500,340 C642,336 762,358 862,388 C922,406 970,422 1010,438" stroke-width="2.8" opacity="0.55"/>
-                  <path d="M280,478 C360,444 480,432 620,436 C740,440 842,456 920,476" stroke-width="2" opacity="0.4"/>
-                </g>
-                <path d="M260,506 C370,520 510,524 650,522 C790,520 910,512 1010,498 C980,506 940,510 900,514 C860,516 820,518 780,518 C700,518 620,518 540,516 C460,514 380,512 320,510 C290,508 270,508 260,506 Z" fill="#869866" opacity="0.3"/>
-                <!-- Bush -->
-                <path d="M308,302 c-14,-4 -28,1 -32,12 c-12,0 -22,7 -22,16 c-12,-1 -24,6 -24,17 c0,9 10,16 24,16 h74 c14,0 22,-7 22,-16 c0,-6 -4,-10 -10,-12 c4,-11 -4,-20 -16,-22 c-2,-7 -8,-11 -16,-11z" fill="#94a87a"/>
-                <path d="M268,318 c-6,2 -10,7 -8,13 c-10,-2 -20,4 -20,12 c0,7 8,12 18,12 h32 c-10,-6 -16,-16 -14,-26 c0,-6 -4,-11 -8,-11z" fill="#a4b88a" opacity="0.7"/>
-                <!-- Trees -->
-                <g transform="translate(872,222)">
-                  <rect x="14" y="92" width="6" height="14" fill="#6b5a3e"/>
-                  <path d="M17,0 L0,38 L7,38 L-6,68 L4,68 L-10,100 L44,100 L30,68 L40,68 L27,38 L34,38 Z" fill="url(#wcTreeShade)"/>
-                  <path d="M17,0 L0,38 L7,38 L-6,68 L4,68 L-10,100 L17,100 Z" fill="#fff" opacity="0.08"/>
-                </g>
-                <g transform="translate(932,202)">
-                  <rect x="16" y="112" width="8" height="16" fill="#6b5a3e"/>
-                  <path d="M20,0 L0,42 L8,42 L-8,76 L4,76 L-12,116 L52,116 L36,76 L48,76 L32,42 L40,42 Z" fill="url(#wcTreeShade)"/>
-                  <path d="M20,0 L0,42 L8,42 L-8,76 L4,76 L-12,116 L20,116 Z" fill="#fff" opacity="0.08"/>
-                </g>
-                <g transform="translate(1000,236)">
-                  <rect x="14" y="92" width="6" height="14" fill="#6b5a3e"/>
-                  <path d="M17,0 L0,38 L7,38 L-6,68 L4,68 L-10,100 L44,100 L30,68 L40,68 L27,38 L34,38 Z" fill="url(#wcTreeShade)"/>
-                  <path d="M17,0 L0,38 L7,38 L-6,68 L4,68 L-10,100 L17,100 Z" fill="#fff" opacity="0.08"/>
-                </g>
-                <!-- Bunker -->
-                <path d="M790,438 C820,422 858,420 890,428 C918,434 942,436 966,430 C996,422 1028,426 1048,442 C1062,454 1056,464 1034,470 C1008,460 978,452 950,452 C924,452 902,456 878,460 C852,464 824,462 798,456 C780,452 780,446 790,438 Z" fill="#7a6a4a" opacity="0.55"/>
-                <path d="M798,444 C826,432 858,432 886,440 C912,446 932,448 956,442 C984,436 1018,440 1036,452 C1046,460 1038,470 1018,476 C992,482 966,478 942,472 C920,466 900,466 880,470 C856,474 828,472 806,464 C792,458 792,450 798,444 Z" fill="url(#wcBunkerShade)"/>
-                <path d="M826,460 C854,454 876,457 896,462 C916,466 938,466 960,460 C980,455 1000,457 1014,464" fill="none" stroke="#c4b187" stroke-width="2" opacity="0.55"/>
+                <!-- Green bottom shadow -->
+                <path opacity="0.32" d="M230 470C320 500 430 520 550 530C660 538 770 536 870 524C960 512 1040 490 1090 460C1050 498 980 520 880 532C780 544 670 544 580 538C480 530 380 518 300 494C272 486 248 478 230 470Z" fill="#788A5D"/>
               </g>
               <!-- Flagpole -->
               <line x1="0" y1="-83" x2="0" y2="-100" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
@@ -361,27 +342,11 @@
               </g>
               <!-- Golfer -->
               <path d="M19.8242 0.488281L67.0898 0.488281C73.9258 0.488281 77.1484-1.51367 77.1484-5.9082C77.1484-15.9668 64.4531-30.6641 43.457-30.6641C22.5098-30.6641 9.76562-15.9668 9.76562-5.9082C9.76562-1.51367 13.0371 0.488281 19.8242 0.488281ZM17.627-6.10352C17.0898-6.10352 16.7969-6.25 16.7969-6.78711C16.7969-12.5 26.1719-24.0723 43.457-24.0723C60.7422-24.0723 70.1172-12.5 70.1172-6.78711C70.1172-6.25 69.8242-6.10352 69.2871-6.10352ZM43.457-35.1562C52.6855-35.1562 60.2539-43.4082 60.2539-53.3203C60.2539-63.2324 52.7832-70.9961 43.457-70.9961C34.2285-70.9961 26.6602-63.0859 26.6602-53.2227C26.6602-43.3594 34.2773-35.1562 43.457-35.1562ZM43.457-41.6992C38.2812-41.6992 33.6914-46.8262 33.6914-53.2227C33.6914-59.6191 38.1348-64.4043 43.457-64.4043C48.8281-64.4043 53.2227-59.7168 53.2227-53.3203C53.2227-46.9238 48.7305-41.6992 43.457-41.6992Z" fill="#1a1a1a" transform="translate(-26.1,111.2) scale(0.60)"/>
-              <!-- Wind indicator — rotates around shot-line midpoint.
-                   Wind paths use source SVG coords mapped via matrix(0,0.25,-0.25,0,180,-167.25):
-                   maps source wind tip (505,720) → compass (0,−41), scale 0.25, 90° CCW. -->
+              <!-- Wind: source arrow mapped via matrix(0,0.25,−0.25,0,180,−167.25) = 90° CCW + scale 0.25, tip (505,720)→(0,−41) -->
               <g id="wcrWind" transform="rotate(0,0,-14)">
                 <g id="wcrWindColor" stroke="#c0392b" fill="#c0392b">
-                  <g transform="matrix(0,0.25,-0.25,0,180,-167.25)" fill="none" stroke-linecap="round" stroke-width="11">
-                    <path d="M165,615 L295,615 C320,615 332,602 326,588 C320,576 304,576 300,590"/>
-                    <path d="M130,665 L380,665"/>
-                    <path d="M110,720 L465,720"/>
-                    <path d="M140,770 L300,770 C322,770 332,782 326,794 C320,804 306,802 300,792"/>
-                    <path d="M170,818 L350,818"/>
-                  </g>
-                  <path transform="matrix(0,0.25,-0.25,0,180,-167.25)" d="M455,698 L505,720 L455,742 L470,720 Z" stroke="none"/>
-                </g>
-                <!-- Leaves — fixed olive, rotate with wind group -->
-                <g transform="matrix(0,0.25,-0.25,0,180,-167.25)" fill="#9aa87a">
-                  <ellipse cx="370" cy="600" rx="14" ry="8" transform="rotate(-25,370,600)"/>
-                  <ellipse cx="410" cy="650" rx="13" ry="7" transform="rotate(15,410,650)"/>
-                  <ellipse cx="345" cy="690" rx="14" ry="8" transform="rotate(-10,345,690)"/>
-                  <ellipse cx="430" cy="760" rx="13" ry="7" transform="rotate(20,430,760)"/>
-                  <ellipse cx="365" cy="800" rx="14" ry="8" transform="rotate(-15,365,800)"/>
+                  <path transform="matrix(0,0.25,-0.25,0,180,-167.25)" fill="none" stroke-linecap="round" stroke-width="11" d="M110 720H465"/>
+                  <path transform="matrix(0,0.25,-0.25,0,180,-167.25)" stroke="none" d="M455 698L505 720L455 742L470 720L455 698Z"/>
                 </g>
               </g>
             </svg>
