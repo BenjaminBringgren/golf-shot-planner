@@ -703,16 +703,17 @@ initServices({
     const dirs = ['N','NE','E','SE','S','SW','W','NW'];
     compassDegLabel.textContent = dirs[Math.round(d / 45) % 8];
     // Rotate wind arrow to show wind source relative to the (in-progress) hole direction
-    const wcrWind = document.getElementById('wcrWind');
-    const wcrWindLine = document.getElementById('wcrWindLine');
-    const wcrWindHead = document.getElementById('wcrWindHead');
+    const wcrWind      = document.getElementById('wcrWind');
+    const wcrWindColor = document.getElementById('wcrWindColor');
     if (wcrWind && windState.dirDeg != null) {
       const relAngle = ((windState.dirDeg - d) % 360 + 360) % 360;
       wcrWind.setAttribute('transform', `rotate(${relAngle},0,-14)`);
       const hw = windState.speedMs * Math.cos(relAngle * Math.PI / 180);
       const windColor = hw > 1 ? '#c0392b' : hw < -1 ? '#1e7a45' : '#c07820';
-      if (wcrWindLine) wcrWindLine.setAttribute('stroke', windColor);
-      if (wcrWindHead) wcrWindHead.setAttribute('fill', windColor);
+      if (wcrWindColor) {
+        wcrWindColor.setAttribute('stroke', windColor);
+        wcrWindColor.setAttribute('fill', windColor);
+      }
     }
   }
 

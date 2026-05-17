@@ -1172,7 +1172,7 @@ export function renderMgScoringZone() {
     el.innerHTML =
       '<div class="mg-breakdown-card">' +
         '<div class="mg-breakdown-title">Approach distance · scoring zone</div>' +
-        '<div style="padding:4px 0 8px;color:#aaa;font-size:15px;">Not enough data yet.<br>Recorded automatically from your next round.</div>' +
+        '<div style="padding:8px 14px 12px;color:#aaa;font-size:15px;">Not enough data yet.<br>Recorded automatically from your next round.</div>' +
       '</div>';
     return;
   }
@@ -1183,11 +1183,11 @@ export function renderMgScoringZone() {
   el.innerHTML =
     '<div class="mg-breakdown-card">' +
       '<div class="mg-breakdown-title">Approach distance · scoring zone</div>' +
-      '<div style="display:flex;align-items:baseline;gap:8px;padding:6px 0 10px;">' +
+      '<div style="display:flex;align-items:baseline;gap:8px;padding:6px 14px 10px;">' +
         '<span style="font-size:28px;font-weight:700;color:#1a1a1a;">' + scoringZone[0] + '–' + scoringZone[1] + 'm</span>' +
         '<span style="font-size:15px;font-weight:600;color:' + (avgToPar < 0 ? '#c0392b' : '#1a1a1a') + ';">' + avgStr + ' avg</span>' +
       '</div>' +
-      '<div style="font-size:13px;color:#888;padding-bottom:8px;">You score best from this distance. The strategy carousel highlights it when an approach lands here.</div>' +
+      '<div style="font-size:13px;color:#888;padding:0 14px 12px;">You score best from this distance. The strategy carousel highlights it when an approach lands here.</div>' +
     '</div>';
 }
 
