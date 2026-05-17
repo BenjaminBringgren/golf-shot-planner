@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1220 1280" width="1220" height="1280">
+  <defs>
+    <radialGradient id="greenShade" cx="46%" cy="55%" r="62%">
+      <stop offset="0%" stop-color="#bdcca1"></stop>
+      <stop offset="55%" stop-color="#acbc89"></stop>
+      <stop offset="100%" stop-color="#92a674"></stop>
+    </radialGradient>
+    <radialGradient id="greenInner" cx="40%" cy="55%" r="45%">
+      <stop offset="0%" stop-color="#cad7ad" stop-opacity="0.95"></stop>
+      <stop offset="100%" stop-color="#cad7ad" stop-opacity="0"></stop>
+    </radialGradient>
+    <radialGradient id="bunkerShade" cx="50%" cy="35%" r="70%">
+      <stop offset="0%" stop-color="#f0e4c6"></stop>
+      <stop offset="100%" stop-color="#d3c094"></stop>
+    </radialGradient>
+    <radialGradient id="groundShade" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#e2e6d6"></stop>
+      <stop offset="100%" stop-color="#ced4be"></stop>
+    </radialGradient>
+    <linearGradient id="treeShade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#92a87c"></stop>
+      <stop offset="55%" stop-color="#82986c"></stop>
+      <stop offset="100%" stop-color="#6c8158"></stop>
+    </linearGradient>
+  </defs>
+
+  
+  <g id="landscape">
+
+    
+    <g id="clouds" fill="#dcdcdc">
+      <path d="M270,225 c-26,0 -46,12 -54,30 c-12,-3 -28,3 -34,15 c-6,12 -2,24 12,28 h200 c16,0 28,-10 28,-24 c0,-12 -10,-22 -22,-24 c-4,-14 -20,-22 -36,-22 c-32,0 -60,-3 -94,-3z"></path>
+      <path d="M915,160 c-22,0 -38,10 -44,24 c-10,-2 -22,3 -26,12 c-4,10 -2,20 10,22 h158 c14,0 24,-8 24,-20 c0,-10 -10,-18 -22,-20 c-2,-12 -16,-18 -30,-18 c-22,0 -46,0 -70,0z"></path>
+    </g>
+
+    
+    <path d="M168,408 C158,360 210,316 290,304 C342,296 388,312 450,308 C520,302 590,296 670,298 C748,300 832,310 908,322 C990,334 1060,354 1094,388 C1120,414 1108,448 1068,472 C1006,500 916,514 820,520 C720,524 612,524 506,518 C418,512 336,506 264,494 C194,480 156,452 168,408 Z" fill="url(#greenShade)"></path>
+
+    
+    <ellipse cx="490" cy="398" rx="345" ry="78" fill="url(#greenInner)"></ellipse>
+
+    
+    <g fill="none" stroke="#8fa172" stroke-linecap="round">
+      
+      <path d="M232,438 C258,378 360,344 500,340 C642,336 762,358 862,388 C922,406 970,422 1010,438" stroke-width="2.8" opacity="0.55"></path>
+      
+      <path d="M280,478 C360,444 480,432 620,436 C740,440 842,456 920,476" stroke-width="2" opacity="0.4"></path>
+    </g>
+
+    
+    <path d="M260,506 C370,520 510,524 650,522 C790,520 910,512 1010,498 C980,506 940,510 900,514 C860,516 820,518 780,518 C700,518 620,518 540,516 C460,514 380,512 320,510 C290,508 270,508 260,506 Z" fill="#869866" opacity="0.3"></path>
+
+    
+    <g id="bush">
+      <path d="M308,302 c-14,-4 -28,1 -32,12 c-12,0 -22,7 -22,16 c-12,-1 -24,6 -24,17 c0,9 10,16 24,16 h74 c14,0 22,-7 22,-16 c0,-6 -4,-10 -10,-12 c4,-11 -4,-20 -16,-22 c-2,-7 -8,-11 -16,-11z" fill="#94a87a"></path>
+      <path d="M268,318 c-6,2 -10,7 -8,13 c-10,-2 -20,4 -20,12 c0,7 8,12 18,12 h32 c-10,-6 -16,-16 -14,-26 c0,-6 -4,-11 -8,-11z" fill="#a4b88a" opacity="0.7"></path>
+    </g>
+
+    
+    <g id="trees">
+      <g transform="translate(872 222)">
+        <rect x="14" y="92" width="6" height="14" fill="#6b5a3e"></rect>
+        <path d="M17,0 L0,38 L7,38 L-6,68 L4,68 L-10,100 L44,100 L30,68 L40,68 L27,38 L34,38 Z" fill="url(#treeShade)"></path>
+        <path d="M17,0 L0,38 L7,38 L-6,68 L4,68 L-10,100 L17,100 Z" fill="#fff" opacity="0.08"></path>
+      </g>
+      <g transform="translate(932 202)">
+        <rect x="16" y="112" width="8" height="16" fill="#6b5a3e"></rect>
+        <path d="M20,0 L0,42 L8,42 L-8,76 L4,76 L-12,116 L52,116 L36,76 L48,76 L32,42 L40,42 Z" fill="url(#treeShade)"></path>
+        <path d="M20,0 L0,42 L8,42 L-8,76 L4,76 L-12,116 L20,116 Z" fill="#fff" opacity="0.08"></path>
+      </g>
+      <g transform="translate(1000 236)">
+        <rect x="14" y="92" width="6" height="14" fill="#6b5a3e"></rect>
+        <path d="M17,0 L0,38 L7,38 L-6,68 L4,68 L-10,100 L44,100 L30,68 L40,68 L27,38 L34,38 Z" fill="url(#treeShade)"></path>
+        <path d="M17,0 L0,38 L7,38 L-6,68 L4,68 L-10,100 L17,100 Z" fill="#fff" opacity="0.08"></path>
+      </g>
+    </g>
+
+    
+    <g id="bunker">
+      
+      <path d="M790,438 C820,422 858,420 890,428 C918,434 942,436 966,430 C996,422 1028,426 1048,442 C1062,454 1056,464 1034,470 C1008,460 978,452 950,452 C924,452 902,456 878,460 C852,464 824,462 798,456 C780,452 780,446 790,438 Z" fill="#7a6a4a" opacity="0.55"></path>
+      
+      <path d="M798,444 C826,432 858,432 886,440 C912,446 932,448 956,442 C984,436 1018,440 1036,452 C1046,460 1038,470 1018,476 C992,482 966,478 942,472 C920,466 900,466 880,470 C856,474 828,472 806,464 C792,458 792,450 798,444 Z" fill="url(#bunkerShade)"></path>
+      
+      <path d="M826,460 C854,454 876,457 896,462 C916,466 938,466 960,460 C980,455 1000,457 1014,464" fill="none" stroke="#c4b187" stroke-width="2" opacity="0.55"></path>
+    </g>
+  </g>
+
+  
+  <g id="wind">
+    <g fill="none" stroke="#c97a2a" stroke-width="11" stroke-linecap="round">
+      <path d="M165,615 L295,615 C320,615 332,602 326,588 C320,576 304,576 300,590"></path>
+      <path d="M130,665 L380,665"></path>
+      <path d="M110,720 L465,720"></path>
+      <path d="M140,770 L300,770 C322,770 332,782 326,794 C320,804 306,802 300,792"></path>
+      <path d="M170,818 L350,818"></path>
+    </g>
+    <path d="M455,698 L505,720 L455,742 L470,720 Z" fill="#c97a2a"></path>
+
+    <g fill="#9aa87a">
+      <ellipse cx="370" cy="600" rx="14" ry="8" transform="rotate(-25 370 600)"></ellipse>
+      <ellipse cx="410" cy="650" rx="13" ry="7" transform="rotate(15 410 650)"></ellipse>
+      <ellipse cx="345" cy="690" rx="14" ry="8" transform="rotate(-10 345 690)"></ellipse>
+      <ellipse cx="430" cy="760" rx="13" ry="7" transform="rotate(20 430 760)"></ellipse>
+      <ellipse cx="365" cy="800" rx="14" ry="8" transform="rotate(-15 365 800)"></ellipse>
+    </g>
+    <g stroke="#7d8a62" stroke-width="1.4" fill="none" opacity="0.7">
+      <line x1="358" y1="603" x2="382" y2="597"></line>
+      <line x1="399" y1="648" x2="421" y2="652"></line>
+      <line x1="333" y1="691" x2="357" y2="689"></line>
+      <line x1="419" y1="757" x2="441" y2="763"></line>
+      <line x1="353" y1="802" x2="377" y2="798"></line>
+    </g>
+  </g>
+
+  
+  <g id="ground">
+    
+    <ellipse cx="610" cy="1208" rx="440" ry="22" fill="#000" opacity="0.04"></ellipse>
+    
+    <ellipse cx="610" cy="1200" rx="430" ry="34" fill="url(#groundShade)"></ellipse>
+    
+    <ellipse cx="600" cy="1196" rx="320" ry="18" fill="#ecefe0" opacity="0.55"></ellipse>
+    
+    <g fill="#b8bfa6" opacity="0.7">
+      <circle cx="520" cy="1210" r="2"></circle>
+      <circle cx="560" cy="1216" r="1.6"></circle>
+      <circle cx="680" cy="1214" r="2"></circle>
+      <circle cx="720" cy="1208" r="1.6"></circle>
+      <circle cx="800" cy="1216" r="2"></circle>
+    </g>
+    
+    <g fill="none" stroke-linecap="round">
+      <g stroke="#7e9869" stroke-width="4">
+        <path d="M454,1198 C454,1188 454,1180 450,1170"></path>
+        <path d="M464,1198 C466,1186 470,1178 472,1170"></path>
+        <path d="M474,1198 C478,1188 484,1182 490,1176"></path>
+      </g>
+      <g stroke="#9bb286" stroke-width="3">
+        <path d="M448,1198 C446,1190 444,1184 440,1180"></path>
+        <path d="M460,1198 C460,1190 460,1184 462,1180"></path>
+        <path d="M482,1198 C484,1190 486,1186 494,1184"></path>
+      </g>
+    </g>
+    
+    <g fill="none" stroke-linecap="round">
+      <g stroke="#7e9869" stroke-width="4">
+        <path d="M736,1198 C734,1188 732,1180 728,1172"></path>
+        <path d="M748,1198 C750,1186 752,1178 752,1170"></path>
+        <path d="M758,1198 C760,1188 766,1180 770,1174"></path>
+      </g>
+      <g stroke="#9bb286" stroke-width="3">
+        <path d="M742,1198 C740,1192 738,1186 736,1182"></path>
+        <path d="M754,1198 C754,1190 754,1184 756,1180"></path>
+        <path d="M766,1198 C768,1192 770,1186 774,1184"></path>
+      </g>
+    </g>
+  </g>
+</svg>

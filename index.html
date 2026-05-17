@@ -276,66 +276,112 @@
         <div id="windCompassWrap" style="display:none;flex-direction:column;align-items:center;padding:14px 14px 10px;border-bottom:0.5px solid rgba(0,0,0,0.06);">
           <div class="compass-svg-wrap" id="compassSvgWrap">
             <svg id="compassSvg" viewBox="-80 -145 160 300" width="120" height="225" style="display:block;overflow:visible;">
-              <!-- Clouds -->
-              <g opacity="0.78">
-                <circle cx="-49" cy="-127" r="11" fill="#ccd4dc"/>
-                <circle cx="-38" cy="-133" r="14" fill="#ccd4dc"/>
-                <circle cx="-26" cy="-129" r="10" fill="#ccd4dc"/>
-                <circle cx="-38" cy="-122" r="9"  fill="#ccd4dc"/>
+              <defs>
+                <radialGradient id="wcGreenShade" cx="46%" cy="55%" r="62%">
+                  <stop offset="0%"   stop-color="#bdcca1"/>
+                  <stop offset="55%"  stop-color="#acbc89"/>
+                  <stop offset="100%" stop-color="#92a674"/>
+                </radialGradient>
+                <radialGradient id="wcGreenInner" cx="40%" cy="55%" r="45%">
+                  <stop offset="0%"   stop-color="#cad7ad" stop-opacity="0.95"/>
+                  <stop offset="100%" stop-color="#cad7ad" stop-opacity="0"/>
+                </radialGradient>
+                <radialGradient id="wcBunkerShade" cx="50%" cy="35%" r="70%">
+                  <stop offset="0%"   stop-color="#f0e4c6"/>
+                  <stop offset="100%" stop-color="#d3c094"/>
+                </radialGradient>
+                <radialGradient id="wcGroundShade" cx="50%" cy="50%" r="60%">
+                  <stop offset="0%"   stop-color="#e2e6d6"/>
+                  <stop offset="100%" stop-color="#ced4be"/>
+                </radialGradient>
+                <linearGradient id="wcTreeShade" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%"   stop-color="#92a87c"/>
+                  <stop offset="55%"  stop-color="#82986c"/>
+                  <stop offset="100%" stop-color="#6c8158"/>
+                </linearGradient>
+              </defs>
+              <!-- Scene: source SVG coords mapped via translate(-95.1,-144.5) scale(0.15)
+                   Maps source green centre (634,410) → compass (0,−83) -->
+              <g transform="translate(-95.1,-144.5) scale(0.15)">
+                <!-- Clouds -->
+                <g fill="#dcdcdc">
+                  <path d="M270,225 c-26,0 -46,12 -54,30 c-12,-3 -28,3 -34,15 c-6,12 -2,24 12,28 h200 c16,0 28,-10 28,-24 c0,-12 -10,-22 -22,-24 c-4,-14 -20,-22 -36,-22 c-32,0 -60,-3 -94,-3z"/>
+                  <path d="M915,160 c-22,0 -38,10 -44,24 c-10,-2 -22,3 -26,12 c-4,10 -2,20 10,22 h158 c14,0 24,-8 24,-20 c0,-10 -10,-18 -22,-20 c-2,-12 -16,-18 -30,-18 c-22,0 -46,0 -70,0z"/>
+                </g>
+                <!-- Green -->
+                <path d="M168,408 C158,360 210,316 290,304 C342,296 388,312 450,308 C520,302 590,296 670,298 C748,300 832,310 908,322 C990,334 1060,354 1094,388 C1120,414 1108,448 1068,472 C1006,500 916,514 820,520 C720,524 612,524 506,518 C418,512 336,506 264,494 C194,480 156,452 168,408 Z" fill="url(#wcGreenShade)"/>
+                <ellipse cx="490" cy="398" rx="345" ry="78" fill="url(#wcGreenInner)"/>
+                <g fill="none" stroke="#8fa172" stroke-linecap="round">
+                  <path d="M232,438 C258,378 360,344 500,340 C642,336 762,358 862,388 C922,406 970,422 1010,438" stroke-width="2.8" opacity="0.55"/>
+                  <path d="M280,478 C360,444 480,432 620,436 C740,440 842,456 920,476" stroke-width="2" opacity="0.4"/>
+                </g>
+                <path d="M260,506 C370,520 510,524 650,522 C790,520 910,512 1010,498 C980,506 940,510 900,514 C860,516 820,518 780,518 C700,518 620,518 540,516 C460,514 380,512 320,510 C290,508 270,508 260,506 Z" fill="#869866" opacity="0.3"/>
+                <!-- Bush -->
+                <path d="M308,302 c-14,-4 -28,1 -32,12 c-12,0 -22,7 -22,16 c-12,-1 -24,6 -24,17 c0,9 10,16 24,16 h74 c14,0 22,-7 22,-16 c0,-6 -4,-10 -10,-12 c4,-11 -4,-20 -16,-22 c-2,-7 -8,-11 -16,-11z" fill="#94a87a"/>
+                <path d="M268,318 c-6,2 -10,7 -8,13 c-10,-2 -20,4 -20,12 c0,7 8,12 18,12 h32 c-10,-6 -16,-16 -14,-26 c0,-6 -4,-11 -8,-11z" fill="#a4b88a" opacity="0.7"/>
+                <!-- Trees -->
+                <g transform="translate(872,222)">
+                  <rect x="14" y="92" width="6" height="14" fill="#6b5a3e"/>
+                  <path d="M17,0 L0,38 L7,38 L-6,68 L4,68 L-10,100 L44,100 L30,68 L40,68 L27,38 L34,38 Z" fill="url(#wcTreeShade)"/>
+                  <path d="M17,0 L0,38 L7,38 L-6,68 L4,68 L-10,100 L17,100 Z" fill="#fff" opacity="0.08"/>
+                </g>
+                <g transform="translate(932,202)">
+                  <rect x="16" y="112" width="8" height="16" fill="#6b5a3e"/>
+                  <path d="M20,0 L0,42 L8,42 L-8,76 L4,76 L-12,116 L52,116 L36,76 L48,76 L32,42 L40,42 Z" fill="url(#wcTreeShade)"/>
+                  <path d="M20,0 L0,42 L8,42 L-8,76 L4,76 L-12,116 L20,116 Z" fill="#fff" opacity="0.08"/>
+                </g>
+                <g transform="translate(1000,236)">
+                  <rect x="14" y="92" width="6" height="14" fill="#6b5a3e"/>
+                  <path d="M17,0 L0,38 L7,38 L-6,68 L4,68 L-10,100 L44,100 L30,68 L40,68 L27,38 L34,38 Z" fill="url(#wcTreeShade)"/>
+                  <path d="M17,0 L0,38 L7,38 L-6,68 L4,68 L-10,100 L17,100 Z" fill="#fff" opacity="0.08"/>
+                </g>
+                <!-- Bunker -->
+                <path d="M790,438 C820,422 858,420 890,428 C918,434 942,436 966,430 C996,422 1028,426 1048,442 C1062,454 1056,464 1034,470 C1008,460 978,452 950,452 C924,452 902,456 878,460 C852,464 824,462 798,456 C780,452 780,446 790,438 Z" fill="#7a6a4a" opacity="0.55"/>
+                <path d="M798,444 C826,432 858,432 886,440 C912,446 932,448 956,442 C984,436 1018,440 1036,452 C1046,460 1038,470 1018,476 C992,482 966,478 942,472 C920,466 900,466 880,470 C856,474 828,472 806,464 C792,458 792,450 798,444 Z" fill="url(#wcBunkerShade)"/>
+                <path d="M826,460 C854,454 876,457 896,462 C916,466 938,466 960,460 C980,455 1000,457 1014,464" fill="none" stroke="#c4b187" stroke-width="2" opacity="0.55"/>
               </g>
-              <g opacity="0.62">
-                <circle cx="40"  cy="-120" r="8"  fill="#ccd4dc"/>
-                <circle cx="49"  cy="-125" r="10" fill="#ccd4dc"/>
-                <circle cx="57"  cy="-121" r="7"  fill="#ccd4dc"/>
-                <circle cx="49"  cy="-116" r="7"  fill="#ccd4dc"/>
-              </g>
-              <!-- Trees (drawn before green so green overlaps their bases) -->
-              <rect x="33"  y="-109" width="4"   height="11" rx="1" fill="#907868"/>
-              <polygon points="35,-136 24,-110 46,-110" fill="#5c8452"/>
-              <polygon points="35,-124 22,-108 48,-108" fill="#4e7040"/>
-              <rect x="47"  y="-103" width="3.5" height="9"  rx="1" fill="#907868"/>
-              <polygon points="49,-127 38,-105 60,-105" fill="#5c8452"/>
-              <polygon points="49,-117 36,-103 62,-103" fill="#4e7040"/>
-              <rect x="42"  y="-99"  width="3"   height="8"  rx="1" fill="#907868"/>
-              <polygon points="43,-118 35,-100 51,-100" fill="#5c8452"/>
-              <!-- Green -->
-              <ellipse cx="-2" cy="-90" rx="40" ry="22" fill="#9cc46e"/>
-              <!-- Bunker (sand) -->
-              <ellipse cx="25" cy="-81" rx="13" ry="8" fill="#ecd8a8"/>
               <!-- Flagpole -->
               <line x1="0" y1="-83" x2="0" y2="-100" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
-              <!-- Flag (SF Symbol flag.svg path, scaled and positioned at pole top) -->
+              <!-- Flag (SF Symbol) -->
               <path d="M15.0879 2.92969C16.8945 2.92969 18.3594 1.46484 18.3594-0.341797L18.3594-20.9961C19.2383-21.4844 22.8516-22.8027 28.2227-22.8027C42.5781-22.8027 51.6602-15.8203 65.1367-15.8203C71.2891-15.8203 73.4375-16.4551 76.4648-17.8223C79.248-19.043 81.0547-21.2402 81.0547-25.0977L81.0547-64.4531C81.0547-66.6504 79.1016-67.9688 76.6113-67.9688C74.707-67.9688 71.1914-66.4062 64.6484-66.4062C51.1719-66.4062 42.0898-73.3887 27.7344-73.3887C21.582-73.3887 19.4336-72.7539 16.4062-71.3867C13.623-70.166 11.7676-67.9688 11.7676-64.0625L11.7676-0.341797C11.7676 1.41602 13.2812 2.92969 15.0879 2.92969ZM65.1367-22.4121C52.5391-22.4121 43.2617-29.3457 28.2227-29.3457C23.877-29.3457 19.9707-28.8086 18.3594-28.0762L18.3594-63.8184C18.8477-64.9902 21.7773-66.7969 27.7344-66.7969C41.2109-66.7969 50.4883-59.8145 64.6484-59.8145C68.9941-59.8145 72.4121-60.3516 74.5117-60.9375L74.5117-25.3906C73.9746-24.1699 71.0938-22.4121 65.1367-22.4121Z" fill="#1a1a1a" transform="translate(-8.3,-101.6) scale(0.55)"/>
-              <!-- Pin circle (hole) -->
+              <!-- Pin circle -->
               <circle cx="0" cy="-83" r="5.5" fill="#1a1a1a"/>
-              <!-- Dashed shot line (pin to golfer) -->
+              <!-- Dashed shot line -->
               <line x1="0" y1="-77" x2="0" y2="66" stroke="#c8c5be" stroke-width="2" stroke-dasharray="6,5" stroke-linecap="round"/>
               <!-- Ground -->
-              <rect x="-80" y="107" width="160" height="48" fill="#c0b87a" rx="2"/>
-              <line x1="-55" y1="107" x2="-57" y2="101" stroke="#8ab850" stroke-width="1.5" stroke-linecap="round"/>
-              <line x1="-40" y1="107" x2="-38" y2="101" stroke="#8ab850" stroke-width="1.5" stroke-linecap="round"/>
-              <line x1="-22" y1="107" x2="-24" y2="101" stroke="#8ab850" stroke-width="1.5" stroke-linecap="round"/>
-              <line x1="8"   y1="107" x2="6"   y2="101" stroke="#8ab850" stroke-width="1.5" stroke-linecap="round"/>
-              <line x1="22"  y1="107" x2="24"  y2="101" stroke="#8ab850" stroke-width="1.5" stroke-linecap="round"/>
-              <line x1="38"  y1="107" x2="36"  y2="101" stroke="#8ab850" stroke-width="1.5" stroke-linecap="round"/>
-              <line x1="55"  y1="107" x2="57"  y2="101" stroke="#8ab850" stroke-width="1.5" stroke-linecap="round"/>
-              <!-- Golfer (person SF Symbol) -->
+              <ellipse cx="0"  cy="119" rx="54" ry="8"  fill="url(#wcGroundShade)"/>
+              <ellipse cx="-4" cy="117" rx="38" ry="5"  fill="#ecefe0" opacity="0.55"/>
+              <g fill="none" stroke-linecap="round">
+                <path d="M-36,113 C-36,107 -37,103 -40,98"  stroke="#7e9869" stroke-width="0.5"/>
+                <path d="M-30,113 C-29,107 -28,102 -27,98"  stroke="#7e9869" stroke-width="0.5"/>
+                <path d="M-24,113 C-23,108 -21,104 -19,100" stroke="#9bb286" stroke-width="0.4"/>
+                <path d="M24,113  C24,107  23,103  21,98"   stroke="#7e9869" stroke-width="0.5"/>
+                <path d="M30,113  C31,107  32,103  33,98"   stroke="#7e9869" stroke-width="0.5"/>
+                <path d="M36,113  C37,108  39,104  41,100"  stroke="#9bb286" stroke-width="0.4"/>
+              </g>
+              <!-- Golfer -->
               <path d="M19.8242 0.488281L67.0898 0.488281C73.9258 0.488281 77.1484-1.51367 77.1484-5.9082C77.1484-15.9668 64.4531-30.6641 43.457-30.6641C22.5098-30.6641 9.76562-15.9668 9.76562-5.9082C9.76562-1.51367 13.0371 0.488281 19.8242 0.488281ZM17.627-6.10352C17.0898-6.10352 16.7969-6.25 16.7969-6.78711C16.7969-12.5 26.1719-24.0723 43.457-24.0723C60.7422-24.0723 70.1172-12.5 70.1172-6.78711C70.1172-6.25 69.8242-6.10352 69.2871-6.10352ZM43.457-35.1562C52.6855-35.1562 60.2539-43.4082 60.2539-53.3203C60.2539-63.2324 52.7832-70.9961 43.457-70.9961C34.2285-70.9961 26.6602-63.0859 26.6602-53.2227C26.6602-43.3594 34.2773-35.1562 43.457-35.1562ZM43.457-41.6992C38.2812-41.6992 33.6914-46.8262 33.6914-53.2227C33.6914-59.6191 38.1348-64.4043 43.457-64.4043C48.8281-64.4043 53.2227-59.7168 53.2227-53.3203C53.2227-46.9238 48.7305-41.6992 43.457-41.6992Z" fill="#1a1a1a" transform="translate(-26.1,111.2) scale(0.60)"/>
-              <!-- Wind indicator: rotates around shot-line midpoint to show wind source direction -->
+              <!-- Wind indicator — rotates around shot-line midpoint.
+                   Wind paths use source SVG coords mapped via matrix(0,0.25,-0.25,0,180,-167.25):
+                   maps source wind tip (505,720) → compass (0,−41), scale 0.25, 90° CCW. -->
               <g id="wcrWind" transform="rotate(0,0,-14)">
                 <g id="wcrWindColor" stroke="#c0392b" fill="#c0392b">
-                  <!-- Flair streaks (wavy lines offset to the left of main arrow) -->
-                  <path d="M-12,-118 C-9,-100 -16,-82 -12,-55" fill="none" stroke-width="2" stroke-linecap="round" stroke-opacity="0.60"/>
-                  <path d="M-22,-108 C-19,-92 -26,-76 -22,-65"  fill="none" stroke-width="1.5" stroke-linecap="round" stroke-opacity="0.35"/>
-                  <!-- Main arrow line -->
-                  <line id="wcrWindLine" x1="0" y1="-126" x2="0" y2="-46" fill="none" stroke-width="4" stroke-linecap="round"/>
-                  <!-- Leaves (teardrop shapes scattered near the streaks) -->
-                  <path d="M0,0 C4,-3 4,-9 0,-12 C-4,-9 -4,-3 0,0Z" stroke="none" opacity="0.55" transform="translate(-7,-100) rotate(25)"/>
-                  <path d="M0,0 C4,-3 4,-9 0,-12 C-4,-9 -4,-3 0,0Z" stroke="none" opacity="0.43" transform="translate(-18,-80) rotate(-20)"/>
-                  <path d="M0,0 C4,-3 4,-9 0,-12 C-4,-9 -4,-3 0,0Z" stroke="none" opacity="0.50" transform="translate(4,-88) rotate(40)"/>
-                  <path d="M0,0 C4,-3 4,-9 0,-12 C-4,-9 -4,-3 0,0Z" stroke="none" opacity="0.38" transform="translate(-8,-65) rotate(-25)"/>
-                  <!-- Arrowhead -->
-                  <polygon id="wcrWindHead" points="0,-41 -9,-55 9,-55" stroke="none"/>
+                  <g transform="matrix(0,0.25,-0.25,0,180,-167.25)" fill="none" stroke-linecap="round" stroke-width="11">
+                    <path d="M165,615 L295,615 C320,615 332,602 326,588 C320,576 304,576 300,590"/>
+                    <path d="M130,665 L380,665"/>
+                    <path d="M110,720 L465,720"/>
+                    <path d="M140,770 L300,770 C322,770 332,782 326,794 C320,804 306,802 300,792"/>
+                    <path d="M170,818 L350,818"/>
+                  </g>
+                  <path transform="matrix(0,0.25,-0.25,0,180,-167.25)" d="M455,698 L505,720 L455,742 L470,720 Z" stroke="none"/>
+                </g>
+                <!-- Leaves — fixed olive, rotate with wind group -->
+                <g transform="matrix(0,0.25,-0.25,0,180,-167.25)" fill="#9aa87a">
+                  <ellipse cx="370" cy="600" rx="14" ry="8" transform="rotate(-25,370,600)"/>
+                  <ellipse cx="410" cy="650" rx="13" ry="7" transform="rotate(15,410,650)"/>
+                  <ellipse cx="345" cy="690" rx="14" ry="8" transform="rotate(-10,345,690)"/>
+                  <ellipse cx="430" cy="760" rx="13" ry="7" transform="rotate(20,430,760)"/>
+                  <ellipse cx="365" cy="800" rx="14" ry="8" transform="rotate(-15,365,800)"/>
                 </g>
               </g>
             </svg>
