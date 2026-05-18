@@ -1411,9 +1411,9 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
     : `${totalStrokes} strokes · par ${totalPar} · ${holesPlayed} holes`;
 
   // Strategy insight — this round's Par 4/5 holes grouped by strategy
+  const roundStrategies = getCommittedStrategies();
   let stratInsightHtml = '';
   {
-    const roundStrategies = getCommittedStrategies();
     const byStrat = {};
     scores.forEach((s, i) => {
       if (!s) return;
