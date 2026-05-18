@@ -731,6 +731,7 @@ initServices({
 
   function startDrag(e) {
     if (liveOrientationActive) return; // don't allow drag during live mode
+    if (windState.holeDeg !== null) return; // locked — wind direction fixed, no manual rotation
     dragActive = true;
     dragStartAngle = angleFromCenter(e);
     dragStartHole  = windState.holeDeg ?? 0;
@@ -1741,12 +1742,14 @@ initServices({
       const session = loadActiveCourse();
       if (!session.id) return;
       const { id, holeIdx } = session;
-      if (delta > 0 && holeIdx === 17) {
+      const totalHoles = loadCourses()[id]?.holes?.length ?? 18;
+      const lastIdx = totalHoles - 1;
+      if (delta > 0 && holeIdx >= lastIdx) {
         showRoundCompleteOverlay(id, holeIdx, buildCallbacks());
         return;
       }
       const newIdx = holeIdx + delta;
-      if (newIdx < 0 || newIdx > 17) return;
+      if (newIdx < 0 || newIdx >= totalHoles) return;
       const { gameFormat: _fmt = 'strokes', hcpEnabled: _hcp = true } = loadActiveCourse();
       saveActiveCourse(id, newIdx, _fmt, _hcp);
       resetInRough();

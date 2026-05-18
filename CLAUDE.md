@@ -60,8 +60,7 @@ Never use Object.defineProperty on window (Safari bug).
 
 ## Product roadmap
 Phase 1 (done): Modular web app — this codebase, verified on iPhone Safari
-Phase 2 (next): Capacitor wrapper → App Store
-Phase 3 (if it grows): Expo / React Native native rebuild
+Phase 2 (next): SwiftUi rebuild - make it truly iOS native
 
 ## Key files
 
