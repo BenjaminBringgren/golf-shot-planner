@@ -1,5 +1,30 @@
 # Changelog
 
+## [Refactor] Inline style migration — index.html
+Date: 2026-05-18
+
+All `style=""` attributes removed from `index.html`. Every previously-inlined
+declaration has been moved to `src/styles.css` as ID rules or named classes.
+New classes introduced: `wind-strip-content`, `wind-strip-label`,
+`wind-strip-actions`, `wind-lock-prompt-icon`, `wind-lock-prompt-title`,
+`wind-lock-prompt-sub`, `compass-display-wrap`, `wind-stat-inner`,
+`wind-stat-cell`, `gps-section-label`, `gps-tile-inner`, `mg-profile-spacer`,
+`mg-profile-hint`, `mg-stat-drilldowns`, `mg-content-padded`,
+`mg-content-padded-bottom`, `mg-content-no-flex`, `course-editor-rating-row`,
+`course-editor-rating-col`, `course-editor-rating-lbl`,
+`course-editor-rating-input`, `course-editor-scorecard`,
+`cancel-round-dialog`, `cancel-round-title`, `cancel-round-body`,
+`cancel-round-btns`, `cancel-round-btn--quit`, `cancel-round-btn--keep`,
+`weather-cond-label`. New ID rules added for: `#holeCompactNote`,
+`#parCondGrid`, `#parSelect`, `#conditions`, `#windLockIcon`,
+`#windLockHint`, `#weatherCondRow`, `#windLockPrompt`, `#windCompassWrap`,
+`#compassSvg`, `#wcMask`, `#compassLiveBadge`, `#windStatGrid`,
+`#gpsSection`, `#gpsBallBtn`, `#gpsBallDist`, `#gpsReset`, `#gpsWarning`,
+`#bagCompleteHint`, `#playActionRow`, `#mgBagEditForm`, `#courseEditor`,
+`#roundCompleteOverlay`, `#cancelRoundOverlay`.
+One JS fix: `form.style.display === 'none'` → `getComputedStyle(form).display === 'none'`
+in router.js so the bag edit form toggle reads CSS-controlled initial state correctly.
+
 ## [Fix] Post-window-retirement bugs
 Date: 2026-04-25
 

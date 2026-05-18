@@ -388,7 +388,7 @@ document.getElementById('tabPrepare')?.addEventListener('click', () => switchTab
   document.getElementById('mgEditBagBtn')?.addEventListener('click', () => {
     const form = document.getElementById('mgBagEditForm');
     const btn  = document.getElementById('mgEditBagBtn');
-    if (form.style.display === 'none') {
+    if (getComputedStyle(form).display === 'none') {
       form.style.display = 'block';
       btn.textContent = 'Done editing ✓';
     } else {

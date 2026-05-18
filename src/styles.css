@@ -284,7 +284,7 @@
     .mg-menu-row:last-child { border-bottom: none; }
     .mg-menu-row.is-pressed { background: #f5f4f0; }
     .mg-menu-icon {
-      width: 44px; height: 44px; border-radius: 9px;
+      width: 44px; height: 44px; border-radius: 9px; background: #f0efeb;
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .mg-menu-title { font-size: 15px; font-weight: 700; color: #1a1a1a; margin: 0; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -1110,7 +1110,7 @@
     .wind-strip-btn.locked  #windLockIcon { transition: transform 0.3s ease; }
 
     /* Wind toggle — label is purely the track, outer div handles alignment */
-    .wind-toggle-wrap { cursor: pointer; }
+    .wind-toggle-wrap { cursor: pointer; padding: 2px 6px; }
     .wind-toggle {
       display: flex; align-items: center;
       cursor: pointer; margin: 0;
@@ -3160,5 +3160,153 @@
 .rc-best-trophy { font-size: 34px; line-height: 1; flex-shrink: 0; }
 .rc-best-headline { font-size: 20px; font-weight: 700; margin-bottom: 3px; }
 .rc-best-sub { font-size: 13px; color: rgba(255,255,255,0.65); }
+
+    /* ── index.html static-shell: migrated inline styles ────── */
+
+    /* This Hole card */
+    #holeCompactNote {
+      display: none;
+      font-size: 15px; font-weight: 400; color: #666;
+      margin-top: 2px; width: 100%;
+    }
+    #parCondGrid { display: flex; gap: 20px; }
+    #parSelect, #conditions { display: none; }
+
+    /* Wind section */
+    .wind-strip-content { flex: 1; min-width: 0; }
+    .wind-strip-label {
+      font-size: 12px; font-weight: 700; color: #888;
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px;
+    }
+    .wind-strip-actions {
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    #windLockIcon { transition: transform 0.3s ease; }
+    #windToggle .col-chevron { font-size: 11px; color: #bbb; margin-left: 2px; }
+    #windLockHint {
+      display: none;
+      padding: 6px 14px 8px; font-size: 12px; font-weight: 400;
+      color: #185fa5; background: #eef3fb;
+      border-top: 0.5px solid rgba(24,95,165,0.15);
+    }
+    #weatherCondRow {
+      display: none;
+      align-items: center; gap: 8px; padding: 8px 14px 10px;
+      border-top: 0.5px solid rgba(0,0,0,0.06); background: #fff;
+    }
+    .weather-cond-label { font-size: 12px; color: #bbb; flex-shrink: 0; }
+    #windLockPrompt {
+      display: none;
+      align-items: center; gap: 10px; padding: 10px 14px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.06); background: #fafaf8;
+    }
+    .wind-lock-prompt-icon {
+      width: 36px; height: 36px; border-radius: 8px; background: #f0f0ee;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .wind-lock-prompt-title { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+    .wind-lock-prompt-sub { font-size: 12px; color: #888; margin-top: 1px; }
+    #windCompassWrap {
+      display: none;
+      flex-direction: column; align-items: center;
+      padding: 14px 14px 10px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.06);
+    }
+    #compassSvg { display: block; overflow: visible; }
+    #wcMask { mask-type: luminance; }
+    .compass-display-wrap { text-align: center; margin-top: 8px; }
+    #compassLiveBadge { margin-top: 6px; justify-content: center; }
+    #windStatGrid { display: none; }
+    .wind-stat-inner { display: grid; grid-template-columns: 1fr 1fr; }
+    .wind-stat-cell { padding: 8px 12px; }
+    .wind-stat-cell:nth-child(-n+4) { border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+    .wind-stat-cell:nth-child(odd) { border-right: 0.5px solid rgba(0,0,0,0.06); }
+
+    /* GPS section */
+    #gpsSection {
+      background: #fff; border: 0.5px solid rgba(0,0,0,0.07);
+      border-radius: 12px; padding: 10px 14px 12px; margin-top: 0;
+    }
+    .gps-section-label {
+      font-size: 12px; font-weight: 700; color: #888;
+      text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;
+    }
+    #gpsBallBtn { opacity: 0.45; pointer-events: none; }
+    .gps-tile-inner { flex: 1; }
+    #gpsBallDist { display: none; }
+    #gpsReset { display: none; align-self: center; }
+    #gpsWarning { display: none; margin: 8px 0 0; }
+
+    /* Calculate / output */
+    #bagCompleteHint { display: none; }
+    #playActionRow { display: none; }
+
+    /* Player Profile sub-page */
+    .mg-profile-spacer { height: 12px; }
+    .mg-profile-hint { font-size: 12px; color: #aaa; margin-top: 5px; }
+
+    /* My Bag sub-page */
+    #mgBagEditForm { display: none; padding: 0 12px 12px; }
+
+    /* My Stats sub-page */
+    .mg-stat-drilldowns { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+
+    /* Sub-page content containers */
+    .mg-content-padded { padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+    .mg-content-padded-bottom { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 12px; }
+    .mg-content-no-flex { padding: 0 12px 12px; }
+
+    /* Course editor */
+    #courseEditor { display: none; margin-top: 14px; }
+    .course-editor-rating-row { display: flex; gap: 8px; padding: 0 8px 8px; }
+    .course-editor-rating-col { flex: 1; }
+    .course-editor-rating-lbl {
+      font-size: 11px; font-weight: 700; color: #aaa;
+      text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;
+    }
+    .course-editor-rating-input {
+      width: 100%; padding: 8px 10px; font-size: 15px;
+      border: none; border-radius: 6px; background: #f0efeb;
+      color: #222; font-family: inherit;
+    }
+    .course-editor-scorecard { padding: 0 8px 8px; }
+    .scorecard th.sc-th-si { width: 42px; }
+    .scorecard th.sc-th-note { text-align: left; padding-left: 6px; }
+
+    /* Round complete overlay */
+    #roundCompleteOverlay {
+      display: none; position: fixed; inset: 0;
+      background: #f5f4f0; z-index: 2000;
+      flex-direction: column;
+      overflow-y: scroll; overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Cancel round overlay */
+    #cancelRoundOverlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 2000;
+      align-items: center; justify-content: center;
+    }
+    .cancel-round-dialog {
+      background: #fffffe; border-radius: 12px;
+      padding: 24px 20px; max-width: 300px; width: 90%;
+      margin: auto; text-align: center;
+    }
+    .cancel-round-title { font-size: 17px; font-weight: 700; color: #222; margin-bottom: 8px; }
+    .cancel-round-body { font-size: 15px; color: #666; margin-bottom: 20px; }
+    .cancel-round-btns { display: flex; gap: 10px; }
+    .cancel-round-btn--quit {
+      flex: 1; padding: 17px; background: #c00; color: #fff;
+      border: none; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer;
+      width: auto; margin: 0;
+    }
+    .cancel-round-btn--keep {
+      flex: 1; padding: 17px; background: #f0efeb; color: #333;
+      border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;
+      width: auto; margin: 0;
+    }
+    .cancel-round-btn--quit.is-pressed { background: #a00; transform: scale(0.98); }
+    .cancel-round-btn--keep.is-pressed { background: #e4e2de; transform: scale(0.98); }
 
 

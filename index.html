@@ -135,10 +135,10 @@
   <!-- ── This Hole card (manual mode / no course) ─────────────────────── -->
   <div class="card" id="thisHoleCard">
     <!-- Compact summary hidden — course bar handles it -->
-    <div class="hole-compact-summary" id="holeCompactSummary" style="display:none;">
+    <div class="hole-compact-summary" id="holeCompactSummary">
       <span id="holeCompactText">—</span>
       <span id="holeCompactConditions" class="hcs-conditions"></span>
-      <span id="holeCompactNote" style="display:none;font-size:15px;font-weight:400;color:#666;margin-top:2px;width:100%;"></span>
+      <span id="holeCompactNote"></span>
     </div>
 
     <!-- Full manual fields — hidden when course is active -->
@@ -147,7 +147,7 @@
         <div class="card-title">This Hole</div>
         <button class="calc-close-btn hidden" id="calcCloseBtn" type="button"><svg width="18" height="18" viewBox="-2.000 -74.459 84.860 80.459" xmlns="http://www.w3.org/2000/svg"><path d="M64.4043-64.7461L10.8887-11.2305C9.42383-9.76562 9.375-7.17773 10.8887-5.66406C12.4512-4.15039 14.9902-4.15039 16.5039-5.66406L69.9707-59.1309C71.4844-60.6445 71.5332-63.2324 69.9707-64.7461C68.4082-66.2109 65.918-66.2598 64.4043-64.7461ZM69.9707-11.2305L16.5039-64.7461C14.9902-66.2109 12.4023-66.2598 10.8887-64.7461C9.42383-63.1836 9.42383-60.6445 10.8887-59.1309L64.4043-5.66406C65.8691-4.15039 68.457-4.15039 69.9707-5.66406C71.4844-7.22656 71.4844-9.76562 69.9707-11.2305Z" fill="currentColor"/></svg></button>
       </div>
-      <div style="display:flex;gap:20px;">
+      <div id="parCondGrid">
         <div>
           <label>Par</label>
           <div class="chip-control-row" id="parChipRow">
@@ -169,12 +169,12 @@
     </div>
 
     <!-- Hidden selects for JS compatibility -->
-    <select id="parSelect" style="display:none">
+    <select id="parSelect">
       <option value="3">3</option>
       <option value="4" selected>4</option>
       <option value="5">5</option>
     </select>
-    <select id="conditions" style="display:none">
+    <select id="conditions">
       <option value="soft">Soft</option>
       <option value="firm">Firm</option>
     </select>
@@ -198,34 +198,34 @@
     <!-- Collapsed strip -->
     <div class="collapsible-header" id="windToggle">
       <div class="wind-strip">
-        <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">Weather</div>
+        <div class="wind-strip-content">
+          <div class="wind-strip-label">Weather</div>
           <div class="wind-strip-text" id="windText">Fetch local wind</div>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+      <div class="wind-strip-actions">
         <button class="wind-strip-btn" id="windRefresh" title="Refresh wind" type="button">
           <svg width="20" height="20" viewBox="-2.000 -74.459 85.830 80.459" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M40.918 1.75781C59.7656 1.75781 75-13.5254 75-32.373C75-34.3262 73.3887-35.8887 71.4844-35.8887C69.5801-35.8887 67.9688-34.3262 67.9688-32.373C67.9688-17.4316 55.8594-5.37109 40.918-5.37109C25.9766-5.37109 13.8672-17.4316 13.8672-32.373C13.8672-47.3145 25.9766-59.4238 40.918-59.4238C44.0918-59.4238 47.1191-58.9355 49.9512-57.9102C52.1973-57.0312 54.8828-58.3008 54.8828-61.084C54.8828-63.3789 53.1738-64.1113 52.0508-64.502C48.584-65.7715 44.8242-66.4062 40.918-66.4062C22.0703-66.4062 6.83594-51.1719 6.83594-32.3242C6.83594-13.5254 22.0703 1.75781 40.918 1.75781ZM50.6836-61.6699L37.4512-48.6816C36.7676-48.0469 36.4746-47.1191 36.4746-46.2402C36.4746-44.2383 37.9883-42.7246 39.8926-42.7246C41.0156-42.7246 41.7969-43.1152 42.4316-43.7012L57.8613-59.1309C58.5449-59.8145 58.8867-60.6445 58.8867-61.6699C58.8867-62.5977 58.4961-63.5254 57.8613-64.1602L42.4316-79.7852C41.7969-80.4199 40.9668-80.8594 39.8926-80.8594C37.9883-80.8594 36.4746-79.248 36.4746-77.2461C36.4746-76.3184 36.7676-75.3906 37.4023-74.7559Z"/></svg>
         </button>
         <button class="wind-strip-btn" id="windLockStrip" type="button" aria-label="Lock wind direction">
-          <svg id="windLockIcon" width="20" height="20" viewBox="-2.000 -74.459 72.410 80.459" fill="currentColor" xmlns="http://www.w3.org/2000/svg" style="transition:transform 0.3s ease;"><path d="M12.9883 9.13086C15.0391 9.13086 17.1875 7.95898 18.8477 6.39648L33.0566-7.22656C33.5449-7.71484 33.8867-7.95898 34.1797-7.95898C34.5215-7.95898 34.8633-7.71484 35.3516-7.22656L49.5117 6.39648C51.2207 7.95898 53.3203 9.13086 55.3711 9.13086C58.3496 9.13086 60.5957 6.39648 60.5957 3.56445C60.5957 1.80664 59.8145-0.146484 58.8867-2.63672L40.0879-51.5137C38.623-55.3223 36.6211-56.8359 34.1797-56.8359C31.7871-56.8359 29.7363-55.3223 28.2715-51.5137L9.47266-2.63672C8.54492-0.146484 7.8125 1.80664 7.8125 3.56445C7.8125 6.39648 10.0098 9.13086 12.9883 9.13086ZM15.8203-0.439453C15.7227-0.585938 15.6738-0.732422 15.7715-1.02539L33.6426-47.0215C33.7402-47.3145 33.9355-47.5586 34.1797-47.5586C34.4727-47.5586 34.6191-47.2656 34.7168-47.0215L52.5879-1.02539C52.6855-0.732422 52.6855-0.537109 52.5391-0.439453C52.4414-0.390625 52.2949-0.244141 52.0508-0.488281L37.4512-13.7695C36.2305-14.8926 35.2539-15.4785 34.1797-15.4785C33.1543-15.4785 32.1289-14.8926 30.957-13.7695L16.3086-0.488281C16.2109-0.390625 15.9668-0.244141 15.8203-0.439453ZM34.1797-61.3281C36.2793-61.3281 37.6953-62.8418 37.6953-65.0879L37.6953-81.0547C37.6953-83.3496 36.2793-84.8145 34.1797-84.8145C32.0801-84.8145 30.6641-83.3496 30.6641-81.0547L30.6641-65.0879C30.6641-62.8418 32.0801-61.3281 34.1797-61.3281Z"/></svg>
+          <svg id="windLockIcon" width="20" height="20" viewBox="-2.000 -74.459 72.410 80.459" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12.9883 9.13086C15.0391 9.13086 17.1875 7.95898 18.8477 6.39648L33.0566-7.22656C33.5449-7.71484 33.8867-7.95898 34.1797-7.95898C34.5215-7.95898 34.8633-7.71484 35.3516-7.22656L49.5117 6.39648C51.2207 7.95898 53.3203 9.13086 55.3711 9.13086C58.3496 9.13086 60.5957 6.39648 60.5957 3.56445C60.5957 1.80664 59.8145-0.146484 58.8867-2.63672L40.0879-51.5137C38.623-55.3223 36.6211-56.8359 34.1797-56.8359C31.7871-56.8359 29.7363-55.3223 28.2715-51.5137L9.47266-2.63672C8.54492-0.146484 7.8125 1.80664 7.8125 3.56445C7.8125 6.39648 10.0098 9.13086 12.9883 9.13086ZM15.8203-0.439453C15.7227-0.585938 15.6738-0.732422 15.7715-1.02539L33.6426-47.0215C33.7402-47.3145 33.9355-47.5586 34.1797-47.5586C34.4727-47.5586 34.6191-47.2656 34.7168-47.0215L52.5879-1.02539C52.6855-0.732422 52.6855-0.537109 52.5391-0.439453C52.4414-0.390625 52.2949-0.244141 52.0508-0.488281L37.4512-13.7695C36.2305-14.8926 35.2539-15.4785 34.1797-15.4785C33.1543-15.4785 32.1289-14.8926 30.957-13.7695L16.3086-0.488281C16.2109-0.390625 15.9668-0.244141 15.8203-0.439453ZM34.1797-61.3281C36.2793-61.3281 37.6953-62.8418 37.6953-65.0879L37.6953-81.0547C37.6953-83.3496 36.2793-84.8145 34.1797-84.8145C32.0801-84.8145 30.6641-83.3496 30.6641-81.0547L30.6641-65.0879C30.6641-62.8418 32.0801-61.3281 34.1797-61.3281Z"/></svg>
         </button>
-        <div class="wind-toggle-wrap" id="windToggleWrap" style="padding:2px 6px;">
+        <div class="wind-toggle-wrap" id="windToggleWrap">
           <label class="wind-toggle">
             <input type="checkbox" id="windEnabled" checked>
             <span class="wind-toggle-slider"></span>
           </label>
         </div>
-        <span class="col-chevron" style="margin-left:2px;font-size:11px;color:#bbb;">▼</span>
+        <span class="col-chevron">▼</span>
       </div>
     </div>
-    <div id="windLockHint" style="display:none;padding:6px 14px 8px;font-size:12px;color:#185fa5;font-weight:400;background:#eef3fb;border-top:0.5px solid rgba(24,95,165,0.15);">
+    <div id="windLockHint">
       Point phone toward the hole, then tap the compass again to lock
     </div>
 
     <!-- Conditions — shown here when course is active, strip handles it otherwise -->
-    <div id="weatherCondRow" style="display:none;align-items:center;gap:8px;padding:8px 14px 10px;border-top:0.5px solid rgba(0,0,0,0.06);background:#fff;">
-      <span style="font-size:12px;color:#bbb;flex-shrink:0;">Conditions</span>
+    <div id="weatherCondRow">
+      <span class="weather-cond-label">Conditions</span>
       <div class="chip-control-row" id="condChipRowWeather">
         <button class="chip-control-btn active" data-value="soft" type="button">Soft</button>
         <button class="chip-control-btn" data-value="firm" type="button">Firm</button>
@@ -260,22 +260,22 @@
         <div class="compass-location" id="compassLocation"></div>
 
         <!-- Lock prompt — shown when wind fetched but no hole direction locked -->
-        <div id="windLockPrompt" style="display:none;align-items:center;gap:10px;padding:10px 14px;border-bottom:0.5px solid rgba(0,0,0,0.06);background:#fafaf8;">
-          <div style="width:36px;height:36px;border-radius:8px;background:#f0f0ee;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <div id="windLockPrompt">
+          <div class="wind-lock-prompt-icon">
             <svg width="18" height="18" viewBox="-2.000 -74.459 72.410 80.459" xmlns="http://www.w3.org/2000/svg">
               <path d="M12.9883 9.13086C15.0391 9.13086 17.1875 7.95898 18.8477 6.39648L33.0566-7.22656C33.5449-7.71484 33.8867-7.95898 34.1797-7.95898C34.5215-7.95898 34.8633-7.71484 35.3516-7.22656L49.5117 6.39648C51.2207 7.95898 53.3203 9.13086 55.3711 9.13086C58.3496 9.13086 60.5957 6.39648 60.5957 3.56445C60.5957 1.80664 59.8145-0.146484 58.8867-2.63672L40.0879-51.5137C38.623-55.3223 36.6211-56.8359 34.1797-56.8359C31.7871-56.8359 29.7363-55.3223 28.2715-51.5137L9.47266-2.63672C8.54492-0.146484 7.8125 1.80664 7.8125 3.56445C7.8125 6.39648 10.0098 9.13086 12.9883 9.13086ZM15.8203-0.439453C15.7227-0.585938 15.6738-0.732422 15.7715-1.02539L33.6426-47.0215C33.7402-47.3145 33.9355-47.5586 34.1797-47.5586C34.4727-47.5586 34.6191-47.2656 34.7168-47.0215L52.5879-1.02539C52.6855-0.732422 52.6855-0.537109 52.5391-0.439453C52.4414-0.390625 52.2949-0.244141 52.0508-0.488281L37.4512-13.7695C36.2305-14.8926 35.2539-15.4785 34.1797-15.4785C33.1543-15.4785 32.1289-14.8926 30.957-13.7695L16.3086-0.488281C16.2109-0.390625 15.9668-0.244141 15.8203-0.439453ZM34.1797-61.3281C36.2793-61.3281 37.6953-62.8418 37.6953-65.0879L37.6953-81.0547C37.6953-83.3496 36.2793-84.8145 34.1797-84.8145C32.0801-84.8145 30.6641-83.3496 30.6641-81.0547L30.6641-65.0879C30.6641-62.8418 32.0801-61.3281 34.1797-61.3281Z" fill="#888"/>
             </svg>
           </div>
           <div>
-            <div style="font-size:13px;font-weight:700;color:#1a1a1a;">Lock hole direction to see wind breakdown</div>
-            <div style="font-size:12px;color:#888;margin-top:1px;">Tap the compass button above to point toward the hole</div>
+            <div class="wind-lock-prompt-title">Lock hole direction to see wind breakdown</div>
+            <div class="wind-lock-prompt-sub">Tap the compass button above to point toward the hole</div>
           </div>
         </div>
 
         <!-- Compass/wind-view — shown while locking direction or after lock -->
-        <div id="windCompassWrap" style="display:none;flex-direction:column;align-items:center;padding:14px 14px 10px;border-bottom:0.5px solid rgba(0,0,0,0.06);">
+        <div id="windCompassWrap">
           <div class="compass-svg-wrap" id="compassSvgWrap">
-            <svg id="compassSvg" viewBox="-80 -145 160 300" width="150" height="280" style="display:block;overflow:visible;">
+            <svg id="compassSvg" viewBox="-80 -145 160 300" width="150" height="280">
               <defs>
                 <!-- Green fill — userSpaceOnUse so coords match source SVG paths inside the landscape group -->
                 <radialGradient id="wcGreen" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(643.888 345.382) scale(632.098 220.24)">
@@ -294,7 +294,7 @@
                   <stop offset="100%" stop-color="#ced4be"/>
                 </radialGradient>
                 <!-- Clips inner green details to the green outline shape -->
-                <mask id="wcMask" style="mask-type:luminance" maskUnits="userSpaceOnUse" x="179" y="209" width="930" height="325">
+                <mask id="wcMask" maskUnits="userSpaceOnUse" x="179" y="209" width="930" height="325">
                   <path d="M180 378C170 318 245 256 365 232C495 206 645 202 790 222C905 238 1018 272 1080 318C1112 342 1116 376 1098 406C1080 432 1042 450 992 460C928 472 858 486 790 500C722 514 656 528 588 532C522 536 460 530 410 518C360 506 320 492 270 470C218 448 188 418 188 388C188 384 188 381 180 378Z" fill="white"/>
                 </mask>
               </defs>
@@ -351,10 +351,10 @@
               </g>
             </svg>
           </div>
-          <div style="text-align:center;margin-top:8px;">
+          <div class="compass-display-wrap">
             <div class="compass-deg-display" id="compassDegDisplay">0°</div>
             <div class="compass-deg-label" id="compassDegLabel">North</div>
-            <div class="wind-live-pill" id="compassLiveBadge" style="margin-top:6px;justify-content:center;">
+            <div class="wind-live-pill" id="compassLiveBadge">
               <div class="wind-live-dot"></div>
               LIVE
             </div>
@@ -362,30 +362,30 @@
         </div>
 
         <!-- Stat grid — always visible once wind is fetched -->
-        <div id="windStatGrid" style="display:none;">
+        <div id="windStatGrid">
 
-          <div style="display:grid;grid-template-columns:1fr 1fr;">
-            <div style="padding:8px 12px;border-bottom:0.5px solid rgba(0,0,0,0.06);border-right:0.5px solid rgba(0,0,0,0.06);">
+          <div class="wind-stat-inner">
+            <div class="wind-stat-cell">
               <span class="wbr-label">Headwind / Tailwind</span>
               <span class="wbr-val" id="wbrHead">—</span>
             </div>
-            <div style="padding:8px 12px;border-bottom:0.5px solid rgba(0,0,0,0.06);">
+            <div class="wind-stat-cell">
               <span class="wbr-label">Crosswind</span>
               <span class="wbr-val" id="wbrCross">—</span>
             </div>
-            <div style="padding:8px 12px;border-bottom:0.5px solid rgba(0,0,0,0.06);border-right:0.5px solid rgba(0,0,0,0.06);">
+            <div class="wind-stat-cell">
               <span class="wbr-label">Gusts</span>
               <span class="wbr-val" id="wbrGusts">—</span>
             </div>
-            <div style="padding:8px 12px;border-bottom:0.5px solid rgba(0,0,0,0.06);">
+            <div class="wind-stat-cell">
               <span class="wbr-label">Carry effect</span>
               <span class="wbr-val" id="wbrEffect">—</span>
             </div>
-            <div style="padding:8px 12px;border-right:0.5px solid rgba(0,0,0,0.06);">
+            <div class="wind-stat-cell">
               <span class="wbr-label">Temperature · carry</span>
               <span class="wbr-val" id="wbrFeelsLike">—</span>
             </div>
-            <div style="padding:8px 12px;">
+            <div class="wind-stat-cell">
               <span class="wbr-label">Rain chance</span>
               <span class="wbr-val" id="wbrRain">—</span>
             </div>
@@ -399,8 +399,8 @@
   </div><!-- /windSection -->
 
   <!-- ── GPS tiles ──────────────────────────────────────────────────────── -->
-  <div id="gpsSection" style="background:#fff;border:0.5px solid rgba(0,0,0,0.07);border-radius:12px;padding:10px 14px 12px;margin-top:0;">
-    <div style="font-size:12px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">GPS tracking</div>
+  <div id="gpsSection">
+    <div class="gps-section-label">GPS tracking</div>
     <div class="gps-row" id="gpsTileRow">
       <div class="gps-tile" id="gpsTeeBtn">
         <div class="gps-tile-indicator idle" id="gpsTeeIndicator"></div>
@@ -409,17 +409,17 @@
           <div class="gps-tile-status" id="gpsTeeStatus">Tap to mark</div>
         </div>
       </div>
-      <div class="gps-tile" id="gpsBallBtn" style="opacity:0.45;pointer-events:none;">
+      <div class="gps-tile" id="gpsBallBtn">
         <div class="gps-tile-indicator idle" id="gpsBallIndicator"></div>
-        <div style="flex:1;">
+        <div class="gps-tile-inner">
           <div class="gps-tile-label">Ball position</div>
           <div class="gps-tile-status" id="gpsBallStatus">Mark tee first</div>
         </div>
-        <div class="gps-tile-dist" id="gpsBallDist" style="display:none;"></div>
+        <div class="gps-tile-dist" id="gpsBallDist"></div>
       </div>
-      <span class="gps-reset-link" id="gpsReset" style="display:none;align-self:center;">Reset</span>
+      <span class="gps-reset-link" id="gpsReset">Reset</span>
     </div>
-    <div class="gps-warning" id="gpsWarning" style="display:none;margin:8px 0 0;"></div>
+    <div class="gps-warning" id="gpsWarning"></div>
   </div>
 
 
@@ -427,16 +427,16 @@
   <!-- Focus strip — shown during active round when history data exists -->
   <div id="playFocusStrip" class="hidden"></div>
 
-  <div id="bagCompleteHint" style="display:none;">
+  <div id="bagCompleteHint">
     <span>Complete your bag for better accuracy</span>
     <button type="button" id="bagCompleteHintBtn">My Golf › Bag →</button>
   </div>
   <button id="calcButton">Calculate Shot Plan</button>
   <div id="playBodyPad">
-    <div class="result" id="output" style="background:transparent;border:none;padding:0;margin:0;"></div>
+    <div class="result" id="output"></div>
     <div class="recalc-link" id="recalcLink"><a id="recalcAnchor">↺ Recalculate</a></div>
   </div>
-  <div class="play-action-row" id="playActionRow" style="display:none;">
+  <div class="play-action-row" id="playActionRow">
     <div class="play-hole-nav">
       <button class="phn-chevron" id="playNavPrev" type="button" aria-label="Previous hole"><svg width="20" height="20" viewBox="-2.000 -74.459 61.810 80.459" xmlns="http://www.w3.org/2000/svg"><path d="M4.88281-35.2539C4.88281-34.1797 5.32227-33.2031 6.10352-32.373L36.2793-2.39258C37.0117-1.61133 38.0371-1.2207 39.1602-1.2207C41.4551-1.2207 43.1641-2.92969 43.1641-5.22461C43.1641-6.34766 42.7246-7.32422 41.9922-8.10547L14.7461-35.2539L41.9922-62.4023C42.7246-63.1836 43.1641-64.209 43.1641-65.2832C43.1641-67.5781 41.4551-69.2871 39.1602-69.2871C38.0371-69.2871 37.0117-68.8965 36.2793-68.1152L6.10352-38.1348C5.32227-37.3047 4.88281-36.3281 4.88281-35.2539Z" fill="currentColor"/></svg></button>
       <button class="phn-chevron" id="playNavNext" type="button" aria-label="Next hole"><svg width="20" height="20" viewBox="-2.000 -74.459 61.810 80.459" xmlns="http://www.w3.org/2000/svg"><path d="M52.9297-35.2539C52.9297-36.3281 52.5391-37.3047 51.709-38.1348L21.5332-68.1152C20.8008-68.8965 19.8242-69.2871 18.7012-69.2871C16.4062-69.2871 14.6484-67.5781 14.6484-65.2832C14.6484-64.209 15.1367-63.1836 15.8203-62.4023L43.1152-35.2539L15.8203-8.10547C15.1367-7.32422 14.6484-6.34766 14.6484-5.22461C14.6484-2.92969 16.4062-1.2207 18.7012-1.2207C19.8242-1.2207 20.8008-1.61133 21.5332-2.39258L51.709-32.373C52.5391-33.2031 52.9297-34.1797 52.9297-35.2539Z" fill="currentColor"/></svg></button>
@@ -445,7 +445,7 @@
 
   <!-- ── Load course button (fixed above tab bar) ──────────────────────── -->
   <button class="load-course-btn" id="loadCourseBtn" type="button">
-    <svg width="15" height="15" viewBox="-2.000 -74.459 80.410 80.459" xmlns="http://www.w3.org/2000/svg" style="color:#fff;">
+    <svg width="15" height="15" viewBox="-2.000 -74.459 80.410 80.459" xmlns="http://www.w3.org/2000/svg">
       <path d="M11.0352-7.95898C12.6465-6.39648 14.8926-6.34766 16.5527-7.95898L54.0039-45.4102L62.207-54.248C63.623-55.7129 63.623-57.7148 62.207-59.1309C60.7422-60.5957 58.7402-60.5957 57.2754-59.1309L48.4375-51.0254L10.9863-13.5254C9.32617-11.8652 9.375-9.61914 11.0352-7.95898ZM58.6914-32.5684L58.6914-21.0449C58.6914-18.9941 60.498-17.0898 62.6953-17.0898C64.7949-17.0898 66.6504-18.8477 66.6504-21.2402L66.6504-59.3262C66.6504-61.8164 65.0391-63.5742 62.4023-63.5742L24.3164-63.5742C21.8262-63.5742 20.2148-61.7188 20.2148-59.5703C20.2148-57.4707 22.0703-55.6641 24.1211-55.6641L35.4492-55.6641L59.7656-56.543Z" fill="currentColor"/>
     </svg>
     Load a course
@@ -486,7 +486,7 @@
       </div>
       <div class="mg-menu-card">
         <div class="mg-menu-row" id="mgNavProfile">
-          <div class="mg-menu-icon" style="background:#f0efeb;">
+          <div class="mg-menu-icon">
             <svg width="20" height="20" viewBox="-2.000 -74.459 90.910 80.459" xmlns="http://www.w3.org/2000/svg"><path d="M19.8242 0.488281L67.0898 0.488281C73.9258 0.488281 77.1484-1.51367 77.1484-5.9082C77.1484-15.9668 64.4531-30.6641 43.457-30.6641C22.5098-30.6641 9.76562-15.9668 9.76562-5.9082C9.76562-1.51367 13.0371 0.488281 19.8242 0.488281ZM17.627-6.10352C17.0898-6.10352 16.7969-6.25 16.7969-6.78711C16.7969-12.5 26.1719-24.0723 43.457-24.0723C60.7422-24.0723 70.1172-12.5 70.1172-6.78711C70.1172-6.25 69.8242-6.10352 69.2871-6.10352ZM43.457-35.1562C52.6855-35.1562 60.2539-43.4082 60.2539-53.3203C60.2539-63.2324 52.7832-70.9961 43.457-70.9961C34.2285-70.9961 26.6602-63.0859 26.6602-53.2227C26.6602-43.3594 34.2773-35.1562 43.457-35.1562ZM43.457-41.6992C38.2812-41.6992 33.6914-46.8262 33.6914-53.2227C33.6914-59.6191 38.1348-64.4043 43.457-64.4043C48.8281-64.4043 53.2227-59.7168 53.2227-53.3203C53.2227-46.9238 48.7305-41.6992 43.457-41.6992Z" fill="#555"/></svg>
           </div>
           <div>
@@ -496,7 +496,7 @@
           <div class="mg-menu-arrow"><svg width="10" height="12" viewBox="-2.000 -74.459 61.810 80.459" xmlns="http://www.w3.org/2000/svg"><path d="M52.9297-35.2539C52.9297-36.3281 52.5391-37.3047 51.709-38.1348L21.5332-68.1152C20.8008-68.8965 19.8242-69.2871 18.7012-69.2871C16.4062-69.2871 14.6484-67.5781 14.6484-65.2832C14.6484-64.209 15.1367-63.1836 15.8203-62.4023L43.1152-35.2539L15.8203-8.10547C15.1367-7.32422 14.6484-6.34766 14.6484-5.22461C14.6484-2.92969 16.4062-1.2207 18.7012-1.2207C19.8242-1.2207 20.8008-1.61133 21.5332-2.39258L51.709-32.373C52.5391-33.2031 52.9297-34.1797 52.9297-35.2539Z" fill="currentColor"/></svg></div>
         </div>
         <div class="mg-menu-row" id="mgNavBag">
-          <div class="mg-menu-icon" style="background:#f0efeb;">
+          <div class="mg-menu-icon">
             <svg width="20" height="20" viewBox="0 0 478 526" fill="#555" stroke="#555" stroke-width="5" xmlns="http://www.w3.org/2000/svg"><path d="M388.136 24H336.573C321.031 24 308.387 36.6439 308.387 52.1866C308.387 53.0886 308.549 53.9521 308.634 54.8387H308.387V116.516H200.451V77.2585C203.289 78.7079 206.396 79.741 209.718 80.1496L252.199 85.4538C253.355 85.608 254.527 85.6774 255.699 85.6774H264.789C280.324 85.6774 292.968 73.0336 292.968 57.4908V52.1866C292.968 36.6439 280.324 24 264.781 24H213.219C197.676 24 185.032 36.6439 185.032 52.1866C185.032 53.0886 185.194 53.9521 185.279 54.8387H185.032V116.516H169.613V54.8387H169.366C169.451 53.9521 169.613 53.0886 169.613 52.1866C169.613 36.6439 156.969 24 141.426 24H89.8638C74.3211 24 61.6772 36.6439 61.6772 52.1866V57.4908C61.6772 73.0336 74.3211 85.6774 89.8638 85.6774H98.9535C100.125 85.6774 101.29 85.608 102.454 85.4616L144.934 80.1573C148.249 79.7333 151.356 78.7079 154.193 77.2585V116.516H146.484C136.261 116.516 127.664 123.224 124.619 132.437C102.161 135.59 84.8063 154.879 84.8063 178.194V401.774C84.8063 424.649 101.513 443.645 123.355 447.338V448.032C123.355 458.07 129.823 466.551 138.774 469.743V502H323.806V469.743C332.757 466.551 339.226 458.07 339.226 448.032V386.355H346.935C359.687 386.355 370.064 375.978 370.064 363.226V201.323H339.226V139.645C339.226 129.607 332.757 121.127 323.806 117.935V77.2585C326.643 78.7079 329.75 79.741 333.073 80.1496L375.554 85.4538C376.71 85.608 377.882 85.6774 379.054 85.6774H388.144C403.679 85.6774 416.322 73.0336 416.322 57.4908V52.1866C416.322 36.6439 403.679 24 388.136 24ZM213.219 39.4194H264.781C271.82 39.4194 277.548 45.1477 277.548 52.1866V57.4908C277.548 64.5298 271.82 70.2581 264.781 70.2581H255.691C255.159 70.2581 254.635 70.2272 254.103 70.1578L211.63 64.8536C205.262 64.0518 200.451 58.6087 200.451 52.1866C200.451 45.1477 206.18 39.4194 213.219 39.4194ZM123.355 431.518C110.094 428.072 100.226 416.099 100.226 401.774V178.194C100.226 163.869 110.094 151.896 123.355 148.45V431.518ZM143.007 64.8536L100.534 70.1578C100.01 70.2272 99.4778 70.2581 98.9458 70.2581H89.8561C82.8249 70.2581 77.0966 64.5298 77.0966 57.4908V52.1866C77.0966 45.1477 82.8249 39.4194 89.8638 39.4194H141.426C148.465 39.4194 154.193 45.1477 154.193 52.1866C154.193 58.6087 149.383 64.0518 143.007 64.8536ZM138.774 139.645C138.774 135.397 142.236 131.935 146.484 131.935H316.097C320.345 131.935 323.806 135.397 323.806 139.645V162.774H138.774V139.645ZM308.387 486.581H154.193V471.161H308.387V486.581ZM323.806 448.032C323.806 452.28 320.345 455.742 316.097 455.742H146.484C142.236 455.742 138.774 452.28 138.774 448.032V178.194H323.806V201.323H292.968V363.226C292.968 375.978 303.345 386.355 316.097 386.355H323.806V448.032ZM354.645 363.226C354.645 367.474 351.183 370.935 346.935 370.935H316.097C311.849 370.935 308.387 367.474 308.387 363.226V263H354.645V363.226ZM354.645 216.742V247.581H308.387V216.742H354.645ZM400.903 57.4908C400.903 64.5298 395.175 70.2581 388.136 70.2581H379.046C378.514 70.2581 377.99 70.2272 377.458 70.1578L334.985 64.8536C328.617 64.0518 323.806 58.6087 323.806 52.1866C323.806 45.1477 329.535 39.4194 336.573 39.4194H388.136C395.175 39.4194 400.903 45.1477 400.903 52.1866V57.4908Z"/><path d="M303.097 424H287.678V440.968H303.097V424Z"/><path d="M272.258 424H256.839V440.968H272.258V424Z"/><path d="M241.419 424H226V440.968H241.419V424Z"/></svg>
           </div>
           <div>
@@ -506,7 +506,7 @@
           <div class="mg-menu-arrow"><svg width="10" height="12" viewBox="-2.000 -74.459 61.810 80.459" xmlns="http://www.w3.org/2000/svg"><path d="M52.9297-35.2539C52.9297-36.3281 52.5391-37.3047 51.709-38.1348L21.5332-68.1152C20.8008-68.8965 19.8242-69.2871 18.7012-69.2871C16.4062-69.2871 14.6484-67.5781 14.6484-65.2832C14.6484-64.209 15.1367-63.1836 15.8203-62.4023L43.1152-35.2539L15.8203-8.10547C15.1367-7.32422 14.6484-6.34766 14.6484-5.22461C14.6484-2.92969 16.4062-1.2207 18.7012-1.2207C19.8242-1.2207 20.8008-1.61133 21.5332-2.39258L51.709-32.373C52.5391-33.2031 52.9297-34.1797 52.9297-35.2539Z" fill="currentColor"/></svg></div>
         </div>
         <div class="mg-menu-row" id="mgNavCourses">
-          <div class="mg-menu-icon" style="background:#f0efeb;">
+          <div class="mg-menu-icon">
             <svg width="20" height="20" viewBox="-2.000 -74.459 95.410 80.459" fill="#555" xmlns="http://www.w3.org/2000/svg"><path d="M10.1562-42.7734C4.24805-40.0391 5.9082-32.0801 12.4512-32.0312L39.209-31.9336C39.6973-31.9336 39.7949-31.7871 39.7949-31.3477L39.8926-4.73633C39.9414 2.00195 47.998 3.27148 50.9277-3.02734L78.5156-62.6953C81.4453-68.9453 76.5137-73.4863 70.2148-70.5566ZM17.9688-38.8672C17.8711-38.8672 17.8223-38.9648 17.9688-39.0137L70.6543-62.9395C70.8008-63.0371 70.8984-62.9883 70.752-62.793L46.7285-10.2051C46.6797-10.0586 46.6309-10.0586 46.6309-10.2051L46.8262-35.8887C46.8262-37.7441 45.5078-39.0625 43.6523-39.0625Z"/></svg>
           </div>
           <div>
@@ -516,7 +516,7 @@
           <div class="mg-menu-arrow"><svg width="10" height="12" viewBox="-2.000 -74.459 61.810 80.459" xmlns="http://www.w3.org/2000/svg"><path d="M52.9297-35.2539C52.9297-36.3281 52.5391-37.3047 51.709-38.1348L21.5332-68.1152C20.8008-68.8965 19.8242-69.2871 18.7012-69.2871C16.4062-69.2871 14.6484-67.5781 14.6484-65.2832C14.6484-64.209 15.1367-63.1836 15.8203-62.4023L43.1152-35.2539L15.8203-8.10547C15.1367-7.32422 14.6484-6.34766 14.6484-5.22461C14.6484-2.92969 16.4062-1.2207 18.7012-1.2207C19.8242-1.2207 20.8008-1.61133 21.5332-2.39258L51.709-32.373C52.5391-33.2031 52.9297-34.1797 52.9297-35.2539Z" fill="currentColor"/></svg></div>
         </div>
         <div class="mg-menu-row" id="mgNavStats">
-          <div class="mg-menu-icon" style="background:#f0efeb;">
+          <div class="mg-menu-icon">
             <svg width="20" height="20" viewBox="-2.000 -74.459 122.110 80.459" xmlns="http://www.w3.org/2000/svg"><path d="M88.6719 0.927734L98.6816 0.927734C105.029 0.927734 108.35-2.14844 108.35-8.10547L108.35-62.3535C108.35-68.3105 105.029-71.3867 98.6816-71.3867L88.6719-71.3867C82.3242-71.3867 79.0527-68.3105 79.0527-62.3535L79.0527-8.10547C79.0527-2.14844 82.3242 0.927734 88.6719 0.927734ZM89.9414-5.66406C86.9629-5.66406 85.9863-6.54297 85.9863-9.42383L85.9863-61.0352C85.9863-63.916 86.9629-64.7949 89.9414-64.7949L97.4609-64.7949C100.439-64.7949 101.416-63.916 101.416-61.0352L101.416-9.42383C101.416-6.54297 100.439-5.66406 97.4609-5.66406ZM54.0039 0.927734L64.0625 0.927734C70.4102 0.927734 73.6816-2.14844 73.6816-8.10547L73.6816-51.1719C73.6816-57.1289 70.4102-60.1562 64.0625-60.1562L54.0039-60.1562C47.6562-60.1562 44.3848-57.1289 44.3848-51.1719L44.3848-8.10547C44.3848-2.14844 47.6562 0.927734 54.0039 0.927734ZM55.2734-5.66406C52.2949-5.66406 51.3672-6.54297 51.3672-9.42383L51.3672-49.8047C51.3672-52.6855 52.2949-53.6133 55.2734-53.6133L62.8418-53.6133C65.8203-53.6133 66.748-52.6855 66.748-49.8047L66.748-9.42383C66.748-6.54297 65.8203-5.66406 62.8418-5.66406ZM19.3848 0.927734L29.3945 0.927734C35.7422 0.927734 39.0625-2.14844 39.0625-8.10547L39.0625-39.9414C39.0625-45.8984 35.7422-48.9746 29.3945-48.9746L19.3848-48.9746C13.0371-48.9746 9.76562-45.8984 9.76562-39.9414L9.76562-8.10547C9.76562-2.14844 13.0371 0.927734 19.3848 0.927734ZM20.6543-5.66406C17.6758-5.66406 16.6992-6.54297 16.6992-9.42383L16.6992-38.623C16.6992-41.5039 17.6758-42.3828 20.6543-42.3828L28.1738-42.3828C31.1523-42.3828 32.1289-41.5039 32.1289-38.623L32.1289-9.42383C32.1289-6.54297 31.1523-5.66406 28.1738-5.66406Z" fill="#555"/></svg>
           </div>
           <div>
@@ -534,7 +534,7 @@
         <button class="mg-back-btn" id="mgBackProfile"><svg width="20" height="20" viewBox="-2.000 -74.459 61.810 80.459" xmlns="http://www.w3.org/2000/svg"><path d="M4.88281-35.2539C4.88281-34.1797 5.32227-33.2031 6.10352-32.373L36.2793-2.39258C37.0117-1.61133 38.0371-1.2207 39.1602-1.2207C41.4551-1.2207 43.1641-2.92969 43.1641-5.22461C43.1641-6.34766 42.7246-7.32422 41.9922-8.10547L14.7461-35.2539L41.9922-62.4023C42.7246-63.1836 43.1641-64.209 43.1641-65.2832C43.1641-67.5781 41.4551-69.2871 39.1602-69.2871C38.0371-69.2871 37.0117-68.8965 36.2793-68.1152L6.10352-38.1348C5.32227-37.3047 4.88281-36.3281 4.88281-35.2539Z" fill="currentColor"/></svg></button>
         <h2>Player Profile</h2>
       </div>
-      <div style="height:12px;"></div>
+      <div class="mg-profile-spacer"></div>
       <div class="mg-profile-field">
         <label class="mg-profile-label" for="profileName">Name</label>
         <input class="mg-profile-input" id="profileName" type="text" placeholder="e.g. Benjamin" maxlength="40" autocomplete="given-name" />
@@ -542,7 +542,7 @@
       <div class="mg-profile-field">
         <label class="mg-profile-label" for="profileHandicap">Handicap Index (WHS)</label>
         <input class="mg-profile-input" id="profileHandicap" type="number" placeholder="e.g. 18.4" min="0" max="54" step="0.1" />
-        <div style="font-size:12px;color:#aaa;margin-top:5px;">World Handicap System · range 0.0 – 54.0 · Used to personalise wind calculations</div>
+        <div class="mg-profile-hint">World Handicap System · range 0.0 – 54.0 · Used to personalise wind calculations</div>
       </div>
       <div class="mg-profile-field">
         <label class="mg-profile-label" for="profileHomeCourse">Home Course</label>
@@ -561,14 +561,14 @@
       <div class="mg-carry-card" id="mgCarryBars"><!-- populated by JS --></div>
       <div class="mg-edit-btn" id="mgEditBagBtn">Edit clubs &amp; carries ›</div>
       <!-- Edit form (hidden until Edit tapped) -->
-      <div id="mgBagEditForm" style="display:none; padding:0 12px 12px;">
+      <div id="mgBagEditForm">
         <label for="driverCarry">Driver Carry (m) *</label>
         <input type="number" id="driverCarry" placeholder="e.g. 230" min="100" max="350" />
         <label for="i7Carry">7 Iron Carry (m)</label>
         <input type="number" id="i7Carry" placeholder="e.g. 155 (optional)" min="80" max="220" />
         <label for="pwCarry">PW Carry (m)</label>
         <input type="number" id="pwCarry" placeholder="e.g. 120 (optional)" min="50" max="160" />
-        <div class="club-list" style="margin-top:10px">
+        <div class="club-list">
           <strong>Clubs in Bag:</strong>
           <div id="clubContainer"></div>
         </div>
@@ -584,7 +584,7 @@
       <div class="mg-stats-summary" id="mgStatsSummary"></div>
       <div class="round-filter-row" id="statsRoundFilter"></div>
       <div class="mg-stat-tile-grid" id="mgStatTiles"></div>
-      <div style="padding:12px 12px 12px;display:flex;flex-direction:column;gap:10px;">
+      <div class="mg-stat-drilldowns">
 
         <div class="mg-drilldown-btn" id="mgStatsGotoParType">
           <div class="mg-drilldown-icon">
@@ -639,13 +639,13 @@
         <button class="mg-back-btn" id="mgBackScoring"><svg width="20" height="20" viewBox="-2.000 -74.459 61.810 80.459" xmlns="http://www.w3.org/2000/svg"><path d="M4.88281-35.2539C4.88281-34.1797 5.32227-33.2031 6.10352-32.373L36.2793-2.39258C37.0117-1.61133 38.0371-1.2207 39.1602-1.2207C41.4551-1.2207 43.1641-2.92969 43.1641-5.22461C43.1641-6.34766 42.7246-7.32422 41.9922-8.10547L14.7461-35.2539L41.9922-62.4023C42.7246-63.1836 43.1641-64.209 43.1641-65.2832C43.1641-67.5781 41.4551-69.2871 39.1602-69.2871C38.0371-69.2871 37.0117-68.8965 36.2793-68.1152L6.10352-38.1348C5.32227-37.3047 4.88281-36.3281 4.88281-35.2539Z" fill="currentColor"/></svg></button>
         <h2>Scoring &amp; Putting</h2>
       </div>
-      <div style="padding:12px;display:flex;flex-direction:column;gap:12px;" id="mgBreakdownContent">
+      <div class="mg-content-padded" id="mgBreakdownContent">
         <!-- populated by JS -->
       </div>
-      <div style="padding:0 12px 12px;display:flex;flex-direction:column;gap:12px;" id="mgAvgStrokesContent">
+      <div class="mg-content-padded-bottom" id="mgAvgStrokesContent">
         <!-- populated by JS -->
       </div>
-      <div style="padding:0 12px 12px;display:flex;flex-direction:column;gap:12px;" id="mgPuttsContent">
+      <div class="mg-content-padded-bottom" id="mgPuttsContent">
         <!-- populated by JS -->
       </div>
     </div>
@@ -656,7 +656,7 @@
         <button class="mg-back-btn" id="mgBackBaseline"><svg width="20" height="20" viewBox="-2.000 -74.459 61.810 80.459" xmlns="http://www.w3.org/2000/svg"><path d="M4.88281-35.2539C4.88281-34.1797 5.32227-33.2031 6.10352-32.373L36.2793-2.39258C37.0117-1.61133 38.0371-1.2207 39.1602-1.2207C41.4551-1.2207 43.1641-2.92969 43.1641-5.22461C43.1641-6.34766 42.7246-7.32422 41.9922-8.10547L14.7461-35.2539L41.9922-62.4023C42.7246-63.1836 43.1641-64.209 43.1641-65.2832C43.1641-67.5781 41.4551-69.2871 39.1602-69.2871C38.0371-69.2871 37.0117-68.8965 36.2793-68.1152L6.10352-38.1348C5.32227-37.3047 4.88281-36.3281 4.88281-35.2539Z" fill="currentColor"/></svg></button>
         <h2>Personal baseline</h2>
       </div>
-      <div style="padding:12px;display:flex;flex-direction:column;gap:12px;" id="mgBaselineContent">
+      <div class="mg-content-padded" id="mgBaselineContent">
         <!-- populated by JS -->
       </div>
     </div>
@@ -667,13 +667,13 @@
         <button class="mg-back-btn" id="mgBackStrokeAnalysis"><svg width="20" height="20" viewBox="-2.000 -74.459 61.810 80.459" xmlns="http://www.w3.org/2000/svg"><path d="M4.88281-35.2539C4.88281-34.1797 5.32227-33.2031 6.10352-32.373L36.2793-2.39258C37.0117-1.61133 38.0371-1.2207 39.1602-1.2207C41.4551-1.2207 43.1641-2.92969 43.1641-5.22461C43.1641-6.34766 42.7246-7.32422 41.9922-8.10547L14.7461-35.2539L41.9922-62.4023C42.7246-63.1836 43.1641-64.209 43.1641-65.2832C43.1641-67.5781 41.4551-69.2871 39.1602-69.2871C38.0371-69.2871 37.0117-68.8965 36.2793-68.1152L6.10352-38.1348C5.32227-37.3047 4.88281-36.3281 4.88281-35.2539Z" fill="currentColor"/></svg></button>
         <h2>Stroke Analysis</h2>
       </div>
-      <div style="padding:12px;display:flex;flex-direction:column;gap:12px;" id="mgStrokeLossContent">
+      <div class="mg-content-padded" id="mgStrokeLossContent">
         <!-- populated by JS -->
       </div>
-      <div style="padding:0 12px 12px;display:flex;flex-direction:column;gap:12px;" id="mgStrategyContent">
+      <div class="mg-content-padded-bottom" id="mgStrategyContent">
         <!-- populated by JS -->
       </div>
-      <div style="padding:0 12px 12px;" id="mgScoringZoneContent">
+      <div class="mg-content-no-flex" id="mgScoringZoneContent">
         <!-- populated by JS -->
       </div>
     </div>
@@ -704,31 +704,31 @@
         <h2>My Courses</h2>
       </div>
       <div class="course-list" id="courseList"></div>
-      <div class="course-editor" id="courseEditor" style="display:none; margin-top:14px;">
+      <div class="course-editor" id="courseEditor">
         <div class="course-editor-header">
           <input type="text" id="courseNameInput" placeholder="Course name (e.g. Eslövs GK)" maxlength="60"/>
           <button class="course-editor-cancel" type="button" id="courseEditorCancel">Cancel</button>
           <button class="course-editor-save" type="button" id="courseEditorSave">Save</button>
         </div>
-        <div style="display:flex;gap:8px;padding:0 8px 8px;">
-          <div style="flex:1;">
-            <div style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">Course rating</div>
-            <input type="number" id="courseRatingInput" placeholder="e.g. 71.4" min="60" max="80" step="0.1" style="width:100%;padding:8px 10px;font-size:15px;border:none;border-radius:6px;background:#f0efeb;color:#222;font-family:inherit;"/>
+        <div class="course-editor-rating-row">
+          <div class="course-editor-rating-col">
+            <div class="course-editor-rating-lbl">Course rating</div>
+            <input type="number" id="courseRatingInput" placeholder="e.g. 71.4" min="60" max="80" step="0.1" class="course-editor-rating-input"/>
           </div>
-          <div style="flex:1;">
-            <div style="font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">Slope rating</div>
-            <input type="number" id="slopeRatingInput" placeholder="e.g. 125" min="55" max="155" style="width:100%;padding:8px 10px;font-size:15px;border:none;border-radius:6px;background:#f0efeb;color:#222;font-family:inherit;"/>
+          <div class="course-editor-rating-col">
+            <div class="course-editor-rating-lbl">Slope rating</div>
+            <input type="number" id="slopeRatingInput" placeholder="e.g. 125" min="55" max="155" class="course-editor-rating-input"/>
           </div>
         </div>
-        <div style="padding:0 8px 8px;">
+        <div class="course-editor-scorecard">
           <table class="scorecard" id="scorecardTable">
             <thead>
               <tr>
                 <th class="sc-th-hole">#</th>
                 <th class="sc-th-par">Par</th>
-                <th style="width:42px;">SI</th>
+                <th class="sc-th-si">SI</th>
                 <th class="sc-th-len">Length (m)</th>
-                <th style="text-align:left; padding-left:6px;">Note</th>
+                <th class="sc-th-note">Note</th>
               </tr>
             </thead>
             <tbody id="scorecardBody"></tbody>
@@ -800,17 +800,17 @@
     <div class="scorecard-page-inner" id="scorecardPageInner"></div>
   </div>
 
-<div id="roundCompleteOverlay" style="display:none; position:fixed; inset:0; background:#f5f4f0; z-index:2000; flex-direction:column; overflow-y:scroll; overscroll-behavior:contain; -webkit-overflow-scrolling:touch;">
+<div id="roundCompleteOverlay">
   <div class="rc-body"></div>
 </div>
 
-<div id="cancelRoundOverlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:2000; align-items:center; justify-content:center;">
-  <div style="background:#fffffe; border-radius:12px; padding:24px 20px; max-width:300px; width:90%; margin:auto; text-align:center;">
-    <div style="font-size:17px; font-weight:700; color:#222; margin-bottom:8px;">Quit round?</div>
-    <div style="font-size:15px; color:#666; margin-bottom:20px;">Your scores for this round will not be saved.</div>
-    <div style="display:flex; gap:10px;">
-      <button id="cancelRoundConfirm" style="flex:1; padding:17px; background:#c00; color:#fff; border:none; border-radius:8px; font-size:15px; font-weight:700; cursor:pointer;">Quit round</button>
-      <button id="cancelRoundAbort" style="flex:1; padding:17px; background:#f0efeb; color:#333; border:none; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer;">Keep playing</button>
+<div id="cancelRoundOverlay">
+  <div class="cancel-round-dialog">
+    <div class="cancel-round-title">Quit round?</div>
+    <div class="cancel-round-body">Your scores for this round will not be saved.</div>
+    <div class="cancel-round-btns">
+      <button id="cancelRoundConfirm" class="cancel-round-btn--quit">Quit round</button>
+      <button id="cancelRoundAbort" class="cancel-round-btn--keep">Keep playing</button>
     </div>
   </div>
 </div>

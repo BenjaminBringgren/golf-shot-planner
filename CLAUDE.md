@@ -199,6 +199,27 @@ Two separate iOS issues, both fixed:
    pointer devices (desktop). Never write a bare `:hover` rule.
    Always write: `@media (hover: hover) { .foo:hover { ... } }`
 
+## index.html is a static shell — strict rules
+
+index.html must contain:
+- Semantic HTML structure only (elements, IDs, classes)
+- `<link rel="stylesheet" href="src/styles.css">`
+- `<script type="module" src="src/app/router.js"></script>`
+- Meta tags and viewport
+
+index.html must never contain:
+- Any `<style>` block or inline `style=""` attribute
+- Any JavaScript — including onclick, onchange, or any
+  inline event handler
+- Any dynamically generated HTML
+- Any template strings or render logic
+
+New UI elements go in src/styles.css (styles) and the
+relevant src/ui/ module (structure and behaviour).
+If you are about to write anything into index.html beyond
+a structural HTML element — stop and put it in the
+correct module instead.
+
 ## SF Symbols
 All icons in this app use Apple SF Symbols. Never substitute
 custom SVGs, emoji, Unicode glyphs, or third-party icon sets.
