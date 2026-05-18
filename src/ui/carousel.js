@@ -212,7 +212,7 @@ export function renderPlan(_result, ctx) {
           teeMarked, completedShots, inRough, handicap,
           ordered, activePlanType,
           _blCourseId, _blHoleIdx,
-          holeStrategyRec, scoringZone } = _result;
+          holeStrategyRec, scoringZone, personalCal } = _result;
   const { windState, _holeHcpAdj, _overrideCourseId, _overrideHoleIdx,
           par3ClubOverrides, teeOverrides, shot2Overrides, approachOverrides, gpsShot2Overrides,
           par3Override, _hk,
@@ -536,7 +536,7 @@ export function renderPlan(_result, ctx) {
       if (!longClubs.includes(teeClub.key)) return null;
     }
     const driverCarry = driverClub ? driverClub.carry : driver;
-    return findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj);
+    return findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj, personalCal);
   }
 
   // Build a modified plan using a user-forced second club.
@@ -549,7 +549,7 @@ export function renderPlan(_result, ctx) {
     const approach = hole - teeShot.total - forced2.total;
     if (approach < 0) return null; // overshoots green
     const driverCarry2 = driverClub ? driverClub.carry : driver;
-    const rawScore = 2 + expectedStrokesRemaining(approach, driverCarry2, handicap, inRough, windState, undefined, _holeHcpAdj);
+    const rawScore = 2 + expectedStrokesRemaining(approach, driverCarry2, handicap, inRough, windState, undefined, _holeHcpAdj, personalCal);
     // Apply personal baseline blend for consistency with main plan scores
     const bl = (_blCourseId && _blHoleIdx !== null)
       ? blendedScore(rawScore, _blCourseId, _blHoleIdx)
@@ -594,7 +594,7 @@ export function renderPlan(_result, ctx) {
     if (gpsActive) {
       // Shots taken so far + expected strokes from actual GPS position
       const shotsTaken = completedShots.length;
-      scoreVal   = shotsTaken + expectedStrokesRemaining(gpsRemaining, driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj);
+      scoreVal   = shotsTaken + expectedStrokesRemaining(gpsRemaining, driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj, personalCal);
       scoreSuffix = ' GPS';
     } else {
       scoreVal   = activePlan.score;
@@ -698,8 +698,8 @@ export function renderPlan(_result, ctx) {
         if (forcedClub) {
           const approach = gpsRemaining - forcedClub.total;
           gpsContinuation = approach >= 0
-            ? { shots: [forcedClub], approach, score: 1 + expectedStrokesRemaining(approach, driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj) }
-            : findBestContinuation(forcedClub, gpsRemaining, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj);
+            ? { shots: [forcedClub], approach, score: 1 + expectedStrokesRemaining(approach, driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj, personalCal) }
+            : findBestContinuation(forcedClub, gpsRemaining, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj, personalCal);
         }
       }
       if (!gpsContinuation) {
@@ -707,10 +707,10 @@ export function renderPlan(_result, ctx) {
           clubsList.reduce((best, c) => {
             const app = gpsRemaining - c.total;
             if (c.key === 'driver') return best;
-            const score = 1 + expectedStrokesRemaining(Math.max(0, app), driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj);
+            const score = 1 + expectedStrokesRemaining(Math.max(0, app), driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj, personalCal);
             return (!best || score < best.score) ? { club: c, score } : best;
           }, null)?.club || clubsList.find(c => c.key !== 'driver') || clubsList[0],
-          gpsRemaining, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj
+          gpsRemaining, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj, personalCal
         );
       }
     }

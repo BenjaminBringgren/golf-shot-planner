@@ -24,6 +24,7 @@ export const KEY_WIDGET_GPS         = 'widgetGps';
 export const KEY_WIDGET_FOCUS       = 'widgetFocus';
 export const KEY_GAME_FORMAT        = 'golfGameFormat';  // localStorage — persists last choice
 export const KEY_HCP_ENABLED        = 'golfHcpEnabled';  // localStorage — persists last choice
+export const KEY_PERSONAL_CAL       = 'golfPersonalCal'; // personal approach calibration cache
 
 // ── Per-hole record shape (extended) ─────────────────────────────────────────
 // Backward-compat: new fields default safely on read for older saved rounds.
@@ -229,6 +230,15 @@ export function loadGameFormat()        { return localStorage.getItem(KEY_GAME_F
 export function saveGameFormat(fmt)     { try { localStorage.setItem(KEY_GAME_FORMAT, fmt); } catch(e) {} }
 export function loadHcpEnabled()        { return localStorage.getItem(KEY_HCP_ENABLED) !== 'false'; }
 export function saveHcpEnabled(enabled) { try { localStorage.setItem(KEY_HCP_ENABLED, String(enabled)); } catch(e) {} }
+
+// ── Personal calibration cache ────────────────────────────────────────────────
+// [{avg, count}|null] × 6 bands. Recomputed after each saved round.
+export function loadPersonalCal() {
+  try { const r = localStorage.getItem(KEY_PERSONAL_CAL); return r ? JSON.parse(r) : null; } catch(e) { return null; }
+}
+export function savePersonalCal(data) {
+  try { localStorage.setItem(KEY_PERSONAL_CAL, JSON.stringify(data)); } catch(e) {}
+}
 
 // ── Round filter preferences ──────────────────────────────────────────────────
 export function loadHomeRoundFilter()       { return localStorage.getItem(KEY_HOME_ROUND_FILTER)  || '18'; }

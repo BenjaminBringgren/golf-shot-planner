@@ -54,17 +54,27 @@ export function altFactor(category, handicap) {
 }
 
 // ── Expected strokes remaining lookup ─────────────────────────────────────────
-// 6 approach bands × 4 driver carry tiers
+// 6 approach bands × 6 handicap tiers (null hcp → 0 = scratch baseline).
+// Hard anchors (fairway lie):
+//   Arccos (700M+ shots): 10-hcp at 91m (100y) = 3.38
+//   Broadie/ShotLink:     15-hcp at 146m (160y) = 3.92
+// 0-hcp column: Broadie/ShotLink tour baseline + 0.25 amateur adjustment
+//   (tour pros play to ~−5 equivalent; scratch amateurs are meaningfully worse)
+// 5-hcp: midpoint between 0-hcp and 10-hcp columns
+// 15-hcp: ratio 3.92/2.98 = 1.315 × tour baseline, validated at anchor
+// 20-hcp/21+: scaled from 15-hcp using Shot Scope scoring deltas (Law of Averages series)
+// ≤60m: Shot Scope up-and-down rates by handicap (scratch 54%, 15-hcp 35%, 20-hcp 32%)
 export const EXPECTED_STROKES = {
   bands:  [60, 100, 130, 160, 190, Infinity],
-  tiers:  [195, 220, 250, Infinity],
+  tiers:  [0, 5, 10, 15, 20, Infinity],  // handicap upper bounds; null → 0 (scratch)
   values: [
-    [2.95, 2.80, 2.65, 2.55],
-    [3.10, 2.95, 2.75, 2.60],
-    [3.30, 3.10, 2.90, 2.70],
-    [3.55, 3.30, 3.10, 2.85],
-    [3.80, 3.55, 3.30, 3.00],
-    [4.05, 3.80, 3.55, 3.20],
+    //   0     5     10    15    20    21+
+    [2.60, 2.68, 2.75, 2.85, 2.95, 3.10],  // ≤60m   (short game / pitch)
+    [3.05, 3.20, 3.38, 3.68, 3.80, 4.00],  // ≤100m  ← Arccos anchor: 10-hcp = 3.38
+    [3.16, 3.35, 3.51, 3.83, 3.98, 4.23],  // ≤130m
+    [3.23, 3.42, 3.60, 3.92, 4.10, 4.40],  // ≤160m  ← Broadie anchor: 15-hcp = 3.92
+    [3.34, 3.55, 3.73, 4.06, 4.28, 4.63],  // ≤190m
+    [3.41, 3.60, 3.81, 4.16, 4.44, 4.84],  // >190m
   ],
 };
 
@@ -159,16 +169,26 @@ export function interpolate(driverDist, i7Dist, pwDist, key) {
 // ── Expected strokes remaining ────────────────────────────────────────────────
 // holeHcpAdj: per-hole WHS stroke allocation (null = use flat Broadie model).
 // applyWindAdj: undefined/true = apply wind; false = skip; {noWind:true} = skip.
-export function expectedStrokesRemaining(approachDist, driverCarry, handicap, inRough, windState, applyWindAdj, holeHcpAdj = null) {
-  const ti = EXPECTED_STROKES.tiers.findIndex(t => driverCarry < t);
+// personalCal: [{avg, count}|null] × 6 bands — blended with table when count ≥ 3.
+export function expectedStrokesRemaining(approachDist, driverCarry, handicap, inRough, windState, applyWindAdj, holeHcpAdj = null, personalCal = null) {
+  const hcp = handicap ?? 0;
+  const ti = EXPECTED_STROKES.tiers.findIndex(t => hcp <= t);
   const bi = EXPECTED_STROKES.bands.findIndex(b => approachDist <= b);
-  const base = EXPECTED_STROKES.values[bi === -1 ? 5 : bi][ti === -1 ? 3 : ti];
+  const bandIdx = bi === -1 ? 5 : bi;
+  let base = EXPECTED_STROKES.values[bandIdx][ti === -1 ? 5 : ti];
+
+  // Personal calibration blend: weight grows with sample count, caps at 50%
+  if (personalCal) {
+    const cal = personalCal[bandIdx];
+    if (cal && cal.count >= 3) {
+      const w = Math.min(0.5, cal.count / 15);
+      base = base * (1 - w) + cal.avg * w;
+    }
+  }
 
   let hcpAdj = 0;
   if (holeHcpAdj !== null) {
     hcpAdj = holeHcpAdj;
-  } else if (handicap != null && handicap > 0) {
-    hcpAdj = Math.min(handicap * 0.056, 3.0);
   }
 
   const useWind = applyWindAdj !== false && !(typeof applyWindAdj === 'object' && applyWindAdj?.noWind);
@@ -201,7 +221,8 @@ export function getValidTeeClubs(clubsList, parValue) {
 // ── Best continuation ─────────────────────────────────────────────────────────
 // Returns { shots, approach, score } or null if no valid plan found.
 // holeHcpAdj: forwarded to expectedStrokesRemaining.
-export function findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, holeHcpAdj = null) {
+// personalCal: forwarded to expectedStrokesRemaining.
+export function findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, holeHcpAdj = null, personalCal = null) {
   const maxApproach = driverTotal * 0.92;
   const singleApproach = hole - teeClub.total;
 
@@ -211,7 +232,7 @@ export function findBestContinuation(teeClub, hole, driverTotal, clubsList, driv
     : 0;
 
   if (singleApproach >= 0 && singleApproach <= maxApproach && singleApproach <= longestApproachTotal) {
-    const score = 1 + expectedStrokesRemaining(singleApproach, driverCarry, handicap, inRough, windState, undefined, holeHcpAdj);
+    const score = 1 + expectedStrokesRemaining(singleApproach, driverCarry, handicap, inRough, windState, undefined, holeHcpAdj, personalCal);
     return { shots: [teeClub], approach: singleApproach, score };
   }
 
@@ -223,7 +244,7 @@ export function findBestContinuation(teeClub, hole, driverTotal, clubsList, driv
   candidates.forEach(second => {
     const approach = hole - teeClub.total - second.total;
     if (approach < 0 || approach > maxApproach) return;
-    const score = 2 + expectedStrokesRemaining(approach, driverCarry, handicap, inRough, windState, undefined, holeHcpAdj);
+    const score = 2 + expectedStrokesRemaining(approach, driverCarry, handicap, inRough, windState, undefined, holeHcpAdj, personalCal);
     if (!best || score < best.score) {
       best = { shots: [teeClub, second], approach, score };
     }

@@ -3,7 +3,9 @@
     "allow": [
       "Bash(python3 -)",
       "WebFetch(domain:www.golfmonthly.com)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:forums.golfwrx.com)",
+      "WebFetch(domain:clubhouse.swingu.com)"
     ]
   }
 }

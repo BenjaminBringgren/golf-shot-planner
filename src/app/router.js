@@ -13,6 +13,7 @@ import {
   loadInProgressRound, clearInProgressRound,
   saveProfile, getScoringMode,
   loadCollapseState, saveCollapseState,
+  loadPersonalCal, savePersonalCal,
   KEY_HERO_IMG_IDX, KEY_HERO_QUOTE_IDX,
 } from '../storage/storage.js';
 import {
@@ -48,6 +49,7 @@ import {
   showMgSub, showMgHub, refreshMgHub,
   renderMgCarryBars, renderSavedRounds, refreshHomeStats,
   initRoundsServices, computePreRoundFocus, renderMgStrokeLossBreakdown,
+  computePersonalCalibration,
 } from './rounds.js';
 import {
   initHoleFlowServices, setHoleExpected,
@@ -182,7 +184,17 @@ function timeAgo(ts) {
 // ── App state ──────────────────────────────────────────────────────────────
 // Per-hole HCP adjustment — set by calculate() using refined WHS model when
 // course has CR/Slope/SI and player has handicap index. Falls back to flat model.
-let _holeHcpAdj = null; // null = use flat model inside expectedStrokesRemaining
+let _holeHcpAdj  = null; // null = use flat model inside expectedStrokesRemaining
+let _personalCal = null; // personal approach calibration — computed at startup, refreshed after round save
+
+function computeAndCachePersonalCal() {
+  const cal = computePersonalCalibration(loadAllRounds());
+  savePersonalCal(cal);
+  return cal;
+}
+export function refreshPersonalCal() {
+  _personalCal = computeAndCachePersonalCal();
+}
 // Rough lie flag — set true when GPS ball mark is in rough, adds penalty to expected strokes
 // _inRough is owned by scorecard.js; read via getInRough(), reset via resetInRough()
 
@@ -222,7 +234,7 @@ function buildCallbacks() {
     gpsTeeSetState,
     gpsBallSetState,
     calculate:                () => calculate(),
-    renderSavedRounds,
+    renderSavedRounds: () => { refreshPersonalCal(); renderSavedRounds(); },
     updateLoadCourseBtn,
     updateCalcButtonVisibility,
     navigateHome: () => switchTab('home'),
@@ -261,7 +273,7 @@ function _getExpectedStrokes(remaining, inRoughFlag) {
       const _hv = parseFloat(_ph.handicap);
       if (!isNaN(_hv) && _hv > 0) handicap = _hv;
     } catch(e) {}
-    return expectedStrokesRemaining(remaining, driverCarry, handicap, inRoughFlag, windState, undefined, _holeHcpAdj);
+    return expectedStrokesRemaining(remaining, driverCarry, handicap, inRoughFlag, windState, undefined, _holeHcpAdj, _personalCal);
   } catch(e) { return null; }
 }
 initHoleFlowServices({ getExpectedStrokes: _getExpectedStrokes });
@@ -1459,10 +1471,10 @@ initServices({
       if (gpsActive3) {
         const shotsTaken = completedShots.length;
         const rem = completedShots[completedShots.length - 1].remaining;
-        scoreVal3 = shotsTaken + expectedStrokesRemaining(rem, driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj);
+        scoreVal3 = shotsTaken + expectedStrokesRemaining(rem, driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj, _personalCal);
       } else {
         const remaining = Math.max(0, hole - s.total);
-        scoreVal3 = 1 + expectedStrokesRemaining(remaining, driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj);
+        scoreVal3 = 1 + expectedStrokesRemaining(remaining, driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj, _personalCal);
       }
       if (_blCourseId && _blHoleIdx !== null) {
         const bl3 = blendedScore(scoreVal3, _blCourseId, _blHoleIdx);
@@ -1504,7 +1516,7 @@ initServices({
     const STRATEGY_TYPES = ['Max distance', 'Controlled', 'Conservative'];
     const ordered = [];
     validTeeClubs.slice(0, 3).forEach((teeClub, rank) => {
-      const p = findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj);
+      const p = findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj, _personalCal);
       if (!p) return;
       p.type = STRATEGY_TYPES[rank];
       ordered.push(p);
@@ -1555,6 +1567,7 @@ initServices({
       ordered, activePlanType,
       _blCourseId, _blHoleIdx,
       holeStrategyRec, scoringZone,
+      personalCal: _personalCal,
     };
   }
 
@@ -2066,6 +2079,10 @@ initServices({
       showMgSub('mgSubRoundDetail');
     },
   });
+
+  // Compute personal calibration from all historical rounds at startup.
+  // Cached in localStorage; refreshed whenever a new round is saved.
+  _personalCal = loadPersonalCal() ?? computeAndCachePersonalCal();
 
   // Switch to Play pane as soon as a course bar is injected into #calcView
   (function watchForCourseLoad() {

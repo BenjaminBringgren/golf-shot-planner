@@ -13,6 +13,49 @@ import { clubs } from '../engine/clubs.js';
 import { interpolate, decodeStrategy, courseHandicap, stablefordPoints, computeStrokeLoss, analyzeApproachDistances } from '../engine/calculations.js';
 import { renderCourseList, computeHoleStrokeCounts } from './courses.js';
 
+// ── Personal calibration ──────────────────────────────────────────────────────
+// Reads all saved rounds and computes player's actual strokes-from-approach
+// per distance band. Returns [{avg, count}|null] × 6 bands (same order as
+// EXPECTED_STROKES.bands: ≤60m, ≤100m, ≤130m, ≤160m, ≤190m, >190m).
+// Only holes with a 3-part strategy string (type|club|approachM) contribute.
+// Retroactive: processes all historical rounds already in storage.
+export function computePersonalCalibration(allRounds) {
+  const BANDS = [60, 100, 130, 160, 190, Infinity];
+  const buckets = BANDS.map(() => ({ sum: 0, count: 0 }));
+
+  for (const round of allRounds) {
+    if (!round.scores || !round.strategies) continue;
+    const scores = Array.isArray(round.scores) ? round.scores : [];
+
+    scores.forEach((hole, i) => {
+      if (!hole) return;
+      const strategy = round.strategies[i] ?? round.strategies[String(i)];
+      if (!strategy) return;
+
+      const parts = String(strategy).split('|');
+      if (parts.length < 3) return;
+      const approachM = parseFloat(parts[2]);
+      if (!approachM || isNaN(approachM) || approachM <= 0) return;
+
+      const par = hole.par || 4;
+      const totalStrokes = (hole.fairway || 0) + (hole.rough || 0) + (hole.putts || 0);
+      if (totalStrokes < 1) return;
+
+      // Pre-approach shots: 0 for par 3 (tee shot = approach), 1 for par 4, 2 for par 5
+      const preApproach = Math.max(0, par - 3);
+      const fromApproach = totalStrokes - preApproach;
+      if (fromApproach < 1 || fromApproach > 9) return;
+
+      const bi = BANDS.findIndex(b => approachM <= b);
+      const bandIdx = bi === -1 ? 5 : bi;
+      buckets[bandIdx].sum   += fromApproach;
+      buckets[bandIdx].count += 1;
+    });
+  }
+
+  return buckets.map(b => b.count > 0 ? { avg: b.sum / b.count, count: b.count } : null);
+}
+
 // ── Services (injected by router.js) ─────────────────────────────────────────
 let _switchTab = null;
 let _openRoundDetail = null;
