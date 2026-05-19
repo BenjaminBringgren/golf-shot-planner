@@ -218,7 +218,7 @@ export function expectedStrokesRemaining(approachDist, driverCarry, handicap, in
 // (u2 onward); on par 5 restricted to u2–u4 since regular irons are too short.
 // Par 3 is handled separately — this function is not called for par 3.
 const _TEE_WOOD_KEYS = new Set(['fw3','fw5','fw7','hy3','hy4','hy5','hy6']);
-const _TEE_IRON_KEYS = new Set(['u2','u3','u4','4i','5i','6i','7i','8i','9i','pw','50','52','54','56','58','60']);
+const _TEE_IRON_KEYS = new Set(['2i','u2','u3','u4','3i','4i','5i','6i','7i','8i','9i','pw','48','50','52','54','56','58','60']);
 
 export function getValidTeeClubs(clubsList, parValue) {
   const sorted = [...clubsList].sort((a, b) => b.total - a.total);

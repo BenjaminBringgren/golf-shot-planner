@@ -14,7 +14,7 @@ import { loadActiveCourse, getCommittedStrategies, setCommittedStrategies } from
 // Woods/hybrids: fw3, fw5, fw7 and future HY keys (add e.g. 'hy3','hy5' here when bag setup supports them)
 const WOOD_KEYS = new Set(['fw3','fw5','fw7','hy3','hy4','hy5','hy6']);
 // Utility irons + irons: u2 onward in relCarry order
-const IRON_KEYS = new Set(['u2','u3','u4','4i','5i','6i','7i','8i','9i','pw','50','52','54','56','58','60']);
+const IRON_KEYS = new Set(['2i','u2','u3','u4','3i','4i','5i','6i','7i','8i','9i','pw','48','50','52','54','56','58','60']);
 
 // ── Crosswind helper ────────────────────────────────────────────────────────
 export function crosswindSide(windState) {
@@ -1267,10 +1267,29 @@ export function renderPlan(_result, ctx) {
       bagBtn.addEventListener('click', () => {
         const currentKey = teeOverrides[_hk(basePlan.type)] || basePlan.shots[0].key;
         openClubPicker(currentKey, (selectedKey) => {
-            teeOverrides[_hk(basePlan.type)] = selectedKey !== basePlan.shots[0].key ? selectedKey : null;
+          // Route to the strategy whose category contains the selected club
+          let targetType;
+          if (selectedKey === 'driver')        targetType = 'Max distance';
+          else if (WOOD_KEYS.has(selectedKey)) targetType = 'Controlled';
+          else if (IRON_KEYS.has(selectedKey)) targetType = 'Conservative';
+          else                                  targetType = null; // genuinely custom
+
+          const targetPlan = targetType ? ordered.find(p => p.type === targetType) : null;
+          if (targetPlan) {
+            teeOverrides[_hk(targetType)] = selectedKey !== targetPlan.shots[0].key ? selectedKey : null;
+            if (targetType === basePlan.type) {
+              const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
+              newCard.id = 'activeStrategyCard'; newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
+            } else {
+              switchStrategyCard(targetType); syncOuterHeight();
+            }
+          } else {
+            // Custom — club doesn't fit any strategy category
+            teeOverrides[_hk(basePlan.type)] = selectedKey;
             const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
             newCard.id = 'activeStrategyCard'; newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
-          }, basePlan.type === 'Max distance' ? { type: 'par', parValue } : { type: 'no-driver' }, 'Select tee club');
+          }
+        }, null, 'Select tee club');
       });
       stratFooter.appendChild(bagBtn);
     }
