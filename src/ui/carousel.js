@@ -544,7 +544,7 @@ export function renderPlan(_result, ctx) {
     const teeClub = clubsList.find(c => c.key === forcedTeeKey);
     if (!teeClub) return null;
     const driverCarry = driverClub ? driverClub.carry : driver;
-    return findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj, personalCal);
+    return findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj, personalCal, true);
   }
 
   // Build a modified plan using a user-forced second club.
@@ -1350,9 +1350,41 @@ export function renderPlan(_result, ctx) {
   function buildDeltaSection(wrap) {
     if (!ordered.length) { wrap.style.display = 'none'; return; }
     const currentType = getCurrentCarouselType();
+
+    const ctrlChips = clubsList.filter(c => WOOD_KEYS.has(c.key)).slice(0, 2).map(c => c.key);
+    const consChips = clubsList.filter(c => IRON_KEYS.has(c.key)).slice(0, 2).map(c => c.key);
+    function _isCustomOv(type, ovKey) {
+      if (!ovKey) return false;
+      if (type === 'Max distance') return ovKey !== 'driver';
+      if (type === 'Controlled')   return !ctrlChips.includes(ovKey);
+      if (type === 'Conservative') return !consChips.includes(ovKey);
+      return true;
+    }
+
+    // Detect custom plan: active strategy with a custom tee override gets its own bar
+    let customPlan = null;
+    const activeOv = teeOverrides[_hk(currentType)];
+    if (currentType && _isCustomOv(currentType, activeOv)) {
+      const base = ordered.find(p => p.type === currentType);
+      if (base) {
+        const forced = solveForced(activeOv);
+        if (forced) {
+          const s2Key = shot2Overrides[_hk(currentType)];
+          let cp = { ...forced, type: 'Custom' };
+          if (s2Key && forced.shots?.length >= 2) {
+            const s2ov = buildPlanWithShot2Override(base, forced, s2Key);
+            if (s2ov) cp = { ...s2ov, type: 'Custom' };
+          }
+          customPlan = cp;
+        }
+      }
+    }
+
     const plans = ordered.map(p => {
       const ov = teeOverrides[_hk(p.type)];
-      const resolved = ov ? (solveForced(ov) || p) : p;
+      // Custom override is lifted into the Custom bar — revert this column to default
+      if (_isCustomOv(p.type, ov) && customPlan) return p;
+      const resolved = ov ? ({ ...(solveForced(ov) || p), type: p.type }) : p;
       const s2Key = shot2Overrides[_hk(p.type)];
       if (s2Key && resolved.shots?.length >= 2) {
         const override = buildPlanWithShot2Override(p, resolved, s2Key);
@@ -1360,12 +1392,14 @@ export function renderPlan(_result, ctx) {
       }
       return resolved;
     });
+    if (customPlan) plans.push(customPlan);
+
     const scores = plans.map(p => p.score);
     const minScore = Math.min(...scores);
     const maxScore = Math.max(...scores);
     const range = maxScore - minScore;
-    const barColors = { 'Max distance': '#a05a5a', 'Controlled': '#986840', 'Conservative': '#347a50' };
-    const shortNames = { 'Max distance': 'Max dist', 'Controlled': 'Controlled', 'Conservative': 'Conserv' };
+    const barColors = { 'Max distance': '#a05a5a', 'Controlled': '#986840', 'Conservative': '#347a50', 'Custom': '#555' };
+    const shortNames = { 'Max distance': 'Max dist', 'Controlled': 'Controlled', 'Conservative': 'Conserv', 'Custom': 'Custom' };
 
     let rowsHtml = plans.map((p, i) => {
       const score = scores[i];
@@ -1404,15 +1438,48 @@ export function renderPlan(_result, ctx) {
   }
 
   function buildCompareTable(wrap) {
-    const types = ordered.map(p => p.type);
+    const ctrlChips = clubsList.filter(c => WOOD_KEYS.has(c.key)).slice(0, 2).map(c => c.key);
+    const consChips = clubsList.filter(c => IRON_KEYS.has(c.key)).slice(0, 2).map(c => c.key);
+    function _isCustomOv(type, ovKey) {
+      if (!ovKey) return false;
+      if (type === 'Max distance') return ovKey !== 'driver';
+      if (type === 'Controlled')   return !ctrlChips.includes(ovKey);
+      if (type === 'Conservative') return !consChips.includes(ovKey);
+      return true;
+    }
+
     const currentType = getCurrentCarouselType();
+
+    // Detect custom plan: active strategy with a custom tee override gets its own column
+    let customPlan = null;
+    let customSourceType = null;
+    const activeOv = teeOverrides[_hk(currentType)];
+    if (currentType && _isCustomOv(currentType, activeOv)) {
+      const base = ordered.find(p => p.type === currentType);
+      if (base) {
+        const forced = solveForced(activeOv);
+        if (forced) {
+          const s2Key = shot2Overrides[_hk(currentType)];
+          let cp = { ...forced, type: 'Custom' };
+          if (s2Key && forced.shots?.length >= 2) {
+            const s2ov = buildPlanWithShot2Override(base, forced, s2Key);
+            if (s2ov) cp = { ...s2ov, type: 'Custom' };
+          }
+          customPlan = cp;
+          customSourceType = currentType;
+        }
+      }
+    }
 
     // Resolve the active plan per type (apply tee and shot2 overrides if set)
     function getActivePlan(t) {
+      if (t === 'Custom') return customPlan;
       const base = ordered.find(p => p.type === t);
       if (!base) return null;
       const ov = teeOverrides[_hk(t)];
-      const resolved = ov ? (solveForced(ov) || base) : base;
+      // Custom override is lifted into its own column — revert this column to default
+      if (_isCustomOv(t, ov) && customPlan) return base;
+      const resolved = ov ? ({ ...(solveForced(ov) || base), type: t }) : base;
       const s2Key = shot2Overrides[_hk(t)];
       if (s2Key && resolved.shots?.length >= 2) {
         const override = buildPlanWithShot2Override(base, resolved, s2Key);
@@ -1421,9 +1488,13 @@ export function renderPlan(_result, ctx) {
       return resolved;
     }
 
+    const types = ordered.map(p => p.type);
+    if (customPlan) types.push('Custom');
+    const isCustomMode = !!customPlan;
+
     let thead = `<thead><tr><th></th>`;
     types.forEach(t => {
-      const active = t === currentType;
+      const active = isCustomMode ? (t === 'Custom') : (t === currentType);
       thead += `<th class="${active ? 'active-col' : ''}">${strategyShortName(t)}</th>`;
     });
     thead += `</tr></thead>`;
@@ -1431,19 +1502,20 @@ export function renderPlan(_result, ctx) {
     let approachRow = `<tr><td>Approach</td>`;
     types.forEach(t => {
       const p = getActivePlan(t);
-      const active = t === currentType;
+      const active = isCustomMode ? (t === 'Custom') : (t === currentType);
       const cls = t === 'Controlled' ? 'balanced' : t === 'Conservative' ? 'safe' : '';
       approachRow += `<td class="${active ? 'active-col' : ''}"><span class="cv-primary ${cls}">${p ? p.approach.toFixed(0) + 'm' : '—'}</span></td>`;
     });
     approachRow += `</tr>`;
 
-    const maxShotsInPlan = Math.max(...ordered.map(p => p.shots.length));
+    const allPlans = types.map(t => getActivePlan(t)).filter(Boolean);
+    const maxShotsInPlan = allPlans.length > 0 ? Math.max(...allPlans.map(p => p.shots?.length || 0)) : 0;
     let shotRows = '';
     for (let i = 0; i < maxShotsInPlan; i++) {
       shotRows += `<tr><td>Shot ${i + 1}</td>`;
       types.forEach(t => {
         const p = getActivePlan(t);
-        const active = t === currentType;
+        const active = isCustomMode ? (t === 'Custom') : (t === currentType);
         const s = p?.shots[i];
         if (s) {
           const lbl = clubMap[s.key]?.label ?? s.key;
@@ -1463,7 +1535,7 @@ export function renderPlan(_result, ctx) {
     let greenRow = `<tr><td>Into green</td>`;
     types.forEach(t => {
       const p = getActivePlan(t);
-      const active = t === currentType;
+      const active = isCustomMode ? (t === 'Custom') : (t === currentType);
       const rec = p ? approachClub(p.approach) : null;
       if (rec) {
         const lbl = clubMap[rec.key]?.label ?? rec.key;
@@ -1487,8 +1559,16 @@ export function renderPlan(_result, ctx) {
       if (!t) return;
       th.style.cursor = 'pointer';
       th.addEventListener('click', () => {
-        switchStrategyCard(t);
-        goToCard(0);
+        if (t === 'Custom') {
+          // Navigate back to source strategy card, preserving the custom override
+          switchStrategyCard(customSourceType);
+          goToCard(0);
+        } else {
+          // Tapping a base column clears any custom override on that strategy (revert to default)
+          if (customPlan && t === customSourceType) teeOverrides[_hk(t)] = null;
+          switchStrategyCard(t);
+          goToCard(0);
+        }
       });
     });
   }

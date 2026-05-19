@@ -239,7 +239,7 @@ export function getValidTeeClubs(clubsList, parValue) {
 // Returns { shots, approach, score } or null if no valid plan found.
 // holeHcpAdj: forwarded to expectedStrokesRemaining.
 // personalCal: forwarded to expectedStrokesRemaining.
-export function findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, holeHcpAdj = null, personalCal = null) {
+export function findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, holeHcpAdj = null, personalCal = null, anySecond = false) {
   const maxApproach = driverTotal * 0.92;
   const singleApproach = hole - teeClub.total;
 
@@ -257,7 +257,7 @@ export function findBestContinuation(teeClub, hole, driverTotal, clubsList, driv
   }
 
   const candidates = clubsList.filter(c =>
-    c.total < teeClub.total && c.key !== 'driver'
+    (anySecond || c.total < teeClub.total) && c.key !== 'driver'
   );
 
   let best = null;
