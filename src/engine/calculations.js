@@ -205,17 +205,28 @@ export function expectedStrokesRemaining(approachDist, driverCarry, handicap, in
 }
 
 // ── Valid tee clubs ───────────────────────────────────────────────────────────
-// Par 5: long clubs only (driver through U4). Par 4: up to and including 7i.
-// Par 3: handled separately (all clubs valid).
+// Returns a 3-element array [maxClub, controlledClub, conservativeClub].
+// Each element is a club object or null when no matching club exists in the bag.
+// Max distance = driver (or longest available). Controlled = longest fairway wood
+// (fw3/fw5/fw7 + future HY keys). Conservative = longest utility iron / iron
+// (u2 onward); on par 5 restricted to u2–u4 since regular irons are too short.
+// Par 3 is handled separately — this function is not called for par 3.
+const _TEE_WOOD_KEYS = new Set(['fw3','fw5','fw7']); // add HY keys here when bag setup supports them
+const _TEE_IRON_KEYS = new Set(['u2','u3','u4','4i','5i','6i','7i','8i','9i','pw','50','52','54','56','58','60']);
+
 export function getValidTeeClubs(clubsList, parValue) {
-  let filtered;
-  if (parValue === 5) {
-    const longClubs = ['driver','fw3','fw5','fw7','u2','u3','u4'];
-    filtered = clubsList.filter(c => longClubs.includes(c.key));
-  } else {
-    filtered = clubsList.filter(c => c.idx <= idx7);
-  }
-  return filtered.sort((a, b) => b.total - a.total);
+  const sorted = [...clubsList].sort((a, b) => b.total - a.total);
+
+  // Max distance: driver first, otherwise longest club in bag
+  const maxClub = sorted.find(c => c.key === 'driver') ?? sorted[0] ?? null;
+
+  // Controlled: longest fairway wood (or HY) that differs from max club
+  const controlledClub = sorted.find(c => _TEE_WOOD_KEYS.has(c.key) && c.key !== maxClub?.key) ?? null;
+
+  // Conservative: longest utility iron / iron in bag (no par restriction — course layout is unknown)
+  const conservativeClub = sorted.find(c => _TEE_IRON_KEYS.has(c.key)) ?? null;
+
+  return [maxClub, controlledClub, conservativeClub];
 }
 
 // ── Best continuation ─────────────────────────────────────────────────────────

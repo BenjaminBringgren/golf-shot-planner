@@ -1599,11 +1599,12 @@ initServices({
     }
 
     const validTeeClubs = getValidTeeClubs(clubsList, parValue);
-    if (validTeeClubs.length === 0) return { isError: true, msg: 'No valid clubs for this par. Check bag setup.' };
+    if (!validTeeClubs[0]) return { isError: true, msg: 'No valid clubs for this par. Check bag setup.' };
 
     const STRATEGY_TYPES = ['Max distance', 'Controlled', 'Conservative'];
     const ordered = [];
-    validTeeClubs.slice(0, 3).forEach((teeClub, rank) => {
+    validTeeClubs.forEach((teeClub, rank) => {
+      if (!teeClub) return; // category not available in this bag
       const p = findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj, _personalCal);
       if (!p) return;
       p.type = STRATEGY_TYPES[rank];
