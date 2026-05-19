@@ -244,11 +244,14 @@ export function findBestContinuation(teeClub, hole, driverTotal, clubsList, driv
   const singleApproach = hole - teeClub.total;
 
   const approachClubs = clubsList.filter(c => c.key !== 'driver');
-  const longestApproachTotal = approachClubs.length > 0
-    ? Math.max(...approachClubs.map(c => c.total))
+  // Use carry (not total) to decide if a single-shot approach is reachable — consistent with
+  // how approachClub() selects the club. On firm conditions, roll inflates total enough to pass
+  // the threshold while carry alone falls short, producing a plan with no valid approach club.
+  const longestApproachCarry = approachClubs.length > 0
+    ? Math.max(...approachClubs.map(c => c.carry))
     : 0;
 
-  if (singleApproach >= 0 && singleApproach <= maxApproach && singleApproach <= longestApproachTotal) {
+  if (singleApproach >= 0 && singleApproach <= maxApproach && singleApproach <= longestApproachCarry) {
     const score = 1 + expectedStrokesRemaining(singleApproach, driverCarry, handicap, inRough, windState, undefined, holeHcpAdj, personalCal);
     return { shots: [teeClub], approach: singleApproach, score };
   }
