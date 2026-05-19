@@ -544,13 +544,7 @@ export function renderPlan(_result, ctx) {
     const teeClub = clubsList.find(c => c.key === forcedTeeKey);
     if (!teeClub) return null;
     const driverCarry = driverClub ? driverClub.carry : driver;
-    const result = findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj, personalCal);
-    if (result) return result;
-    // findBestContinuation found no valid plan (e.g. short iron forced on a long hole).
-    // Build a minimal plan so the forced club is always shown — never fall back to basePlan's tee.
-    const remaining = Math.max(0, hole - teeClub.total);
-    const score = 1 + expectedStrokesRemaining(remaining, driverCarry, handicap, inRough, windState, undefined, _holeHcpAdj, personalCal);
-    return { shots: [teeClub], approach: remaining, score };
+    return findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj, personalCal);
   }
 
   // Build a modified plan using a user-forced second club.
