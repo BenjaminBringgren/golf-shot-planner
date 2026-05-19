@@ -543,11 +543,6 @@ export function renderPlan(_result, ctx) {
   function solveForced(forcedTeeKey) {
     const teeClub = clubsList.find(c => c.key === forcedTeeKey);
     if (!teeClub) return null;
-    if (parValue === 4 && teeClub.idx > idx7) return null;
-    if (parValue === 5) {
-      const longClubs = ['driver','fw3','fw5','fw7','u2','u3','u4'];
-      if (!longClubs.includes(teeClub.key)) return null;
-    }
     const driverCarry = driverClub ? driverClub.carry : driver;
     return findBestContinuation(teeClub, hole, driverTotal, clubsList, driverCarry, handicap, inRough, windState, _holeHcpAdj, personalCal);
   }
