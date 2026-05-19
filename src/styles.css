@@ -1791,7 +1791,7 @@
       border-top: 0.5px solid #f2f1ee;
       display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
     }
-    .tee-chip-label { font-size: 11px; color: #888; flex-shrink: 0; }
+    .tee-chip-label { font-size: 13px; color: #888; flex-shrink: 0; }
     .tee-chips { display: flex; gap: 5px; flex-wrap: wrap; }
     .tee-chip {
       border: none; border-radius: 8px;
