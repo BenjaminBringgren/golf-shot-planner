@@ -1626,14 +1626,12 @@ export function showRoundCompleteOverlay(courseId, fromHoleIdx, callbacks = {}) 
     if (!deleteArmed) {
       deleteArmed = true;
       deleteBtn.textContent = 'Tap again to delete — this cannot be undone';
-      deleteBtn.style.background = '#c00';
-      deleteBtn.style.color = '#fff';
+      deleteBtn.style.background = '#a93226';
       setTimeout(() => {
         if (deleteArmed) {
           deleteArmed = false;
           deleteBtn.textContent = 'Delete round';
           deleteBtn.style.background = '';
-          deleteBtn.style.color = '';
         }
       }, 3000);
       return;
@@ -2238,14 +2236,12 @@ export function renderSavedRoundDetail(courseId, savedRound, roundIdx, callbacks
     if (!deleteArmed) {
       deleteArmed = true;
       deleteBtn.textContent = 'Tap again to confirm delete';
-      deleteBtn.style.background = '#c00';
-      deleteBtn.style.color = '#fff';
+      deleteBtn.style.background = '#a93226';
       setTimeout(() => {
         if (deleteArmed) {
           deleteArmed = false;
           deleteBtn.textContent = 'Delete round';
           deleteBtn.style.background = '';
-          deleteBtn.style.color = '';
         }
       }, 3000);
     } else {

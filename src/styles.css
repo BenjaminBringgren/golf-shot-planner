@@ -842,8 +842,8 @@
     .rc-btn-secondary { flex: 1; background: #f0efeb; color: #333; border: none; border-radius: 8px; height: 56px; font-size: 15px; font-weight: 600; cursor: pointer; }
     .rc-btn-primary.is-pressed { background: #333; transform: scale(0.98); }
     .rc-btn-secondary.is-pressed { background: #e4e2de; transform: scale(0.98); }
-    .rc-btn-delete { display: flex; align-items: center; justify-content: center; width: calc(100% - 28px); margin: 10px 14px 14px; background: none; color: #c00; border: 0.5px solid rgba(204,0,0,0.25); border-radius: 8px; height: 44px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.12s, color 0.12s; text-align: center; }
-    .rc-btn-delete.is-pressed { background: rgba(204,0,0,0.07); transform: scale(0.98); }
+    .rc-btn-delete { display: flex; align-items: center; justify-content: center; width: calc(100% - 28px); margin: 10px 14px 14px; background: #c0392b; color: #fff; border: none; border-radius: 8px; height: 44px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.12s; text-align: center; }
+    .rc-btn-delete.is-pressed { background: #a93226; transform: scale(0.98); }
     .rc-footnote { text-align: center; font-size: 12px; color: #aaa; padding: 10px 0 4px; }
     .score-entry-title {
       font-size: 13px; font-weight: 700; color: #888;
