@@ -1372,9 +1372,12 @@ export function renderPlan(_result, ctx) {
       const diff  = score - parValue;
       const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff.toFixed(1) : diff.toFixed(1));
       const isBest = score === minScore;
-      const barPct = range > 0.01
-        ? 30 + Math.round(((score - minScore) / range) * 55)
-        : 55;
+      // Anchor to an absolute par-based scale so visual length reflects real distance from par.
+      // Scale: (parValue − 1) to (parValue + 2), spread across 10–90% bar width.
+      // Close strategies → nearly identical bars. Large differences → clearly distinct bars.
+      const scaleMin = parValue - 1;
+      const scaleMax = parValue + 2;
+      const barPct = Math.max(10, Math.min(90, Math.round(((score - scaleMin) / (scaleMax - scaleMin)) * 85)));
       const color = barColors[p.type] || '#888';
       const name  = shortNames[p.type] || p.type;
       return `<div class="cc-delta-row">
