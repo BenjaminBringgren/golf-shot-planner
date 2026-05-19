@@ -1262,12 +1262,14 @@ export function renderPlan(_result, ctx) {
       bagBtn.addEventListener('click', () => {
         const currentKey = teeOverrides[_hk(basePlan.type)] || basePlan.shots[0].key;
         openClubPicker(currentKey, (selectedKey) => {
-          // Route to the strategy whose category contains the selected club
+          // Route to a strategy only if the selected club is one of its actual chip options
+          const controlledChips   = clubsList.filter(c => WOOD_KEYS.has(c.key)).slice(0, 2).map(c => c.key);
+          const conservativeChips = clubsList.filter(c => IRON_KEYS.has(c.key)).slice(0, 2).map(c => c.key);
           let targetType;
-          if (selectedKey === 'driver')        targetType = 'Max distance';
-          else if (WOOD_KEYS.has(selectedKey)) targetType = 'Controlled';
-          else if (IRON_KEYS.has(selectedKey)) targetType = 'Conservative';
-          else                                  targetType = null; // genuinely custom
+          if (selectedKey === 'driver')                     targetType = 'Max distance';
+          else if (controlledChips.includes(selectedKey))   targetType = 'Controlled';
+          else if (conservativeChips.includes(selectedKey)) targetType = 'Conservative';
+          else                                               targetType = null; // genuinely custom
 
           const targetPlan = targetType ? ordered.find(p => p.type === targetType) : null;
           if (targetPlan) {
