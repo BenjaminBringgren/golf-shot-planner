@@ -573,13 +573,14 @@ export function renderPlan(_result, ctx) {
       ? (buildPlanWithShot2Override(basePlan, basePlanResolved, shot2Key) || basePlanResolved)
       : basePlanResolved;
 
-    // isCustom: true only when a bag-selected override falls outside the strategy's expected club category.
-    // In-category chip selections (e.g. FW3 on Controlled) are NOT custom — they are alternate club picks within the same strategy.
+    // isCustom: true when override is outside the strategy's actual chip options (top-2 per category).
+    const _ctrlChips = clubsList.filter(c => WOOD_KEYS.has(c.key)).slice(0, 2).map(c => c.key);
+    const _consChips = clubsList.filter(c => IRON_KEYS.has(c.key)).slice(0, 2).map(c => c.key);
     const isCustom = (() => {
       if (!override) return false;
       if (basePlan.type === 'Max distance') return override !== 'driver';
-      if (basePlan.type === 'Controlled')   return !WOOD_KEYS.has(override);
-      if (basePlan.type === 'Conservative') return !IRON_KEYS.has(override);
+      if (basePlan.type === 'Controlled')   return !_ctrlChips.includes(override);
+      if (basePlan.type === 'Conservative') return !_consChips.includes(override);
       return true;
     })();
 
@@ -1228,8 +1229,8 @@ export function renderPlan(_result, ctx) {
           const ov = teeOverrides[_hk(plan.type)];
           if (!ov) return false;
           if (plan.type === 'Max distance') return ov !== 'driver';
-          if (plan.type === 'Controlled')   return !WOOD_KEYS.has(ov);
-          if (plan.type === 'Conservative') return !IRON_KEYS.has(ov);
+          if (plan.type === 'Controlled')   return !_ctrlChips.includes(ov);
+          if (plan.type === 'Conservative') return !_consChips.includes(ov);
           return true;
         })();
         const diff = withS2.score - parValue;
