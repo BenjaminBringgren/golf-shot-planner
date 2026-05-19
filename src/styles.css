@@ -809,8 +809,15 @@
     #preRoundFocusOverlay { display: none; position: fixed; inset: 0; z-index: 1100; align-items: flex-end; justify-content: center; }
     .prf-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); display: flex; align-items: flex-end; justify-content: center; width: 100%; }
     .prf-card { background: #fff; border-radius: 16px 16px 0 0; padding: 28px 20px 40px; width: 100%; max-width: 480px; position: relative; z-index: 1; }
-    .prf-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #888; margin-bottom: 12px; }
-    .prf-text { font-size: 17px; font-weight: 400; color: #1a1a1a; line-height: 1.5; margin-bottom: 24px; }
+    .prf-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #888; margin-bottom: 8px; }
+    .prf-category { font-size: 22px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+    .prf-stat { font-size: 34px; font-weight: 800; color: #c0392b; line-height: 1; margin-bottom: 4px; }
+    .prf-stat.prf-stat-strength { color: #1e7a45; }
+    .prf-context { font-size: 13px; font-weight: 400; color: #888; margin-bottom: 16px; }
+    .prf-divider { height: 0.5px; background: rgba(0,0,0,0.1); margin-bottom: 16px; }
+    .prf-holes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .prf-hole-pill { font-size: 12px; font-weight: 700; color: #c0392b; background: rgba(192,57,43,0.08); border-radius: 20px; padding: 3px 10px; }
+    .prf-strategy { font-size: 17px; font-weight: 400; color: #1a1a1a; line-height: 1.5; margin-bottom: 24px; }
     .prf-btn { width: 100%; padding: 14px; background: #1a1a1a; color: #fff; border: none; border-radius: 10px; font-size: 17px; font-weight: 700; cursor: pointer; }
     .prf-btn.is-pressed { background: #444; transform: scale(0.98); }
     .rc-stat-grid { display: grid; grid-template-columns: repeat(5, 1fr); }

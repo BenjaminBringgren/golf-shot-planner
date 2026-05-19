@@ -7,7 +7,6 @@ import {
   loadBag, loadProfile, saveProfile,
   loadHomeRoundFilter, saveHomeRoundFilter,
   loadStatsRoundFilter, saveStatsRoundFilter,
-  KEY_PRE_ROUND_FOCUS_IDX,
 } from '../storage/storage.js';
 import { clubs } from '../engine/clubs.js';
 import { interpolate, decodeStrategy, courseHandicap, stablefordPoints, computeStrokeLoss, analyzeApproachDistances } from '../engine/calculations.js';
@@ -64,18 +63,19 @@ export function initRoundsServices(svc) {
   _openRoundDetail = svc.openRoundDetail ?? null;
 }
 
-// ── Pre-round focus prompt ─────────────────────────────────────────────────────
-// Analyses last 5 rounds at this course and returns the single most important
-// behavioural focus for the upcoming round, or null if no data / no clear issue.
+// ── Pre-round strategy brief ──────────────────────────────────────────────────
+// Returns a structured object describing the player's biggest stat leak (or
+// standout strength) at this course, with course-specific hole data and the
+// player's cross-course scoring zone for use in the UI. Returns null if
+// insufficient data.
 export function computePreRoundFocus(courseId) {
-  const courses = loadCourses ? loadCourses() : {};
+  const courses = loadCourses();
   const course  = courses[courseId];
   const rounds  = loadRounds(courseId);
   if (!rounds.length || !course) return null;
   const recent = rounds.slice(-5);
   const n      = recent.length;
 
-  // Aggregate stroke-loss and key stats across recent rounds
   const totals = { driving: 0, approach: 0, shortGame: 0, putting: 0, penalties: 0 };
   let validRounds = 0;
   let totalGIR = 0, totalFIR = 0, firEligHoles = 0, girHoles = 0;
@@ -102,108 +102,65 @@ export function computePreRoundFocus(courseId) {
 
   const avgs     = {};
   Object.keys(totals).forEach(k => { avgs[k] = totals[k] / validRounds; });
-  const girPct   = girHoles > 0 ? totalGIR / girHoles : null;
-  const firPct   = firEligHoles > 0 ? totalFIR / firEligHoles : null;
-  const avgPutts = puttHoles > 0 ? totalPutts / puttHoles : null;
+  const girPct   = girHoles    > 0 ? totalGIR   / girHoles    : null;
+  const firPct   = firEligHoles > 0 ? totalFIR  / firEligHoles : null;
+  const avgPutts = puttHoles   > 0 ? totalPutts / puttHoles   : null;
 
-  // ── Build the message pool for this round ────────────────────────────────
   const maxLeak = Math.max(...Object.values(avgs));
-  let pool;
 
   if (maxLeak < 0.5) {
-    // Everything under control — positive observation
-    const strengthPool = [];
-    if (girPct !== null && girPct > 0.55) {
-      const pct = Math.round(girPct * 100);
-      strengthPool.push(
-        `Your approach game is working — GIR ${pct}% here. Keep attacking pins.`,
-        `You're hitting greens at ${pct}% here. Trust your iron play and go at flags you can hold.`,
-        `${pct}% GIR at this course. Your ball-striking is your edge today — use it.`,
-      );
-    }
-    if (firPct !== null && firPct > 0.65) {
-      const pct = Math.round(firPct * 100);
-      strengthPool.push(
-        `You're finding the fairway well here — ${pct}% FIR. That's your foundation today.`,
-        `${pct}% fairways here. Off-the-tee accuracy is a real strength — commit to the same routine.`,
-        `Driving has been reliable at this course (${pct}% FIR). Stay patient and let your irons do the work.`,
-      );
-    }
-    if (avgPutts !== null && avgPutts < 1.75) {
-      strengthPool.push(
-        `Your putting has been excellent here. Trust your read and commit to each stroke.`,
-        `You're rolling it well on these greens. Step up to every putt expecting to make it.`,
-        `Fewer than ${avgPutts.toFixed(1)} putts per hole here. Your speed control is dialled in — stay aggressive on makeable putts.`,
-      );
-    }
-    if (!strengthPool.length) return null;
-    pool = strengthPool;
-  } else {
-    // Find the biggest leak
-    const top = Object.entries(avgs)
-      .filter(([, v]) => v >= 0.5)
-      .sort(([, a], [, b]) => b - a)[0];
-    if (!top) return null;
-
-    const [key, val] = top;
-    const perRound = '+' + val.toFixed(1) + ' stroke' + (val >= 1.5 ? 's' : '') + '/round';
-    const suffix   = n > 1 ? ' over your last ' + n + ' rounds here' : ' last round here';
-
-    const messages = {
-      driving: [
-        `Driving cost you ${perRound}${suffix}. Club down off the tee — a fairway bogey beats a rough double.`,
-        `Off-the-tee errors have been costing ${perRound}${suffix}. Pick a smaller target and commit to it.`,
-        `Your driver has been expensive here (${perRound}${suffix}). Consider a 3-wood or long iron on tight holes.`,
-        `Tee shots are leaking ${perRound}${suffix}. Pick a club you can swing at 80% and put it in the short grass.`,
-        `${perRound}${suffix} lost off the tee. Aim at the widest part of the fairway, not the shortest route to the pin.`,
-        `Driving accuracy has been costing you here. Tee it down on par 4s if it helps you commit to a line.`,
-        `The rough is punishing you at this course (${perRound}${suffix}). Play a club shorter and stay in control.`,
-      ],
-      approach: [
-        `Approach play cost you ${perRound}${suffix}. Leave yourself a full wedge distance into greens — don't over-press.`,
-        `Your approach shots have been leaking ${perRound}${suffix}. Aim for the center of the green, not the flag.`,
-        `Missed greens are adding up (${perRound}${suffix}). Pick a conservative target and make clean contact.`,
-        `Irons have been costing you here (${perRound}${suffix}). One club more, smooth swing, middle of the green.`,
-        `${perRound}${suffix} lost on approaches. Short-siding yourself is costly — take the fat side of every pin.`,
-        `Approach play is your biggest leak today (${perRound}${suffix}). Commit to your yardage and don't second-guess mid-swing.`,
-        `Green misses are adding up (${perRound}${suffix}). Play to your yardage gaps — don't try to hit a club you can't fully commit to.`,
-      ],
-      shortGame: [
-        `Short game cost you ${perRound}${suffix}. Focus on getting chips close — one putt saves the hole.`,
-        `Around the green you've been losing ${perRound}${suffix}. Land the chip on the green early and let it roll.`,
-        `Scrambling has been tough here (${perRound}${suffix}). Bump-and-run over lob — take the lower-risk shot.`,
-        `Short game is the focus today (${perRound}${suffix}). Pick your landing spot before you pick your club.`,
-        `${perRound}${suffix} lost around the greens. Get it on the putting surface first — don't try to hero the flop.`,
-        `Chipping has been costing you here (${perRound}${suffix}). Use the most loft you need and no more — less spin, more predictable.`,
-        `Scrambling rate has been low (${perRound}${suffix}). When you miss a green, commit to a safe chip and rely on your putter.`,
-      ],
-      putting: [
-        `Putting cost you ${perRound}${suffix}. Lag from distance — your main goal is to avoid the three-putt.`,
-        `You've been leaving strokes on the greens here (${perRound}${suffix}). Read the break early and commit to speed.`,
-        `Three-putts are adding up (${perRound}${suffix}). On long putts, aim for a two-foot circle — not the hole.`,
-        `Greens have been tough here (${perRound}${suffix}). Walk the full line before you putt — don't rush the read.`,
-        `${perRound}${suffix} on the greens. Speed control is the priority today — distance first, line second.`,
-        `Putting is your biggest leak at this course (${perRound}${suffix}). Get your first putt within tap-in range and move on.`,
-        `The greens here have been costly (${perRound}${suffix}). Focus on your pre-putt routine — same process every time.`,
-      ],
-      penalties: [
-        `Penalties cost you ${perRound}${suffix}. Play well away from trouble today — a bogey beats a double every time.`,
-        `Risky shots have backfired here (${perRound}${suffix}). If it's not a comfortable carry, lay up.`,
-        `Penalty strokes are expensive (${perRound}${suffix}). Add an imaginary penalty stroke before each risky shot — does it still make sense?`,
-        `You've been losing ${perRound}${suffix} to penalty areas here. Know the safe bailout on every hole before you tee off.`,
-        `${perRound}${suffix} in penalties. Today's goal: no doubles. Take the conservative line and let your short game rescue par.`,
-        `Out-of-bounds and water have been costly here (${perRound}${suffix}). Tee up further from the trouble side and swing free.`,
-        `Penalty areas are punishing you (${perRound}${suffix}). If the aggressive line requires perfection, it's not the right line.`,
-      ],
-    };
-    pool = messages[key];
+    // No significant leak — surface a strength instead
+    let strengthCategory = null, strengthValue = null;
+    if      (girPct   !== null && girPct   > 0.55) { strengthCategory = 'gir';    strengthValue = Math.round(girPct * 100); }
+    else if (firPct   !== null && firPct   > 0.65) { strengthCategory = 'fir';    strengthValue = Math.round(firPct * 100); }
+    else if (avgPutts !== null && avgPutts < 1.75) { strengthCategory = 'putting'; strengthValue = +avgPutts.toFixed(1); }
+    if (!strengthCategory) return null;
+    return { category: 'strength', rounds: n, courseName: course.name || '', strengthCategory, strengthValue };
   }
 
-  // Advance a per-category-neutral index in localStorage so each round start shows the next variant
-  const stored  = parseInt(localStorage.getItem(KEY_PRE_ROUND_FOCUS_IDX) ?? '0', 10);
-  const nextIdx = (stored + 1) % pool.length;
-  localStorage.setItem(KEY_PRE_ROUND_FOCUS_IDX, nextIdx);
-  return pool[nextIdx];
+  const top = Object.entries(avgs).filter(([, v]) => v >= 0.5).sort(([, a], [, b]) => b - a)[0];
+  if (!top) return null;
+  const [category, leakVal] = top;
+
+  // Identify which holes contributed most to this leak
+  const holeStrokes = new Array(course.holes?.length || 18).fill(0);
+  recent.forEach(r => {
+    if (!r.scores) return;
+    r.scores.forEach((s, i) => {
+      if (!s) return;
+      const par = course.holes?.[i]?.par || 4;
+      const total = (s.fairway || 0) + (s.rough || 0) + (s.putts || 0);
+      if (!total) return;
+      const over = Math.max(0, total - par);
+      let leak = 0;
+      if (category === 'approach'  && s.gir === false && over > 0)                          leak = over;
+      if (category === 'driving'   && par >= 4 && s.fir === false && over > 0)              leak = over;
+      if (category === 'putting'   && (s.putts || 0) >= 3)                                  leak = (s.putts || 0) - 2;
+      if (category === 'shortGame' && s.gir === false && (s.putts || 0) >= 2 && over > 0)  leak = over;
+      if (category === 'penalties' && (s.penalties || 0) > 0)                               leak = s.penalties;
+      if (leak > 0) holeStrokes[i] += leak;
+    });
+  });
+
+  const leakHoles = holeStrokes
+    .map((v, i) => ({ holeNum: i + 1, strokes: v }))
+    .filter(h => h.strokes > 0)
+    .sort((a, b) => b.strokes - a.strokes)
+    .slice(0, 3)
+    .map(h => h.holeNum);
+
+  // Cross-course scoring zone (player's best approach distance band)
+  let scoringZone = null;
+  try {
+    const sz = analyzeApproachDistances(loadAllRounds());
+    if (sz?.scoringZone) scoringZone = { low: sz.scoringZone[0], high: sz.scoringZone[1] };
+  } catch(e) {}
+
+  return {
+    category, leakPerRound: leakVal, rounds: n,
+    courseName: course.name || '',
+    leakHoles, girPct, firPct, avgPutts, scoringZone,
+  };
 }
 
 // ── Round filter state ────────────────────────────────────────────────────────

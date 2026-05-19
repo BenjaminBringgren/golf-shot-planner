@@ -589,10 +589,93 @@ initServices({
     });
   })();
 
-  // ── Pre-round focus prompt ────────────────────────────────────────────
+  // ── Pre-round strategy brief ──────────────────────────────────────────
+  function _fmtHoleList(holes) {
+    if (!holes || holes.length === 0) return '';
+    if (holes.length === 1) return String(holes[0]);
+    if (holes.length === 2) return `${holes[0]} and ${holes[1]}`;
+    return `${holes.slice(0, -1).join(', ')} and ${holes[holes.length - 1]}`;
+  }
+
   function showPreRoundFocusUI(courseId) {
-    const text = computePreRoundFocus(courseId);
-    if (!text) return;
+    const data = computePreRoundFocus(courseId);
+    if (!data) return;
+
+    const roundCtx = (data.rounds > 1 ? `Last ${data.rounds} rounds` : 'Last round') +
+                     (data.courseName ? ` · ${data.courseName}` : '');
+
+    const LABELS = { driving: 'Tee accuracy', approach: 'Approach play',
+                     shortGame: 'Short game', putting: 'Putting', penalties: 'Penalty areas' };
+
+    let categoryLabel, statLine, statClass, strategyText, btnText;
+
+    if (data.category === 'strength') {
+      btnText = "Let's go →";
+      const sc = data.strengthCategory;
+      if (sc === 'gir') {
+        categoryLabel = 'Approach play';  statLine = `GIR ${data.strengthValue}%`;
+        statClass = 'prf-stat prf-stat-strength';
+        strategyText = `Hitting greens at ${data.strengthValue}% here is your edge today. Attack pins you can hold — don't leave birdie chances short.`;
+      } else if (sc === 'fir') {
+        categoryLabel = 'Tee accuracy';   statLine = `FIR ${data.strengthValue}%`;
+        statClass = 'prf-stat prf-stat-strength';
+        strategyText = `Finding ${data.strengthValue}% of fairways at this course gives you a head start. Commit to the same routine off the tee.`;
+      } else {
+        categoryLabel = 'Putting';        statLine = `${data.strengthValue} putts/hole`;
+        statClass = 'prf-stat prf-stat-strength';
+        strategyText = `Your putting has been dialled in here. Step up to every birdie putt expecting to make it — your speed control is the foundation.`;
+      }
+    } else {
+      btnText       = 'Got it →';
+      categoryLabel = LABELS[data.category] || data.category;
+      statLine      = '+' + data.leakPerRound.toFixed(1) + (data.leakPerRound >= 1.5 ? ' strokes/round' : ' stroke/round');
+      statClass     = 'prf-stat';
+      const holeStr = _fmtHoleList(data.leakHoles);
+
+      if (data.category === 'approach') {
+        if (holeStr && data.scoringZone) {
+          const lo = Math.round(data.scoringZone.low), hi = Math.round(data.scoringZone.high);
+          strategyText = `Holes ${holeStr} have cost you most. Your scoring zone is ${lo}–${hi}m — on these holes, consider laying up to it rather than pressing for extra distance.`;
+        } else if (holeStr) {
+          const girStr = data.girPct !== null ? ` (GIR ${Math.round(data.girPct * 100)}% here)` : '';
+          strategyText = `Holes ${holeStr} are your approach leaks${girStr}. Aim for centre green on these holes — one extra GIR per round saves around 1.5 strokes.`;
+        } else {
+          strategyText = `Aim for centre green, not the flag. One extra GIR per round is worth around 1.5 strokes.`;
+        }
+      } else if (data.category === 'driving') {
+        const firStr = data.firPct !== null ? `${Math.round(data.firPct * 100)}% FIR here` : '';
+        if (holeStr) {
+          strategyText = `Holes ${holeStr} are your tee shot leaks${firStr ? ` (${firStr})` : ''}. Use the Controlled strategy on these — a fairway bogey beats a rough double.`;
+        } else {
+          strategyText = `Off-the-tee accuracy${firStr ? ` (${firStr})` : ''} is today's priority. Club down on tight holes and commit to the short grass.`;
+        }
+      } else if (data.category === 'shortGame') {
+        if (holeStr) {
+          strategyText = `Holes ${holeStr} are where missed greens hurt most. Pick your landing spot before your club — use the lowest-loft shot that reaches the putting surface.`;
+        } else {
+          strategyText = `Pick your landing spot before your club. Use the lowest-loft shot that reaches the putting surface and let it run out.`;
+        }
+      } else if (data.category === 'putting') {
+        if (holeStr) {
+          strategyText = `Holes ${holeStr} have produced the most 3-putts. From distance, aim for a 2-foot circle around the hole — speed control first, line second.`;
+        } else {
+          strategyText = `3-putts are adding up here. From distance, aim for a 2-foot circle around the hole — speed control first, line second.`;
+        }
+      } else if (data.category === 'penalties') {
+        if (holeStr) {
+          strategyText = `Holes ${holeStr} are penalty traps at this course. Know the safe bail-out line on each before you tee off — and commit to it when the aggressive line isn't comfortable.`;
+        } else {
+          strategyText = `Penalty areas are punishing you here. Know the safe bail-out line on risky holes before you tee off.`;
+        }
+      } else {
+        strategyText = '';
+      }
+    }
+
+    const holesHTML = data.leakHoles?.length > 0
+      ? `<div class="prf-holes">${data.leakHoles.map(h => `<span class="prf-hole-pill">Hole ${h}</span>`).join('')}</div>`
+      : '';
+
     let el = document.getElementById('preRoundFocusOverlay');
     if (!el) {
       el = document.createElement('div');
@@ -602,9 +685,14 @@ initServices({
     el.innerHTML =
       '<div class="prf-backdrop">' +
         '<div class="prf-card">' +
-          '<div class="prf-eyebrow">Today\'s focus</div>' +
-          '<div class="prf-text">' + text + '</div>' +
-          '<button class="prf-btn" type="button">Got it →</button>' +
+          '<div class="prf-eyebrow">Today\'s strategy</div>' +
+          `<div class="prf-category">${categoryLabel}</div>` +
+          `<div class="${statClass}">${statLine}</div>` +
+          `<div class="prf-context">${roundCtx}</div>` +
+          '<div class="prf-divider"></div>' +
+          holesHTML +
+          `<div class="prf-strategy">${strategyText}</div>` +
+          `<button class="prf-btn" type="button">${btnText}</button>` +
         '</div>' +
       '</div>';
     el.style.display = 'flex';

@@ -10,6 +10,12 @@ import {
 } from '../engine/calculations.js';
 import { loadActiveCourse, getCommittedStrategies, setCommittedStrategies } from '../storage/storage.js';
 
+// ── Club group sets for strategy chip rows ──────────────────────────────────
+// Woods/hybrids: fw3, fw5, fw7 and future HY keys (add e.g. 'hy3','hy5' here when bag setup supports them)
+const WOOD_KEYS = new Set(['fw3','fw5','fw7']);
+// Utility irons + irons: u2 onward in relCarry order
+const IRON_KEYS = new Set(['u2','u3','u4','4i','5i','6i','7i','8i','9i','pw','50','52','54','56','58','60']);
+
 // ── Crosswind helper ────────────────────────────────────────────────────────
 export function crosswindSide(windState) {
   if (!windState.active || !windState.enabled || windState.crosswind < 2) return 'none';
@@ -322,24 +328,31 @@ export function renderPlan(_result, ctx) {
         const chipsWrap = document.createElement('div');
         chipsWrap.className = 'tee-chips';
 
-        const recChip = document.createElement('div');
-        recChip.className = 'tee-chip tee-chip-sm' + (!par3Override() ? ' active' : '');
-        recChip.textContent = clubMap[par3DefaultClub.key]?.label ?? par3DefaultClub.key;
-        recChip.addEventListener('click', () => {
-          par3ClubOverrides[_overrideCourseId + "|" + _overrideHoleIdx] = null;
-          calculate();
+        // ±2 chips centred on recommended club
+        const p3RecIdx = clubsList.findIndex(c => c.key === par3DefaultClub.key);
+        const p3ChipClubs = p3RecIdx >= 0
+          ? clubsList.slice(Math.max(0, p3RecIdx - 2), p3RecIdx + 3)
+          : [par3DefaultClub];
+        p3ChipClubs.forEach(c => {
+          const chip = document.createElement('div');
+          chip.className = 'tee-chip tee-chip-sm' + (par3ActiveClub.key === c.key ? ' active' : '');
+          chip.textContent = clubMap[c.key]?.label ?? c.key;
+          chip.addEventListener('click', () => {
+            par3ClubOverrides[_overrideCourseId + '|' + _overrideHoleIdx] = c.key !== par3DefaultClub.key ? c.key : null;
+            calculate();
+          });
+          chipsWrap.appendChild(chip);
         });
-        chipsWrap.appendChild(recChip);
 
-        // Bag chip
+        // Bag chip — opens full picker for clubs beyond the ±2 window
         const bagChip = document.createElement('div');
-        bagChip.className = 'tee-chip tee-chip-sm bag-chip' + (par3Override() ? ' active' : '');
+        bagChip.className = 'tee-chip tee-chip-sm bag-chip' + (par3Override() && !p3ChipClubs.find(c => c.key === par3Override()) ? ' active' : '');
         const bagInner = document.createElement('div');
         bagInner.className = 'tee-chip-bag';
         const bagSvg = document.createElementNS('http://www.w3.org/2000/svg','svg');
         bagSvg.setAttribute('width','18'); bagSvg.setAttribute('height','18');
         bagSvg.setAttribute('viewBox','0 0 478 526'); bagSvg.setAttribute('fill','currentColor'); bagSvg.setAttribute('stroke','currentColor'); bagSvg.setAttribute('stroke-width','5');
-        bagSvg.style.color = par3Override() ? '#1a1a1a' : '#888';
+        bagSvg.style.color = (par3Override() && !p3ChipClubs.find(c => c.key === par3Override())) ? '#1a1a1a' : '#888';
         bagSvg.innerHTML = `<path d="M388.136 24H336.573C321.031 24 308.387 36.6439 308.387 52.1866C308.387 53.0886 308.549 53.9521 308.634 54.8387H308.387V116.516H200.451V77.2585C203.289 78.7079 206.396 79.741 209.718 80.1496L252.199 85.4538C253.355 85.608 254.527 85.6774 255.699 85.6774H264.789C280.324 85.6774 292.968 73.0336 292.968 57.4908V52.1866C292.968 36.6439 280.324 24 264.781 24H213.219C197.676 24 185.032 36.6439 185.032 52.1866C185.032 53.0886 185.194 53.9521 185.279 54.8387H185.032V116.516H169.613V54.8387H169.366C169.451 53.9521 169.613 53.0886 169.613 52.1866C169.613 36.6439 156.969 24 141.426 24H89.8638C74.3211 24 61.6772 36.6439 61.6772 52.1866V57.4908C61.6772 73.0336 74.3211 85.6774 89.8638 85.6774H98.9535C100.125 85.6774 101.29 85.608 102.454 85.4616L144.934 80.1573C148.249 79.7333 151.356 78.7079 154.193 77.2585V116.516H146.484C136.261 116.516 127.664 123.224 124.619 132.437C102.161 135.59 84.8063 154.879 84.8063 178.194V401.774C84.8063 424.649 101.513 443.645 123.355 447.338V448.032C123.355 458.07 129.823 466.551 138.774 469.743V502H323.806V469.743C332.757 466.551 339.226 458.07 339.226 448.032V386.355H346.935C359.687 386.355 370.064 375.978 370.064 363.226V201.323H339.226V139.645C339.226 129.607 332.757 121.127 323.806 117.935V77.2585C326.643 78.7079 329.75 79.741 333.073 80.1496L375.554 85.4538C376.71 85.608 377.882 85.6774 379.054 85.6774H388.144C403.679 85.6774 416.322 73.0336 416.322 57.4908V52.1866C416.322 36.6439 403.679 24 388.136 24ZM213.219 39.4194H264.781C271.82 39.4194 277.548 45.1477 277.548 52.1866V57.4908C277.548 64.5298 271.82 70.2581 264.781 70.2581H255.691C255.159 70.2581 254.635 70.2272 254.103 70.1578L211.63 64.8536C205.262 64.0518 200.451 58.6087 200.451 52.1866C200.451 45.1477 206.18 39.4194 213.219 39.4194ZM123.355 431.518C110.094 428.072 100.226 416.099 100.226 401.774V178.194C100.226 163.869 110.094 151.896 123.355 148.45V431.518ZM143.007 64.8536L100.534 70.1578C100.01 70.2272 99.4778 70.2581 98.9458 70.2581H89.8561C82.8249 70.2581 77.0966 64.5298 77.0966 57.4908V52.1866C77.0966 45.1477 82.8249 39.4194 89.8638 39.4194H141.426C148.465 39.4194 154.193 45.1477 154.193 52.1866C154.193 58.6087 149.383 64.0518 143.007 64.8536ZM138.774 139.645C138.774 135.397 142.236 131.935 146.484 131.935H316.097C320.345 131.935 323.806 135.397 323.806 139.645V162.774H138.774V139.645ZM308.387 486.581H154.193V471.161H308.387V486.581ZM323.806 448.032C323.806 452.28 320.345 455.742 316.097 455.742H146.484C142.236 455.742 138.774 452.28 138.774 448.032V178.194H323.806V201.323H292.968V363.226C292.968 375.978 303.345 386.355 316.097 386.355H323.806V448.032ZM354.645 363.226C354.645 367.474 351.183 370.935 346.935 370.935H316.097C311.849 370.935 308.387 367.474 308.387 363.226V263H354.645V363.226ZM354.645 216.742V247.581H308.387V216.742H354.645ZM400.903 57.4908C400.903 64.5298 395.175 70.2581 388.136 70.2581H379.046C378.514 70.2581 377.99 70.2272 377.458 70.1578L334.985 64.8536C328.617 64.0518 323.806 58.6087 323.806 52.1866C323.806 45.1477 329.535 39.4194 336.573 39.4194H388.136C395.175 39.4194 400.903 45.1477 400.903 52.1866V57.4908Z"/><path d="M303.097 424H287.678V440.968H303.097V424Z"/><path d="M272.258 424H256.839V440.968H272.258V424Z"/><path d="M241.419 424H226V440.968H241.419V424Z"/>`;
         const bagLbl = document.createElement('span');
         bagLbl.className = 'tee-chip-bag-label'; bagLbl.textContent = 'Bag';
@@ -349,10 +362,10 @@ export function renderPlan(_result, ctx) {
           openClubPicker(
               par3Override() || par3DefaultClub.key,
               (selectedKey) => {
-                par3ClubOverrides[_overrideCourseId + "|" + _overrideHoleIdx] = selectedKey !== par3DefaultClub.key ? selectedKey : null;
+                par3ClubOverrides[_overrideCourseId + '|' + _overrideHoleIdx] = selectedKey !== par3DefaultClub.key ? selectedKey : null;
                 calculate();
               },
-              { type: 'window', defaultKey: par3DefaultClub.key, clubsList, n: 2 }
+              { type: 'no-driver' }
             );
         });
         chipsWrap.appendChild(bagChip);
@@ -738,6 +751,37 @@ export function renderPlan(_result, ctx) {
           <div class="cc-shot-done-dist">${measured ? measured.dist + 'm' : ''}</div>`;
         body.appendChild(row);
       } else if (i === 0) {
+        // Quick-pick club chips for Controlled (woods) and Conservative (irons)
+        if (basePlan.type === 'Controlled' || basePlan.type === 'Conservative') {
+          const chipKeySet = basePlan.type === 'Controlled' ? WOOD_KEYS : IRON_KEYS;
+          const quickChips = clubsList.filter(c => chipKeySet.has(c.key)).slice(0, 2);
+          if (quickChips.length > 0) {
+            const currentTeeKey = teeOverrides[_hk(basePlan.type)] || basePlan.shots[0].key;
+            const qRow = document.createElement('div');
+            qRow.className = 'tee-chip-row';
+            const qLabel = document.createElement('div');
+            qLabel.className = 'tee-chip-label';
+            qLabel.textContent = basePlan.type === 'Controlled' ? 'Wood' : 'Iron';
+            qRow.appendChild(qLabel);
+            const qChips = document.createElement('div');
+            qChips.className = 'tee-chips';
+            quickChips.forEach(c => {
+              const chip = document.createElement('div');
+              chip.className = 'tee-chip tee-chip-sm' + (currentTeeKey === c.key ? ' active' : '');
+              chip.textContent = clubMap[c.key]?.label ?? c.key;
+              chip.addEventListener('click', () => {
+                teeOverrides[_hk(basePlan.type)] = c.key !== basePlan.shots[0].key ? c.key : null;
+                const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
+                newCard.id = card.id || 'activeStrategyCard';
+                newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
+              });
+              qChips.appendChild(chip);
+            });
+            qRow.appendChild(qChips);
+            body.appendChild(qRow);
+          }
+        }
+
         // Tee divider
         const teeDivider = document.createElement('div');
         teeDivider.className = 'cc-section-divider';
@@ -1174,7 +1218,10 @@ export function renderPlan(_result, ctx) {
         const withS2 = (shot2Overrides[_hk(plan.type)] && res.shots?.length >= 2)
           ? (buildPlanWithShot2Override(plan, res, shot2Overrides[_hk(plan.type)]) || res) : res;
         const teeKey = teeOverrides[_hk(plan.type)] || plan.shots[0].key;
-        const teeLabel = clubMap[teeKey]?.label ?? teeKey;
+        const teeLabel = plan.type === 'Max distance' ? 'Driver'
+          : plan.type === 'Controlled'   ? (WOOD_KEYS.has(teeKey) ? 'Wood' : (clubMap[teeKey]?.label ?? teeKey))
+          : plan.type === 'Conservative' ? (IRON_KEYS.has(teeKey) ? 'Iron' : (clubMap[teeKey]?.label ?? teeKey))
+          : (clubMap[teeKey]?.label ?? teeKey);
         const diff = withS2.score - parValue;
         const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff.toFixed(1) : diff.toFixed(1));
         const btn = document.createElement('div');
@@ -1208,7 +1255,7 @@ export function renderPlan(_result, ctx) {
             teeOverrides[_hk(basePlan.type)] = selectedKey !== basePlan.shots[0].key ? selectedKey : null;
             const newCard = buildStrategyCard(basePlan, cardIndex, totalCards, detailOpen);
             newCard.id = 'activeStrategyCard'; newCard.classList.add('active-card'); card.replaceWith(newCard); syncOuterHeight(); updateCompareTable();
-          }, { type: 'par', parValue }, 'Select tee club');
+          }, basePlan.type === 'Max distance' ? { type: 'par', parValue } : { type: 'no-driver' }, 'Select tee club');
       });
       stratFooter.appendChild(bagBtn);
     }
