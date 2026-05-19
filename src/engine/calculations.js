@@ -79,11 +79,17 @@ export const EXPECTED_STROKES = {
 };
 
 // ── Wind category ─────────────────────────────────────────────────────────────
-export function windCategory(idx) {
-  if (idx <= 3)  return 'driver_fw';
-  if (idx <= 7)  return 'hybrid_long';
-  if (idx <= 10) return 'mid_iron';
-  if (idx <= 13) return 'short_iron';
+// Key-based — index-based ranges break whenever clubs are added or reordered.
+const _WC_DRIVER_FW   = new Set(['driver','fw3','fw5','fw7']);
+const _WC_HYBRID_LONG = new Set(['hy3','hy4','hy5','hy6','2i','u2','u3','u4','3i','4i']);
+const _WC_MID_IRON    = new Set(['5i','6i','7i']);
+const _WC_SHORT_IRON  = new Set(['8i','9i','pw','48']);
+// All remaining keys (50°–60°) fall through to 'wedge'
+export function windCategory(key) {
+  if (_WC_DRIVER_FW.has(key))   return 'driver_fw';
+  if (_WC_HYBRID_LONG.has(key)) return 'hybrid_long';
+  if (_WC_MID_IRON.has(key))    return 'mid_iron';
+  if (_WC_SHORT_IRON.has(key))  return 'short_iron';
   return 'wedge';
 }
 
@@ -100,11 +106,11 @@ export function tempCarryFactor(windState) {
 
 // ── Wind carry adjustment ─────────────────────────────────────────────────────
 // Applied to carry only — roll calculated after on the adjusted carry.
-export function applyWind(carry, clubIdx, windState, handicap) {
+export function applyWind(carry, clubKey, windState, handicap) {
   if (!windState.enabled) return carry;
   const tempAdj = carry * tempCarryFactor(windState);
   if (!windState.active) return tempAdj;
-  const cat    = windCategory(clubIdx);
+  const cat    = windCategory(clubKey);
   const adj    = WIND_ADJ[cat];
   const altFac = altFactor(cat, handicap);
   const hw = windState.headwind * altFac;
@@ -118,9 +124,9 @@ export function applyWind(carry, clubIdx, windState, handicap) {
 // ── Wind roll adjustment ──────────────────────────────────────────────────────
 // η_hw = 0.022 (headwind); η_tw = 0.011 (tailwind ≈ η_hw / 2)
 // Floor: 1.0; ceiling: 1.6
-export function windAdjustedRoll(baseRoll, clubIdx, windState, handicap) {
+export function windAdjustedRoll(baseRoll, clubKey, windState, handicap) {
   if (!windState.active || !windState.enabled) return baseRoll;
-  const altFac = altFactor(windCategory(clubIdx), handicap);
+  const altFac = altFactor(windCategory(clubKey), handicap);
   const hw = windState.headwind * altFac;
   let adjusted;
   if (hw >= 0) {
@@ -211,7 +217,7 @@ export function expectedStrokesRemaining(approachDist, driverCarry, handicap, in
 // (fw3/fw5/fw7 + future HY keys). Conservative = longest utility iron / iron
 // (u2 onward); on par 5 restricted to u2–u4 since regular irons are too short.
 // Par 3 is handled separately — this function is not called for par 3.
-const _TEE_WOOD_KEYS = new Set(['fw3','fw5','fw7']); // add HY keys here when bag setup supports them
+const _TEE_WOOD_KEYS = new Set(['fw3','fw5','fw7','hy3','hy4','hy5','hy6']);
 const _TEE_IRON_KEYS = new Set(['u2','u3','u4','4i','5i','6i','7i','8i','9i','pw','50','52','54','56','58','60']);
 
 export function getValidTeeClubs(clubsList, parValue) {

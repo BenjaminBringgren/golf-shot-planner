@@ -1469,10 +1469,13 @@ export function renderMgCarryBars() {
     el.innerHTML = '<div style="padding:12px;color:#aaa;font-size:15px;">Enter driver carry to see distances.</div>';
     return;
   }
+  const _legacyOrder = ['driver','fw3','fw5','fw7','u2','u3','u4','4i','5i','6i','7i','8i','9i','pw','50','52','54','56','58','60'];
   const activeKeys = new Set(
-    saved.checked
-      ? clubs.filter((c, i) => saved.checked[i]).map(c => c.key)
-      : clubs.map(c => c.key)
+    !saved.checked
+      ? clubs.map(c => c.key)
+      : Array.isArray(saved.checked)
+        ? clubs.filter(c => { const i = _legacyOrder.indexOf(c.key); return i >= 0 && saved.checked[i]; }).map(c => c.key)
+        : clubs.filter(c => saved.checked[c.key]).map(c => c.key)
   );
   const rows = clubs.filter(c => activeKeys.has(c.key)).map(c => {
     const carry = Math.round(interpolate(driver, i7, pw, c.key));

@@ -12,7 +12,7 @@ import { loadActiveCourse, getCommittedStrategies, setCommittedStrategies } from
 
 // ── Club group sets for strategy chip rows ──────────────────────────────────
 // Woods/hybrids: fw3, fw5, fw7 and future HY keys (add e.g. 'hy3','hy5' here when bag setup supports them)
-const WOOD_KEYS = new Set(['fw3','fw5','fw7']);
+const WOOD_KEYS = new Set(['fw3','fw5','fw7','hy3','hy4','hy5','hy6']);
 // Utility irons + irons: u2 onward in relCarry order
 const IRON_KEYS = new Set(['u2','u3','u4','4i','5i','6i','7i','8i','9i','pw','50','52','54','56','58','60']);
 

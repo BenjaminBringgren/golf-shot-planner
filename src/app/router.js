@@ -60,8 +60,21 @@ import {
 } from './holeFlow.js';
 
 // ── Persistence ────────────────────────────────────────────────────────────
+// Club order before hybrids/2i/3i/48° were added — used to migrate old index-based checked arrays.
+const _LEGACY_CLUB_ORDER = ['driver','fw3','fw5','fw7','u2','u3','u4','4i','5i','6i','7i','8i','9i','pw','50','52','54','56','58','60'];
+
+function _resolveChecked(checkedData, key) {
+  if (!checkedData) return false;
+  if (Array.isArray(checkedData)) {
+    const legacyIdx = _LEGACY_CLUB_ORDER.indexOf(key);
+    return legacyIdx >= 0 ? (checkedData[legacyIdx] ?? false) : false;
+  }
+  return checkedData[key] ?? false;
+}
+
 function saveBag() {
-  const checked = clubs.map(c => document.getElementById('cb_' + c.key)?.checked ?? c.checked);
+  const checked = {};
+  clubs.forEach(c => { checked[c.key] = document.getElementById('cb_' + c.key)?.checked ?? !!c.checked; });
   const data = {
     checked,
     driver:     document.getElementById('driverCarry').value,
@@ -98,7 +111,7 @@ function updateCarryLabels() {
     if (!driver) { span.textContent = ''; return; }
     const carry = interpolate(driver, i7, pw, c.key);
     const baseRoll = getRollFactor(c.key, cond);
-    const roll  = windAdjustedRoll(baseRoll, clubOrder.indexOf(c.key), windState, _readHandicap());
+    const roll  = windAdjustedRoll(baseRoll, c.key, windState, _readHandicap());
     const total = carry * roll;
     span.textContent = isFinite(carry) && carry > 0
       ? (roll > 1.00 ? `${carry.toFixed(0)}→${total.toFixed(0)}m` : `${carry.toFixed(0)}m`)
@@ -116,7 +129,7 @@ function buildClubUI(saved) {
     cb.type = 'checkbox';
     cb.value = c.key;
     cb.id = 'cb_' + c.key;
-    cb.checked = saved ? (saved.checked[i] ?? !!c.checked) : !!c.checked;
+    cb.checked = saved ? (_resolveChecked(saved.checked, c.key) ?? !!c.checked) : !!c.checked;
     cb.addEventListener('change', saveBag);
 
     const lbl = document.createElement('label');
@@ -148,9 +161,9 @@ function getClubs(driver, i7, pw, windState) {
       const baseCarry = interpolate(driver, i7, pw, key);
       if (!isFinite(baseCarry) || baseCarry <= 0) return null;
       const idx   = clubOrder.indexOf(key);
-      const carry    = applyWind(baseCarry, idx, windState, _readHandicap());
+      const carry    = applyWind(baseCarry, key, windState, _readHandicap());
       const baseRoll = getRollFactor(key, cond);
-      const roll     = windAdjustedRoll(baseRoll, idx, windState, _readHandicap());
+      const roll     = windAdjustedRoll(baseRoll, key, windState, _readHandicap());
       return { key, carry, baseCarry, total: carry * roll, roll, idx };
     })
     .filter(Boolean)
@@ -525,6 +538,7 @@ initServices({
 
   const saved = loadBag();
   buildClubUI(saved);
+  if (saved && Array.isArray(saved.checked)) saveBag(); // migrate index-based → key-based
 
   if (saved) {
     if (saved.driver)     document.getElementById('driverCarry').value = saved.driver;
