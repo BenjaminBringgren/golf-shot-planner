@@ -233,7 +233,7 @@
     /* ── My Golf sub-page system ───────────────────────────── */
     .mg-sub { display: none; }
     .mg-sub.active { display: block; background: #f5f4f0; }
-    .mg-hub { display: block; margin-top: -env(safe-area-inset-top); }
+    .mg-hub { display: block; margin-top: calc(0px - env(safe-area-inset-top)); }
     .mg-hub.hidden { display: none; }
 
     /* Hub header — image strip */
@@ -2833,7 +2833,7 @@
 
 /* ── Home screen ──────────────────────────────────────────────────────────── */
 
-#homeScreen { display: flex; flex-direction: column; gap: 12px; padding-bottom: calc(77px + env(safe-area-inset-bottom)); background: #f5f4f0; }
+#homeScreen { display: flex; flex-direction: column; gap: 12px; padding-bottom: calc(77px + env(safe-area-inset-bottom)); background: #f5f4f0; margin-top: calc(0px - env(safe-area-inset-top)); }
 #calcView { display: contents; }
 
 /* Hero */
@@ -2842,7 +2842,6 @@
   width: 100%;
   background: #f5f4f0 !important;
   flex-shrink: 0;
-  margin-top: -env(safe-area-inset-top);
 }
 .home-hero img {
   width: 100%; height: auto;
