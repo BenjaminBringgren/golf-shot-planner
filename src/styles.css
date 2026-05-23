@@ -2833,7 +2833,7 @@
 
 /* ── Home screen ──────────────────────────────────────────────────────────── */
 
-#homeScreen { display: flex; flex-direction: column; gap: 12px; padding-bottom: calc(77px + env(safe-area-inset-bottom)); background: #f5f4f0; margin-top: calc(0px - env(safe-area-inset-top)); }
+#homeScreen { display: flex; flex-direction: column; gap: 12px; padding-bottom: calc(77px + env(safe-area-inset-bottom)); background: #f5f4f0; margin-top: calc(0px - env(safe-area-inset-top)); min-height: 100svh; }
 #calcView { display: contents; }
 
 /* Hero */
