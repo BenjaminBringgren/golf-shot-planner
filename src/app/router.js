@@ -2301,8 +2301,8 @@ initServices({
 
 // ── Pull-to-refresh (reload) ──────────────────────────────────────────────────
 (function wirePullToRefresh() {
-  const pill    = document.getElementById('ptrPill');
-  const pane    = document.getElementById('panePlay');
+  const pill = document.getElementById('ptrPill');
+  const pane = document.getElementById('panePlay');
   if (!pill || !pane) return;
 
   let startY    = null;
@@ -2312,18 +2312,16 @@ initServices({
     if (window.scrollY === 0) startY = e.touches[0].clientY;
   }, { passive: true });
 
-  pane.addEventListener('touchmove', e => {
-    if (startY === null || triggered) return;
-    if (window.scrollY > 0) { startY = null; return; }
-    const delta = e.touches[0].clientY - startY;
-    if (delta > 0) e.preventDefault(); // block iOS rubber-band when pulling down from top
-    if (delta > 70) {
+  pane.addEventListener('touchend', e => {
+    if (startY === null || triggered) { startY = null; return; }
+    if (e.changedTouches[0].clientY - startY > 80) {
       triggered = true;
       pill.classList.add('visible');
-      setTimeout(() => location.reload(), 400);
+      setTimeout(() => location.reload(), 500);
     }
-  }, { passive: false });
+    startY = null;
+  }, { passive: true });
 
-  pane.addEventListener('touchend', () => { startY = null; }, { passive: true });
+  pane.addEventListener('touchcancel', () => { startY = null; }, { passive: true });
 })();
 
