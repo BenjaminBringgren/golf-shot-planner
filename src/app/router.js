@@ -2309,12 +2309,12 @@ initServices({
   let triggered = false;
 
   pane.addEventListener('touchstart', e => {
-    if (pane.scrollTop === 0) startY = e.touches[0].clientY;
+    if (window.scrollY === 0) startY = e.touches[0].clientY;
   }, { passive: true });
 
   pane.addEventListener('touchmove', e => {
     if (startY === null || triggered) return;
-    if (pane.scrollTop > 0) { startY = null; return; }
+    if (window.scrollY > 0) { startY = null; return; }
     if (e.touches[0].clientY - startY > 70) {
       triggered = true;
       pill.classList.add('visible');
