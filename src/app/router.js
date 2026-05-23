@@ -2299,3 +2299,29 @@ initServices({
   }
 })();
 
+// ── Pull-to-refresh (reload) ──────────────────────────────────────────────────
+(function wirePullToRefresh() {
+  const pill    = document.getElementById('ptrPill');
+  const pane    = document.getElementById('panePlay');
+  if (!pill || !pane) return;
+
+  let startY    = null;
+  let triggered = false;
+
+  pane.addEventListener('touchstart', e => {
+    if (pane.scrollTop === 0) startY = e.touches[0].clientY;
+  }, { passive: true });
+
+  pane.addEventListener('touchmove', e => {
+    if (startY === null || triggered) return;
+    if (pane.scrollTop > 0) { startY = null; return; }
+    if (e.touches[0].clientY - startY > 70) {
+      triggered = true;
+      pill.classList.add('visible');
+      setTimeout(() => location.reload(), 400);
+    }
+  }, { passive: true });
+
+  pane.addEventListener('touchend', () => { startY = null; }, { passive: true });
+})();
+
