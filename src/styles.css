@@ -413,6 +413,18 @@
     }
     .mg-profile-save-btn.is-pressed { background: #333; }
 
+    .mg-data-transfer-section { margin-top: 8px; }
+    .mg-data-btn {
+      display: block; margin: 0 12px 10px;
+      padding: 15px; background: #f0efeb;
+      border: none; border-radius: 9px;
+      text-align: center; font-size: 17px; font-weight: 600;
+      color: #1a1a1a; cursor: pointer; width: calc(100% - 24px);
+    }
+    .mg-data-btn--import { color: #c0392b; }
+    .mg-data-btn.is-pressed { background: #e0deda; }
+    .mg-data-hint { margin: 0 12px 16px; }
+
     /* Edit bag button */
     .mg-edit-btn {
       display: block; margin: 0 12px 12px;

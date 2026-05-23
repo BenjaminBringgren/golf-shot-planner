@@ -14,6 +14,7 @@ import {
   saveProfile, getScoringMode,
   loadCollapseState, saveCollapseState,
   loadPersonalCal, savePersonalCal,
+  exportAllData, importAllData,
   KEY_HERO_IMG_IDX, KEY_HERO_QUOTE_IDX,
 } from '../storage/storage.js';
 import {
@@ -445,7 +446,42 @@ document.getElementById('mgProfileSaveBtn')?.addEventListener('click', () => {
 
 // Profile: pre-fill when sub-page opens (wired in showMgSub)
 
+// Data export
+document.getElementById('mgExportDataBtn')?.addEventListener('click', () => {
+  const json = exportAllData();
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10);
+  a.href     = url;
+  a.download = `golf-shot-planner-backup-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
 
+// Data import
+document.getElementById('mgImportDataBtn')?.addEventListener('click', () => {
+  document.getElementById('mgImportFileInput')?.click();
+});
+
+document.getElementById('mgImportFileInput')?.addEventListener('change', e => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      importAllData(ev.target.result);
+      const btn = document.getElementById('mgImportDataBtn');
+      btn.textContent = 'Imported ✓ — reload to apply';
+      btn.style.color = '#1e7a45';
+      btn.disabled = true;
+    } catch (err) {
+      alert('Could not read backup file. Make sure it was exported from this app.');
+    }
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
 
 // ── New course button ─────────────────────────────────────────────────────
 document.getElementById('newCourseBtn').addEventListener('click', () => {

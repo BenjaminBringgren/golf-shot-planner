@@ -246,6 +246,37 @@ export function saveHomeRoundFilter(f)      { try { localStorage.setItem(KEY_HOM
 export function loadStatsRoundFilter()      { return localStorage.getItem(KEY_STATS_ROUND_FILTER) || 'all'; }
 export function saveStatsRoundFilter(f)     { try { localStorage.setItem(KEY_STATS_ROUND_FILTER, f); } catch(e) {} }
 
+// ── Data export / import ──────────────────────────────────────────────────────
+const EXPORT_KEYS = [
+  KEY_BAG, KEY_PROFILE, KEY_COURSES, KEY_ROUNDS,
+  KEY_WIND_ENABLED, KEY_GAME_FORMAT, KEY_HCP_ENABLED,
+  KEY_WIDGET_WEATHER, KEY_WIDGET_GPS, KEY_WIDGET_FOCUS,
+  KEY_PERSONAL_CAL,
+];
+
+export function exportAllData() {
+  const data = { version: 1, exportedAt: Date.now(), keys: {} };
+  EXPORT_KEYS.forEach(k => {
+    const v = localStorage.getItem(k);
+    if (v !== null) data.keys[k] = v;
+  });
+  // include dynamic per-course keys
+  Object.keys(localStorage).forEach(k => {
+    if (k.startsWith('committedStrategies_') || k.startsWith('roundScores_')) {
+      data.keys[k] = localStorage.getItem(k);
+    }
+  });
+  return JSON.stringify(data, null, 2);
+}
+
+export function importAllData(jsonString) {
+  const data = JSON.parse(jsonString);
+  if (!data || !data.keys || typeof data.keys !== 'object') throw new Error('Invalid backup file');
+  Object.entries(data.keys).forEach(([k, v]) => {
+    try { localStorage.setItem(k, v); } catch(e) {}
+  });
+}
+
 // ── Collapsible section state ─────────────────────────────────────────────────
 export function loadCollapseState(sectionId) {
   return localStorage.getItem(_collapseKey(sectionId));

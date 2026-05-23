@@ -549,6 +549,13 @@
         <input class="mg-profile-input" id="profileHomeCourse" type="text" placeholder="e.g. Eslövs GK" maxlength="60" />
       </div>
       <button class="mg-profile-save-btn" id="mgProfileSaveBtn">Save profile</button>
+      <div class="mg-data-transfer-section">
+        <div class="mg-section-lbl">Data</div>
+        <button class="mg-data-btn" id="mgExportDataBtn">Export all data</button>
+        <button class="mg-data-btn mg-data-btn--import" id="mgImportDataBtn">Import data from backup</button>
+        <input type="file" id="mgImportFileInput" accept=".json" style="display:none" />
+        <div class="mg-profile-hint mg-data-hint">Export creates a backup file you can save to Files or share. Use Import to restore data on a new device or URL.</div>
+      </div>
     </div>
 
     <!-- ── My Bag sub-page ───────────────────────────────────────────── -->
