@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Shot counter · v4</title>
+<style>
+  :root {
+    --card: #ffffff;
+    --ink: #000000;
+    --ink-2: #3c3c43;
+    --ink-3: #8e8e93;
+    --ink-4: #c7c7cc;
+    --sep: rgba(60,60,67,0.12);
+
+    --tee: #d6e5f5;
+    --tee-ink: #1a4a7c;
+    --fw: #c7e4cb;
+    --fw-ink: #1a5530;
+    --rough: #e6d7a3;
+    --rough-ink: #5a4410;
+    --sand: #f0e2bd;
+    --sand-ink: #6a5520;
+    --green: #b8d9bc;
+    --green-ink: #1a5530;
+    --penalty: #f0c8c8;
+    --penalty-ink: #7a1f1f;
+    --holed: #1c1c1e;
+
+    --accent: #30a14e;
+    --accent-bad: #ff3b30;
+    --gold: #c9a227;
+
+    --shadow-lg: 0 20px 50px rgba(0,0,0,0.12), 0 4px 10px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #dedfe3;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
+  .page {
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 20px 14px 60px;
+  }
+  .intro {
+    font-size: 13px;
+    color: var(--ink-3);
+    line-height: 1.45;
+    margin: 0 4px 16px;
+  }
+  .intro strong { color: var(--ink-2); }
+
+  .phone {
+    background: var(--card);
+    border-radius: 32px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    margin-bottom: 28px;
+    position: relative;
+  }
+
+  /* Live-activity header */
+  .activity-bar {
+    background: #000;
+    color: #fff;
+    margin: 10px 10px 0;
+    border-radius: 20px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .activity-bar .left { display: flex; align-items: center; gap: 8px; }
+  .activity-bar .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+  .activity-bar .right { display: flex; align-items: center; gap: 12px; color: rgba(255,255,255,0.7); font-variant-numeric: tabular-nums; }
+  .activity-bar .score { color: #fff; font-weight: 600; font-size: 14px; }
+  .activity-bar .score.good { color: #34c759; }
+  .activity-bar .score.bad { color: #ff453a; }
+
+  /* Hole header */
+  .hole-header {
+    padding: 18px 20px 8px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .hole-title {
+    font-family: "SF Pro Display", -apple-system, sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .hole-title .sub { color: var(--ink-3); font-weight: 500; font-size: 17px; margin-left: 6px; }
+  .shot-counter {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-3);
+    letter-spacing: -0.01em;
+  }
+  .shot-counter .num {
+    color: var(--ink);
+    font-size: 15px;
+  }
+
+  /* Shot chips */
+  .history {
+    padding: 4px 20px 14px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .history::-webkit-scrollbar { display: none; }
+  .chip {
+    flex-shrink: 0;
+    height: 30px;
+    padding: 0 11px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    position: relative;
+    cursor: pointer;
+  }
+  .chip.tee { background: var(--tee); color: var(--tee-ink); }
+  .chip.fw { background: var(--fw); color: var(--fw-ink); }
+  .chip.rough { background: var(--rough); color: var(--rough-ink); }
+  .chip.sand { background: var(--sand); color: var(--sand-ink); }
+  .chip.penalty { background: var(--penalty); color: var(--penalty-ink); }
+  .chip.green { background: var(--green); color: var(--green-ink); }
+  .chip .num {
+    opacity: 0.55;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .chip.last::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 17px;
+    border: 2px solid rgba(0,0,0,0.08);
+  }
+  .chip-hint {
+    font-size: 11px;
+    color: var(--ink-4);
+    padding-left: 4px;
+    letter-spacing: -0.01em;
+  }
+
+  /* Prompt */
+  .prompt {
+    padding: 0 20px 14px;
+    font-family: "SF Pro Display", -apple-system, sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+  .prompt .hint {
+    display: block;
+    font-size: 13px;
+    color: var(--ink-3);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin-top: 2px;
+  }
+
+  /* Lies */
+  .lies {
+    padding: 0 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .lie {
+    aspect-ratio: 1 / 0.78;
+    border-radius: 20px;
+    border: none;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    cursor: pointer;
+    font-family: inherit;
+    transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .lie:active { transform: scale(0.96); }
+  .lie .icon { width: 24px; height: 24px; opacity: 0.55; }
+  .lie .label {
+    font-size: 19px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .lie.fw { background: var(--fw); color: var(--fw-ink); }
+  .lie.rough { background: var(--rough); color: var(--rough-ink); }
+  .lie.sand { background: var(--sand); color: var(--sand-ink); }
+  .lie.green { background: var(--green); color: var(--green-ink); }
+  .lie.green .label::after {
+    content: "";
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    margin-left: 8px;
+    vertical-align: middle;
+    opacity: 0.5;
+  }
+
+  /* Secondary */
+  .secondary {
+    padding: 12px 14px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .secondary-btn {
+    height: 52px;
+    border-radius: 16px;
+    border: none;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .secondary-btn:active { transform: scale(0.97); }
+  .secondary-btn.penalty { background: var(--penalty); color: var(--penalty-ink); }
+  .secondary-btn.holed { background: var(--holed); color: #fff; }
+  .secondary-btn svg { width: 18px; height: 18px; }
+
+  /* Stats */
+  .stats-bar {
+    margin-top: 16px;
+    padding: 14px 20px 18px;
+    border-top: 0.5px solid var(--sep);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+  .stat { display: flex; flex-direction: column; gap: 2px; }
+  .stat.right { align-items: flex-end; }
+  .stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  .stat-value {
+    font-family: "SF Pro Display", -apple-system, sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-value.good { color: var(--accent); }
+  .stat-value.bad { color: var(--accent-bad); }
+
+  /* Putts */
+  .putts-view { padding: 0 20px; }
+  .putts-card {
+    background: linear-gradient(180deg, #f7f7fa 0%, #eef0f3 100%);
+    border-radius: 24px;
+    padding: 28px 24px 22px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.04);
+  }
+  .putts-number {
+    font-family: "SF Pro Display", -apple-system, sans-serif;
+    font-size: 88px;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.06em;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .putts-sub {
+    font-size: 13px;
+    color: var(--ink-3);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .quick-putts {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    width: 100%;
+  }
+  .quick-putt {
+    flex: 1;
+    height: 48px;
+    border-radius: 14px;
+    background: #fff;
+    border: 0.5px solid var(--sep);
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink-2);
+    cursor: pointer;
+    font-family: inherit;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    transition: transform 0.1s ease;
+  }
+  .quick-putt:active { transform: scale(0.94); }
+  .quick-putt.active {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
+
+  /* Confirm row */
+  .confirm-row {
+    padding: 16px 14px 0;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 8px;
+  }
+  .btn-sec {
+    height: 52px;
+    border-radius: 16px;
+    border: none;
+    background: rgba(0,0,0,0.05);
+    color: var(--ink-2);
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+  }
+  .btn-primary {
+    height: 52px;
+    border-radius: 16px;
+    border: none;
+    background: var(--ink);
+    color: #fff;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: -0.01em;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-primary svg { width: 16px; height: 16px; }
+
+  /* Result variants */
+  .result-slim {
+    margin: 8px 20px 0;
+    padding: 14px 18px;
+    border-radius: 16px;
+    background: #f2f2f7;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .result-slim .left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .result-slim .score-pill {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: #fff;
+    display: grid; place-items: center;
+    font-family: "SF Pro Display", -apple-system, sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .result-slim .score-pill.over { color: var(--accent-bad); }
+  .result-slim .score-pill.par { color: var(--ink-2); }
+  .result-slim .result-meta {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-2);
+    letter-spacing: -0.01em;
+  }
+  .result-slim .result-meta .dim {
+    color: var(--ink-3);
+    font-weight: 500;
+  }
+
+  /* Celebration card */
+  .celebrate {
+    margin: 8px 20px 0;
+    border-radius: 24px;
+    padding: 28px 24px 22px;
+    color: #fff;
+    text-align: center;
+    box-shadow: 0 16px 40px rgba(0,0,0,0.15);
+    position: relative;
+    overflow: hidden;
+  }
+  .celebrate.birdie {
+    background: linear-gradient(135deg, #1a5530 0%, #2a7a48 60%, #3a9958 100%);
+  }
+  .celebrate.eagle {
+    background: linear-gradient(135deg, #8a6a1a 0%, #c9a227 50%, #e4c14a 100%);
+  }
+  .celebrate::before {
+    content: "";
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .celebrate .kind {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    opacity: 0.8;
+    margin-bottom: 6px;
+  }
+  .celebrate .big {
+    font-family: "SF Pro Display", -apple-system, sans-serif;
+    font-size: 56px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+  .celebrate .big .emoji {
+    font-size: 40px;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  .celebrate .meta {
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0.85;
+    margin-top: 6px;
+  }
+  .celebrate .badges {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .celebrate .badge {
+    background: rgba(255,255,255,0.18);
+    padding: 4px 10px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    backdrop-filter: blur(10px);
+  }
+  .celebrate .badge.star::before {
+    content: "★ ";
+    color: #ffe4a0;
+  }
+
+  /* Tag */
+  .tag {
+    display: inline-block;
+    background: #111;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin: 0 4px 10px;
+  }
+  .tag.alt { background: #c9a227; }
+  .tag.neutral { background: #8e8e93; }
+  .note {
+    font-size: 12px;
+    color: var(--ink-3);
+    line-height: 1.5;
+    margin: 8px 4px 0;
+  }
+  .note strong { color: var(--ink-2); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <p class="intro"><strong>Four hole outcomes.</strong> Only genuinely notable moments get the full celebration — the rest get a clean, quick confirmation so you can move on.</p>
+
+  <!-- REGULAR PAR -->
+  <span class="tag neutral">① Regular par · slim confirmation</span>
+  <div class="phone">
+    <div class="activity-bar">
+      <div class="left">
+        <span class="dot"></span>
+        <span>Eslövs GK · Round active</span>
+      </div>
+      <div class="right">
+        <span>6/18</span>
+        <span class="score good">−2</span>
+      </div>
+    </div>
+
+    <div class="hole-header">
+      <div class="hole-title">Hole 6 <span class="sub">· Par 4</span></div>
+      <div class="shot-counter">Complete</div>
+    </div>
+
+    <div class="history">
+      <div class="chip tee"><span class="num">1</span>Tee</div>
+      <div class="chip rough"><span class="num">2</span>Rough</div>
+      <div class="chip fw"><span class="num">3</span>FW</div>
+      <div class="chip green"><span class="num">4</span>Green</div>
+    </div>
+
+    <div class="result-slim">
+      <div class="left">
+        <div class="score-pill par">4</div>
+        <div class="result-meta">
+          Par<br>
+          <span class="dim">4 shots · 2 putts</span>
+        </div>
+      </div>
+      <button class="btn-primary" style="padding: 0 20px; height: 44px; font-size: 14px;">
+        Hole 7
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12 H19 M13 6 L19 12 L13 18"/></svg>
+      </button>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-label">vs Expected</span>
+        <span class="stat-value good">−0.1</span>
+      </div>
+      <div class="stat right">
+        <span class="stat-label">Round</span>
+        <span class="stat-value good">−2</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="note"><strong>The majority case.</strong> Par, bogey, double — you want to log it and move on. Slim result bar, inline "Hole 7" button, no fanfare.</p>
+
+  <!-- BIRDIE -->
+  <span class="tag">② Birdie · celebration</span>
+  <div class="phone">
+    <div class="activity-bar">
+      <div class="left">
+        <span class="dot"></span>
+        <span>Eslövs GK · Round active</span>
+      </div>
+      <div class="right">
+        <span>6/18</span>
+        <span class="score good">−3</span>
+      </div>
+    </div>
+
+    <div class="hole-header">
+      <div class="hole-title">Hole 6 <span class="sub">· Par 4</span></div>
+      <div class="shot-counter">Complete</div>
+    </div>
+
+    <div class="history">
+      <div class="chip tee"><span class="num">1</span>Tee</div>
+      <div class="chip fw"><span class="num">2</span>FW</div>
+      <div class="chip green"><span class="num">3</span>Green</div>
+    </div>
+
+    <div class="celebrate birdie">
+      <div class="kind">Birdie · Hole 6</div>
+      <div class="big"><span class="emoji">🐦</span>−1</div>
+      <div class="meta">3 shots · 1 putt · GIR</div>
+      <div class="badges">
+        <span class="badge star">FIRST BIRDIE</span>
+        <span class="badge">GIR</span>
+      </div>
+    </div>
+
+    <div class="confirm-row">
+      <button class="btn-sec">Edit</button>
+      <button class="btn-primary">
+        Hole 7
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12 H19 M13 6 L19 12 L13 18"/></svg>
+      </button>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-label">vs Expected</span>
+        <span class="stat-value good">−1.1</span>
+      </div>
+      <div class="stat right">
+        <span class="stat-label">Round</span>
+        <span class="stat-value good">−3</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="note"><strong>Birdie triggers the full card.</strong> Green gradient, bird emoji, "FIRST BIRDIE" star-badge for the first of the round. Subsequent birdies get the same card minus the star — still celebrated, but not "first-of" framed.</p>
+
+  <!-- EAGLE -->
+  <span class="tag alt">③ Eagle · premium celebration</span>
+  <div class="phone">
+    <div class="activity-bar">
+      <div class="left">
+        <span class="dot"></span>
+        <span>Eslövs GK · Round active</span>
+      </div>
+      <div class="right">
+        <span>6/18</span>
+        <span class="score good">−4</span>
+      </div>
+    </div>
+
+    <div class="hole-header">
+      <div class="hole-title">Hole 6 <span class="sub">· Par 4</span></div>
+      <div class="shot-counter">Complete</div>
+    </div>
+
+    <div class="history">
+      <div class="chip tee"><span class="num">1</span>Tee</div>
+      <div class="chip green"><span class="num">2</span>Green</div>
+    </div>
+
+    <div class="celebrate eagle">
+      <div class="kind">Eagle · Hole 6</div>
+      <div class="big"><span class="emoji">🦅</span>−2</div>
+      <div class="meta">2 shots · holed from the fairway</div>
+      <div class="badges">
+        <span class="badge star">EAGLE</span>
+        <span class="badge">GIR</span>
+        <span class="badge">FAIRWAY</span>
+      </div>
+    </div>
+
+    <div class="confirm-row">
+      <button class="btn-sec">Edit</button>
+      <button class="btn-primary">
+        Hole 7
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12 H19 M13 6 L19 12 L13 18"/></svg>
+      </button>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-label">vs Expected</span>
+        <span class="stat-value good">−2.1</span>
+      </div>
+      <div class="stat right">
+        <span class="stat-label">Round</span>
+        <span class="stat-value good">−4</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="note"><strong>Eagle or better gets the gold treatment.</strong> Different gradient, different emoji, reserved for the rare shot. Scarcity is what makes it feel earned.</p>
+
+  <!-- FIRST GIR -->
+  <span class="tag">④ First GIR of the round · milestone</span>
+  <div class="phone">
+    <div class="activity-bar">
+      <div class="left">
+        <span class="dot"></span>
+        <span>Eslövs GK · Round active</span>
+      </div>
+      <div class="right">
+        <span>6/18</span>
+        <span class="score bad">+1</span>
+      </div>
+    </div>
+
+    <div class="hole-header">
+      <div class="hole-title">Hole 6 <span class="sub">· Par 4</span></div>
+      <div class="shot-counter">Complete</div>
+    </div>
+
+    <div class="history">
+      <div class="chip tee"><span class="num">1</span>Tee</div>
+      <div class="chip fw"><span class="num">2</span>FW</div>
+      <div class="chip green"><span class="num">3</span>Green</div>
+    </div>
+
+    <div class="result-slim" style="background: linear-gradient(135deg, #fff8e4 0%, #fef1c6 100%); box-shadow: inset 0 0 0 0.5px rgba(201,162,39,0.2);">
+      <div class="left">
+        <div class="score-pill par">4</div>
+        <div class="result-meta">
+          Par · <span style="color:#8a6a1a;">★ First GIR</span><br>
+          <span class="dim">3 shots · 1 putt</span>
+        </div>
+      </div>
+      <button class="btn-primary" style="padding: 0 20px; height: 44px; font-size: 14px;">
+        Hole 7
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12 H19 M13 6 L19 12 L13 18"/></svg>
+      </button>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat">
+        <span class="stat-label">vs Expected</span>
+        <span class="stat-value good">−1.1</span>
+      </div>
+      <div class="stat right">
+        <span class="stat-label">Round</span>
+        <span class="stat-value bad">+1</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="note"><strong>Milestone, not celebration.</strong> "First GIR," "First FW hit," "Longest drive" are quieter — the slim bar gets a warm gold tint and a star-marked callout. Acknowledges the moment without the full stop.</p>
+
+  <!-- PUTTS refined -->
+  <span class="tag neutral">⑤ Putts stage · simplified</span>
+  <div class="phone">
+    <div class="activity-bar">
+      <div class="left">
+        <span class="dot"></span>
+        <span>Eslövs GK · Round active</span>
+      </div>
+      <div class="right">
+        <span>6/18</span>
+        <span class="score good">−2</span>
+      </div>
+    </div>
+
+    <div class="hole-header">
+      <div class="hole-title">Hole 6 <span class="sub">· Par 4</span></div>
+      <div class="shot-counter">Putts</div>
+    </div>
+
+    <div class="history">
+      <div class="chip tee"><span class="num">1</span>Tee</div>
+      <div class="chip fw"><span class="num">2</span>FW</div>
+      <div class="chip green last"><span class="num">3</span>Green</div>
+    </div>
+
+    <div class="putts-view">
+      <div class="putts-card">
+        <div class="putts-number">2</div>
+        <div class="putts-sub">putts on the green</div>
+        <div class="quick-putts">
+          <button class="quick-putt">1</button>
+          <button class="quick-putt active">2</button>
+          <button class="quick-putt">3</button>
+          <button class="quick-putt">4+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="confirm-row">
+      <button class="btn-sec">Back</button>
+      <button class="btn-primary">
+        Finish hole
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12 H19 M13 6 L19 12 L13 18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <p class="note"><strong>Cleaner putts card.</strong> Dropped the ± pills — the 1/2/3/4+ quick-picks cover everything. Tap "4+" to reveal a +/− stepper for the rare 5-putt case. Stats bar removed here since it's the same as the previous screen (reduces redundancy mid-flow).</p>
+
+</div>
+</body>
+</html>

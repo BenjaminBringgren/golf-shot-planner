@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shot Counter — Design Variants</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #1a1a1a; font-family: -apple-system, 'SF Pro Display', system-ui, sans-serif; }
+  @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(0.93); } 100% { transform: scale(1); } }
+  @keyframes ripple { 0% { transform: scale(0); opacity: 0.4; } 100% { transform: scale(4); opacity: 0; } }
+  @keyframes slideInRight { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+  @keyframes checkPop { 0% { transform: scale(0) rotate(-10deg); opacity: 0; } 60% { transform: scale(1.2) rotate(2deg); } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+</style>
+</head>
+<body>
+<script type="text/babel">
+
+// ─── Shared colors / tokens ───────────────────────────────────
+const LIE_CONFIG = {
+  tee:     { label: 'Tee',     short: 'TEE', bg: '#e8f4ff', text: '#2a6496', border: '#b8d8f0' },
+  fw:      { label: 'Fairway', short: 'FW',  bg: '#e2f0e8', text: '#3a7055', border: '#b4d8c1' },
+  rgh:     { label: 'Rough',   short: 'RGH', bg: '#f5edda', text: '#8a6030', border: '#dfc898' },
+  sand:    { label: 'Sand',    short: 'SND', bg: '#fdf3e0', text: '#a07020', border: '#f0d898' },
+  penalty: { label: 'Penalty', short: 'PEN', bg: '#fdeaea', text: '#a03030', border: '#f0b8b8' },
+};
+
+const LIE_ORDER = ['tee', 'fw', 'rgh', 'sand', 'penalty'];
+
+function LiePill({ lie, selected, onPress, size = 'md' }) {
+  const cfg = LIE_CONFIG[lie];
+  const [pressed, setPressed] = React.useState(false);
+  const pad = size === 'sm' ? '5px 10px' : size === 'lg' ? '10px 20px' : '7px 14px';
+  const fs = size === 'sm' ? 11 : size === 'lg' ? 15 : 13;
+  return (
+    <button
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
+      onClick={onPress}
+      style={{
+        padding: pad, borderRadius: 999,
+        background: selected ? cfg.text : cfg.bg,
+        color: selected ? '#fff' : cfg.text,
+        border: `1.5px solid ${selected ? cfg.text : cfg.border}`,
+        fontSize: fs, fontWeight: 600, letterSpacing: '0.02em',
+        cursor: 'pointer', transition: 'all 0.15s',
+        transform: pressed ? 'scale(0.94)' : 'scale(1)',
+        outline: 'none', userSelect: 'none',
+      }}
+    >{cfg.short}</button>
+  );
+}
+
+function ShotBadge({ shot, onTap }) {
+  const cfg = LIE_CONFIG[shot.lie];
+  const [pressed, setPressed] = React.useState(false);
+  return (
+    <div
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerLeave={() => setPressed(false)}
+      onClick={onTap}
+      style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+        cursor: 'pointer', userSelect: 'none',
+        transform: pressed ? 'scale(0.9)' : 'scale(1)', transition: 'transform 0.12s',
+        animation: 'slideInRight 0.2s ease',
+      }}
+    >
+      <div style={{
+        width: 36, height: 36, borderRadius: 999,
+        background: cfg.bg, border: `2px solid ${cfg.border}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 12, fontWeight: 700, color: cfg.text,
+      }}>{shot.num}</div>
+      <div style={{ fontSize: 9, fontWeight: 600, color: cfg.text, letterSpacing: '0.04em' }}>{cfg.short}</div>
+    </div>
+  );
+}
+
+function ScoreChip({ score }) {
+  const color = score < 0 ? '#3a7055' : score > 0 ? '#a03030' : '#555';
+  const bg = score < 0 ? '#e2f0e8' : score > 0 ? '#fdeaea' : '#f0f0f0';
+  return (
+    <div style={{
+      padding: '4px 12px', borderRadius: 999,
+      background: bg, color: color,
+      fontSize: 14, fontWeight: 700,
+    }}>{score > 0 ? '+' : ''}{score}</div>
+  );
+}
+
+function HoleHeader({ hole = 6, par = 4 }) {
+  return (
+    <div style={{ padding: '18px 20px 14px' }}>
+      <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', color: '#888', marginBottom: 2 }}>
+        HOLE {hole} · PAR {par}
+      </div>
+    </div>
+  );
+}
+
+function PuttsRow({ putts, onChange }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '14px 20px', borderTop: '1px solid #f0f0f0',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: 16 }}>⛳</span>
+        <span style={{ fontSize: 15, fontWeight: 500, color: '#333' }}>Putts</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <button onClick={() => onChange(Math.max(0, putts - 1))} style={btnMinus}>−</button>
+        <span style={{ fontSize: 20, fontWeight: 600, color: '#111', minWidth: 24, textAlign: 'center' }}>{putts}</span>
+        <button onClick={() => onChange(putts + 1)} style={btnMinus}>+</button>
+      </div>
+    </div>
+  );
+}
+
+const btnMinus = {
+  width: 32, height: 32, borderRadius: 999,
+  background: '#f0f0f0', border: 'none',
+  fontSize: 20, color: '#444', cursor: 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  lineHeight: 1,
+};
+
+function TotalsRow({ shots, putts, par = 4 }) {
+  const total = shots.length + putts;
+  const score = total - par;
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      padding: '12px 20px 16px', borderTop: '1px solid #f0f0f0',
+    }}>
+      <span style={{ fontSize: 15, fontWeight: 600, color: '#222' }}>Total: {total}</span>
+      <ScoreChip score={score} />
+      <span style={{ fontSize: 13, color: '#aaa' }}>Running: −3</span>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// VARIANT 1: Lie-first + Big Tap
+// ─────────────────────────────────────────────────────────────
+function Variant1() {
+  const [shots, setShots] = React.useState([
+    { num: 1, lie: 'tee' }, { num: 2, lie: 'fw' }
+  ]);
+  const [selectedLie, setSelectedLie] = React.useState('rgh');
+  const [putts, setPutts] = React.useState(0);
+  const [tapping, setTapping] = React.useState(false);
+  const [ripple, setRipple] = React.useState(null);
+
+  function logShot(e) {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setRipple({ x, y, key: Date.now() });
+    setTapping(true);
+    setTimeout(() => setTapping(false), 150);
+    setShots(s => [...s, { num: s.length + 1, lie: selectedLie }]);
+  }
+
+  function undoLast() {
+    setShots(s => s.slice(0, -1));
+  }
+
+  const nextNum = shots.length + 1;
+
+  return (
+    <div style={{ background: '#fff', borderRadius: '28px 28px 0 0', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ width: 36, height: 4, background: '#ddd', borderRadius: 99, margin: '10px auto 0' }} />
+      <HoleHeader />
+
+      {/* Shot history */}
+      <div style={{ display: 'flex', gap: 12, padding: '0 20px 16px', flexWrap: 'wrap', minHeight: 60, alignItems: 'center' }}>
+        {shots.map(s => <ShotBadge key={s.num} shot={s} onTap={() => {}} />)}
+        {shots.length === 0 && <span style={{ fontSize: 13, color: '#bbb', fontStyle: 'italic' }}>No shots yet</span>}
+      </div>
+
+      {/* Lie selector */}
+      <div style={{ padding: '0 20px 4px' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: '#aaa', marginBottom: 10 }}>
+          SHOT {nextNum} — WHERE IS YOUR BALL?
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {LIE_ORDER.map(lie => (
+            <LiePill key={lie} lie={lie} selected={selectedLie === lie} onPress={() => setSelectedLie(lie)} />
+          ))}
+        </div>
+      </div>
+
+      {/* Big tap area */}
+      <div style={{ flex: 1, padding: '12px 20px 8px' }}>
+        <div
+          onClick={logShot}
+          style={{
+            height: '100%', borderRadius: 20,
+            background: tapping ? LIE_CONFIG[selectedLie].bg : '#fafafa',
+            border: `2px solid ${tapping ? LIE_CONFIG[selectedLie].border : '#ebebeb'}`,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', position: 'relative', overflow: 'hidden',
+            transition: 'all 0.15s',
+            userSelect: 'none',
+          }}
+        >
+          {ripple && (
+            <div key={ripple.key} style={{
+              position: 'absolute',
+              left: ripple.x, top: ripple.y,
+              width: 20, height: 20,
+              borderRadius: '50%',
+              background: LIE_CONFIG[selectedLie].border,
+              transform: 'translate(-50%, -50%)',
+              animation: 'ripple 0.5s ease-out forwards',
+              pointerEvents: 'none',
+            }} />
+          )}
+          <div style={{ fontSize: 40, marginBottom: 8 }}>
+            {selectedLie === 'tee' ? '🏌️' : selectedLie === 'penalty' ? '🚫' : selectedLie === 'sand' ? '🏖️' : '⛳'}
+          </div>
+          <div style={{ fontSize: 17, fontWeight: 700, color: '#222' }}>
+            TAP — SHOT {nextNum}
+          </div>
+          <div style={{
+            marginTop: 6, fontSize: 12, fontWeight: 600,
+            color: LIE_CONFIG[selectedLie].text,
+            background: LIE_CONFIG[selectedLie].bg,
+            padding: '4px 12px', borderRadius: 999,
+          }}>
+            from {LIE_CONFIG[selectedLie].label}
+          </div>
+        </div>
+      </div>
+
+      {/* Undo */}
+      {shots.length > 0 && (
+        <div style={{ textAlign: 'center', padding: '4px 0 8px' }}>
+          <button onClick={undoLast} style={{ background: 'none', border: 'none', fontSize: 12, color: '#aaa', cursor: 'pointer' }}>
+            ↩ Undo last shot
+          </button>
+        </div>
+      )}
+
+      <PuttsRow putts={putts} onChange={setPutts} />
+      <TotalsRow shots={shots} putts={putts} />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// VARIANT 2: Shot History Timeline — tap + to add
+// ─────────────────────────────────────────────────────────────
+function Variant2() {
+  const [shots, setShots] = React.useState([
+    { num: 1, lie: 'tee' }, { num: 2, lie: 'fw' }
+  ]);
+  const [putts, setPutts] = React.useState(0);
+  const [sheet, setSheet] = React.useState(null); // null | 'add' | number (edit index)
+
+  function addShot(lie) {
+    setShots(s => [...s, { num: s.length + 1, lie }]);
+    setSheet(null);
+  }
+
+  function editShot(idx, lie) {
+    setShots(s => s.map((sh, i) => i === idx ? { ...sh, lie } : sh));
+    setSheet(null);
+  }
+
+  function deleteShot(idx) {
+    setShots(s => s.filter((_, i) => i !== idx).map((sh, i) => ({ ...sh, num: i + 1 })));
+    setSheet(null);
+  }
+
+  const isEditing = typeof sheet === 'number';
+
+  return (
+    <div style={{ background: '#fff', borderRadius: '28px 28px 0 0', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <div style={{ width: 36, height: 4, background: '#ddd', borderRadius: 99, margin: '10px auto 0' }} />
+      <HoleHeader />
+
+      {/* Timeline */}
+      <div style={{ padding: '0 20px 0', flex: 1 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: '#aaa', marginBottom: 14 }}>SHOTS</div>
+
+        {shots.map((shot, idx) => {
+          const cfg = LIE_CONFIG[shot.lie];
+          return (
+            <div key={idx} style={{ display: 'flex', alignItems: 'center', marginBottom: 10, animation: 'slideInRight 0.2s ease' }}
+              onClick={() => setSheet(idx)}>
+              {/* Line */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginRight: 14 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 999,
+                  background: cfg.bg, border: `2px solid ${cfg.border}`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 14, fontWeight: 700, color: cfg.text,
+                  flexShrink: 0,
+                }}>{shot.num}</div>
+                {idx < shots.length - 1 && <div style={{ width: 2, height: 10, background: '#f0f0f0', marginTop: 1 }} />}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: '#222' }}>Shot {shot.num}</div>
+                <div style={{ fontSize: 12, color: cfg.text, fontWeight: 500 }}>{cfg.label}</div>
+              </div>
+              <div style={{ fontSize: 12, color: '#ccc' }}>›</div>
+            </div>
+          );
+        })}
+
+        {/* Add button */}
+        <button
+          onClick={() => setSheet('add')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 12,
+            background: 'none', border: '2px dashed #ddd', borderRadius: 14,
+            padding: '10px 16px', cursor: 'pointer', width: '100%',
+            marginTop: 4,
+          }}
+        >
+          <div style={{
+            width: 36, height: 36, borderRadius: 999, background: '#f5f5f5',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 22, color: '#bbb', flexShrink: 0,
+          }}>+</div>
+          <span style={{ fontSize: 15, color: '#bbb', fontWeight: 500 }}>Add shot {shots.length + 1}</span>
+        </button>
+      </div>
+
+      <PuttsRow putts={putts} onChange={setPutts} />
+      <TotalsRow shots={shots} putts={putts} />
+
+      {/* Bottom sheet */}
+      {sheet !== null && (
+        <div style={{
+          position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)',
+          borderRadius: '28px 28px 0 0',
+          display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+          animation: 'fadeIn 0.15s ease',
+        }} onClick={() => setSheet(null)}>
+          <div style={{
+            background: '#fff', borderRadius: '24px 24px 0 0',
+            padding: '20px 20px 32px',
+            animation: 'slideUp 0.25s ease',
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: 36, height: 4, background: '#ddd', borderRadius: 99, margin: '0 auto 20px' }} />
+            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', color: '#aaa', marginBottom: 16 }}>
+              {isEditing ? `EDIT SHOT ${shots[sheet].num}` : `LOG SHOT ${shots.length + 1}`}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {LIE_ORDER.map(lie => {
+                const cfg = LIE_CONFIG[lie];
+                const active = isEditing && shots[sheet].lie === lie;
+                return (
+                  <button key={lie} onClick={() => isEditing ? editShot(sheet, lie) : addShot(lie)}
+                    style={{
+                      padding: '14px 16px', borderRadius: 14, textAlign: 'left',
+                      background: active ? cfg.text : cfg.bg,
+                      border: `1.5px solid ${active ? cfg.text : cfg.border}`,
+                      cursor: 'pointer',
+                    }}>
+                    <div style={{ fontSize: 15, fontWeight: 700, color: active ? '#fff' : cfg.text }}>{cfg.label}</div>
+                    <div style={{ fontSize: 11, color: active ? 'rgba(255,255,255,0.7)' : cfg.text, opacity: 0.7, marginTop: 2 }}>{cfg.short}</div>
+                  </button>
+                );
+              })}
+            </div>
+            {isEditing && (
+              <button onClick={() => deleteShot(sheet)} style={{
+                marginTop: 14, width: '100%', padding: '12px', borderRadius: 14,
+                background: '#fdeaea', border: '1.5px solid #f0b8b8',
+                color: '#a03030', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+              }}>Remove shot {shots[sheet].num}</button>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// VARIANT 3: One-tap grid — lie + shot in one gesture
+// ─────────────────────────────────────────────────────────────
+function Variant3() {
+  const [shots, setShots] = React.useState([
+    { num: 1, lie: 'tee' }, { num: 2, lie: 'fw' }
+  ]);
+  const [putts, setPutts] = React.useState(0);
+  const [lastTapped, setLastTapped] = React.useState(null);
+
+  function logShot(lie) {
+    setLastTapped(lie);
+    setTimeout(() => setLastTapped(null), 400);
+    setShots(s => [...s, { num: s.length + 1, lie }]);
+  }
+
+  function undoLast() {
+    setShots(s => s.slice(0, -1));
+  }
+
+  const nextNum = shots.length + 1;
+
+  return (
+    <div style={{ background: '#fff', borderRadius: '28px 28px 0 0', height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ width: 36, height: 4, background: '#ddd', borderRadius: 99, margin: '10px auto 0' }} />
+      <HoleHeader />
+
+      {/* Shot history pills */}
+      <div style={{ display: 'flex', gap: 8, padding: '0 20px 16px', flexWrap: 'wrap', minHeight: 44, alignItems: 'center' }}>
+        {shots.map(s => <ShotBadge key={s.num} shot={s} onTap={() => {}} />)}
+        {shots.length === 0 && <span style={{ fontSize: 13, color: '#bbb', fontStyle: 'italic' }}>No shots yet</span>}
+      </div>
+
+      <div style={{ padding: '0 20px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: '#aaa', marginBottom: 12 }}>
+          SHOT {nextNum} — TAP YOUR LIE TO LOG
+        </div>
+
+        {/* Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr 1fr', gap: 10, flex: 1 }}>
+          {LIE_ORDER.map(lie => {
+            const cfg = LIE_CONFIG[lie];
+            const active = lastTapped === lie;
+            const icon = { tee: '🏌️', fw: '🌿', rgh: '🌾', sand: '⛱️', penalty: '🚫' }[lie];
+            return (
+              <button key={lie} onClick={() => logShot(lie)}
+                style={{
+                  borderRadius: 18,
+                  background: active ? cfg.text : cfg.bg,
+                  border: `2px solid ${active ? cfg.text : cfg.border}`,
+                  cursor: 'pointer', userSelect: 'none',
+                  display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center',
+                  gap: 6,
+                  transform: active ? 'scale(0.95)' : 'scale(1)',
+                  transition: 'all 0.15s',
+                  gridColumn: lie === 'penalty' ? 'span 2' : 'auto',
+                }}>
+                <div style={{ fontSize: 22 }}>{icon}</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: active ? '#fff' : cfg.text }}>{cfg.label}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {shots.length > 0 && (
+        <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
+          <button onClick={undoLast} style={{ background: 'none', border: 'none', fontSize: 12, color: '#aaa', cursor: 'pointer' }}>
+            ↩ Undo last shot
+          </button>
+        </div>
+      )}
+
+      <PuttsRow putts={putts} onChange={setPutts} />
+      <TotalsRow shots={shots} putts={putts} />
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// VARIANT 4: Sequential step-by-step
+// ─────────────────────────────────────────────────────────────
+function Variant4() {
+  const [shots, setShots] = React.useState([
+    { num: 1, lie: 'tee' }, { num: 2, lie: 'fw' }
+  ]);
+  const [putts, setPutts] = React.useState(0);
+  const [step, setStep] = React.useState('idle'); // 'idle' | 'choosing'
+  const [flash, setFlash] = React.useState(false);
+
+  function startShot() {
+    setStep('choosing');
+  }
+
+  function confirmLie(lie) {
+    setShots(s => [...s, { num: s.length + 1, lie }]);
+    setFlash(true);
+    setTimeout(() => setFlash(false), 300);
+    setStep('idle');
+  }
+
+  function undoLast() {
+    setShots(s => s.slice(0, -1));
+  }
+
+  const nextNum = shots.length + 1;
+
+  return (
+    <div style={{ background: '#fff', borderRadius: '28px 28px 0 0', height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <div style={{ width: 36, height: 4, background: '#ddd', borderRadius: 99, margin: '10px auto 0' }} />
+      <HoleHeader />
+
+      {/* Shot history */}
+      <div style={{ display: 'flex', gap: 8, padding: '0 20px 16px', flexWrap: 'wrap', minHeight: 52, alignItems: 'center' }}>
+        {shots.map(s => <ShotBadge key={s.num} shot={s} onTap={() => {}} />)}
+        {shots.length === 0 && <span style={{ fontSize: 13, color: '#bbb', fontStyle: 'italic' }}>No shots yet</span>}
+      </div>
+
+      {/* Main tap zone */}
+      <div style={{ flex: 1, padding: '0 20px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
+        <button
+          onClick={startShot}
+          style={{
+            width: 140, height: 140, borderRadius: 999,
+            background: flash ? '#e2f0e8' : '#f7f7f7',
+            border: `3px solid ${flash ? '#b4d8c1' : '#e8e8e8'}`,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', userSelect: 'none',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.07)',
+            transition: 'all 0.2s',
+            animation: flash ? 'pop 0.3s ease' : 'none',
+          }}
+        >
+          <div style={{ fontSize: 38 }}>🏌️</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#444', marginTop: 6 }}>SHOT {nextNum}</div>
+        </button>
+        <div style={{ fontSize: 13, color: '#bbb' }}>Tap to log a shot</div>
+
+        {shots.length > 0 && (
+          <button onClick={undoLast} style={{ background: 'none', border: 'none', fontSize: 12, color: '#ccc', cursor: 'pointer', marginTop: 4 }}>
+            ↩ Undo
+          </button>
+        )}
+      </div>
+
+      <PuttsRow putts={putts} onChange={setPutts} />
+      <TotalsRow shots={shots} putts={putts} />
+
+      {/* Lie picker overlay */}
+      {step === 'choosing' && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(0,0,0,0.25)',
+          borderRadius: '28px 28px 0 0',
+          display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+          animation: 'fadeIn 0.15s ease',
+        }}>
+          <div style={{
+            background: '#fff', borderRadius: '24px 24px 0 0',
+            padding: '20px 20px 30px',
+            animation: 'slideUp 0.2s ease',
+          }}>
+            <div style={{ width: 36, height: 4, background: '#ddd', borderRadius: 99, margin: '0 auto 18px' }} />
+            <div style={{ fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', color: '#aaa', marginBottom: 14 }}>
+              SHOT {nextNum} — WHERE IS YOUR BALL?
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {LIE_ORDER.map(lie => {
+                const cfg = LIE_CONFIG[lie];
+                return (
+                  <button key={lie} onClick={() => confirmLie(lie)}
+                    style={{
+                      padding: '14px 18px', borderRadius: 14, textAlign: 'left',
+                      background: cfg.bg, border: `1.5px solid ${cfg.border}`,
+                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    }}>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: cfg.text }}>{cfg.label}</span>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: cfg.text, opacity: 0.6, background: 'rgba(0,0,0,0.06)', padding: '2px 8px', borderRadius: 99 }}>{cfg.short}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={() => setStep('idle')} style={{
+              marginTop: 12, width: '100%', padding: '12px', borderRadius: 14,
+              background: '#f5f5f5', border: 'none', color: '#888', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+            }}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Phone shell
+// ─────────────────────────────────────────────────────────────
+function PhoneShell({ children, bg = '#f0ede8' }) {
+  return (
+    <div style={{
+      width: 320, height: 620,
+      background: bg,
+      borderRadius: 48,
+      overflow: 'hidden',
+      boxShadow: '0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.12), inset 0 0 0 1px rgba(255,255,255,0.15)',
+      position: 'relative',
+      display: 'flex', flexDirection: 'column',
+    }}>
+      {/* Status bar */}
+      <div style={{ background: bg, padding: '14px 24px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
+        <span style={{ fontSize: 14, fontWeight: 600, color: '#333' }}>9:41</span>
+        <div style={{ width: 100, height: 28, background: '#222', borderRadius: 99 }} />
+        <span style={{ fontSize: 13, color: '#333' }}>⚡</span>
+      </div>
+      {/* Map background hint */}
+      <div style={{ background: bg, height: 80, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <div style={{ fontSize: 11, color: 'rgba(0,0,0,0.3)', letterSpacing: '0.05em', fontWeight: 500 }}>3.6 exp. strokes · −0.4 vs par</div>
+      </div>
+      {/* Sheet */}
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// App
+// ─────────────────────────────────────────────────────────────
+function App() {
+  return (
+    <DesignCanvas title="Shot Counter — 4 Directions">
+      <DCSection id="s1" title="Lie-first + Big Tap">
+        <DCArtboard id="v1" label="A — Select lie, then tap" width={320} height={620}>
+          <PhoneShell><Variant1 /></PhoneShell>
+        </DCArtboard>
+      </DCSection>
+      <DCSection id="s2" title="Shot History Timeline">
+        <DCArtboard id="v2" label="B — Timeline with + add" width={320} height={620}>
+          <PhoneShell bg="#ede8f0"><Variant2 /></PhoneShell>
+        </DCArtboard>
+      </DCSection>
+      <DCSection id="s3" title="One-tap Grid">
+        <DCArtboard id="v3" label="C — Tap lie to log instantly" width={320} height={620}>
+          <PhoneShell bg="#e8f0ed"><Variant3 /></PhoneShell>
+        </DCArtboard>
+      </DCSection>
+      <DCSection id="s4" title="Tap + Lie Sheet">
+        <DCArtboard id="v4" label="D — Log shot, then pick lie" width={320} height={620}>
+          <PhoneShell bg="#f0ece8"><Variant4 /></PhoneShell>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+<div id="root"></div>
+</body>
+</html>
