@@ -2918,7 +2918,7 @@
 /* ── Play tab hero strip + landing ───────────────────────────────────────── */
 .play-hero {
   flex-shrink: 0;
-  height: 130px;
+  height: calc(130px + env(safe-area-inset-top));
   position: relative; overflow: hidden;
   margin-left: -12px; margin-right: -12px;
   margin-top: calc(-10px - env(safe-area-inset-top));
