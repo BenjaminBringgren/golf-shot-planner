@@ -2315,12 +2315,14 @@ initServices({
   pane.addEventListener('touchmove', e => {
     if (startY === null || triggered) return;
     if (window.scrollY > 0) { startY = null; return; }
-    if (e.touches[0].clientY - startY > 70) {
+    const delta = e.touches[0].clientY - startY;
+    if (delta > 0) e.preventDefault(); // block iOS rubber-band when pulling down from top
+    if (delta > 70) {
       triggered = true;
       pill.classList.add('visible');
       setTimeout(() => location.reload(), 400);
     }
-  }, { passive: true });
+  }, { passive: false });
 
   pane.addEventListener('touchend', () => { startY = null; }, { passive: true });
 })();
