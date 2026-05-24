@@ -118,11 +118,11 @@ async function _locateAndCenter() {
   _playerMarker.setLngLat([pos.lon, pos.lat]).addTo(_map);
 
   const h   = _mapContainer.clientHeight;
-  const pad = Math.round(h * 0.70);
+  const pad = Math.round(h * 0.55);
   _map.easeTo({
     center:   [pos.lon, pos.lat],
     zoom:     17,
-    padding:  { top: 0, bottom: pad, left: 0, right: 0 },
+    padding:  { top: pad, bottom: 0, left: 0, right: 0 },
     duration: 600,
   });
 
