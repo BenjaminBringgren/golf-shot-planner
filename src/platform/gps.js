@@ -21,6 +21,28 @@ export function haversine(lat1, lon1, lat2, lon2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
+// Destination point given origin, compass bearing (°), and distance (m).
+export function destinationFromBearing(lat, lon, bearingDeg, distM) {
+  const R  = 6371000;
+  const d  = distM / R;
+  const b  = bearingDeg * Math.PI / 180;
+  const φ1 = lat * Math.PI / 180;
+  const λ1 = lon * Math.PI / 180;
+  const φ2 = Math.asin(Math.sin(φ1)*Math.cos(d) + Math.cos(φ1)*Math.sin(d)*Math.cos(b));
+  const λ2 = λ1 + Math.atan2(Math.sin(b)*Math.sin(d)*Math.cos(φ1), Math.cos(d) - Math.sin(φ1)*Math.sin(φ2));
+  return { lat: φ2 * 180 / Math.PI, lon: λ2 * 180 / Math.PI };
+}
+
+// Compass bearing (°, 0–360) from point A to point B.
+export function getBearingBetween(lat1, lon1, lat2, lon2) {
+  const toRad = d => d * Math.PI / 180;
+  const dLon  = toRad(lon2 - lon1);
+  const y     = Math.sin(dLon) * Math.cos(toRad(lat2));
+  const x     = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2))
+              - Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+  return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+}
+
 // ── Geolocation ────────────────────────────────────────────────────────────────
 // Takes N GPS readings over ~(n-1)*0.5s and returns inverse-variance weighted position.
 export function averagedPosition(n = 6) {
