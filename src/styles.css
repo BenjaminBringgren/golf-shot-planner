@@ -3381,7 +3381,7 @@
 /* ── Map FAB ─────────────────────────────────────────────────────────────── */
 .map-fab {
   position: fixed;
-  bottom: 168px;
+  bottom: calc(77px + env(safe-area-inset-bottom, 0px) + 12px + 72px + 12px);
   left: 20px;
   z-index: 510;
   width: 72px; height: 72px; border-radius: 50%;
