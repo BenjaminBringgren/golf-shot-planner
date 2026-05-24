@@ -22,7 +22,7 @@ import {
   clearGpsState, markTeePosition, recordShot, restoreGpsState, getGpsSnapshot,
   averagedPosition, haversine,
 } from '../platform/gps.js';
-import { initMapView, setMapFabVisible, closeMapViewIfOpen } from '../ui/mapView.js';
+import { initMapView, setMapFabVisible, closeMapViewIfOpen, refreshMapInfoStrip } from '../ui/mapView.js';
 import { fetchWind, fetchLocationName } from '../platform/weather.js';
 import {
   clubs, clubOrder, idx7, idxPW, clubMap, getRollFactor,
@@ -1908,6 +1908,7 @@ initServices({
       const { gameFormat: _fmt = 'strokes', hcpEnabled: _hcp = true } = loadActiveCourse();
       saveActiveCourse(id, newIdx, _fmt, _hcp);
       resetInRough();
+      refreshMapInfoStrip();
       const bar = document.getElementById('playCourseBar');
       if (bar?._navigateTo) bar._navigateTo(newIdx);
     }

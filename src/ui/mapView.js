@@ -5,7 +5,7 @@
 // All GPS/session data comes via injected callbacks from router.js.
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoiZ29sZm1hcCIsImEiOiJjbXBqZHE0NzgwY3JnMnJzYXdqYmwzZTdyIn0.NjQk6PyT7w2uObA_vkuc4Q';
-const MAP_STYLE    = 'mapbox://styles/mapbox/satellite-streets-v12';
+const MAP_STYLE    = 'mapbox://styles/mapbox/satellite-v9';
 
 let _map          = null;
 let _playerMarker = null;
@@ -38,8 +38,6 @@ export function openMapView() {
   _mapPage.classList.add('open');
   _fab.classList.add('map-open');
   document.body.style.overflow = 'hidden';
-  document.getElementById('scoreFab')?.classList.remove('visible');
-  document.getElementById('widgetFab')?.classList.remove('visible');
   _renderInfoStrip();
   requestAnimationFrame(() => requestAnimationFrame(() => {
     if (!_map) _initMap();
@@ -59,6 +57,11 @@ export function closeMapView() {
 // Called when switching away from play tab — caller handles FAB visibility.
 export function closeMapViewIfOpen() {
   if (_isOpen) _closeInternal();
+}
+
+// Called by router whenever the active hole changes.
+export function refreshMapInfoStrip() {
+  if (_isOpen) _renderInfoStrip();
 }
 
 // ── Internal ──────────────────────────────────────────────────────────────────
@@ -115,7 +118,7 @@ async function _locateAndCenter() {
   _playerMarker.setLngLat([pos.lon, pos.lat]).addTo(_map);
 
   const h   = _mapContainer.clientHeight;
-  const pad = Math.round(h * 0.15);
+  const pad = Math.round(h * 0.70);
   _map.easeTo({
     center:   [pos.lon, pos.lat],
     zoom:     17,
