@@ -16,9 +16,15 @@ let _playerConeEl = null;
 let _isOpen       = false;
 let _callbacks    = null;
 
-let _fab, _mapPage, _mapContainer, _infoStrip, _windBtn, _windPopup;
+let _fab, _mapPage, _mapContainer, _infoStrip, _windBtn, _windPopup, _chipsRow;
 let _compassAbsHandler = null;
 let _compassFbHandler  = null;
+
+const _STRATEGIES = [
+  { type: 'Max distance', label: 'MAX',  color: '#c0392b' },
+  { type: 'Controlled',   label: 'CTRL', color: '#c07820' },
+  { type: 'Conservative', label: 'CONS', color: '#1e7a45' },
+];
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
@@ -49,6 +55,28 @@ export function initMapView(callbacks) {
     `<span class="map-wind-btn-speed">–</span>`;
   _mapPage.appendChild(_windBtn);
 
+  _chipsRow = document.createElement('div');
+  _chipsRow.className = 'map-strategy-chips';
+  _mapPage.appendChild(_chipsRow);
+
+  _chipsRow.addEventListener('click', (e) => {
+    const chip = e.target.closest('.map-strategy-chip');
+    if (!chip) return;
+    const session  = _callbacks.getActiveSession?.();
+    const courseId = session?.id;
+    const holeIdx  = session?.id ? (session.holeIdx ?? 0) : null;
+    if (!courseId || holeIdx === null) return;
+    const type = chip.dataset.type;
+    const current = _callbacks.getCommittedStrategy?.(courseId, holeIdx);
+    const currentType = current?.split(' · ')[0] ?? null;
+    if (currentType === type) {
+      _callbacks.clearCommittedStrategy?.(courseId, holeIdx);
+    } else {
+      _callbacks.setCommittedStrategy?.(courseId, holeIdx, type, current);
+    }
+    _renderChips();
+  });
+
   _windBtn.addEventListener('click', async () => {
     // Popup open → close only, no refresh.
     if (_windPopup) { _hideWindPopup(); return; }
@@ -77,6 +105,7 @@ export function openMapView() {
   if (existingWind?.speedMs != null) _updateWindBtn(existingWind);
 
   _renderInfoStrip();
+  _renderChips();
   requestAnimationFrame(() => requestAnimationFrame(() => {
     if (!_map) _initMap();
     else       _map.resize();
@@ -100,7 +129,9 @@ export function closeMapViewIfOpen() {
 
 // Called by router whenever the active hole changes.
 export function refreshMapInfoStrip() {
-  if (_isOpen) _renderInfoStrip();
+  if (!_isOpen) return;
+  _renderInfoStrip();
+  _renderChips();
 }
 
 // ── Internal ──────────────────────────────────────────────────────────────────
@@ -274,6 +305,31 @@ function _showWindPopup(wind) {
 
 function _hideWindPopup() {
   if (_windPopup) { _windPopup.remove(); _windPopup = null; }
+}
+
+// ── Strategy chips ────────────────────────────────────────────────────────────
+
+function _renderChips() {
+  if (!_chipsRow) return;
+  const session  = _callbacks.getActiveSession?.();
+  const courseId = session?.id;
+  const holeIdx  = session?.id ? (session.holeIdx ?? 0) : null;
+
+  if (!courseId || holeIdx === null) {
+    _chipsRow.innerHTML = '';
+    return;
+  }
+
+  const committed   = _callbacks.getCommittedStrategy?.(courseId, holeIdx) ?? null;
+  const activeType  = committed?.split(' · ')[0] ?? null;
+
+  _chipsRow.innerHTML = _STRATEGIES.map(({ type, label, color }) => {
+    const isActive = activeType === type;
+    const style = isActive
+      ? `background:${color};border-color:${color};color:#fff;`
+      : '';
+    return `<button class="map-strategy-chip${isActive ? ' active' : ''}" data-type="${type}" style="${style}" type="button">${label}</button>`;
+  }).join('');
 }
 
 // ── Info strip ────────────────────────────────────────────────────────────────

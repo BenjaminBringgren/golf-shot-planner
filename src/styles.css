@@ -3396,6 +3396,33 @@
 .map-card-btn.is-pressed { background: rgba(255,255,255,0.3); }
 @media (hover: hover) { .map-card-btn:hover { background: rgba(255,255,255,0.25); } }
 
+/* ── Strategy chip row ───────────────────────────────────────────────────── */
+.map-strategy-chips {
+  position: absolute;
+  top: calc(54px + env(safe-area-inset-top, 0px));
+  left: 14px;
+  right: 88px; /* leaves room for 60px wind btn + 14px gap */
+  z-index: 2;
+  display: flex; gap: 8px; align-items: center;
+  pointer-events: none; /* row itself is transparent to touches */
+}
+.map-strategy-chip {
+  pointer-events: all;
+  padding: 7px 14px; border-radius: 20px;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: 0.05em; text-transform: uppercase;
+  border: 1.5px solid rgba(255,255,255,0.3);
+  background: rgba(0,0,0,0.5);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  color: rgba(255,255,255,0.6);
+  cursor: pointer; font-family: inherit; margin: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.map-strategy-chip.active { color: #fff; }
+.map-strategy-chip.is-pressed { opacity: 0.7; }
+@media (hover: hover) { .map-strategy-chip:hover { color: #fff; border-color: rgba(255,255,255,0.55); } }
+
 /* ── Wind overlay button ─────────────────────────────────────────────────── */
 .map-wind-btn {
   position: absolute;

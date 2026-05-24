@@ -2339,6 +2339,21 @@ initMapView({
   getCourse:               (courseId) => loadCourses()[courseId],
   getStrokeCounts:         (courseId) => computeHoleStrokeCounts(courseId),
   getWindState:            () => windState,
+  getCommittedStrategy:    (courseId, holeIdx) => (getCommittedStrategies(courseId || null))[holeIdx] ?? null,
+  setCommittedStrategy:    (courseId, holeIdx, type, existing) => {
+    const all   = getCommittedStrategies(courseId || null);
+    const parts = (existing || '').split(' · ');
+    let str = type;
+    if (parts.length >= 2) str += ` · ${parts[1]}`;
+    if (parts.length >= 3) str += ` · ${parts[2]}`;
+    all[holeIdx] = str;
+    setCommittedStrategies(courseId || null, all);
+  },
+  clearCommittedStrategy:  (courseId, holeIdx) => {
+    const all = getCommittedStrategies(courseId || null);
+    delete all[holeIdx];
+    setCommittedStrategies(courseId || null, all);
+  },
   openScorecard:           () => openScorecardPageGlobal(),
   getHandicap:             () => _readHandicap(),
   destinationFromBearing:  (lat, lon, b, d) => destinationFromBearing(lat, lon, b, d),
