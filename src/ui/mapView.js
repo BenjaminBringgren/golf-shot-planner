@@ -386,42 +386,24 @@ function _buildDots(strategy, teeMark, bearing) {
 
 function _renderShotOverlay() {
   _clearShotOverlay();
-  if (!_map || !_map.isStyleLoaded()) {
-    console.log('[map overlay] not ready — map or style not loaded');
-    return;
-  }
+  if (!_map || !_map.isStyleLoaded()) return;
 
   const session  = _callbacks.getActiveSession?.();
   const courseId = session?.id;
   const holeIdx  = session?.id ? (session.holeIdx ?? 0) : null;
-  if (!courseId || holeIdx === null) {
-    console.log('[map overlay] no active session');
-    return;
-  }
+  if (!courseId || holeIdx === null) return;
 
   const committed = _callbacks.getCommittedStrategy?.(courseId, holeIdx);
   const type = committed?.split(' · ')[0] ?? null;
-  if (!type) {
-    console.log('[map overlay] no committed strategy for hole', holeIdx);
-    return;
-  }
+  if (!type) return;
 
   const strategies = _callbacks.getComputedStrategies?.() ?? [];
-  console.log('[map overlay] strategies cached:', strategies.length, 'looking for:', type);
-  const strategy = strategies.find(s => s.type === type);
-  if (!strategy || !strategy.shots?.length) {
-    console.log('[map overlay] strategy not found in computed strategies');
-    return;
-  }
+  const strategy   = strategies.find(s => s.type === type);
+  if (!strategy || !strategy.shots?.length) return;
 
   const snapshot = _callbacks.getGpsSnapshot?.();
-  // Fallback: if no GPS tee mark, use the last known player position.
-  const teeMark = snapshot?.teeMark ?? (_playerPos ? { lat: _playerPos.lat, lon: _playerPos.lon } : null);
-  if (!teeMark) {
-    console.log('[map overlay] no tee mark and no player position yet — will retry after GPS resolves');
-    return;
-  }
-  console.log('[map overlay] rendering — type:', type, 'shots:', strategy.shots.length, 'tee:', teeMark);
+  const teeMark  = snapshot?.teeMark ?? (_playerPos ? { lat: _playerPos.lat, lon: _playerPos.lon } : null);
+  if (!teeMark) return;
 
   _activeStratColor = _STRAT_COLORS[type] ?? '#888';
 
