@@ -29,6 +29,9 @@ export function initMapView(callbacks) {
   _mapContainer = document.getElementById('mapboxContainer');
   _infoStrip    = document.getElementById('mapInfoStrip');
   if (!_fab) return;
+  _infoStrip.addEventListener('click', (e) => {
+    if (e.target.closest('.map-card-btn')) _callbacks.openScorecard?.();
+  });
   _fab.addEventListener('click', () => _isOpen ? closeMapView() : openMapView());
 }
 
@@ -129,17 +132,51 @@ async function _locateAndCenter() {
   _renderInfoStrip(pos, snapshot);
 }
 
+const _WIND_ARROW_PATH = 'M12.9883 9.13086C15.0391 9.13086 17.1875 7.95898 18.8477 6.39648L33.0566-7.22656C33.5449-7.71484 33.8867-7.95898 34.1797-7.95898C34.5215-7.95898 34.8633-7.71484 35.3516-7.22656L49.5117 6.39648C51.2207 7.95898 53.3203 9.13086 55.3711 9.13086C58.3496 9.13086 60.5957 6.39648 60.5957 3.56445C60.5957 1.80664 59.8145-0.146484 58.8867-2.63672L40.0879-51.5137C38.623-55.3223 36.6211-56.8359 34.1797-56.8359C31.7871-56.8359 29.7363-55.3223 28.2715-51.5137L9.47266-2.63672C8.54492-0.146484 7.8125 1.80664 7.8125 3.56445C7.8125 6.39648 10.0098 9.13086 12.9883 9.13086Z';
+
 function _renderInfoStrip(pos, snapshot) {
   if (!_infoStrip) return;
-  const session = _callbacks.getActiveSession?.();
-  const holeNum = session?.id ? (session.holeIdx ?? 0) + 1 : null;
-  let html = '';
-  if (holeNum) html += `<div class="map-info-hole">Hole ${holeNum}</div>`;
-  if (pos && snapshot?.teeMark) {
-    const dist = _callbacks.haversine?.(pos.lat, pos.lon, snapshot.teeMark.lat, snapshot.teeMark.lon);
-    if (dist != null) html += `<div class="map-info-dist">${Math.round(dist)}<span>m to tee</span></div>`;
-  } else if (!pos) {
-    html += `<div class="map-info-locating">Locating…</div>`;
+  const session  = _callbacks.getActiveSession?.();
+  const courseId = session?.id;
+  const holeIdx  = session?.id ? (session.holeIdx ?? 0) : null;
+  const holeNum  = holeIdx !== null ? holeIdx + 1 : null;
+
+  // ── Hole info (left side) ─────────────────────────────────────────────────
+  let leftHtml = '';
+  if (holeNum) {
+    leftHtml += `<span class="map-info-hole">Hole ${holeNum}</span>`;
+    const course = courseId ? _callbacks.getCourse?.(courseId) : null;
+    const hole   = course?.holes?.[holeIdx];
+    if (hole?.length) leftHtml += `<span class="map-info-sep">·</span><span class="map-info-length">${hole.length}m</span>`;
+    if (hole?.si)     leftHtml += `<span class="map-info-sep">·</span><span class="map-info-si">SI ${hole.si}</span>`;
+    if (courseId && session?.hcpEnabled) {
+      const counts = _callbacks.getStrokeCounts?.(courseId);
+      const strokes = counts?.[holeIdx] ?? 0;
+      if (strokes > 0) {
+        leftHtml += `<span class="map-info-hcp-dots">${'●'.repeat(strokes)}</span>`;
+      }
+    }
+  } else {
+    leftHtml += `<span class="map-info-locating">Locating…</span>`;
   }
-  _infoStrip.innerHTML = html;
+
+  // ── Wind + CARD (right side) ──────────────────────────────────────────────
+  let rightHtml = '';
+  const wind = _callbacks.getWindState?.();
+  if (wind?.speedMs != null) {
+    const windTo  = Math.round((wind.dirDeg + 180) % 360);
+    const speedTxt = wind.speedMs < 1 ? 'Calm' : `${wind.speedMs.toFixed(1)}m/s`;
+    rightHtml += `<div class="map-wind-widget">
+      <svg class="map-wind-arrow" width="14" height="14" viewBox="-2.000 -74.459 72.410 80.459"
+           fill="currentColor" style="transform:rotate(${windTo}deg)">
+        <path d="${_WIND_ARROW_PATH}"/>
+      </svg>
+      <span class="map-wind-speed">${speedTxt}</span>
+    </div>`;
+  }
+  rightHtml += `<button class="map-card-btn" type="button">CARD</button>`;
+
+  _infoStrip.innerHTML =
+    `<div class="map-info-left">${leftHtml}</div>` +
+    `<div class="map-info-right">${rightHtml}</div>`;
 }

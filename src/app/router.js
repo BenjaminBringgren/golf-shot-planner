@@ -20,7 +20,7 @@ import {
 import {
   teeMarked, completedShots,
   clearGpsState, markTeePosition, recordShot, restoreGpsState, getGpsSnapshot,
-  averagedPosition, haversine,
+  averagedPosition, haversine, destinationFromBearing,
 } from '../platform/gps.js';
 import { initMapView, setMapFabVisible, closeMapViewIfOpen, refreshMapInfoStrip } from '../ui/mapView.js';
 import { fetchWind, fetchLocationName } from '../platform/weather.js';
@@ -40,12 +40,12 @@ import { renderPlan, updateWindSectionStatus as _uwss, updateWindBreakdown as _u
 import { openClubPicker, closeClubPicker,
          openCoursePicker, closeCoursePicker, wireCoursePickerEvents } from '../ui/sheets.js';
 import { renderPlayCourseBar, renderScoreEntry, showRoundCompleteOverlay, renderSavedRoundDetail,
-         hideScorefab, getInRough, resetInRough } from '../ui/scorecard.js';
+         hideScorefab, getInRough, resetInRough, openScorecardPageGlobal } from '../ui/scorecard.js';
 import {
   computeHoleBaseline, blendedScore,
   applyHoleToPlay, loadCourseIntoPlay, resumeRoundInPlay,
   deleteCourse, renderCourseList, openEditor,
-  initServices,
+  initServices, computeHoleStrokeCounts,
 } from './courses.js';
 import {
   showMgSub, showMgHub, refreshMgHub,
@@ -2331,10 +2331,16 @@ initServices({
 
 // ── Map view ──────────────────────────────────────────────────────────────────
 initMapView({
-  getGpsSnapshot:        () => getGpsSnapshot(),
-  fetchCurrentPosition:  () => averagedPosition(2),
-  getActiveSession:      () => loadActiveCourse(),
-  haversine:             (lat1, lon1, lat2, lon2) => haversine(lat1, lon1, lat2, lon2),
-  getActiveCourseId:     () => getActiveCourseId(),
+  getGpsSnapshot:          () => getGpsSnapshot(),
+  fetchCurrentPosition:    () => averagedPosition(2),
+  getActiveSession:        () => loadActiveCourse(),
+  haversine:               (lat1, lon1, lat2, lon2) => haversine(lat1, lon1, lat2, lon2),
+  getActiveCourseId:       () => getActiveCourseId(),
+  getCourse:               (courseId) => loadCourses()[courseId],
+  getStrokeCounts:         (courseId) => computeHoleStrokeCounts(courseId),
+  getWindState:            () => windState,
+  openScorecard:           () => openScorecardPageGlobal(),
+  getHandicap:             () => _readHandicap(),
+  destinationFromBearing:  (lat, lon, b, d) => destinationFromBearing(lat, lon, b, d),
 });
 

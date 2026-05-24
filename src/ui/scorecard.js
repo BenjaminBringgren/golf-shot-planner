@@ -27,6 +27,10 @@ let _scorecardSwipeAC = null;
 export function getInRough()  { return _inRough; }
 export function resetInRough() { _inRough = false; }
 
+// ── Global scorecard opener (set by renderPlayCourseBar, called by map view) ──
+let _openScorecardFn = null;
+export function openScorecardPageGlobal() { _openScorecardFn?.(); }
+
 // ── Score CSS class helper ────────────────────────────────────────────────────
 function scoreCssClass(strokes, par) {
   if (strokes == null) return '';
@@ -200,6 +204,7 @@ export function renderPlayCourseBar(courseId, callbacks = {}) {
   const session = loadActiveCourse();
   let holeIdx = session.holeIdx ?? 0;
   let scores  = loadScores(courseId);
+  _openScorecardFn = openScorecardPage;
 
   const bar = document.createElement('div');
   bar.id = 'playCourseBar';
