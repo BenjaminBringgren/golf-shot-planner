@@ -3381,10 +3381,10 @@
 /* ── Map FAB ─────────────────────────────────────────────────────────────── */
 .map-fab {
   position: fixed;
-  bottom: calc(24px + 72px + 20px);
+  bottom: calc(24px + 72px + 16px);
   left: 20px;
   z-index: 510;
-  width: 56px; height: 56px; border-radius: 50%;
+  width: 72px; height: 72px; border-radius: 50%;
   background: #1a1a1a; border: none;
   box-shadow: 0 4px 16px rgba(0,0,0,0.25);
   cursor: pointer; display: none;
