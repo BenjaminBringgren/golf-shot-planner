@@ -3473,6 +3473,17 @@
   0%   { transform: scale(1); opacity: 0.6; }
   100% { transform: scale(2.5); opacity: 0; }
 }
+.map-player-cone {
+  position: absolute;
+  width: 0; height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 13px solid rgba(37, 99, 235, 0.8);
+  left: 5px; top: -11px;
+  /* rotate around dot centre: 5px right (half of 10px base), 21px down (11px to element + 10px to dot centre) */
+  transform-origin: 5px 21px;
+  display: none;
+}
 .map-tee-marker { width: 16px; height: 22px; position: relative; }
 .map-tee-pin {
   width: 12px; height: 12px; border-radius: 50%;

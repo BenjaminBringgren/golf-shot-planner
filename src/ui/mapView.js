@@ -7,16 +7,18 @@
 const MAPBOX_TOKEN = 'pk.eyJ1IjoiZ29sZm1hcCIsImEiOiJjbXBqZHE0NzgwY3JnMnJzYXdqYmwzZTdyIn0.NjQk6PyT7w2uObA_vkuc4Q';
 const MAP_STYLE    = 'mapbox://styles/mapbox/satellite-streets-v12';
 
+const _WIND_ARROW_PATH = 'M12.9883 9.13086C15.0391 9.13086 17.1875 7.95898 18.8477 6.39648L33.0566-7.22656C33.5449-7.71484 33.8867-7.95898 34.1797-7.95898C34.5215-7.95898 34.8633-7.71484 35.3516-7.22656L49.5117 6.39648C51.2207 7.95898 53.3203 9.13086 55.3711 9.13086C58.3496 9.13086 60.5957 6.39648 60.5957 3.56445C60.5957 1.80664 59.8145-0.146484 58.8867-2.63672L40.0879-51.5137C38.623-55.3223 36.6211-56.8359 34.1797-56.8359C31.7871-56.8359 29.7363-55.3223 28.2715-51.5137L9.47266-2.63672C8.54492-0.146484 7.8125 1.80664 7.8125 3.56445C7.8125 6.39648 10.0098 9.13086 12.9883 9.13086Z';
+
 let _map          = null;
 let _playerMarker = null;
 let _teeMarker    = null;
+let _playerConeEl = null;
 let _isOpen       = false;
 let _callbacks    = null;
 
 let _fab, _mapPage, _mapContainer, _infoStrip, _windBtn, _windPopup;
-let _windFetched = false;
-
-const _WIND_ARROW_PATH = 'M12.9883 9.13086C15.0391 9.13086 17.1875 7.95898 18.8477 6.39648L33.0566-7.22656C33.5449-7.71484 33.8867-7.95898 34.1797-7.95898C34.5215-7.95898 34.8633-7.71484 35.3516-7.22656L49.5117 6.39648C51.2207 7.95898 53.3203 9.13086 55.3711 9.13086C58.3496 9.13086 60.5957 6.39648 60.5957 3.56445C60.5957 1.80664 59.8145-0.146484 58.8867-2.63672L40.0879-51.5137C38.623-55.3223 36.6211-56.8359 34.1797-56.8359C31.7871-56.8359 29.7363-55.3223 28.2715-51.5137L9.47266-2.63672C8.54492-0.146484 7.8125 1.80664 7.8125 3.56445C7.8125 6.39648 10.0098 9.13086 12.9883 9.13086Z';
+let _compassAbsHandler = null;
+let _compassFbHandler  = null;
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
@@ -32,6 +34,7 @@ export function initMapView(callbacks) {
   _mapContainer = document.getElementById('mapboxContainer');
   _infoStrip    = document.getElementById('mapInfoStrip');
   if (!_fab) return;
+
   _infoStrip.addEventListener('click', (e) => {
     if (e.target.closest('.map-card-btn')) _callbacks.openScorecard?.();
   });
@@ -47,12 +50,13 @@ export function initMapView(callbacks) {
   _mapPage.appendChild(_windBtn);
 
   _windBtn.addEventListener('click', async () => {
-    if (_windFetched) { _toggleWindPopup(); return; }
+    // Popup open → close only, no refresh.
+    if (_windPopup) { _hideWindPopup(); return; }
+    // Popup closed → always fetch fresh + open popup.
     _setWindBtnLoading(true);
     try {
       const wind = await _callbacks.fetchMapWind?.();
       if (wind) {
-        _windFetched = true;
         _updateWindBtn(wind);
         _showWindPopup(wind);
       }
@@ -67,17 +71,17 @@ export function openMapView() {
   _mapPage.classList.add('open');
   _fab.classList.add('map-open');
   document.body.style.overflow = 'hidden';
-  _windFetched = false;
+
+  // Pre-populate wind button if wind already loaded on Play tab.
   const existingWind = _callbacks.getWindState?.();
-  if (existingWind?.speedMs != null) {
-    _windFetched = true;
-    _updateWindBtn(existingWind);
-  }
+  if (existingWind?.speedMs != null) _updateWindBtn(existingWind);
+
   _renderInfoStrip();
   requestAnimationFrame(() => requestAnimationFrame(() => {
     if (!_map) _initMap();
     else       _map.resize();
     _locateAndCenter();
+    _startCompass();
   }));
 }
 
@@ -107,6 +111,8 @@ function _closeInternal() {
   _fab.classList.remove('map-open');
   document.body.style.overflow = '';
   _hideWindPopup();
+  _stopCompass();
+  _playerConeEl = null;
   if (_map) { _map.remove(); _map = null; }
 }
 
@@ -125,7 +131,11 @@ function _initMap() {
 
   const playerEl = document.createElement('div');
   playerEl.className = 'map-player-marker';
-  playerEl.innerHTML = '<div class="map-player-dot"></div><div class="map-player-ring"></div>';
+  playerEl.innerHTML =
+    '<div class="map-player-cone"></div>' +
+    '<div class="map-player-dot"></div>' +
+    '<div class="map-player-ring"></div>';
+  _playerConeEl = playerEl.querySelector('.map-player-cone');
   _playerMarker = new mapboxgl.Marker({ element: playerEl, anchor: 'center' }).setLngLat([0, 0]);
 
   const teeEl = document.createElement('div');
@@ -165,6 +175,54 @@ async function _locateAndCenter() {
   _renderInfoStrip(pos, snapshot);
 }
 
+// ── Compass / player direction ─────────────────────────────────────────────────
+
+function _startCompass() {
+  if (_compassAbsHandler) return;
+  let absFired = false;
+
+  _compassAbsHandler = (ev) => {
+    absFired = true;
+    const h = ev.webkitCompassHeading != null
+      ? ev.webkitCompassHeading
+      : (360 - (ev.alpha ?? 0)) % 360;
+    if (h != null && !isNaN(h)) _updatePlayerCone(h);
+  };
+  window.addEventListener('deviceorientationabsolute', _compassAbsHandler);
+
+  // Fallback to deviceorientation if absolute never fires.
+  setTimeout(() => {
+    if (!absFired) {
+      _compassFbHandler = (ev) => {
+        const h = ev.webkitCompassHeading != null
+          ? ev.webkitCompassHeading
+          : (360 - (ev.alpha ?? 0)) % 360;
+        if (h != null && !isNaN(h)) _updatePlayerCone(h);
+      };
+      window.addEventListener('deviceorientation', _compassFbHandler);
+    }
+  }, 500);
+}
+
+function _stopCompass() {
+  if (_compassAbsHandler) {
+    window.removeEventListener('deviceorientationabsolute', _compassAbsHandler);
+    _compassAbsHandler = null;
+  }
+  if (_compassFbHandler) {
+    window.removeEventListener('deviceorientation', _compassFbHandler);
+    _compassFbHandler = null;
+  }
+}
+
+function _updatePlayerCone(heading) {
+  if (!_playerConeEl) return;
+  _playerConeEl.style.display = 'block';
+  _playerConeEl.style.transform = `rotate(${Math.round(heading)}deg)`;
+}
+
+// ── Wind button helpers ────────────────────────────────────────────────────────
+
 function _bearingLabel(deg) {
   const dirs = ['N','NE','E','SE','S','SW','W','NW'];
   return dirs[Math.round(((deg % 360) + 360) / 45) % 8];
@@ -197,8 +255,8 @@ function _showWindPopup(wind) {
   const rows = [];
   if (wind.speedMs != null) {
     const dir = wind.dirDeg != null ? ` from ${_bearingLabel(wind.dirDeg)}` : '';
-    const speed = wind.speedMs < 1 ? 'Calm' : `${wind.speedMs.toFixed(1)} m/s${dir}`;
-    rows.push(['Wind', speed]);
+    const spd = wind.speedMs < 1 ? 'Calm' : `${wind.speedMs.toFixed(1)} m/s${dir}`;
+    rows.push(['Wind', spd]);
   }
   if (wind.gustMs != null && wind.gustMs > (wind.speedMs ?? 0))
     rows.push(['Gust', `${wind.gustMs.toFixed(1)} m/s`]);
@@ -218,13 +276,7 @@ function _hideWindPopup() {
   if (_windPopup) { _windPopup.remove(); _windPopup = null; }
 }
 
-function _toggleWindPopup() {
-  if (_windPopup) {
-    _hideWindPopup();
-  } else {
-    _showWindPopup(_callbacks.getWindState?.());
-  }
-}
+// ── Info strip ────────────────────────────────────────────────────────────────
 
 function _renderInfoStrip(pos, snapshot) {
   if (!_infoStrip) return;
@@ -233,7 +285,6 @@ function _renderInfoStrip(pos, snapshot) {
   const holeIdx  = session?.id ? (session.holeIdx ?? 0) : null;
   const holeNum  = holeIdx !== null ? holeIdx + 1 : null;
 
-  // ── Hole info (left side) ─────────────────────────────────────────────────
   let leftHtml = '';
   if (holeNum) {
     leftHtml += `<span class="map-info-hole">Hole ${holeNum}</span>`;
@@ -242,11 +293,9 @@ function _renderInfoStrip(pos, snapshot) {
     if (hole?.length) leftHtml += `<span class="map-info-sep">·</span><span class="map-info-length">${hole.length}m</span>`;
     if (hole?.si)     leftHtml += `<span class="map-info-sep">·</span><span class="map-info-si">SI ${hole.si}</span>`;
     if (courseId && session?.hcpEnabled) {
-      const counts = _callbacks.getStrokeCounts?.(courseId);
+      const counts  = _callbacks.getStrokeCounts?.(courseId);
       const strokes = counts?.[holeIdx] ?? 0;
-      if (strokes > 0) {
-        leftHtml += `<span class="map-info-hcp-dots">${'●'.repeat(strokes)}</span>`;
-      }
+      if (strokes > 0) leftHtml += `<span class="map-info-hcp-dots">${'●'.repeat(strokes)}</span>`;
     }
   } else {
     leftHtml += `<span class="map-info-locating">Locating…</span>`;
