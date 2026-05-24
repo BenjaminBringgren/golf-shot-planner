@@ -20,8 +20,9 @@ import {
 import {
   teeMarked, completedShots,
   clearGpsState, markTeePosition, recordShot, restoreGpsState, getGpsSnapshot,
-  averagedPosition,
+  averagedPosition, haversine,
 } from '../platform/gps.js';
+import { initMapView, setMapFabVisible, closeMapViewIfOpen } from '../ui/mapView.js';
 import { fetchWind, fetchLocationName } from '../platform/weather.js';
 import {
   clubs, clubOrder, idx7, idxPW, clubMap, getRollFactor,
@@ -363,6 +364,8 @@ function switchTab(name) {
   if (fab) fab.classList.toggle('visible', name === 'play' && courseActive);
   const wfab = document.getElementById('widgetFab');
   if (wfab) wfab.classList.toggle('visible', name === 'play' && courseActive);
+  setMapFabVisible(name === 'play' && courseActive);
+  if (name !== 'play') closeMapViewIfOpen();
   // Close drawers when switching tabs
   const drawer = document.getElementById('scoreDrawer');
   if (drawer) drawer.classList.remove('open');
@@ -2324,4 +2327,13 @@ initServices({
 
   pane.addEventListener('touchcancel', () => { startY = null; }, { passive: true });
 })();
+
+// ── Map view ──────────────────────────────────────────────────────────────────
+initMapView({
+  getGpsSnapshot:        () => getGpsSnapshot(),
+  fetchCurrentPosition:  () => averagedPosition(2),
+  getActiveSession:      () => loadActiveCourse(),
+  haversine:             (lat1, lon1, lat2, lon2) => haversine(lat1, lon1, lat2, lon2),
+  getActiveCourseId:     () => getActiveCourseId(),
+});
 
