@@ -2342,5 +2342,47 @@ initMapView({
   openScorecard:           () => openScorecardPageGlobal(),
   getHandicap:             () => _readHandicap(),
   destinationFromBearing:  (lat, lon, b, d) => destinationFromBearing(lat, lon, b, d),
+  fetchMapWind: async () => {
+    let orientPermGranted = false;
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      try { orientPermGranted = (await DeviceOrientationEvent.requestPermission()) === 'granted'; }
+      catch (_) {}
+    } else {
+      orientPermGranted = typeof DeviceOrientationEvent !== 'undefined';
+    }
+    let headingPromise = Promise.resolve(null);
+    if (orientPermGranted) {
+      headingPromise = new Promise(resolve => {
+        const readings = [];
+        const onH = (ev) => {
+          const v = ev.webkitCompassHeading != null ? ev.webkitCompassHeading : (360 - (ev.alpha ?? 0)) % 360;
+          if (v != null && !isNaN(v)) readings.push(v);
+        };
+        let absFired = false;
+        const onAbsH = (ev) => { absFired = true; onH(ev); };
+        window.addEventListener('deviceorientationabsolute', onAbsH);
+        const fbTimer = setTimeout(() => { if (!absFired) window.addEventListener('deviceorientation', onH); }, 300);
+        setTimeout(() => {
+          clearTimeout(fbTimer);
+          window.removeEventListener('deviceorientationabsolute', onAbsH);
+          window.removeEventListener('deviceorientation', onH);
+          if (!readings.length) { resolve(null); return; }
+          const sorted = readings.slice(-8).sort((a, b) => a - b);
+          resolve(sorted[Math.floor(sorted.length / 2)]);
+        }, 1200);
+      });
+    }
+    const pos = await averagedPosition(2);
+    const [w, heading] = await Promise.all([fetchWind(pos.lat, pos.lon), headingPromise]);
+    windState.speedMs = w.speedMs;
+    windState.gustMs  = w.gustMs;
+    windState.dirDeg  = w.dirDeg;
+    if (heading != null) windState.holeDeg = Math.round(heading);
+    if (w.tempC     != null) windState.tempC     = w.tempC;
+    if (w.feelsLike != null) windState.feelsLike = w.feelsLike;
+    if (w.rainPct   != null) windState.rainPct   = w.rainPct;
+    return { ...windState };
+  },
 });
 

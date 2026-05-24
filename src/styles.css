@@ -3385,21 +3385,53 @@
 .map-info-si     { font-size: 13px; color: rgba(255,255,255,0.7); }
 .map-info-hcp-dots { font-size: 11px; color: rgba(255,255,255,0.85); letter-spacing: 1px; margin-left: 2px; }
 .map-info-locating { font-size: 15px; color: rgba(255,255,255,0.6); }
-.map-wind-widget {
-  display: flex; align-items: center; gap: 4px;
-}
-.map-wind-arrow { display: inline-block; flex-shrink: 0; }
-.map-wind-speed { font-size: 12px; color: rgba(255,255,255,0.8); white-space: nowrap; }
 .map-card-btn {
   background: rgba(255,255,255,0.15);
   border: 1px solid rgba(255,255,255,0.3);
   color: #fff; border-radius: 6px;
-  font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
-  padding: 4px 8px; cursor: pointer; margin: 0; width: auto;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  padding: 4px 10px; cursor: pointer; margin: 0; width: auto;
   font-family: inherit;
 }
 .map-card-btn.is-pressed { background: rgba(255,255,255,0.3); }
 @media (hover: hover) { .map-card-btn:hover { background: rgba(255,255,255,0.25); } }
+
+/* ── Wind overlay button ─────────────────────────────────────────────────── */
+.map-wind-btn {
+  position: absolute;
+  top: calc(54px + env(safe-area-inset-top, 0px));
+  right: 14px; z-index: 2;
+  width: 60px; height: 60px; border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #fff; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  margin: 0; padding: 0; font-family: inherit;
+  transition: background 0.15s;
+}
+.map-wind-btn.is-pressed { background: rgba(255,255,255,0.15); }
+@media (hover: hover) { .map-wind-btn:hover { background: rgba(0,0,0,0.72); } }
+.map-wind-btn-arrow { display: block; transition: transform 0.5s ease; flex-shrink: 0; }
+.map-wind-btn-speed { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.9); line-height: 1; }
+.map-wind-popup {
+  position: absolute;
+  top: calc(122px + env(safe-area-inset-top, 0px));
+  right: 14px; z-index: 2;
+  background: rgba(0,0,0,0.72);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 12px; padding: 10px 14px;
+  color: #fff; min-width: 170px;
+}
+.map-wind-popup-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; padding: 3px 0; gap: 16px;
+}
+.map-wind-popup-label { color: rgba(255,255,255,0.6); }
+.map-wind-popup-value { font-weight: 600; }
 
 /* ── Map FAB ─────────────────────────────────────────────────────────────── */
 .map-fab {

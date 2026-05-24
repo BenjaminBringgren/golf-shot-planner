@@ -13,7 +13,10 @@ let _teeMarker    = null;
 let _isOpen       = false;
 let _callbacks    = null;
 
-let _fab, _mapPage, _mapContainer, _infoStrip;
+let _fab, _mapPage, _mapContainer, _infoStrip, _windBtn, _windPopup;
+let _windFetched = false;
+
+const _WIND_ARROW_PATH = 'M12.9883 9.13086C15.0391 9.13086 17.1875 7.95898 18.8477 6.39648L33.0566-7.22656C33.5449-7.71484 33.8867-7.95898 34.1797-7.95898C34.5215-7.95898 34.8633-7.71484 35.3516-7.22656L49.5117 6.39648C51.2207 7.95898 53.3203 9.13086 55.3711 9.13086C58.3496 9.13086 60.5957 6.39648 60.5957 3.56445C60.5957 1.80664 59.8145-0.146484 58.8867-2.63672L40.0879-51.5137C38.623-55.3223 36.6211-56.8359 34.1797-56.8359C31.7871-56.8359 29.7363-55.3223 28.2715-51.5137L9.47266-2.63672C8.54492-0.146484 7.8125 1.80664 7.8125 3.56445C7.8125 6.39648 10.0098 9.13086 12.9883 9.13086Z';
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
@@ -33,6 +36,29 @@ export function initMapView(callbacks) {
     if (e.target.closest('.map-card-btn')) _callbacks.openScorecard?.();
   });
   _fab.addEventListener('click', () => _isOpen ? closeMapView() : openMapView());
+
+  _windBtn = document.createElement('button');
+  _windBtn.type = 'button';
+  _windBtn.id = 'mapWindBtn';
+  _windBtn.className = 'map-wind-btn';
+  _windBtn.innerHTML =
+    `<svg class="map-wind-btn-arrow" width="22" height="22" viewBox="-2.000 -74.459 72.410 80.459" fill="currentColor"><path d="${_WIND_ARROW_PATH}"/></svg>` +
+    `<span class="map-wind-btn-speed">–</span>`;
+  _mapPage.appendChild(_windBtn);
+
+  _windBtn.addEventListener('click', async () => {
+    if (_windFetched) { _toggleWindPopup(); return; }
+    _setWindBtnLoading(true);
+    try {
+      const wind = await _callbacks.fetchMapWind?.();
+      if (wind) {
+        _windFetched = true;
+        _updateWindBtn(wind);
+        _showWindPopup(wind);
+      }
+    } catch (_) {}
+    _setWindBtnLoading(false);
+  });
 }
 
 export function openMapView() {
@@ -41,6 +67,12 @@ export function openMapView() {
   _mapPage.classList.add('open');
   _fab.classList.add('map-open');
   document.body.style.overflow = 'hidden';
+  _windFetched = false;
+  const existingWind = _callbacks.getWindState?.();
+  if (existingWind?.speedMs != null) {
+    _windFetched = true;
+    _updateWindBtn(existingWind);
+  }
   _renderInfoStrip();
   requestAnimationFrame(() => requestAnimationFrame(() => {
     if (!_map) _initMap();
@@ -74,6 +106,7 @@ function _closeInternal() {
   _mapPage.classList.remove('open');
   _fab.classList.remove('map-open');
   document.body.style.overflow = '';
+  _hideWindPopup();
   if (_map) { _map.remove(); _map = null; }
 }
 
@@ -132,7 +165,66 @@ async function _locateAndCenter() {
   _renderInfoStrip(pos, snapshot);
 }
 
-const _WIND_ARROW_PATH = 'M12.9883 9.13086C15.0391 9.13086 17.1875 7.95898 18.8477 6.39648L33.0566-7.22656C33.5449-7.71484 33.8867-7.95898 34.1797-7.95898C34.5215-7.95898 34.8633-7.71484 35.3516-7.22656L49.5117 6.39648C51.2207 7.95898 53.3203 9.13086 55.3711 9.13086C58.3496 9.13086 60.5957 6.39648 60.5957 3.56445C60.5957 1.80664 59.8145-0.146484 58.8867-2.63672L40.0879-51.5137C38.623-55.3223 36.6211-56.8359 34.1797-56.8359C31.7871-56.8359 29.7363-55.3223 28.2715-51.5137L9.47266-2.63672C8.54492-0.146484 7.8125 1.80664 7.8125 3.56445C7.8125 6.39648 10.0098 9.13086 12.9883 9.13086Z';
+function _bearingLabel(deg) {
+  const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+  return dirs[Math.round(((deg % 360) + 360) / 45) % 8];
+}
+
+function _setWindBtnLoading(loading) {
+  if (!_windBtn) return;
+  _windBtn.querySelector('.map-wind-btn-speed').textContent = loading ? '…' : '–';
+  _windBtn.disabled = loading;
+}
+
+function _updateWindBtn(wind) {
+  if (!_windBtn) return;
+  const arrow = _windBtn.querySelector('.map-wind-btn-arrow');
+  const label = _windBtn.querySelector('.map-wind-btn-speed');
+  if (wind?.dirDeg != null) {
+    const windTo = Math.round((wind.dirDeg + 180) % 360);
+    arrow.style.transform = `rotate(${windTo}deg)`;
+  }
+  if (wind?.speedMs != null) {
+    label.textContent = wind.speedMs < 1 ? 'Calm' : `${wind.speedMs.toFixed(1)}`;
+  }
+}
+
+function _showWindPopup(wind) {
+  if (!_windBtn || !wind) return;
+  _hideWindPopup();
+  _windPopup = document.createElement('div');
+  _windPopup.className = 'map-wind-popup';
+  const rows = [];
+  if (wind.speedMs != null) {
+    const dir = wind.dirDeg != null ? ` from ${_bearingLabel(wind.dirDeg)}` : '';
+    const speed = wind.speedMs < 1 ? 'Calm' : `${wind.speedMs.toFixed(1)} m/s${dir}`;
+    rows.push(['Wind', speed]);
+  }
+  if (wind.gustMs != null && wind.gustMs > (wind.speedMs ?? 0))
+    rows.push(['Gust', `${wind.gustMs.toFixed(1)} m/s`]);
+  if (wind.tempC != null)
+    rows.push(['Temp', `${Math.round(wind.tempC)}°C`]);
+  if (wind.feelsLike != null && Math.round(wind.feelsLike) !== Math.round(wind.tempC))
+    rows.push(['Feels', `${Math.round(wind.feelsLike)}°C`]);
+  if (wind.rainPct != null)
+    rows.push(['Rain', `${Math.round(wind.rainPct)}%`]);
+  _windPopup.innerHTML = rows.map(([k, v]) =>
+    `<div class="map-wind-popup-row"><span class="map-wind-popup-label">${k}</span><span class="map-wind-popup-value">${v}</span></div>`
+  ).join('');
+  _mapPage.appendChild(_windPopup);
+}
+
+function _hideWindPopup() {
+  if (_windPopup) { _windPopup.remove(); _windPopup = null; }
+}
+
+function _toggleWindPopup() {
+  if (_windPopup) {
+    _hideWindPopup();
+  } else {
+    _showWindPopup(_callbacks.getWindState?.());
+  }
+}
 
 function _renderInfoStrip(pos, snapshot) {
   if (!_infoStrip) return;
@@ -160,21 +252,7 @@ function _renderInfoStrip(pos, snapshot) {
     leftHtml += `<span class="map-info-locating">Locating…</span>`;
   }
 
-  // ── Wind + CARD (right side) ──────────────────────────────────────────────
-  let rightHtml = '';
-  const wind = _callbacks.getWindState?.();
-  if (wind?.speedMs != null) {
-    const windTo  = Math.round((wind.dirDeg + 180) % 360);
-    const speedTxt = wind.speedMs < 1 ? 'Calm' : `${wind.speedMs.toFixed(1)}m/s`;
-    rightHtml += `<div class="map-wind-widget">
-      <svg class="map-wind-arrow" width="14" height="14" viewBox="-2.000 -74.459 72.410 80.459"
-           fill="currentColor" style="transform:rotate(${windTo}deg)">
-        <path d="${_WIND_ARROW_PATH}"/>
-      </svg>
-      <span class="map-wind-speed">${speedTxt}</span>
-    </div>`;
-  }
-  rightHtml += `<button class="map-card-btn" type="button">CARD</button>`;
+  const rightHtml = `<button class="map-card-btn" type="button">SCORECARD</button>`;
 
   _infoStrip.innerHTML =
     `<div class="map-info-left">${leftHtml}</div>` +
