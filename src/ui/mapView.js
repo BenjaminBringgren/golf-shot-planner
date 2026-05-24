@@ -102,7 +102,7 @@ export function initMapView(callbacks) {
       _callbacks.setCommittedStrategy?.(courseId, holeIdx, type, current);
     }
     _renderChips();
-    _renderShotOverlay();
+    _whenStyleLoaded(() => _renderShotOverlay());
   });
 }
 
@@ -144,7 +144,7 @@ export function refreshMapInfoStrip() {
   _renderInfoStrip();
   _renderChips();
   _clearShotOverlay();
-  _whenStyleLoaded(() => _renderShotOverlay());
+  if (_map) _whenStyleLoaded(() => _renderShotOverlay());
 }
 
 // ── Internal ──────────────────────────────────────────────────────────────────
@@ -380,24 +380,45 @@ function _buildDots(strategy, teeMark, bearing) {
 
 function _renderShotOverlay() {
   _clearShotOverlay();
-  if (!_map || !_map.isStyleLoaded()) return;
+  if (!_map || !_map.isStyleLoaded()) {
+    console.log('[map overlay] not ready — map or style not loaded');
+    return;
+  }
 
   const session  = _callbacks.getActiveSession?.();
   const courseId = session?.id;
   const holeIdx  = session?.id ? (session.holeIdx ?? 0) : null;
-  if (!courseId || holeIdx === null) return;
+  if (!courseId || holeIdx === null) {
+    console.log('[map overlay] no active session');
+    return;
+  }
 
   const committed = _callbacks.getCommittedStrategy?.(courseId, holeIdx);
   const type = committed?.split(' · ')[0] ?? null;
-  if (!type) return;
+  if (!type) {
+    console.log('[map overlay] no committed strategy for hole', holeIdx);
+    return;
+  }
 
   const strategies = _callbacks.getComputedStrategies?.() ?? [];
-  const strategy   = strategies.find(s => s.type === type);
-  if (!strategy || !strategy.shots?.length) return;
+  console.log('[map overlay] strategies cached:', strategies.length, 'looking for:', type);
+  const strategy = strategies.find(s => s.type === type);
+  if (!strategy || !strategy.shots?.length) {
+    console.log('[map overlay] strategy not found in computed strategies');
+    return;
+  }
 
   const snapshot = _callbacks.getGpsSnapshot?.();
-  const teeMark  = snapshot?.teeMark;
-  if (!teeMark) return;
+  // Fallback: if no GPS tee mark, use map centre (player's current position).
+  const teeMark = snapshot?.teeMark ?? (() => {
+    const c = _map.getCenter();
+    return c ? { lat: c.lat, lon: c.lng } : null;
+  })();
+  if (!teeMark) {
+    console.log('[map overlay] no tee mark and no map centre');
+    return;
+  }
+  console.log('[map overlay] rendering — type:', type, 'shots:', strategy.shots.length, 'tee:', teeMark);
 
   _activeStratColor = _STRAT_COLORS[type] ?? '#888';
 
