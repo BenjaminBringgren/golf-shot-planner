@@ -3500,22 +3500,33 @@
   0%   { transform: scale(1); opacity: 0.6; }
   100% { transform: scale(2.5); opacity: 0; }
 }
-.map-player-cone {
+/* ── Lock button ─────────────────────────────────────────────────────────────── */
+.map-lock-btn {
   position: absolute;
-  width: 0; height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-bottom: 13px solid rgba(37, 99, 235, 0.8);
-  left: 5px; top: -11px;
-  /* rotate around dot centre: 5px right (half of 10px base), 21px down (11px to element + 10px to dot centre) */
-  transform-origin: 5px 21px;
-  display: none;
+  top: calc(104px + env(safe-area-inset-top, 0px));
+  left: 14px;
+  z-index: 2;
+  width: 44px; height: 44px; border-radius: 50%;
+  background: rgba(0,0,0,0.55);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border: none; display: flex; align-items: center; justify-content: center;
+  color: #fff; cursor: pointer;
+}
+.map-lock-btn.locked {
+  background: #2563eb;
+}
+.map-lock-btn.is-pressed {
+  background: rgba(0,0,0,0.75);
+}
+.map-lock-btn.locked.is-pressed {
+  background: #1d4ed8;
 }
 /* ── Shot overlay ────────────────────────────────────────────────────────────── */
 .map-shot-dot {
-  width: 14px; height: 14px; border-radius: 50%;
-  border: 2.5px solid #fff;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 3px solid #fff;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.45);
   cursor: grab;
 }
 .map-shot-dot:active { cursor: grabbing; }
@@ -3523,8 +3534,8 @@
   background: rgba(0,0,0,0.62);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
-  color: #fff; font-size: 13px; font-weight: 600;
-  padding: 2px 8px; border-radius: 10px;
+  color: #fff; font-size: 15px; font-weight: 600;
+  padding: 3px 9px; border-radius: 10px;
   pointer-events: none; white-space: nowrap;
 }
 .map-shot-warn {

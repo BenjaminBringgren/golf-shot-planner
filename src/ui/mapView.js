@@ -24,21 +24,22 @@ const _STRATEGIES = [
 let _map          = null;
 let _playerMarker = null;
 let _teeMarker    = null;
-let _playerConeEl = null;
 let _isOpen       = false;
 let _callbacks    = null;
 
-let _fab, _mapPage, _mapContainer, _infoStrip, _windBtn, _windPopup, _chipsRow;
+let _fab, _mapPage, _mapContainer, _infoStrip, _windBtn, _windPopup, _chipsRow, _lockBtn;
 let _compassAbsHandler = null;
 let _compassFbHandler  = null;
 let _currentHeading    = 0;
+let _mapBearing        = 0;   // current map rotation (degrees)
+let _lockedHeading     = null; // null = free; number = locked heading for overlay
 
 // ── Shot overlay state ────────────────────────────────────────────────────────
-let _playerPos   = null; // last known player position — used as tee fallback
-let _shotDots    = [];   // { lat, lon } — full dot array including tee at [0]
-let _nominalDists = [];  // nominal distance (m) for each segment [tee→dot1, dot1→dot2, …]
-let _shotMarkers  = [];  // mapboxgl.Marker for each draggable dot (dots[1..])
-let _labelMarkers = [];  // mapboxgl.Marker for each segment midpoint label
+let _playerPos    = null;
+let _shotDots     = [];
+let _nominalDists = [];
+let _shotMarkers  = [];
+let _labelMarkers = [];
 let _warnEl       = null;
 let _activeStratColor = '#888';
 
@@ -81,6 +82,14 @@ export function initMapView(callbacks) {
     } catch (_) {}
     _setWindBtnLoading(false);
   });
+
+  // Lock rotation button
+  _lockBtn = document.createElement('button');
+  _lockBtn.type = 'button';
+  _lockBtn.className = 'map-lock-btn';
+  _lockBtn.innerHTML = `<svg class="map-lock-arrow" width="20" height="20" viewBox="-2.000 -74.459 72.410 80.459" fill="currentColor"><path d="${_WIND_ARROW_PATH}"/></svg>`;
+  _mapPage.appendChild(_lockBtn);
+  _lockBtn.addEventListener('click', _toggleLock);
 
   // Strategy chips
   _chipsRow = document.createElement('div');
@@ -159,8 +168,12 @@ function _closeInternal() {
   _hideWindPopup();
   _clearShotOverlay();
   _stopCompass();
-  _playerConeEl = null;
-  _playerPos    = null;
+  _playerPos     = null;
+  _lockedHeading = null;
+  _mapBearing    = 0;
+  _lockBtn?.classList.remove('locked');
+  const arrow = _lockBtn?.querySelector('.map-lock-arrow');
+  if (arrow) arrow.style.transform = '';
   if (_map) { _map.remove(); _map = null; }
 }
 
@@ -180,10 +193,8 @@ function _initMap() {
   const playerEl = document.createElement('div');
   playerEl.className = 'map-player-marker';
   playerEl.innerHTML =
-    '<div class="map-player-cone"></div>' +
     '<div class="map-player-dot"></div>' +
     '<div class="map-player-ring"></div>';
-  _playerConeEl = playerEl.querySelector('.map-player-cone');
   _playerMarker = new mapboxgl.Marker({ element: playerEl, anchor: 'center' }).setLngLat([0, 0]);
 
   const teeEl = document.createElement('div');
@@ -217,7 +228,6 @@ async function _locateAndCenter() {
 
   _playerMarker.setLngLat([pos.lon, pos.lat]).addTo(_map);
   _playerPos = pos;
-  // Now that we have a real position, re-render overlay if it was deferred.
   _whenStyleLoaded(() => _renderShotOverlay());
 
   const h   = _mapContainer.clientHeight;
@@ -225,11 +235,36 @@ async function _locateAndCenter() {
   _map.easeTo({
     center:   [pos.lon, pos.lat],
     zoom:     17,
+    bearing:  _mapBearing,
     padding:  { top: pad, bottom: 0, left: 0, right: 0 },
     duration: 600,
   });
 
   _renderInfoStrip(pos, snapshot);
+}
+
+// ── Lock rotation ─────────────────────────────────────────────────────────────
+
+function _toggleLock() {
+  if (_lockedHeading !== null) {
+    // Unlock — reset map to north-up
+    _lockedHeading = null;
+    _mapBearing    = 0;
+    _map?.easeTo({ bearing: 0, duration: 400 });
+    _lockBtn?.classList.remove('locked');
+    const arrow = _lockBtn?.querySelector('.map-lock-arrow');
+    if (arrow) arrow.style.transform = '';
+  } else {
+    // Lock — freeze current heading and rotate map
+    _lockedHeading = _currentHeading;
+    _mapBearing    = _currentHeading;
+    _map?.easeTo({ bearing: _currentHeading, duration: 400 });
+    _lockBtn?.classList.add('locked');
+    const arrow = _lockBtn?.querySelector('.map-lock-arrow');
+    if (arrow) arrow.style.transform = `rotate(${Math.round(_currentHeading)}deg)`;
+  }
+  _updatePlayerCone(_currentHeading);
+  _whenStyleLoaded(() => _renderShotOverlay());
 }
 
 // ── Compass / player direction ─────────────────────────────────────────────────
@@ -273,9 +308,6 @@ function _stopCompass() {
 
 function _updatePlayerCone(heading) {
   _currentHeading = heading;
-  if (!_playerConeEl) return;
-  _playerConeEl.style.display = 'block';
-  _playerConeEl.style.transform = `rotate(${Math.round(heading)}deg)`;
 }
 
 // ── Shot overlay ───────────────────────────────────────────────────────────────
@@ -317,7 +349,7 @@ function _setLineGeoJSON(dots) {
       source: 'shot-line',
       paint: {
         'line-color':     _activeStratColor,
-        'line-width':     2.5,
+        'line-width':     4,
         'line-dasharray': [2, 1.5],
         'line-opacity':   0.9,
       },
@@ -336,14 +368,6 @@ function _addLabelMarker(pos, text) {
   return m;
 }
 
-function _repositionLabels(dots, dists) {
-  for (let i = 0; i < _labelMarkers.length; i++) {
-    const mid = _midpoint(dots[i], dots[i + 1]);
-    _labelMarkers[i].setLngLat([mid.lon, mid.lat]);
-    _labelMarkers[i].getElement().textContent = `${Math.round(dists[i])}m`;
-  }
-}
-
 function _showWarn(text, dotEl) {
   if (!_warnEl) {
     _warnEl = document.createElement('div');
@@ -352,11 +376,10 @@ function _showWarn(text, dotEl) {
   }
   _warnEl.textContent = text;
   _warnEl.style.display = 'block';
-  // Position near the dot element
-  const r = dotEl.getBoundingClientRect();
+  const r  = dotEl.getBoundingClientRect();
   const pr = _mapPage.getBoundingClientRect();
   _warnEl.style.left = `${Math.round(r.left - pr.left - 8)}px`;
-  _warnEl.style.top  = `${Math.round(r.top  - pr.top  - 32)}px`;
+  _warnEl.style.top  = `${Math.round(r.top  - pr.top  - 36)}px`;
 }
 
 function _hideWarn() {
@@ -374,7 +397,6 @@ function _buildDots(strategy, teeMark, bearing) {
     dists.push(shot.total);
     b = _callbacks.getBearingBetween(prev.lat, prev.lon, next.lat, next.lon);
   }
-  // approach landing dot
   if (strategy.approach > 0) {
     const prev = dots[dots.length - 1];
     const next = _callbacks.destinationFromBearing(prev.lat, prev.lon, b, strategy.approach);
@@ -407,26 +429,26 @@ function _renderShotOverlay() {
 
   _activeStratColor = _STRAT_COLORS[type] ?? '#888';
 
-  const { dots, dists } = _buildDots(strategy, teeMark, _currentHeading);
+  // Use locked heading if set, otherwise current compass heading.
+  const bearing = _lockedHeading ?? _currentHeading;
+  const { dots, dists } = _buildDots(strategy, teeMark, bearing);
   _shotDots     = dots;
   _nominalDists = dists;
 
   _setLineGeoJSON(dots);
 
-  // Labels at each segment midpoint
   for (let i = 0; i < dots.length - 1; i++) {
     _addLabelMarker(_midpoint(dots[i], dots[i + 1]), `${Math.round(dists[i])}m`);
   }
 
   const hcp = _callbacks.getHandicap?.() ?? 18;
 
-  // Draggable dots for dots[1..end]
   for (let i = 1; i < dots.length; i++) {
     const dotEl = document.createElement('div');
     dotEl.className = 'map-shot-dot';
     dotEl.style.background = _activeStratColor;
 
-    const idx = i; // capture for closure
+    const idx = i;
     const marker = new mapboxgl.Marker({ element: dotEl, anchor: 'center', draggable: true })
       .setLngLat([dots[i].lon, dots[i].lat])
       .addTo(_map);
@@ -435,38 +457,33 @@ function _renderShotOverlay() {
       const { lng, lat } = marker.getLngLat();
       _shotDots[idx] = { lat, lon: lng };
 
-      // Actual distance from previous dot
-      const actualDist = _callbacks.haversine(
-        _shotDots[idx - 1].lat, _shotDots[idx - 1].lon, lat, lng
-      );
-
-      // Recalculate bearing and all downstream dots
-      let b = _callbacks.getBearingBetween(
-        _shotDots[idx - 1].lat, _shotDots[idx - 1].lon, lat, lng
-      );
-      for (let j = idx + 1; j < _shotDots.length; j++) {
-        const prev = _shotDots[j - 1];
-        _shotDots[j] = _callbacks.destinationFromBearing(prev.lat, prev.lon, b, _nominalDists[j - 1]);
-        b = _callbacks.getBearingBetween(prev.lat, prev.lon, _shotDots[j].lat, _shotDots[j].lon);
-        _shotMarkers[j - 1].setLngLat([_shotDots[j].lon, _shotDots[j].lat]);
-      }
-
+      // Update line — all dots fixed except the one being dragged.
       _setLineGeoJSON(_shotDots);
-      _repositionLabels(_shotDots, _nominalDists);
 
-      // Soft dispersion warning
-      const limits = _dispersionLimits(_nominalDists[idx - 1], hcp);
-      if (actualDist < limits.short) {
-        _showWarn('Short of typical range', dotEl);
-      } else if (actualDist > limits.long) {
-        _showWarn('Long of typical range', dotEl);
-      } else {
-        _hideWarn();
+      // Update only the two adjacent segment labels.
+      const prevDot = _shotDots[idx - 1];
+      const d1 = _callbacks.haversine(prevDot.lat, prevDot.lon, lat, lng);
+      if (_labelMarkers[idx - 1]) {
+        const m1 = _midpoint(prevDot, { lat, lon: lng });
+        _labelMarkers[idx - 1].setLngLat([m1.lon, m1.lat]);
+        _labelMarkers[idx - 1].getElement().textContent = `${Math.round(d1)}m`;
       }
+      if (idx < _shotDots.length - 1 && _labelMarkers[idx]) {
+        const nextDot = _shotDots[idx + 1];
+        const d2 = _callbacks.haversine(lat, lng, nextDot.lat, nextDot.lon);
+        const m2 = _midpoint({ lat, lon: lng }, nextDot);
+        _labelMarkers[idx].setLngLat([m2.lon, m2.lat]);
+        _labelMarkers[idx].getElement().textContent = `${Math.round(d2)}m`;
+      }
+
+      // Soft dispersion warning against this segment's nominal distance.
+      const limits = _dispersionLimits(_nominalDists[idx - 1], hcp);
+      if (d1 < limits.short)      _showWarn('Short of typical range', dotEl);
+      else if (d1 > limits.long)  _showWarn('Long of typical range', dotEl);
+      else                         _hideWarn();
     });
 
     marker.on('dragend', () => _hideWarn());
-
     _shotMarkers.push(marker);
   }
 }
