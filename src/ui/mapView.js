@@ -5,7 +5,7 @@
 // All GPS/session data comes via injected callbacks from router.js.
 
 const MAPBOX_TOKEN = 'pk.eyJ1IjoiZ29sZm1hcCIsImEiOiJjbXBqZHE0NzgwY3JnMnJzYXdqYmwzZTdyIn0.NjQk6PyT7w2uObA_vkuc4Q';
-const MAP_STYLE    = 'mapbox://styles/mapbox/satellite-v9';
+const MAP_STYLE    = 'mapbox://styles/mapbox/outdoors-v12';
 
 let _map          = null;
 let _playerMarker = null;
