@@ -2363,6 +2363,7 @@ initMapView({
   destinationFromBearing:  (lat, lon, b, d) => destinationFromBearing(lat, lon, b, d),
   getBearingBetween:       (lat1, lon1, lat2, lon2) => getBearingBetween(lat1, lon1, lat2, lon2),
   getComputedStrategies:   () => _lastComputedStrategies,
+  recalculate:             () => calculate(),
   fetchMapWind: async () => {
     let orientPermGranted = false;
     if (typeof DeviceOrientationEvent !== 'undefined' &&

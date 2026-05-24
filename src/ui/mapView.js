@@ -104,6 +104,7 @@ export function initMapView(callbacks) {
     }
     _renderChips();
     _whenStyleLoaded(() => _renderShotOverlay());
+    _callbacks.recalculate?.();
   });
 }
 
