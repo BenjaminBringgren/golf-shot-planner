@@ -1883,7 +1883,7 @@
       position: fixed;
       bottom: calc(6px + 49px + 6px + env(safe-area-inset-bottom));
       left: 0; right: 0;
-      padding: 28px 12px 8px;
+      padding: 10px 12px 8px;
       z-index: 849;
       background: #f5f4f0;
       display: flex; justify-content: center;
