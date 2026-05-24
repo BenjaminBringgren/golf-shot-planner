@@ -1721,6 +1721,7 @@ initServices({
     inputs.clearOverrides = clearOverrides;
     const plan = computePlan(inputs);
     _lastComputedStrategies = plan.isError ? [] : (plan.ordered ?? []);
+    console.log('[router] calculate ran — isError:', plan.isError, 'strategies:', _lastComputedStrategies.length);
     if (!plan.isError) {
       const _exp = plan.isPar3
         ? plan.par3.scoreVal3
