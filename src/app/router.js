@@ -20,7 +20,7 @@ import {
 import {
   teeMarked, completedShots,
   clearGpsState, markTeePosition, recordShot, restoreGpsState, getGpsSnapshot,
-  averagedPosition, haversine, destinationFromBearing,
+  averagedPosition, haversine, destinationFromBearing, getBearingBetween,
 } from '../platform/gps.js';
 import { initMapView, setMapFabVisible, closeMapViewIfOpen, refreshMapInfoStrip } from '../ui/mapView.js';
 import { fetchWind, fetchLocationName } from '../platform/weather.js';
@@ -305,6 +305,8 @@ let _overrideCourseId = '';
 })();
 // Namespace key: course|hole|strategyType — prevents cross-course/cross-hole bleed
 function _hk(type) { return _overrideCourseId + '|' + _overrideHoleIdx + '|' + type; }
+
+let _lastComputedStrategies = [];
 
 let windState = {
   speedMs:    null,   // sustained wind speed m/s (10-min average at 10m height)
@@ -1718,6 +1720,7 @@ initServices({
     const inputs = readInputsFromDOM();
     inputs.clearOverrides = clearOverrides;
     const plan = computePlan(inputs);
+    _lastComputedStrategies = plan.isError ? [] : (plan.ordered ?? []);
     if (!plan.isError) {
       const _exp = plan.isPar3
         ? plan.par3.scoreVal3
@@ -2357,6 +2360,8 @@ initMapView({
   openScorecard:           () => openScorecardPageGlobal(),
   getHandicap:             () => _readHandicap(),
   destinationFromBearing:  (lat, lon, b, d) => destinationFromBearing(lat, lon, b, d),
+  getBearingBetween:       (lat1, lon1, lat2, lon2) => getBearingBetween(lat1, lon1, lat2, lon2),
+  getComputedStrategies:   () => _lastComputedStrategies,
   fetchMapWind: async () => {
     let orientPermGranted = false;
     if (typeof DeviceOrientationEvent !== 'undefined' &&

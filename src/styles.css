@@ -3511,6 +3511,30 @@
   transform-origin: 5px 21px;
   display: none;
 }
+/* ── Shot overlay ────────────────────────────────────────────────────────────── */
+.map-shot-dot {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2.5px solid #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+  cursor: grab;
+}
+.map-shot-dot:active { cursor: grabbing; }
+.map-shot-label {
+  background: rgba(0,0,0,0.62);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: #fff; font-size: 13px; font-weight: 600;
+  padding: 2px 8px; border-radius: 10px;
+  pointer-events: none; white-space: nowrap;
+}
+.map-shot-warn {
+  position: absolute; z-index: 3;
+  background: rgba(180,40,20,0.88); color: #fff;
+  font-size: 13px; font-weight: 600;
+  padding: 4px 10px; border-radius: 8px;
+  pointer-events: none; white-space: nowrap;
+}
+
 .map-tee-marker { width: 16px; height: 22px; position: relative; }
 .map-tee-pin {
   width: 12px; height: 12px; border-radius: 50%;
