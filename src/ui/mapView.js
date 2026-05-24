@@ -34,6 +34,7 @@ let _compassFbHandler  = null;
 let _currentHeading    = 0;
 
 // ── Shot overlay state ────────────────────────────────────────────────────────
+let _playerPos   = null; // last known player position — used as tee fallback
 let _shotDots    = [];   // { lat, lon } — full dot array including tee at [0]
 let _nominalDists = [];  // nominal distance (m) for each segment [tee→dot1, dot1→dot2, …]
 let _shotMarkers  = [];  // mapboxgl.Marker for each draggable dot (dots[1..])
@@ -158,6 +159,7 @@ function _closeInternal() {
   _clearShotOverlay();
   _stopCompass();
   _playerConeEl = null;
+  _playerPos    = null;
   if (_map) { _map.remove(); _map = null; }
 }
 
@@ -213,6 +215,9 @@ async function _locateAndCenter() {
   if (!pos) return;
 
   _playerMarker.setLngLat([pos.lon, pos.lat]).addTo(_map);
+  _playerPos = pos;
+  // Now that we have a real position, re-render overlay if it was deferred.
+  _whenStyleLoaded(() => _renderShotOverlay());
 
   const h   = _mapContainer.clientHeight;
   const pad = Math.round(h * 0.55);
@@ -409,13 +414,10 @@ function _renderShotOverlay() {
   }
 
   const snapshot = _callbacks.getGpsSnapshot?.();
-  // Fallback: if no GPS tee mark, use map centre (player's current position).
-  const teeMark = snapshot?.teeMark ?? (() => {
-    const c = _map.getCenter();
-    return c ? { lat: c.lat, lon: c.lng } : null;
-  })();
+  // Fallback: if no GPS tee mark, use the last known player position.
+  const teeMark = snapshot?.teeMark ?? (_playerPos ? { lat: _playerPos.lat, lon: _playerPos.lon } : null);
   if (!teeMark) {
-    console.log('[map overlay] no tee mark and no map centre');
+    console.log('[map overlay] no tee mark and no player position yet — will retry after GPS resolves');
     return;
   }
   console.log('[map overlay] rendering — type:', type, 'shots:', strategy.shots.length, 'tee:', teeMark);
