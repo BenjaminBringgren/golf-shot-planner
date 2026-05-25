@@ -46,6 +46,7 @@ let _shotMarkers    = [];
 let _labelMarkers   = [];
 let _activeStratColor  = '#888';
 let _customOverride    = false; // true after a drag that didn't snap to any named strategy
+let _activeArcIdx      = 1;    // which scope dot currently shows the dispersion arc
 
 // Persists dot positions the user has dragged, keyed by 'courseId|holeIdx|strategyType'.
 // Survives map close/reopen within the same session.
@@ -167,6 +168,7 @@ export function closeMapViewIfOpen() {
 export function refreshMapInfoStrip() {
   if (!_isOpen) return;
   _customOverride = false;
+  _activeArcIdx   = 1;
   _renderInfoStrip();
   _renderChips();
   _clearShotOverlay();
@@ -186,6 +188,7 @@ export function refreshMapInfoStrip() {
 function _closeInternal() {
   _isOpen = false;
   _customOverride = false;
+  _activeArcIdx   = 1;
   _mapPage.classList.remove('open');
   _fab.classList.remove('map-open');
   document.body.style.overflow = '';
@@ -361,6 +364,7 @@ function _clearShotOverlay() {
   _nominalDists   = [];
   _shotClubs      = [];
   _shotWindDeltas = [];
+  _clearArcLayer();
   if (_map) {
     if (_map.getLayer('shot-line-layer')) _map.removeLayer('shot-line-layer');
     if (_map.getSource('shot-line'))      _map.removeSource('shot-line');
@@ -530,6 +534,90 @@ function _fitToOverlay() {
   });
 }
 
+// ── Dispersion arc ────────────────────────────────────────────────────────────
+
+// 95th-percentile (1.65 SD) lateral spread in metres for driver, by HCP band.
+const _DRIVER_95 = [
+  { maxHcp:  5, r: 33 },
+  { maxHcp: 12, r: 43 },
+  { maxHcp: 20, r: 54 },
+  { maxHcp: 28, r: 69 },
+  { maxHcp: 54, r: 92 },
+];
+// Lateral spread scale relative to driver, by club key.
+const _DISP_SCALE = {
+  driver: 1.00, fw3: 0.85, fw5: 0.80, fw7: 0.78,
+  hy3: 0.75, hy4: 0.75, hy5: 0.75, hy6: 0.75,
+  '2i': 0.73, u2: 0.73, u3: 0.73, u4: 0.73,
+  '3i': 0.72, '4i': 0.72,
+  '5i': 0.70, '6i': 0.70, '7i': 0.68, '8i': 0.68,
+  '9i': 0.65, pw: 0.65,
+  '48': 0.62, '50': 0.62, '52': 0.60, '54': 0.58,
+  '56': 0.56, '58': 0.54, '60': 0.52,
+};
+
+function _dispersionRadius(clubKey, hcp) {
+  const band = _DRIVER_95.find(b => hcp <= b.maxHcp) ?? _DRIVER_95[_DRIVER_95.length - 1];
+  return band.r * (_DISP_SCALE[clubKey] ?? 0.70);
+}
+
+function _bearingDeg(from, to) {
+  const φ1 = from.lat * Math.PI / 180, φ2 = to.lat * Math.PI / 180;
+  const Δλ = (to.lon - from.lon) * Math.PI / 180;
+  return (Math.atan2(
+    Math.sin(Δλ) * Math.cos(φ2),
+    Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ)
+  ) * 180 / Math.PI + 360) % 360;
+}
+
+function _arcCoords(center, bearingDeg, radiusM, steps = 48) {
+  const R = 6371000, coords = [];
+  for (let i = 0; i <= steps; i++) {
+    const angle = (bearingDeg - 90 + 180 * i / steps) * Math.PI / 180;
+    const δ = radiusM / R;
+    const φ1 = center.lat * Math.PI / 180, λ1 = center.lon * Math.PI / 180;
+    const φ2 = Math.asin(Math.sin(φ1)*Math.cos(δ) + Math.cos(φ1)*Math.sin(δ)*Math.cos(angle));
+    const λ2 = λ1 + Math.atan2(Math.sin(angle)*Math.sin(δ)*Math.cos(φ1), Math.cos(δ)-Math.sin(φ1)*Math.sin(φ2));
+    coords.push([λ2 * 180 / Math.PI, φ2 * 180 / Math.PI]);
+  }
+  return coords;
+}
+
+function _setArcGeoJSON(center, bearingDeg, radiusM, color) {
+  if (!_map) return;
+  const coords = _arcCoords(center, bearingDeg, radiusM);
+  const data = { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } };
+  if (_map.getSource('arc-line')) {
+    _map.getSource('arc-line').setData(data);
+    _map.setPaintProperty('arc-line-layer', 'line-color', color);
+  } else {
+    _map.addSource('arc-line', { type: 'geojson', data });
+    _map.addLayer({
+      id: 'arc-line-layer', type: 'line', source: 'arc-line',
+      paint: { 'line-color': color, 'line-width': 1.5, 'line-opacity': 0.7, 'line-dasharray': [4, 4] },
+    });
+  }
+}
+
+function _clearArcLayer() {
+  if (_map?.getSource('arc-line')) {
+    _map.getSource('arc-line').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates: [] } });
+  }
+}
+
+function _refreshArc() {
+  if (!_map || _shotDots.length < 2 || _activeArcIdx < 1 || _activeArcIdx >= _shotDots.length) {
+    _clearArcLayer();
+    return;
+  }
+  const hcp     = _callbacks?.getHandicap?.() ?? 20;
+  const center  = _shotDots[_activeArcIdx];
+  const bearing = _bearingDeg(_shotDots[_activeArcIdx - 1], center);
+  const clubKey = _shotClubs[_activeArcIdx - 1];
+  if (!clubKey) { _clearArcLayer(); return; }
+  _setArcGeoJSON(center, bearing, _dispersionRadius(clubKey, hcp), _activeStratColor);
+}
+
 function _renderPar3Overlay(par3, teeMark, courseId, holeIdx) {
   const club      = par3.s;
   const bearing   = _overlayBearing;
@@ -567,6 +655,7 @@ function _renderPar3Overlay(par3, teeMark, courseId, holeIdx) {
     const { lng, lat } = marker.getLngLat();
     _shotDots[1] = { lat, lon: lng };
     _setLineGeoJSON(_shotDots);
+    _refreshArc();
     const d       = _callbacks.haversine(dots[0].lat, dots[0].lon, lat, lng);
     const bestKey = _callbacks.findBestClubForDist?.(d, true) ?? club.key;
     if (_labelMarkers[0]) {
@@ -583,6 +672,8 @@ function _renderPar3Overlay(par3, teeMark, courseId, holeIdx) {
     _dotPosCache[cacheKey] = [_shotDots[1]];
   });
   _shotMarkers.push(marker);
+  _activeArcIdx = 1;
+  _refreshArc();
 }
 
 function _renderShotOverlay() {
@@ -633,6 +724,7 @@ function _renderShotOverlay() {
   _nominalDists   = dists;
   _shotClubs      = clubs;
   _shotWindDeltas = windDeltas;
+  if (_activeArcIdx >= dots.length) _activeArcIdx = 1;
 
   _setLineGeoJSON(dots);
 
@@ -664,6 +756,12 @@ function _renderShotOverlay() {
     const outgoingKey   = i < dots.length - 2 ? (segmentKeys[i + 1] ?? null) : null;
     const excludeDriver = (i > 1);
 
+    dotEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      _activeArcIdx = idx;
+      _refreshArc();
+    });
+
     const marker = new mapboxgl.Marker({ element: dotEl, anchor: 'center', draggable: true })
       .setLngLat([dots[i].lon, dots[i].lat])
       .addTo(_map);
@@ -672,6 +770,7 @@ function _renderShotOverlay() {
       const { lng, lat } = marker.getLngLat();
       _shotDots[idx] = { lat, lon: lng };
       _setLineGeoJSON(_shotDots);
+      if (idx === _activeArcIdx || idx === _activeArcIdx - 1) _refreshArc();
 
       // Incoming segment — live club lookup.
       const prevDot = _shotDots[idx - 1];
@@ -735,6 +834,7 @@ function _renderShotOverlay() {
     _shotMarkers.push(marker);
   }
 
+  _refreshArc();
 }
 
 // ── Strategy chips ────────────────────────────────────────────────────────────
