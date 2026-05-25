@@ -406,8 +406,9 @@ function _setLineGeoJSON(dots) {
   } else {
     const allCoords = _catmullRomCoords(dots);
     const mpp = _metersPerPixel();
-    // Outer scope ring ≈17 px radius; approach circle = 8 px radius.
-    const SCOPE_R = 17 * mpp;
+    // Inner circle radius ≈14 px at 52px render size; outer ring covers 14–17px.
+    // Masking at the inner boundary lets the opaque outer ring hide the transition.
+    const SCOPE_R = 14 * mpp;
     const APPR_R  =  8 * mpp;
     // dot[0] = tee/player (no clip); interior dots = scopes; last dot:
     //   par3 (2 dots) — last is a scope; par4/5 (3+ dots) — last is approach circle.
@@ -556,7 +557,7 @@ function _renderPar3Overlay(par3, teeMark, courseId, holeIdx) {
 
   const dotEl = document.createElement('div');
   dotEl.className = 'map-shot-dot';
-  dotEl.innerHTML = `<svg width="52" height="52" viewBox="-2 -74.459 111.77 80.459" fill="#fff" opacity="0.75"><path d="${_SCOPE_PATH}"/></svg>`;
+  dotEl.innerHTML = `<svg width="52" height="52" viewBox="-2 -74.459 111.77 80.459" fill="#fff"><path d="${_SCOPE_PATH}"/></svg>`;
 
   const marker = new mapboxgl.Marker({ element: dotEl, anchor: 'center', draggable: true })
     .setLngLat([dots[1].lon, dots[1].lat])
@@ -654,7 +655,7 @@ function _renderShotOverlay() {
     const isApproach = (i === dots.length - 1);
     dotEl.innerHTML = isApproach
       ? `<svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="8" fill="#fff" stroke="rgba(0,0,0,0.25)" stroke-width="1.5"/></svg>`
-      : `<svg width="52" height="52" viewBox="-2 -74.459 111.77 80.459" fill="#fff" opacity="0.75"><path d="${_SCOPE_PATH}"/></svg>`;
+      : `<svg width="52" height="52" viewBox="-2 -74.459 111.77 80.459" fill="#fff"><path d="${_SCOPE_PATH}"/></svg>`;
 
     const idx         = i;
     // 'tee' for dot 1, 'shot2' for dot 2 in 2-shot plans, null for approach dot (last).
