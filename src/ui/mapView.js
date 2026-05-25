@@ -8,6 +8,7 @@ const MAPBOX_TOKEN = 'pk.eyJ1IjoiZ29sZm1hcCIsImEiOiJjbXBqZHE0NzgwY3JnMnJzYXdqYmw
 const MAP_STYLE    = 'mapbox://styles/mapbox/satellite-streets-v12';
 
 const _WIND_ARROW_PATH = 'M12.9883 9.13086C15.0391 9.13086 17.1875 7.95898 18.8477 6.39648L33.0566-7.22656C33.5449-7.71484 33.8867-7.95898 34.1797-7.95898C34.5215-7.95898 34.8633-7.71484 35.3516-7.22656L49.5117 6.39648C51.2207 7.95898 53.3203 9.13086 55.3711 9.13086C58.3496 9.13086 60.5957 6.39648 60.5957 3.56445C60.5957 1.80664 59.8145-0.146484 58.8867-2.63672L40.0879-51.5137C38.623-55.3223 36.6211-56.8359 34.1797-56.8359C31.7871-56.8359 29.7363-55.3223 28.2715-51.5137L9.47266-2.63672C8.54492-0.146484 7.8125 1.80664 7.8125 3.56445C7.8125 6.39648 10.0098 9.13086 12.9883 9.13086Z';
+const _SCOPE_PATH = 'M53.9062 1.02539C73.9258 1.02539 90.1855-15.2832 90.1855-35.3027C90.1855-55.3223 73.9258-71.6309 53.9062-71.6309C33.8379-71.6309 17.5781-55.3223 17.5781-35.3027C17.5781-15.2832 33.8379 1.02539 53.9062 1.02539ZM53.9062-6.05469C37.7441-6.05469 24.6582-19.1406 24.6582-35.3027C24.6582-51.416 37.7441-64.5508 53.9062-64.5508C70.0195-64.5508 83.1055-51.416 83.1055-35.3027C83.1055-19.1406 70.0195-6.05469 53.9062-6.05469ZM53.9062-49.9512C55.6152-49.9512 56.9824-51.3184 56.9824-53.0273L56.9824-79.1504C56.9824-80.9082 55.6152-82.2754 53.9062-82.2754C52.1484-82.2754 50.7812-80.9082 50.7812-79.1504L50.7812-53.0273C50.7812-51.3184 52.1484-49.9512 53.9062-49.9512ZM9.96094-32.0801L36.0352-32.0801C37.793-32.0801 39.1602-33.4473 39.1602-35.2051C39.1602-36.9629 37.793-38.3301 36.0352-38.3301L9.96094-38.3301C8.20312-38.3301 6.83594-36.9629 6.83594-35.2051C6.83594-33.4473 8.20312-32.0801 9.96094-32.0801ZM53.9062 11.8652C55.6152 11.8652 56.9824 10.498 56.9824 8.74023L56.9824-17.3828C56.9824-19.0918 55.6152-20.459 53.9062-20.459C52.1484-20.459 50.7812-19.0918 50.7812-17.3828L50.7812 8.74023C50.7812 10.498 52.1484 11.8652 53.9062 11.8652ZM71.7285-32.0801L97.8027-32.0801C99.5605-32.0801 100.928-33.4473 100.928-35.2051C100.928-36.9629 99.5605-38.3301 97.8027-38.3301L71.7285-38.3301C69.9707-38.3301 68.6035-36.9629 68.6035-35.2051C68.6035-33.4473 69.9707-32.0801 71.7285-32.0801Z';
 
 const _STRAT_COLORS = {
   'Max distance': '#c0392b',
@@ -38,6 +39,7 @@ let _lockedHeading     = null; // null = free; number = locked heading for overl
 let _playerPos    = null;
 let _shotDots     = [];
 let _nominalDists = [];
+let _shotClubs    = []; // club key per segment (null for approach)
 let _shotMarkers  = [];
 let _labelMarkers = [];
 let _warnEl       = null;
@@ -328,6 +330,7 @@ function _clearShotOverlay() {
   _labelMarkers = [];
   _shotDots     = [];
   _nominalDists = [];
+  _shotClubs    = [];
   if (_warnEl) { _warnEl.remove(); _warnEl = null; }
   if (_map) {
     if (_map.getLayer('shot-line-layer')) _map.removeLayer('shot-line-layer');
@@ -348,19 +351,28 @@ function _setLineGeoJSON(dots) {
       type:   'line',
       source: 'shot-line',
       paint: {
-        'line-color':     _activeStratColor,
-        'line-width':     4,
-        'line-dasharray': [2, 1.5],
-        'line-opacity':   0.9,
+        'line-color':   '#ffffff',
+        'line-width':   4,
+        'line-opacity': 0.92,
       },
     });
   }
 }
 
-function _addLabelMarker(pos, text) {
+function _formatClub(key) {
+  if (!key) return '';
+  return key === 'driver' ? 'Driver' : key.toUpperCase();
+}
+
+function _labelText(dist, club) {
+  return club ? `${Math.round(dist)}m · ${_formatClub(club)}` : `${Math.round(dist)}m`;
+}
+
+function _addLabelMarker(pos, text, color) {
   const el = document.createElement('div');
   el.className = 'map-shot-label';
   el.textContent = text;
+  if (color) el.style.background = color;
   const m = new mapboxgl.Marker({ element: el, anchor: 'center' })
     .setLngLat([pos.lon, pos.lat])
     .addTo(_map);
@@ -387,14 +399,16 @@ function _hideWarn() {
 }
 
 function _buildDots(strategy, teeMark, bearing) {
-  const dots = [{ lat: teeMark.lat, lon: teeMark.lon }];
+  const dots  = [{ lat: teeMark.lat, lon: teeMark.lon }];
   const dists = [];
+  const clubs = [];
   let b = bearing;
   for (const shot of strategy.shots) {
     const prev = dots[dots.length - 1];
     const next = _callbacks.destinationFromBearing(prev.lat, prev.lon, b, shot.total);
     dots.push(next);
     dists.push(shot.total);
+    clubs.push(shot.key ?? null);
     b = _callbacks.getBearingBetween(prev.lat, prev.lon, next.lat, next.lon);
   }
   if (strategy.approach > 0) {
@@ -402,8 +416,9 @@ function _buildDots(strategy, teeMark, bearing) {
     const next = _callbacks.destinationFromBearing(prev.lat, prev.lon, b, strategy.approach);
     dots.push(next);
     dists.push(strategy.approach);
+    clubs.push(null);
   }
-  return { dots, dists };
+  return { dots, dists, clubs };
 }
 
 function _renderShotOverlay() {
@@ -431,14 +446,19 @@ function _renderShotOverlay() {
 
   // Use locked heading if set, otherwise current compass heading.
   const bearing = _lockedHeading ?? _currentHeading;
-  const { dots, dists } = _buildDots(strategy, teeMark, bearing);
+  const { dots, dists, clubs } = _buildDots(strategy, teeMark, bearing);
   _shotDots     = dots;
   _nominalDists = dists;
+  _shotClubs    = clubs;
 
   _setLineGeoJSON(dots);
 
   for (let i = 0; i < dots.length - 1; i++) {
-    _addLabelMarker(_midpoint(dots[i], dots[i + 1]), `${Math.round(dists[i])}m`);
+    _addLabelMarker(
+      _midpoint(dots[i], dots[i + 1]),
+      _labelText(dists[i], clubs[i]),
+      _activeStratColor,
+    );
   }
 
   const hcp = _callbacks.getHandicap?.() ?? 18;
@@ -446,7 +466,7 @@ function _renderShotOverlay() {
   for (let i = 1; i < dots.length; i++) {
     const dotEl = document.createElement('div');
     dotEl.className = 'map-shot-dot';
-    dotEl.style.background = _activeStratColor;
+    dotEl.innerHTML = `<svg width="24" height="24" viewBox="-2 -74.459 111.77 80.459" fill="#fff"><path d="${_SCOPE_PATH}"/></svg>`;
 
     const idx = i;
     const marker = new mapboxgl.Marker({ element: dotEl, anchor: 'center', draggable: true })
@@ -466,14 +486,14 @@ function _renderShotOverlay() {
       if (_labelMarkers[idx - 1]) {
         const m1 = _midpoint(prevDot, { lat, lon: lng });
         _labelMarkers[idx - 1].setLngLat([m1.lon, m1.lat]);
-        _labelMarkers[idx - 1].getElement().textContent = `${Math.round(d1)}m`;
+        _labelMarkers[idx - 1].getElement().textContent = _labelText(d1, _shotClubs[idx - 1]);
       }
       if (idx < _shotDots.length - 1 && _labelMarkers[idx]) {
         const nextDot = _shotDots[idx + 1];
         const d2 = _callbacks.haversine(lat, lng, nextDot.lat, nextDot.lon);
         const m2 = _midpoint({ lat, lon: lng }, nextDot);
         _labelMarkers[idx].setLngLat([m2.lon, m2.lat]);
-        _labelMarkers[idx].getElement().textContent = `${Math.round(d2)}m`;
+        _labelMarkers[idx].getElement().textContent = _labelText(d2, _shotClubs[idx]);
       }
 
       // Soft dispersion warning against this segment's nominal distance.

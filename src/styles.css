@@ -3524,19 +3524,17 @@
 }
 /* ── Shot overlay ────────────────────────────────────────────────────────────── */
 .map-shot-dot {
-  width: 20px; height: 20px; border-radius: 50%;
-  border: 3px solid #fff;
-  box-shadow: 0 1px 6px rgba(0,0,0,0.45);
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
   cursor: grab;
+  filter: drop-shadow(0 1px 4px rgba(0,0,0,0.65));
 }
 .map-shot-dot:active { cursor: grabbing; }
 .map-shot-label {
-  background: rgba(0,0,0,0.62);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
-  color: #fff; font-size: 15px; font-weight: 600;
-  padding: 3px 9px; border-radius: 10px;
+  color: #fff; font-size: 15px; font-weight: 700;
+  padding: 4px 10px; border-radius: 10px;
   pointer-events: none; white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 .map-shot-warn {
   position: absolute; z-index: 3;
