@@ -573,7 +573,7 @@ function _bearingDeg(from, to) {
 function _arcCoords(center, bearingDeg, radiusM, steps = 48) {
   const R = 6371000, coords = [];
   for (let i = 0; i <= steps; i++) {
-    const angle = (bearingDeg - 90 + 180 * i / steps) * Math.PI / 180;
+    const angle = (bearingDeg - 65 + 130 * i / steps) * Math.PI / 180;
     const δ = radiusM / R;
     const φ1 = center.lat * Math.PI / 180, λ1 = center.lon * Math.PI / 180;
     const φ2 = Math.asin(Math.sin(φ1)*Math.cos(δ) + Math.cos(φ1)*Math.sin(δ)*Math.cos(angle));
@@ -594,7 +594,7 @@ function _setArcGeoJSON(center, bearingDeg, radiusM, color) {
     _map.addSource('arc-line', { type: 'geojson', data });
     _map.addLayer({
       id: 'arc-line-layer', type: 'line', source: 'arc-line',
-      paint: { 'line-color': color, 'line-width': 1.5, 'line-opacity': 0.7, 'line-dasharray': [4, 4] },
+      paint: { 'line-color': '#ffffff', 'line-width': 1.5, 'line-opacity': 0.7 },
     });
   }
 }
