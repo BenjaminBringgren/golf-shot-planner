@@ -36,12 +36,13 @@ let _mapBearing        = 0;   // current map rotation (degrees)
 let _lockedHeading     = null; // null = free; number = locked heading for overlay
 
 // ── Shot overlay state ────────────────────────────────────────────────────────
-let _playerPos    = null;
-let _shotDots     = [];
-let _nominalDists = [];
-let _shotClubs    = []; // club key per segment (null for approach)
-let _shotMarkers  = [];
-let _labelMarkers = [];
+let _playerPos      = null;
+let _shotDots       = [];
+let _nominalDists   = [];
+let _shotClubs      = []; // club key per segment (null for approach)
+let _shotWindDeltas = []; // wind carry delta per segment (null if no wind adjustment)
+let _shotMarkers    = [];
+let _labelMarkers   = [];
 let _warnEl       = null;
 let _activeStratColor = '#888';
 
@@ -328,9 +329,10 @@ function _clearShotOverlay() {
   _labelMarkers.forEach(m => m.remove());
   _shotMarkers  = [];
   _labelMarkers = [];
-  _shotDots     = [];
-  _nominalDists = [];
-  _shotClubs    = [];
+  _shotDots       = [];
+  _nominalDists   = [];
+  _shotClubs      = [];
+  _shotWindDeltas = [];
   if (_warnEl) { _warnEl.remove(); _warnEl = null; }
   if (_map) {
     if (_map.getLayer('shot-line-layer')) _map.removeLayer('shot-line-layer');
@@ -364,8 +366,11 @@ function _formatClub(key) {
   return key === 'driver' ? 'Driver' : key.toUpperCase();
 }
 
-function _labelText(dist, club) {
-  return club ? `${Math.round(dist)}m · ${_formatClub(club)}` : `${Math.round(dist)}m`;
+function _labelText(dist, club, windDelta) {
+  let text = `${Math.round(dist)}m`;
+  if (windDelta) text += ` ${windDelta > 0 ? '+' : ''}${windDelta}`;
+  if (club) text += ` · ${_formatClub(club)}`;
+  return text;
 }
 
 function _addLabelMarker(pos, text, color) {
@@ -399,9 +404,10 @@ function _hideWarn() {
 }
 
 function _buildDots(strategy, teeMark, bearing) {
-  const dots  = [{ lat: teeMark.lat, lon: teeMark.lon }];
-  const dists = [];
-  const clubs = [];
+  const dots       = [{ lat: teeMark.lat, lon: teeMark.lon }];
+  const dists      = [];
+  const clubs      = [];
+  const windDeltas = [];
   let b = bearing;
   for (const shot of strategy.shots) {
     const prev = dots[dots.length - 1];
@@ -409,6 +415,8 @@ function _buildDots(strategy, teeMark, bearing) {
     dots.push(next);
     dists.push(shot.total);
     clubs.push(shot.key ?? null);
+    const delta = shot.baseCarry != null ? Math.round(shot.carry - shot.baseCarry) : 0;
+    windDeltas.push(delta !== 0 ? delta : null);
     b = _callbacks.getBearingBetween(prev.lat, prev.lon, next.lat, next.lon);
   }
   if (strategy.approach > 0) {
@@ -417,8 +425,9 @@ function _buildDots(strategy, teeMark, bearing) {
     dots.push(next);
     dists.push(strategy.approach);
     clubs.push(null);
+    windDeltas.push(null);
   }
-  return { dots, dists, clubs };
+  return { dots, dists, clubs, windDeltas };
 }
 
 function _renderShotOverlay() {
@@ -446,17 +455,18 @@ function _renderShotOverlay() {
 
   // Use locked heading if set, otherwise current compass heading.
   const bearing = _lockedHeading ?? _currentHeading;
-  const { dots, dists, clubs } = _buildDots(strategy, teeMark, bearing);
-  _shotDots     = dots;
-  _nominalDists = dists;
-  _shotClubs    = clubs;
+  const { dots, dists, clubs, windDeltas } = _buildDots(strategy, teeMark, bearing);
+  _shotDots       = dots;
+  _nominalDists   = dists;
+  _shotClubs      = clubs;
+  _shotWindDeltas = windDeltas;
 
   _setLineGeoJSON(dots);
 
   for (let i = 0; i < dots.length - 1; i++) {
     _addLabelMarker(
       _midpoint(dots[i], dots[i + 1]),
-      _labelText(dists[i], clubs[i]),
+      _labelText(dists[i], clubs[i], windDeltas[i]),
       _activeStratColor,
     );
   }
@@ -486,14 +496,14 @@ function _renderShotOverlay() {
       if (_labelMarkers[idx - 1]) {
         const m1 = _midpoint(prevDot, { lat, lon: lng });
         _labelMarkers[idx - 1].setLngLat([m1.lon, m1.lat]);
-        _labelMarkers[idx - 1].getElement().textContent = _labelText(d1, _shotClubs[idx - 1]);
+        _labelMarkers[idx - 1].getElement().textContent = _labelText(d1, _shotClubs[idx - 1], _shotWindDeltas[idx - 1]);
       }
       if (idx < _shotDots.length - 1 && _labelMarkers[idx]) {
         const nextDot = _shotDots[idx + 1];
         const d2 = _callbacks.haversine(lat, lng, nextDot.lat, nextDot.lon);
         const m2 = _midpoint({ lat, lon: lng }, nextDot);
         _labelMarkers[idx].setLngLat([m2.lon, m2.lat]);
-        _labelMarkers[idx].getElement().textContent = _labelText(d2, _shotClubs[idx]);
+        _labelMarkers[idx].getElement().textContent = _labelText(d2, _shotClubs[idx], _shotWindDeltas[idx]);
       }
 
       // Soft dispersion warning against this segment's nominal distance.
