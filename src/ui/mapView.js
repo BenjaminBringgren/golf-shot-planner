@@ -365,7 +365,7 @@ function _setLineGeoJSON(dots) {
       source: 'shot-line',
       paint: {
         'line-color':   '#ffffff',
-        'line-width':   4,
+        'line-width':   2,
         'line-opacity': 0.92,
       },
     });
