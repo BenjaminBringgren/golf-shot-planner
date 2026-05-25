@@ -338,13 +338,16 @@ function _matchBaseStrategy(stratType) {
       (_lastClubsList ?? []).filter(c => IRON_KEYS.has(c.key)).slice(0, 2).forEach(c => validTee.add(c.key));
     }
 
-    // Valid shot2 set: 3 candidates anchored to recommended (mirrors carousel shot2 picker)
+    // Valid shot2 set: 3 candidates anchored to recommended (mirrors carousel shot2 picker).
+    // Use the effective tee total (dragged club) so the window is relative to where the
+    // ball actually lands, not the strategy's base tee total.
     let validShot2 = null;
     if (baseShot2) {
-      const teeTot    = s.shots[0]?.total ?? 0;
-      const all2      = (_lastClubsList ?? []).filter(c =>
-        c.key !== 'driver' && c.total < teeTot &&
-        (_lastHoleLength - teeTot - c.total) >= 0
+      const effectiveTeeClub = (_lastClubsList ?? []).find(c => c.key === effectiveTee);
+      const effectiveTeeTot  = effectiveTeeClub?.total ?? (s.shots[0]?.total ?? 0);
+      const all2 = (_lastClubsList ?? []).filter(c =>
+        c.key !== 'driver' && c.total < effectiveTeeTot &&
+        (_lastHoleLength - effectiveTeeTot - c.total) >= 0
       );
       const recIdx = all2.findIndex(c => c.key === baseShot2);
       const window3 = recIdx >= 0 ? all2.slice(recIdx, recIdx + 3) : all2.slice(0, 3);
