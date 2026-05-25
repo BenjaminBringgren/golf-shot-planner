@@ -194,6 +194,7 @@ function _closeInternal() {
   document.body.style.overflow = '';
   _hideWindPopup();
   _clearShotOverlay();
+  _clearArcLayer();
   _stopCompass();
   _playerPos     = null;
   _liveRotate     = false;
@@ -364,7 +365,6 @@ function _clearShotOverlay() {
   _nominalDists   = [];
   _shotClubs      = [];
   _shotWindDeltas = [];
-  _clearArcLayer();
   if (_map) {
     if (_map.getLayer('shot-line-layer')) _map.removeLayer('shot-line-layer');
     if (_map.getSource('shot-line'))      _map.removeSource('shot-line');
@@ -615,7 +615,7 @@ function _refreshArc() {
   const bearing = _bearingDeg(_shotDots[_activeArcIdx - 1], center);
   const clubKey = _shotClubs[_activeArcIdx - 1];
   if (!clubKey) { _clearArcLayer(); return; }
-  _setArcGeoJSON(center, bearing, _dispersionRadius(clubKey, hcp), _activeStratColor);
+  _setArcGeoJSON(center, bearing, _dispersionRadius(clubKey, hcp), '#ffffff');
 }
 
 function _renderPar3Overlay(par3, teeMark, courseId, holeIdx) {
