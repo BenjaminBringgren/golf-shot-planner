@@ -44,7 +44,6 @@ let _shotClubs      = []; // club key per segment (null for approach)
 let _shotWindDeltas = []; // wind carry delta per segment (null if no wind adjustment)
 let _shotMarkers    = [];
 let _labelMarkers   = [];
-let _warnEl         = null;
 let _activeStratColor = '#888';
 
 // Persists dot positions the user has dragged, keyed by 'courseId|holeIdx|strategyType'.
@@ -343,11 +342,6 @@ function _updatePlayerCone(heading) {
 
 // ── Shot overlay ───────────────────────────────────────────────────────────────
 
-function _dispersionLimits(nominalDist, hcp) {
-  const d = 0.08 + Math.min(36, Math.max(0, hcp ?? 18)) * 0.008;
-  return { short: nominalDist * (1 - d * 0.75), long: nominalDist * (1 + d * 0.25) };
-}
-
 function _midpoint(a, b) {
   return { lat: (a.lat + b.lat) / 2, lon: (a.lon + b.lon) / 2 };
 }
@@ -361,7 +355,6 @@ function _clearShotOverlay() {
   _nominalDists   = [];
   _shotClubs      = [];
   _shotWindDeltas = [];
-  if (_warnEl) { _warnEl.remove(); _warnEl = null; }
   if (_map) {
     if (_map.getLayer('shot-line-layer')) _map.removeLayer('shot-line-layer');
     if (_map.getSource('shot-line'))      _map.removeSource('shot-line');
@@ -416,23 +409,6 @@ function _addLabelMarker(pos, text, color) {
   return m;
 }
 
-function _showWarn(text, dotEl) {
-  if (!_warnEl) {
-    _warnEl = document.createElement('div');
-    _warnEl.className = 'map-shot-warn';
-    _mapPage.appendChild(_warnEl);
-  }
-  _warnEl.textContent = text;
-  _warnEl.style.display = 'block';
-  const r  = dotEl.getBoundingClientRect();
-  const pr = _mapPage.getBoundingClientRect();
-  _warnEl.style.left = `${Math.round(r.left - pr.left - 8)}px`;
-  _warnEl.style.top  = `${Math.round(r.top  - pr.top  - 36)}px`;
-}
-
-function _hideWarn() {
-  if (_warnEl) _warnEl.style.display = 'none';
-}
 
 function _buildDots(strategy, teeMark, bearing) {
   const dots       = [{ lat: teeMark.lat, lon: teeMark.lon }];
@@ -522,9 +498,8 @@ function _renderPar3Overlay(par3, teeMark, courseId, holeIdx) {
     const d = _callbacks.haversine(
       dots[0].lat, dots[0].lon, _shotDots[1].lat, _shotDots[1].lon
     );
-    _callbacks.commitClubOverride?.('par3', d, null);
+    _callbacks.commitClubOverride?.([{ key: 'par3', dist: d }], null);
     _dotPosCache[cacheKey] = [_shotDots[1]];
-    _hideWarn();
   });
   _shotMarkers.push(marker);
 }
@@ -587,17 +562,16 @@ function _renderShotOverlay() {
     );
   }
 
-  const hcp = _callbacks.getHandicap?.() ?? 18;
-
   for (let i = 1; i < dots.length; i++) {
     const dotEl = document.createElement('div');
     dotEl.className = 'map-shot-dot';
     dotEl.innerHTML = `<svg width="40" height="40" viewBox="-2 -74.459 111.77 80.459" fill="#fff"><path d="${_SCOPE_PATH}"/></svg>`;
 
     const idx         = i;
-    // 'tee' for dot 1, 'shot2' for dot 2 (2-shot plans), null for approach dot (last).
-    const segmentKeys = [null, 'tee', 'shot2'];
-    const segmentKey  = i < dots.length - 1 ? (segmentKeys[i] ?? null) : null;
+    // 'tee' for dot 1, 'shot2' for dot 2 in 2-shot plans, null for approach dot (last).
+    const segmentKeys   = [null, 'tee', 'shot2'];
+    const segmentKey    = i < dots.length - 1 ? (segmentKeys[i] ?? null) : null;
+    const outgoingKey   = i < dots.length - 2 ? (segmentKeys[i + 1] ?? null) : null;
     const excludeDriver = (i > 1);
 
     const marker = new mapboxgl.Marker({ element: dotEl, anchor: 'center', draggable: true })
@@ -607,11 +581,9 @@ function _renderShotOverlay() {
     marker.on('drag', () => {
       const { lng, lat } = marker.getLngLat();
       _shotDots[idx] = { lat, lon: lng };
-
-      // Update line — all dots fixed except the one being dragged.
       _setLineGeoJSON(_shotDots);
 
-      // Update only the two adjacent segment labels.
+      // Incoming segment — live club lookup.
       const prevDot = _shotDots[idx - 1];
       const d1      = _callbacks.haversine(prevDot.lat, prevDot.lon, lat, lng);
       if (_labelMarkers[idx - 1]) {
@@ -622,31 +594,36 @@ function _renderShotOverlay() {
         _labelMarkers[idx - 1].setLngLat([m1.lon, m1.lat]);
         _labelMarkers[idx - 1].getElement().textContent = _labelText(d1, liveKey, _shotWindDeltas[idx - 1]);
       }
+
+      // Outgoing segment — live club lookup (skip for approach segment).
       if (idx < _shotDots.length - 1 && _labelMarkers[idx]) {
-        const nextDot = _shotDots[idx + 1];
-        const d2 = _callbacks.haversine(lat, lng, nextDot.lat, nextDot.lon);
+        const nextDot  = _shotDots[idx + 1];
+        const d2       = _callbacks.haversine(lat, lng, nextDot.lat, nextDot.lon);
+        const liveKey2 = (outgoingKey && _callbacks.findBestClubForDist)
+          ? (_callbacks.findBestClubForDist(d2, true) ?? _shotClubs[idx])
+          : _shotClubs[idx];
         const m2 = _midpoint({ lat, lon: lng }, nextDot);
         _labelMarkers[idx].setLngLat([m2.lon, m2.lat]);
-        _labelMarkers[idx].getElement().textContent = _labelText(d2, _shotClubs[idx], _shotWindDeltas[idx]);
+        _labelMarkers[idx].getElement().textContent = _labelText(d2, liveKey2, _shotWindDeltas[idx]);
       }
-
-      // Soft dispersion warning against this segment's nominal distance.
-      const limits = _dispersionLimits(_nominalDists[idx - 1], hcp);
-      if (d1 < limits.short)      _showWarn('Short of typical range', dotEl);
-      else if (d1 > limits.long)  _showWarn('Long of typical range', dotEl);
-      else                         _hideWarn();
     });
 
     marker.on('dragend', () => {
+      const segs = [];
       if (segmentKey) {
-        const prevDot = _shotDots[idx - 1];
-        const d = _callbacks.haversine(
-          prevDot.lat, prevDot.lon, _shotDots[idx].lat, _shotDots[idx].lon
+        const d1 = _callbacks.haversine(
+          _shotDots[idx - 1].lat, _shotDots[idx - 1].lon, _shotDots[idx].lat, _shotDots[idx].lon
         );
-        _callbacks.commitClubOverride?.(segmentKey, d, type);
+        segs.push({ key: segmentKey, dist: d1 });
       }
+      if (outgoingKey) {
+        const d2 = _callbacks.haversine(
+          _shotDots[idx].lat, _shotDots[idx].lon, _shotDots[idx + 1].lat, _shotDots[idx + 1].lon
+        );
+        segs.push({ key: outgoingKey, dist: d2 });
+      }
+      if (segs.length) _callbacks.commitClubOverride?.(segs, type);
       _dotPosCache[cacheKey] = _shotDots.slice(1);
-      _hideWarn();
     });
     _shotMarkers.push(marker);
   }

@@ -2437,16 +2437,18 @@ initMapView({
   recalculate:             () => calculate(),
   findBestClubForDist: (distM, excludeDriver) =>
     _findBestClubByTotal(distM, excludeDriver)?.key ?? null,
-  commitClubOverride: (segmentKey, distM, stratType) => {
-    if (segmentKey === 'par3') {
-      const club = _findBestClubByTotal(distM, true);
-      if (club) par3ClubOverrides[_overrideCourseId + '|' + _overrideHoleIdx] = club.key;
-    } else if (segmentKey === 'tee') {
-      const club = _findBestClubByTotal(distM, false);
-      if (club) teeOverrides[_hk(stratType)] = club.key;
-    } else if (segmentKey === 'shot2') {
-      const club = _findBestClubByTotal(distM, true);
-      if (club) shot2Overrides[_hk(stratType)] = club.key;
+  commitClubOverride: (segs, stratType) => {
+    for (const { key, dist } of segs) {
+      if (key === 'par3') {
+        const club = _findBestClubByTotal(dist, true);
+        if (club) par3ClubOverrides[_overrideCourseId + '|' + _overrideHoleIdx] = club.key;
+      } else if (key === 'tee') {
+        const club = _findBestClubByTotal(dist, false);
+        if (club) teeOverrides[_hk(stratType)] = club.key;
+      } else if (key === 'shot2') {
+        const club = _findBestClubByTotal(dist, true);
+        if (club) shot2Overrides[_hk(stratType)] = club.key;
+      }
     }
     calculate();
   },
