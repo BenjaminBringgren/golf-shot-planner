@@ -67,6 +67,9 @@ export const clubs = [
   {key:'60',     label:'60°',    relCarry:0.378, rollSoft:1.00, rollFirm:1.00},
 ];
 
+export const WOOD_KEYS = new Set(['fw3','fw5','fw7','hy3','hy4','hy5','hy6']);
+export const IRON_KEYS = new Set(['2i','u2','u3','u4','3i','4i','5i','6i','7i','8i','9i','pw','48','50','52','54','56','58','60']);
+
 export const clubOrder = clubs.map(c => c.key);
 export const idx7      = clubOrder.indexOf('7i');
 export const idxPW     = clubOrder.indexOf('pw');

@@ -3,18 +3,12 @@
 // LAYER 1 — ui — strategy carousel rendering, wind breakdown, chip row sync.
 // No business logic. Imports from engine and storage only.
 
-import { clubMap, idx7 } from '../engine/clubs.js';
+import { clubMap, idx7, WOOD_KEYS, IRON_KEYS } from '../engine/clubs.js';
 import {
   expectedStrokesRemaining, findBestContinuation, ALT_FACTORS, tempCarryFactor,
   windAdjustedRoll, interpolate, calcPar3, crosswindDrift,
 } from '../engine/calculations.js';
 import { loadActiveCourse, getCommittedStrategies, setCommittedStrategies } from '../storage/storage.js';
-
-// ── Club group sets for strategy chip rows ──────────────────────────────────
-// Woods/hybrids: fw3, fw5, fw7 and future HY keys (add e.g. 'hy3','hy5' here when bag setup supports them)
-const WOOD_KEYS = new Set(['fw3','fw5','fw7','hy3','hy4','hy5','hy6']);
-// Utility irons + irons: u2 onward in relCarry order
-const IRON_KEYS = new Set(['2i','u2','u3','u4','3i','4i','5i','6i','7i','8i','9i','pw','48','50','52','54','56','58','60']);
 
 // ── Crosswind helper ────────────────────────────────────────────────────────
 export function crosswindSide(windState) {

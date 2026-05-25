@@ -25,7 +25,7 @@ import {
 import { initMapView, setMapFabVisible, closeMapViewIfOpen, refreshMapInfoStrip } from '../ui/mapView.js';
 import { fetchWind, fetchLocationName } from '../platform/weather.js';
 import {
-  clubs, clubOrder, idx7, idxPW, clubMap, getRollFactor,
+  clubs, clubOrder, idx7, idxPW, clubMap, getRollFactor, WOOD_KEYS, IRON_KEYS,
 } from '../engine/clubs.js';
 import {
   WIND_ADJ, ALT_FACTORS, EXPECTED_STROKES, altFactor,
@@ -315,17 +315,50 @@ let _lastDriverTotal        = 0;
 let _lastInRough            = false;
 let _lastIsFirm             = false;
 
-// Returns the base strategy type whose shots[] clubs exactly match the current
-// effective clubs (overrides + base fallback) for stratType, or null if custom.
+// Returns a match descriptor if the effective clubs (overrides + base fallback)
+// fall within any strategy's valid alternatives, or null if the result is custom.
+// Checks exact base match first, then alternative ranges, for each strategy in order.
 function _matchBaseStrategy(stratType) {
   const teeOv     = teeOverrides[_hk(stratType)];
   const shot2Ov   = shot2Overrides[_hk(stratType)];
   const baseStrat = _lastComputedStrategies.find(s => s.type === stratType);
   const effectiveTee   = teeOv   ?? baseStrat?.shots?.[0]?.key ?? null;
   const effectiveShot2 = shot2Ov ?? baseStrat?.shots?.[1]?.key ?? null;
+  if (!effectiveTee) return null;
+
   for (const s of _lastComputedStrategies) {
-    if ((s.shots?.[0]?.key ?? null) === effectiveTee &&
-        (s.shots?.[1]?.key ?? null) === effectiveShot2) return s.type;
+    const baseTee   = s.shots?.[0]?.key ?? null;
+    const baseShot2 = s.shots?.[1]?.key ?? null;
+
+    // Valid tee set: base + up to 2 alternatives (mirrors carousel quick-chip logic)
+    const validTee = new Set([baseTee]);
+    if (s.type === 'Controlled') {
+      (_lastClubsList ?? []).filter(c => WOOD_KEYS.has(c.key)).slice(0, 2).forEach(c => validTee.add(c.key));
+    } else if (s.type === 'Conservative') {
+      (_lastClubsList ?? []).filter(c => IRON_KEYS.has(c.key)).slice(0, 2).forEach(c => validTee.add(c.key));
+    }
+
+    // Valid shot2 set: 3 candidates anchored to recommended (mirrors carousel shot2 picker)
+    let validShot2 = null;
+    if (baseShot2) {
+      const teeTot    = s.shots[0]?.total ?? 0;
+      const all2      = (_lastClubsList ?? []).filter(c =>
+        c.key !== 'driver' && c.total < teeTot &&
+        (_lastHoleLength - teeTot - c.total) >= 0
+      );
+      const recIdx = all2.findIndex(c => c.key === baseShot2);
+      const window3 = recIdx >= 0 ? all2.slice(recIdx, recIdx + 3) : all2.slice(0, 3);
+      validShot2 = new Set(window3.map(c => c.key));
+    }
+
+    const teeOk   = validTee.has(effectiveTee);
+    const shot2Ok = validShot2 === null
+      ? effectiveShot2 === null
+      : (effectiveShot2 !== null && validShot2.has(effectiveShot2));
+
+    if (teeOk && shot2Ok) {
+      return { type: s.type, effectiveTee, effectiveShot2, baseTee, baseShot2 };
+    }
   }
   return null;
 }
@@ -2465,19 +2498,30 @@ initMapView({
         if (club) shot2Overrides[_hk(stratType)] = club.key;
       }
     }
-    // Snap to a named strategy if the resulting clubs match one exactly.
+    // Snap to a named strategy if the resulting clubs fall within its valid alternatives.
     let snappedTo = null;
     if (stratType) {
-      const matched = _matchBaseStrategy(stratType);
-      if (matched) {
+      const match = _matchBaseStrategy(stratType);
+      if (match) {
+        // Clear drag overrides on the original strategy.
         delete teeOverrides[_hk(stratType)];
         delete shot2Overrides[_hk(stratType)];
-        if (matched !== stratType) {
-          const all = getCommittedStrategies(_overrideCourseId || null);
-          all[_overrideHoleIdx] = matched;
-          setCommittedStrategies(_overrideCourseId || null, all);
+        // If the matched clubs aren't that strategy's base defaults, set overrides there.
+        if (match.effectiveTee !== match.baseTee) {
+          teeOverrides[_hk(match.type)] = match.effectiveTee;
+        } else {
+          delete teeOverrides[_hk(match.type)];
         }
-        snappedTo = matched;
+        if (match.baseShot2 && match.effectiveShot2 && match.effectiveShot2 !== match.baseShot2) {
+          shot2Overrides[_hk(match.type)] = match.effectiveShot2;
+        } else if (match.baseShot2) {
+          delete shot2Overrides[_hk(match.type)];
+        }
+        // Update committed strategy in storage.
+        const all = getCommittedStrategies(_overrideCourseId || null);
+        all[_overrideHoleIdx] = match.type;
+        setCommittedStrategies(_overrideCourseId || null, all);
+        snappedTo = match.type;
       }
     }
     calculate();
