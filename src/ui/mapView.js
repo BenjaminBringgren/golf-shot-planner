@@ -622,8 +622,14 @@ function _renderShotOverlay() {
         );
         segs.push({ key: outgoingKey, dist: d2 });
       }
-      if (segs.length) _callbacks.commitClubOverride?.(segs, type);
+      const snappedTo = segs.length ? _callbacks.commitClubOverride?.(segs, type) : null;
       _dotPosCache[cacheKey] = _shotDots.slice(1);
+      // If we snapped to a different strategy, migrate dot cache and re-render.
+      if (snappedTo && snappedTo !== type) {
+        _dotPosCache[`${courseId}|${holeIdx}|${snappedTo}`] = _shotDots.slice(1);
+        _renderChips();
+        _whenStyleLoaded(() => _renderShotOverlay());
+      }
     });
     _shotMarkers.push(marker);
   }

@@ -315,6 +315,21 @@ let _lastDriverTotal        = 0;
 let _lastInRough            = false;
 let _lastIsFirm             = false;
 
+// Returns the base strategy type whose shots[] clubs exactly match the current
+// effective clubs (overrides + base fallback) for stratType, or null if custom.
+function _matchBaseStrategy(stratType) {
+  const teeOv     = teeOverrides[_hk(stratType)];
+  const shot2Ov   = shot2Overrides[_hk(stratType)];
+  const baseStrat = _lastComputedStrategies.find(s => s.type === stratType);
+  const effectiveTee   = teeOv   ?? baseStrat?.shots?.[0]?.key ?? null;
+  const effectiveShot2 = shot2Ov ?? baseStrat?.shots?.[1]?.key ?? null;
+  for (const s of _lastComputedStrategies) {
+    if ((s.shots?.[0]?.key ?? null) === effectiveTee &&
+        (s.shots?.[1]?.key ?? null) === effectiveShot2) return s.type;
+  }
+  return null;
+}
+
 function _findBestClubByTotal(distM, excludeDriver = false) {
   if (!_lastClubsList?.length) return null;
   const list = excludeDriver ? _lastClubsList.filter(c => c.key !== 'driver') : _lastClubsList;
@@ -2450,7 +2465,23 @@ initMapView({
         if (club) shot2Overrides[_hk(stratType)] = club.key;
       }
     }
+    // Snap to a named strategy if the resulting clubs match one exactly.
+    let snappedTo = null;
+    if (stratType) {
+      const matched = _matchBaseStrategy(stratType);
+      if (matched) {
+        delete teeOverrides[_hk(stratType)];
+        delete shot2Overrides[_hk(stratType)];
+        if (matched !== stratType) {
+          const all = getCommittedStrategies(_overrideCourseId || null);
+          all[_overrideHoleIdx] = matched;
+          setCommittedStrategies(_overrideCourseId || null, all);
+        }
+        snappedTo = matched;
+      }
+    }
     calculate();
+    return snappedTo;
   },
   fetchMapWind: async () => {
     let orientPermGranted = false;
