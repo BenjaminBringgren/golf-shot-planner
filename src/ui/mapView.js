@@ -367,9 +367,33 @@ function _clearShotOverlay() {
   }
 }
 
+function _catmullRomCoords(dots, steps = 16) {
+  const pts = dots.map(d => [d.lon, d.lat]);
+  if (pts.length < 2) return pts;
+  // Phantom endpoints via reflection so the curve reaches both terminals.
+  const ext = [
+    [2*pts[0][0] - pts[1][0], 2*pts[0][1] - pts[1][1]],
+    ...pts,
+    [2*pts[pts.length-1][0] - pts[pts.length-2][0], 2*pts[pts.length-1][1] - pts[pts.length-2][1]],
+  ];
+  const out = [];
+  const last = ext.length - 3;
+  for (let i = 1; i <= last; i++) {
+    const [x0,y0] = ext[i-1], [x1,y1] = ext[i], [x2,y2] = ext[i+1], [x3,y3] = ext[i+2];
+    for (let j = 0; j <= (i === last ? steps : steps - 1); j++) {
+      const t = j / steps, t2 = t*t, t3 = t2*t;
+      out.push([
+        0.5*((2*x1)+(-x0+x2)*t+(2*x0-5*x1+4*x2-x3)*t2+(-x0+3*x1-3*x2+x3)*t3),
+        0.5*((2*y1)+(-y0+y2)*t+(2*y0-5*y1+4*y2-y3)*t2+(-y0+3*y1-3*y2+y3)*t3),
+      ]);
+    }
+  }
+  return out;
+}
+
 function _setLineGeoJSON(dots) {
   if (!_map) return;
-  const coords = dots.map(d => [d.lon, d.lat]);
+  const coords = dots.length >= 2 ? _catmullRomCoords(dots) : dots.map(d => [d.lon, d.lat]);
   const data = { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } };
   if (_map.getSource('shot-line')) {
     _map.getSource('shot-line').setData(data);
