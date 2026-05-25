@@ -34,6 +34,7 @@ let _compassFbHandler  = null;
 let _currentHeading    = 0;
 let _mapBearing        = 0;   // current map rotation (degrees)
 let _liveRotate        = false; // true = map bearing follows compass in real-time
+let _overlayBearing    = 0;    // bearing used to draw overlay — fixed until hole change or close
 
 // ── Shot overlay state ────────────────────────────────────────────────────────
 let _playerPos      = null;
@@ -158,6 +159,7 @@ export function refreshMapInfoStrip() {
   _renderInfoStrip();
   _renderChips();
   _clearShotOverlay();
+  _overlayBearing = _currentHeading; // fresh orientation for new hole
   if (_map) _whenStyleLoaded(() => _renderShotOverlay());
 }
 
@@ -172,8 +174,9 @@ function _closeInternal() {
   _clearShotOverlay();
   _stopCompass();
   _playerPos     = null;
-  _liveRotate = false;
-  _mapBearing = 0;
+  _liveRotate     = false;
+  _overlayBearing = 0;
+  _mapBearing     = 0;
   _lockBtn?.classList.remove('locked');
   const arrow = _lockBtn?.querySelector('.map-lock-arrow');
   if (arrow) arrow.style.transform = '';
@@ -233,6 +236,7 @@ async function _locateAndCenter() {
   _playerPos = pos;
   // Face player direction on first load (compass has had time to settle during GPS averaging).
   if (_currentHeading !== 0 && _mapBearing === 0) _mapBearing = _currentHeading;
+  _overlayBearing = _currentHeading;
   _whenStyleLoaded(() => _renderShotOverlay());
 
   const h   = _mapContainer.clientHeight;
@@ -457,7 +461,7 @@ function _renderShotOverlay() {
   _activeStratColor = _STRAT_COLORS[type] ?? '#888';
 
   // Use locked heading if set, otherwise current compass heading.
-  const bearing = _currentHeading;
+  const bearing = _overlayBearing;
   const { dots, dists, clubs, windDeltas } = _buildDots(strategy, teeMark, bearing);
   _shotDots       = dots;
   _nominalDists   = dists;
