@@ -33,7 +33,7 @@ let _compassAbsHandler = null;
 let _compassFbHandler  = null;
 let _currentHeading    = 0;
 let _mapBearing        = 0;   // current map rotation (degrees)
-let _lockedHeading     = null; // null = free; number = locked heading for overlay
+let _liveRotate        = false; // true = map bearing follows compass in real-time
 
 // ── Shot overlay state ────────────────────────────────────────────────────────
 let _playerPos      = null;
@@ -172,8 +172,8 @@ function _closeInternal() {
   _clearShotOverlay();
   _stopCompass();
   _playerPos     = null;
-  _lockedHeading = null;
-  _mapBearing    = 0;
+  _liveRotate = false;
+  _mapBearing = 0;
   _lockBtn?.classList.remove('locked');
   const arrow = _lockBtn?.querySelector('.map-lock-arrow');
   if (arrow) arrow.style.transform = '';
@@ -231,6 +231,8 @@ async function _locateAndCenter() {
 
   _playerMarker.setLngLat([pos.lon, pos.lat]).addTo(_map);
   _playerPos = pos;
+  // Face player direction on first load (compass has had time to settle during GPS averaging).
+  if (_currentHeading !== 0 && _mapBearing === 0) _mapBearing = _currentHeading;
   _whenStyleLoaded(() => _renderShotOverlay());
 
   const h   = _mapContainer.clientHeight;
@@ -249,25 +251,20 @@ async function _locateAndCenter() {
 // ── Lock rotation ─────────────────────────────────────────────────────────────
 
 function _toggleLock() {
-  if (_lockedHeading !== null) {
-    // Unlock — reset map to north-up
-    _lockedHeading = null;
-    _mapBearing    = 0;
-    _map?.easeTo({ bearing: 0, duration: 400 });
+  const arrow = _lockBtn?.querySelector('.map-lock-arrow');
+  if (_liveRotate) {
+    // Disengage — freeze at current bearing
+    _liveRotate = false;
     _lockBtn?.classList.remove('locked');
-    const arrow = _lockBtn?.querySelector('.map-lock-arrow');
     if (arrow) arrow.style.transform = '';
   } else {
-    // Lock — freeze current heading and rotate map
-    _lockedHeading = _currentHeading;
-    _mapBearing    = _currentHeading;
-    _map?.easeTo({ bearing: _currentHeading, duration: 400 });
+    // Engage — start live rotation and immediately snap to current heading
+    _liveRotate = true;
+    _mapBearing = _currentHeading;
+    _map?.easeTo({ bearing: _currentHeading, duration: 300 });
     _lockBtn?.classList.add('locked');
-    const arrow = _lockBtn?.querySelector('.map-lock-arrow');
     if (arrow) arrow.style.transform = `rotate(${Math.round(_currentHeading)}deg)`;
   }
-  _updatePlayerCone(_currentHeading);
-  _whenStyleLoaded(() => _renderShotOverlay());
 }
 
 // ── Compass / player direction ─────────────────────────────────────────────────
@@ -311,6 +308,12 @@ function _stopCompass() {
 
 function _updatePlayerCone(heading) {
   _currentHeading = heading;
+  if (_liveRotate && _map && Math.abs(heading - _mapBearing) > 1) {
+    _mapBearing = heading;
+    _map.jumpTo({ bearing: heading });
+    const arrow = _lockBtn?.querySelector('.map-lock-arrow');
+    if (arrow) arrow.style.transform = `rotate(${Math.round(heading)}deg)`;
+  }
 }
 
 // ── Shot overlay ───────────────────────────────────────────────────────────────
@@ -454,7 +457,7 @@ function _renderShotOverlay() {
   _activeStratColor = _STRAT_COLORS[type] ?? '#888';
 
   // Use locked heading if set, otherwise current compass heading.
-  const bearing = _lockedHeading ?? _currentHeading;
+  const bearing = _currentHeading;
   const { dots, dists, clubs, windDeltas } = _buildDots(strategy, teeMark, bearing);
   _shotDots       = dots;
   _nominalDists   = dists;
