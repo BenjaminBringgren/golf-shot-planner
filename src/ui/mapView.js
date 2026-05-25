@@ -51,7 +51,6 @@ let _activeStratColor = '#888';
 // Survives map close/reopen within the same session.
 const _dotPosCache = {};
 
-let _fitNextRender = false; // when true, fitBounds fires once after next successful overlay render
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
@@ -166,8 +165,10 @@ export function refreshMapInfoStrip() {
   _renderChips();
   _clearShotOverlay();
   _overlayBearing = _currentHeading;
-  _fitNextRender  = true;
-  if (_map) _whenStyleLoaded(() => _renderShotOverlay());
+  if (_map) _whenStyleLoaded(() => {
+    _renderShotOverlay();
+    if (_shotDots.length >= 2) _fitToOverlay();
+  });
 }
 
 // ── Internal ──────────────────────────────────────────────────────────────────
@@ -184,7 +185,6 @@ function _closeInternal() {
   _liveRotate     = false;
   _overlayBearing = 0;
   _mapBearing     = 0;
-  _fitNextRender  = false;
   _lockBtn?.classList.remove('locked');
   const arrow = _lockBtn?.querySelector('.map-lock-arrow');
   if (arrow) arrow.style.transform = '';
@@ -245,15 +245,23 @@ async function _locateAndCenter() {
   // Face player direction on first load (compass has had time to settle during GPS averaging).
   if (_currentHeading !== 0 && _mapBearing === 0) _mapBearing = _currentHeading;
   _overlayBearing = _currentHeading;
-  _fitNextRender  = true;
-  _whenStyleLoaded(() => _renderShotOverlay());
 
-  // Initial centre-on-player while overlay is rendering; fitBounds will override if dots exist.
-  _map.easeTo({
-    center:   [pos.lon, pos.lat],
-    zoom:     17,
-    bearing:  _mapBearing,
-    duration: 500,
+  _whenStyleLoaded(() => {
+    _renderShotOverlay();
+    if (_shotDots.length >= 2) {
+      _fitToOverlay();
+    } else {
+      // No overlay — centre on player
+      const h   = _mapContainer.clientHeight;
+      const pad = Math.round(h * 0.55);
+      _map.easeTo({
+        center:   [pos.lon, pos.lat],
+        zoom:     17,
+        bearing:  _mapBearing,
+        padding:  { top: pad, bottom: 0, left: 0, right: 0 },
+        duration: 600,
+      });
+    }
   });
 
   _renderInfoStrip(pos, snapshot);
@@ -458,8 +466,6 @@ function _fitToOverlay() {
 
 function _renderShotOverlay() {
   _clearShotOverlay();
-  const doFit = _fitNextRender;
-  _fitNextRender = false;
   if (!_map || !_map.isStyleLoaded()) return;
 
   const session  = _callbacks.getActiveSession?.();
@@ -555,7 +561,6 @@ function _renderShotOverlay() {
     _shotMarkers.push(marker);
   }
 
-  if (doFit) _fitToOverlay();
 }
 
 // ── Strategy chips ────────────────────────────────────────────────────────────
