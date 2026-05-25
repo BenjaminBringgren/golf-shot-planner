@@ -391,10 +391,59 @@ function _catmullRomCoords(dots, steps = 16) {
   return out;
 }
 
+function _metersPerPixel() {
+  if (!_map) return 1;
+  const c = _map.getCenter();
+  return (40075016.686 * Math.cos(c.lat * Math.PI / 180)) / (256 * Math.pow(2, _map.getZoom()));
+}
+
 function _setLineGeoJSON(dots) {
   if (!_map) return;
-  const coords = dots.length >= 2 ? _catmullRomCoords(dots) : dots.map(d => [d.lon, d.lat]);
-  const data = { type: 'Feature', geometry: { type: 'LineString', coordinates: coords } };
+
+  let geometry;
+  if (dots.length < 2) {
+    geometry = { type: 'LineString', coordinates: [] };
+  } else {
+    const allCoords = _catmullRomCoords(dots);
+    const mpp = _metersPerPixel();
+    // Outer scope ring ≈17 px radius; approach circle = 8 px radius.
+    const SCOPE_R = 17 * mpp;
+    const APPR_R  =  8 * mpp;
+    // dot[0] = tee/player (no clip); interior dots = scopes; last dot:
+    //   par3 (2 dots) — last is a scope; par4/5 (3+ dots) — last is approach circle.
+    const radii = dots.map((_, i) => {
+      if (i === 0) return 0;
+      if (i === dots.length - 1 && dots.length > 2) return APPR_R;
+      return SCOPE_R;
+    });
+    // Squared distance (metres) from a GeoJSON coord to a dot.
+    const sqDist = (coord, dot) => {
+      const dx = (coord[0] - dot.lon) * 111320 * Math.cos(dot.lat * Math.PI / 180);
+      const dy = (coord[1] - dot.lat) * 110574;
+      return dx * dx + dy * dy;
+    };
+    // Mark coords that fall inside any scope/approach circle.
+    const masked = allCoords.map(coord =>
+      dots.some((dot, i) => radii[i] > 0 && sqDist(coord, dot) < radii[i] * radii[i])
+    );
+    // Split into visible segments (MultiLineString).
+    const segments = [];
+    let seg = [];
+    for (let i = 0; i < allCoords.length; i++) {
+      if (!masked[i]) {
+        seg.push(allCoords[i]);
+      } else {
+        if (seg.length >= 2) segments.push(seg);
+        seg = [];
+      }
+    }
+    if (seg.length >= 2) segments.push(seg);
+    geometry = segments.length === 1
+      ? { type: 'LineString',      coordinates: segments[0] }
+      : { type: 'MultiLineString', coordinates: segments };
+  }
+
+  const data = { type: 'Feature', geometry };
   if (_map.getSource('shot-line')) {
     _map.getSource('shot-line').setData(data);
   } else {
@@ -507,7 +556,7 @@ function _renderPar3Overlay(par3, teeMark, courseId, holeIdx) {
 
   const dotEl = document.createElement('div');
   dotEl.className = 'map-shot-dot';
-  dotEl.innerHTML = `<svg width="52" height="52" viewBox="-2 -74.459 111.77 80.459" fill="#fff"><path d="${_SCOPE_PATH}"/></svg>`;
+  dotEl.innerHTML = `<svg width="52" height="52" viewBox="-2 -74.459 111.77 80.459" fill="#fff" opacity="0.75"><path d="${_SCOPE_PATH}"/></svg>`;
 
   const marker = new mapboxgl.Marker({ element: dotEl, anchor: 'center', draggable: true })
     .setLngLat([dots[1].lon, dots[1].lat])
@@ -605,7 +654,7 @@ function _renderShotOverlay() {
     const isApproach = (i === dots.length - 1);
     dotEl.innerHTML = isApproach
       ? `<svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="8" fill="#fff" stroke="rgba(0,0,0,0.25)" stroke-width="1.5"/></svg>`
-      : `<svg width="52" height="52" viewBox="-2 -74.459 111.77 80.459" fill="#fff"><path d="${_SCOPE_PATH}"/></svg>`;
+      : `<svg width="52" height="52" viewBox="-2 -74.459 111.77 80.459" fill="#fff" opacity="0.75"><path d="${_SCOPE_PATH}"/></svg>`;
 
     const idx         = i;
     // 'tee' for dot 1, 'shot2' for dot 2 in 2-shot plans, null for approach dot (last).
