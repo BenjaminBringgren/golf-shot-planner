@@ -2562,14 +2562,18 @@ initMapView({
       });
     }
     const pos = await averagedPosition(2);
-    const [w, heading] = await Promise.all([fetchWind(pos.lat, pos.lon), headingPromise]);
-    windState.speedMs = w.speedMs;
-    windState.gustMs  = w.gustMs;
-    windState.dirDeg  = w.dirDeg;
-    if (heading != null) windState.holeDeg = Math.round(heading);
-    if (w.tempC     != null) windState.tempC     = w.tempC;
-    if (w.feelsLike != null) windState.feelsLike = w.feelsLike;
-    if (w.rainPct   != null) windState.rainPct   = w.rainPct;
+    const [locationName, w, heading] = await Promise.all([
+      fetchLocationName(pos.lat, pos.lon),
+      fetchWind(pos.lat, pos.lon),
+      headingPromise,
+    ]);
+    if (heading != null) {
+      windState.holeDeg = Math.round(heading);
+      setCompassAngle(windState.holeDeg);
+      setLockIcon('locked', windState.holeDeg);
+      saveWindPrefs();
+    }
+    applyWindData(w.speedMs, w.gustMs, w.dirDeg, locationName, w.tempC, w.feelsLike, w.rainPct);
     return { ...windState };
   },
 });

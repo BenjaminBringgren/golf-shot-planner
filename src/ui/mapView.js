@@ -677,8 +677,7 @@ function _updateWindBtn(wind) {
   const arrow = _windBtn.querySelector('.map-wind-btn-arrow');
   const label = _windBtn.querySelector('.map-wind-btn-speed');
   if (wind?.dirDeg != null) {
-    const windTo = Math.round((wind.dirDeg + 180) % 360);
-    arrow.style.transform = `rotate(${windTo}deg)`;
+    arrow.style.transform = `rotate(${Math.round(wind.dirDeg)}deg)`;
   }
   if (wind?.speedMs != null) {
     label.textContent = wind.speedMs < 1 ? 'Calm' : `${wind.speedMs.toFixed(1)}`;
