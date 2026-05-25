@@ -2029,9 +2029,12 @@ initServices({
       const { gameFormat: _fmt = 'strokes', hcpEnabled: _hcp = true } = loadActiveCourse();
       saveActiveCourse(id, newIdx, _fmt, _hcp);
       resetInRough();
-      refreshMapInfoStrip();
+      // Navigate the carousel first so DOM inputs (holeLength, parSelect) reflect the
+      // new hole before refreshMapInfoStrip calls recalculate(). If the order is reversed
+      // recalculate() reads stale DOM values and _lastPar3Plan ends up wrong.
       const bar = document.getElementById('playCourseBar');
       if (bar?._navigateTo) bar._navigateTo(newIdx);
+      refreshMapInfoStrip();
     }
 
     prevBtn.addEventListener('click', () => navTo(-1));
