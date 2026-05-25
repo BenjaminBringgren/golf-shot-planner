@@ -44,8 +44,12 @@ let _shotClubs      = []; // club key per segment (null for approach)
 let _shotWindDeltas = []; // wind carry delta per segment (null if no wind adjustment)
 let _shotMarkers    = [];
 let _labelMarkers   = [];
-let _warnEl       = null;
+let _warnEl         = null;
 let _activeStratColor = '#888';
+
+// Persists dot positions the user has dragged, keyed by 'courseId|holeIdx|strategyType'.
+// Survives map close/reopen within the same session.
+const _dotPosCache = {};
 
 // ── Public API ────────────────────────────────────────────────────────────────
 
@@ -460,9 +464,16 @@ function _renderShotOverlay() {
 
   _activeStratColor = _STRAT_COLORS[type] ?? '#888';
 
-  // Use locked heading if set, otherwise current compass heading.
   const bearing = _overlayBearing;
   const { dots, dists, clubs, windDeltas } = _buildDots(strategy, teeMark, bearing);
+
+  // Restore user-dragged positions if the dot count matches.
+  const cacheKey = `${courseId}|${holeIdx}|${type}`;
+  const cached = _dotPosCache[cacheKey];
+  if (cached && cached.length === dots.length - 1) {
+    for (let i = 1; i < dots.length; i++) dots[i] = cached[i - 1];
+  }
+
   _shotDots       = dots;
   _nominalDists   = dists;
   _shotClubs      = clubs;
@@ -483,7 +494,7 @@ function _renderShotOverlay() {
   for (let i = 1; i < dots.length; i++) {
     const dotEl = document.createElement('div');
     dotEl.className = 'map-shot-dot';
-    dotEl.innerHTML = `<svg width="32" height="32" viewBox="-2 -74.459 111.77 80.459" fill="#fff"><path d="${_SCOPE_PATH}"/></svg>`;
+    dotEl.innerHTML = `<svg width="40" height="40" viewBox="-2 -74.459 111.77 80.459" fill="#fff"><path d="${_SCOPE_PATH}"/></svg>`;
 
     const idx = i;
     const marker = new mapboxgl.Marker({ element: dotEl, anchor: 'center', draggable: true })
@@ -520,7 +531,10 @@ function _renderShotOverlay() {
       else                         _hideWarn();
     });
 
-    marker.on('dragend', () => _hideWarn());
+    marker.on('dragend', () => {
+      _dotPosCache[cacheKey] = _shotDots.slice(1);
+      _hideWarn();
+    });
     _shotMarkers.push(marker);
   }
 }
