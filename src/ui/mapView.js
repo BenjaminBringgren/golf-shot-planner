@@ -510,13 +510,19 @@ function _renderPar3Overlay(par3, teeMark, courseId, holeIdx) {
     const { lng, lat } = marker.getLngLat();
     _shotDots[1] = { lat, lon: lng };
     _setLineGeoJSON(_shotDots);
-    const d = _callbacks.haversine(dots[0].lat, dots[0].lon, lat, lng);
+    const d       = _callbacks.haversine(dots[0].lat, dots[0].lon, lat, lng);
+    const bestKey = _callbacks.findBestClubForDist?.(d, true) ?? club.key;
     if (_labelMarkers[0]) {
-      _labelMarkers[0].setLngLat([(_midpoint(dots[0], { lat, lon: lng })).lon, (_midpoint(dots[0], { lat, lon: lng })).lat]);
-      _labelMarkers[0].getElement().textContent = _labelText(d, club.key, _shotWindDeltas[0]);
+      const mid = _midpoint(dots[0], { lat, lon: lng });
+      _labelMarkers[0].setLngLat([mid.lon, mid.lat]);
+      _labelMarkers[0].getElement().textContent = _labelText(d, bestKey, _shotWindDeltas[0]);
     }
   });
   marker.on('dragend', () => {
+    const d = _callbacks.haversine(
+      dots[0].lat, dots[0].lon, _shotDots[1].lat, _shotDots[1].lon
+    );
+    _callbacks.commitClubOverride?.('par3', d, null);
     _dotPosCache[cacheKey] = [_shotDots[1]];
     _hideWarn();
   });
@@ -588,7 +594,12 @@ function _renderShotOverlay() {
     dotEl.className = 'map-shot-dot';
     dotEl.innerHTML = `<svg width="40" height="40" viewBox="-2 -74.459 111.77 80.459" fill="#fff"><path d="${_SCOPE_PATH}"/></svg>`;
 
-    const idx = i;
+    const idx         = i;
+    // 'tee' for dot 1, 'shot2' for dot 2 (2-shot plans), null for approach dot (last).
+    const segmentKeys = [null, 'tee', 'shot2'];
+    const segmentKey  = i < dots.length - 1 ? (segmentKeys[i] ?? null) : null;
+    const excludeDriver = (i > 1);
+
     const marker = new mapboxgl.Marker({ element: dotEl, anchor: 'center', draggable: true })
       .setLngLat([dots[i].lon, dots[i].lat])
       .addTo(_map);
@@ -602,11 +613,14 @@ function _renderShotOverlay() {
 
       // Update only the two adjacent segment labels.
       const prevDot = _shotDots[idx - 1];
-      const d1 = _callbacks.haversine(prevDot.lat, prevDot.lon, lat, lng);
+      const d1      = _callbacks.haversine(prevDot.lat, prevDot.lon, lat, lng);
       if (_labelMarkers[idx - 1]) {
+        const liveKey = (segmentKey && _callbacks.findBestClubForDist)
+          ? (_callbacks.findBestClubForDist(d1, excludeDriver) ?? _shotClubs[idx - 1])
+          : _shotClubs[idx - 1];
         const m1 = _midpoint(prevDot, { lat, lon: lng });
         _labelMarkers[idx - 1].setLngLat([m1.lon, m1.lat]);
-        _labelMarkers[idx - 1].getElement().textContent = _labelText(d1, _shotClubs[idx - 1], _shotWindDeltas[idx - 1]);
+        _labelMarkers[idx - 1].getElement().textContent = _labelText(d1, liveKey, _shotWindDeltas[idx - 1]);
       }
       if (idx < _shotDots.length - 1 && _labelMarkers[idx]) {
         const nextDot = _shotDots[idx + 1];
@@ -624,6 +638,13 @@ function _renderShotOverlay() {
     });
 
     marker.on('dragend', () => {
+      if (segmentKey) {
+        const prevDot = _shotDots[idx - 1];
+        const d = _callbacks.haversine(
+          prevDot.lat, prevDot.lon, _shotDots[idx].lat, _shotDots[idx].lon
+        );
+        _callbacks.commitClubOverride?.(segmentKey, d, type);
+      }
       _dotPosCache[cacheKey] = _shotDots.slice(1);
       _hideWarn();
     });

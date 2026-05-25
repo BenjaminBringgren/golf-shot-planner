@@ -315,6 +315,15 @@ let _lastDriverTotal        = 0;
 let _lastInRough            = false;
 let _lastIsFirm             = false;
 
+function _findBestClubByTotal(distM, excludeDriver = false) {
+  if (!_lastClubsList?.length) return null;
+  const list = excludeDriver ? _lastClubsList.filter(c => c.key !== 'driver') : _lastClubsList;
+  if (!list.length) return null;
+  return list.reduce((best, c) =>
+    Math.abs(c.total - distM) < Math.abs(best.total - distM) ? c : best
+  );
+}
+
 function _resolveApproachClub(approachDist, approachOvKey) {
   if (!_lastClubsList || approachDist == null) return null;
   if (approachOvKey) {
@@ -2426,6 +2435,21 @@ initMapView({
   getActivePlanType:       () => _lastActivePlanType,
   getPar3Plan:             () => _lastPar3Plan,
   recalculate:             () => calculate(),
+  findBestClubForDist: (distM, excludeDriver) =>
+    _findBestClubByTotal(distM, excludeDriver)?.key ?? null,
+  commitClubOverride: (segmentKey, distM, stratType) => {
+    if (segmentKey === 'par3') {
+      const club = _findBestClubByTotal(distM, true);
+      if (club) par3ClubOverrides[_overrideCourseId + '|' + _overrideHoleIdx] = club.key;
+    } else if (segmentKey === 'tee') {
+      const club = _findBestClubByTotal(distM, false);
+      if (club) teeOverrides[_hk(stratType)] = club.key;
+    } else if (segmentKey === 'shot2') {
+      const club = _findBestClubByTotal(distM, true);
+      if (club) shot2Overrides[_hk(stratType)] = club.key;
+    }
+    calculate();
+  },
   fetchMapWind: async () => {
     let orientPermGranted = false;
     if (typeof DeviceOrientationEvent !== 'undefined' &&
