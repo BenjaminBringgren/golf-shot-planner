@@ -574,7 +574,8 @@ function _renderShotOverlay() {
   // Restore user-dragged positions if the dot count matches.
   const cacheKey = `${courseId}|${holeIdx}|${type}`;
   const cached = _dotPosCache[cacheKey];
-  if (cached && cached.length === dots.length - 1) {
+  const hasCached = cached && cached.length === dots.length - 1;
+  if (hasCached) {
     for (let i = 1; i < dots.length; i++) dots[i] = cached[i - 1];
   }
 
@@ -586,9 +587,14 @@ function _renderShotOverlay() {
   _setLineGeoJSON(dots);
 
   for (let i = 0; i < dots.length - 1; i++) {
+    // When cached positions are in use, recalculate the actual segment distance so
+    // the label reflects the true haversine distance rather than the plan distance.
+    const labelDist = hasCached
+      ? _callbacks.haversine(dots[i].lat, dots[i].lon, dots[i + 1].lat, dots[i + 1].lon)
+      : dists[i];
     _addLabelMarker(
       _midpoint(dots[i], dots[i + 1]),
-      _labelText(dists[i], clubs[i], windDeltas[i]),
+      _labelText(labelDist, clubs[i], windDeltas[i]),
       _activeStratColor,
     );
   }
@@ -657,14 +663,19 @@ function _renderShotOverlay() {
         segs.push({ key: outgoingKey, dist: d2 });
       }
       const snappedTo = segs.length ? _callbacks.commitClubOverride?.(segs, type) : null;
-      _dotPosCache[cacheKey] = _shotDots.slice(1);
       if (segs.length) {
-        if (snappedTo) {
+        if (snappedTo && snappedTo !== type) {
+          // Snapped to a different strategy: discard dot cache for the original strategy
+          // and leave the new strategy uncached so it renders its own fresh positions.
+          delete _dotPosCache[cacheKey];
           _customOverride = false;
-          if (snappedTo !== type) {
-            _dotPosCache[`${courseId}|${holeIdx}|${snappedTo}`] = _shotDots.slice(1);
-          }
+        } else if (snappedTo) {
+          // Same-strategy snap (clubs still fit): keep dragged positions for this strategy.
+          _dotPosCache[cacheKey] = _shotDots.slice(1);
+          _customOverride = false;
         } else {
+          // No snap — custom override. Keep dragged positions for this strategy.
+          _dotPosCache[cacheKey] = _shotDots.slice(1);
           _customOverride = true;
         }
         _renderChips();
