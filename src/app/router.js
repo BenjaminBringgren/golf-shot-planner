@@ -307,6 +307,7 @@ let _overrideCourseId = '';
 function _hk(type) { return _overrideCourseId + '|' + _overrideHoleIdx + '|' + type; }
 
 let _lastComputedStrategies = [];
+let _lastActivePlanType     = null;
 let _lastClubsList          = null;
 let _lastHoleLength         = 0;
 let _lastDriverTotal        = 0;
@@ -1778,6 +1779,7 @@ initServices({
     inputs.clearOverrides = clearOverrides;
     const plan = computePlan(inputs);
     _lastComputedStrategies = plan.isError ? [] : (plan.ordered ?? []);
+    _lastActivePlanType     = plan.isError ? null : (plan.activePlanType ?? null);
     if (!plan.isError) {
       const _exp = plan.isPar3
         ? plan.par3.scoreVal3
@@ -2419,6 +2421,7 @@ initMapView({
   destinationFromBearing:  (lat, lon, b, d) => destinationFromBearing(lat, lon, b, d),
   getBearingBetween:       (lat1, lon1, lat2, lon2) => getBearingBetween(lat1, lon1, lat2, lon2),
   getComputedStrategies:   () => _buildResolvedStrategies(),
+  getActivePlanType:       () => _lastActivePlanType,
   recalculate:             () => calculate(),
   fetchMapWind: async () => {
     let orientPermGranted = false;

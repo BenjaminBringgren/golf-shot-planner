@@ -138,6 +138,8 @@ export function openMapView() {
 
   _renderInfoStrip();
   _renderChips();
+  // Ensure strategies are computed before render (covers fresh-start and resume cases).
+  _callbacks.recalculate?.();
   requestAnimationFrame(() => requestAnimationFrame(() => {
     if (!_map) _initMap();
     else       _map.resize();
@@ -477,7 +479,9 @@ function _renderShotOverlay() {
   if (!courseId || holeIdx === null) return;
 
   const committed = _callbacks.getCommittedStrategy?.(courseId, holeIdx);
-  const type = committed?.split(' · ')[0] ?? null;
+  const committedType = committed?.split(' · ')[0] ?? null;
+  // Fall back to the carousel's active/recommended plan if nothing is committed.
+  const type = committedType || _callbacks.getActivePlanType?.() || null;
   if (!type) return;
 
   const strategies = _callbacks.getComputedStrategies?.() ?? [];
