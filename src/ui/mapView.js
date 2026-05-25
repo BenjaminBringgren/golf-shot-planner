@@ -386,7 +386,9 @@ function _setLineGeoJSON(dots) {
 function _formatClub(key) {
   if (!key) return '';
   if (/^\d+$/.test(key)) return `${key}°`;
-  return key === 'driver' ? 'Driver' : key.toUpperCase();
+  if (key === 'driver') return 'Driver';
+  if (key.endsWith('i')) return key; // irons: preserve lowercase i (7i, 5i…)
+  return key.toUpperCase();
 }
 
 function _labelText(dist, club, windDelta) {
