@@ -312,9 +312,9 @@ function _stopCompass() {
 
 function _updatePlayerCone(heading) {
   _currentHeading = heading;
-  if (_liveRotate && _map && Math.abs(heading - _mapBearing) > 1) {
+  if (_liveRotate && _map && Math.abs(heading - _mapBearing) > 0.5) {
     _mapBearing = heading;
-    _map.jumpTo({ bearing: heading });
+    _map.easeTo({ bearing: heading, duration: 200, easing: t => t });
     const arrow = _lockBtn?.querySelector('.map-lock-arrow');
     if (arrow) arrow.style.transform = `rotate(${Math.round(heading)}deg)`;
   }
