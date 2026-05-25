@@ -469,6 +469,56 @@ function _fitToOverlay() {
   });
 }
 
+function _renderPar3Overlay(par3, teeMark, courseId, holeIdx) {
+  const club      = par3.s;
+  const bearing   = _overlayBearing;
+  const landing   = _callbacks.destinationFromBearing(teeMark.lat, teeMark.lon, bearing, club.total);
+  const windDelta = club.baseCarry != null ? Math.round(club.carry - club.baseCarry) : 0;
+  const dots      = [{ lat: teeMark.lat, lon: teeMark.lon }, landing];
+
+  // Restore cached dragged position for this hole if available.
+  const cacheKey = `${courseId}|${holeIdx}|par3`;
+  const cached = _dotPosCache[cacheKey];
+  if (cached?.length === 1) dots[1] = cached[0];
+
+  _activeStratColor = '#888';
+  _shotDots       = dots;
+  _nominalDists   = [club.total];
+  _shotClubs      = [club.key];
+  _shotWindDeltas = [windDelta !== 0 ? windDelta : null];
+
+  _setLineGeoJSON(dots);
+  _addLabelMarker(
+    _midpoint(dots[0], dots[1]),
+    _labelText(club.total, club.key, windDelta !== 0 ? windDelta : null),
+    '#888',
+  );
+
+  const dotEl = document.createElement('div');
+  dotEl.className = 'map-shot-dot';
+  dotEl.innerHTML = `<svg width="40" height="40" viewBox="-2 -74.459 111.77 80.459" fill="#fff"><path d="${_SCOPE_PATH}"/></svg>`;
+
+  const marker = new mapboxgl.Marker({ element: dotEl, anchor: 'center', draggable: true })
+    .setLngLat([dots[1].lon, dots[1].lat])
+    .addTo(_map);
+
+  marker.on('drag', () => {
+    const { lng, lat } = marker.getLngLat();
+    _shotDots[1] = { lat, lon: lng };
+    _setLineGeoJSON(_shotDots);
+    const d = _callbacks.haversine(dots[0].lat, dots[0].lon, lat, lng);
+    if (_labelMarkers[0]) {
+      _labelMarkers[0].setLngLat([(_midpoint(dots[0], { lat, lon: lng })).lon, (_midpoint(dots[0], { lat, lon: lng })).lat]);
+      _labelMarkers[0].getElement().textContent = _labelText(d, club.key, _shotWindDeltas[0]);
+    }
+  });
+  marker.on('dragend', () => {
+    _dotPosCache[cacheKey] = [_shotDots[1]];
+    _hideWarn();
+  });
+  _shotMarkers.push(marker);
+}
+
 function _renderShotOverlay() {
   _clearShotOverlay();
   if (!_map || !_map.isStyleLoaded()) return;
@@ -478,6 +528,18 @@ function _renderShotOverlay() {
   const holeIdx  = session?.id ? (session.holeIdx ?? 0) : null;
   if (!courseId || holeIdx === null) return;
 
+  const snapshot = _callbacks.getGpsSnapshot?.();
+  const teeMark  = snapshot?.teeMark ?? (_playerPos ? { lat: _playerPos.lat, lon: _playerPos.lon } : null);
+  if (!teeMark) return;
+
+  // ── Par 3 ──────────────────────────────────────────────────────────────────
+  const par3 = _callbacks.getPar3Plan?.();
+  if (par3) {
+    _renderPar3Overlay(par3, teeMark, courseId, holeIdx);
+    return;
+  }
+
+  // ── Par 4 / 5 ──────────────────────────────────────────────────────────────
   const committed = _callbacks.getCommittedStrategy?.(courseId, holeIdx);
   const committedType = committed?.split(' · ')[0] ?? null;
   // Fall back to the carousel's active/recommended plan if nothing is committed.
@@ -487,10 +549,6 @@ function _renderShotOverlay() {
   const strategies = _callbacks.getComputedStrategies?.() ?? [];
   const strategy   = strategies.find(s => s.type === type);
   if (!strategy || !strategy.shots?.length) return;
-
-  const snapshot = _callbacks.getGpsSnapshot?.();
-  const teeMark  = snapshot?.teeMark ?? (_playerPos ? { lat: _playerPos.lat, lon: _playerPos.lon } : null);
-  if (!teeMark) return;
 
   _activeStratColor = _STRAT_COLORS[type] ?? '#888';
 
