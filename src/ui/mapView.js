@@ -385,6 +385,7 @@ function _setLineGeoJSON(dots) {
 
 function _formatClub(key) {
   if (!key) return '';
+  if (/^\d+$/.test(key)) return `${key}°`;
   return key === 'driver' ? 'Driver' : key.toUpperCase();
 }
 
