@@ -3524,10 +3524,10 @@
 }
 /* ── Shot overlay ────────────────────────────────────────────────────────────── */
 .map-shot-dot {
-  width: 28px; height: 28px;
+  width: 44px; height: 44px;
   display: flex; align-items: center; justify-content: center;
   cursor: grab;
-  filter: drop-shadow(0 1px 4px rgba(0,0,0,0.65));
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.7));
 }
 .map-shot-dot:active { cursor: grabbing; }
 .map-shot-label {

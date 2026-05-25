@@ -483,7 +483,7 @@ function _renderShotOverlay() {
   for (let i = 1; i < dots.length; i++) {
     const dotEl = document.createElement('div');
     dotEl.className = 'map-shot-dot';
-    dotEl.innerHTML = `<svg width="24" height="24" viewBox="-2 -74.459 111.77 80.459" fill="#fff"><path d="${_SCOPE_PATH}"/></svg>`;
+    dotEl.innerHTML = `<svg width="32" height="32" viewBox="-2 -74.459 111.77 80.459" fill="#fff"><path d="${_SCOPE_PATH}"/></svg>`;
 
     const idx = i;
     const marker = new mapboxgl.Marker({ element: dotEl, anchor: 'center', draggable: true })
