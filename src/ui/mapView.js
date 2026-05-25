@@ -167,6 +167,10 @@ export function refreshMapInfoStrip() {
   _renderChips();
   _clearShotOverlay();
   _overlayBearing = _currentHeading;
+  // Recalculate for the new hole so _lastPar3Plan and strategies are current
+  // before the overlay renders. Without this, switching par 3 ↔ par 4/5 shows
+  // stale overlay data (wrong hole's par3 flag).
+  _callbacks.recalculate?.();
   if (_map) _whenStyleLoaded(() => {
     _renderShotOverlay();
     if (_shotDots.length >= 2) _fitToOverlay();
