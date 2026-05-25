@@ -44,7 +44,8 @@ let _shotClubs      = []; // club key per segment (null for approach)
 let _shotWindDeltas = []; // wind carry delta per segment (null if no wind adjustment)
 let _shotMarkers    = [];
 let _labelMarkers   = [];
-let _activeStratColor = '#888';
+let _activeStratColor  = '#888';
+let _customOverride    = false; // true after a drag that didn't snap to any named strategy
 
 // Persists dot positions the user has dragged, keyed by 'courseId|holeIdx|strategyType'.
 // Survives map close/reopen within the same session.
@@ -114,7 +115,10 @@ export function initMapView(callbacks) {
     const type    = chip.dataset.type;
     const current = _callbacks.getCommittedStrategy?.(courseId, holeIdx);
     const currentType = current?.split(' · ')[0] ?? null;
-    if (currentType === type) {
+    _customOverride = false;
+    if (type === 'Custom') {
+      // Tapping CUST chip when already custom → no-op; otherwise ignore
+    } else if (currentType === type) {
       _callbacks.clearCommittedStrategy?.(courseId, holeIdx);
     } else {
       _callbacks.setCommittedStrategy?.(courseId, holeIdx, type, current);
@@ -162,6 +166,7 @@ export function closeMapViewIfOpen() {
 
 export function refreshMapInfoStrip() {
   if (!_isOpen) return;
+  _customOverride = false;
   _renderInfoStrip();
   _renderChips();
   _clearShotOverlay();
@@ -180,6 +185,7 @@ export function refreshMapInfoStrip() {
 
 function _closeInternal() {
   _isOpen = false;
+  _customOverride = false;
   _mapPage.classList.remove('open');
   _fab.classList.remove('map-open');
   document.body.style.overflow = '';
@@ -535,7 +541,7 @@ function _renderShotOverlay() {
   const strategy   = strategies.find(s => s.type === type);
   if (!strategy || !strategy.shots?.length) return;
 
-  _activeStratColor = _STRAT_COLORS[type] ?? '#888';
+  _activeStratColor = _customOverride ? '#888' : (_STRAT_COLORS[type] ?? '#888');
 
   const bearing = _overlayBearing;
   const { dots, dists, clubs, windDeltas } = _buildDots(strategy, teeMark, bearing);
@@ -624,9 +630,15 @@ function _renderShotOverlay() {
       }
       const snappedTo = segs.length ? _callbacks.commitClubOverride?.(segs, type) : null;
       _dotPosCache[cacheKey] = _shotDots.slice(1);
-      // If we snapped to a different strategy, migrate dot cache and re-render.
-      if (snappedTo && snappedTo !== type) {
-        _dotPosCache[`${courseId}|${holeIdx}|${snappedTo}`] = _shotDots.slice(1);
+      if (segs.length) {
+        if (snappedTo) {
+          _customOverride = false;
+          if (snappedTo !== type) {
+            _dotPosCache[`${courseId}|${holeIdx}|${snappedTo}`] = _shotDots.slice(1);
+          }
+        } else {
+          _customOverride = true;
+        }
         _renderChips();
         _whenStyleLoaded(() => _renderShotOverlay());
       }
@@ -652,11 +664,16 @@ function _renderChips() {
   const committed  = _callbacks.getCommittedStrategy?.(courseId, holeIdx) ?? null;
   const activeType = committed?.split(' · ')[0] ?? null;
 
-  _chipsRow.innerHTML = _STRATEGIES.map(({ type, label, color }) => {
-    const isActive = activeType === type;
+  const custActive = _customOverride;
+  const chips = _STRATEGIES.map(({ type, label, color }) => {
+    const isActive = !custActive && activeType === type;
     const style = isActive ? `background:${color};border-color:${color};color:#fff;` : '';
     return `<button class="map-strategy-chip${isActive ? ' active' : ''}" data-type="${type}" style="${style}" type="button">${label}</button>`;
-  }).join('');
+  });
+  chips.push(
+    `<button class="map-strategy-chip${custActive ? ' active' : ''}" data-type="Custom" style="${custActive ? 'background:#888;border-color:#888;color:#fff;' : ''}" type="button">CUST</button>`
+  );
+  _chipsRow.innerHTML = chips.join('');
 }
 
 // ── Wind button helpers ────────────────────────────────────────────────────────
