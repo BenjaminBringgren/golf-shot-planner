@@ -307,6 +307,40 @@ let _overrideCourseId = '';
 function _hk(type) { return _overrideCourseId + '|' + _overrideHoleIdx + '|' + type; }
 
 let _lastComputedStrategies = [];
+let _lastClubsList          = null;
+let _lastHoleLength         = 0;
+let _lastDriverTotal        = 0;
+let _lastInRough            = false;
+
+function _buildResolvedStrategies() {
+  if (!_lastComputedStrategies.length || !_lastClubsList) return _lastComputedStrategies;
+  const driverCarry = _lastClubsList.find(c => c.key === 'driver')?.carry ?? 0;
+  const hcp = _readHandicap();
+  return _lastComputedStrategies.map(basePlan => {
+    const teeOvKey  = teeOverrides[_hk(basePlan.type)];
+    const shot2OvKey = shot2Overrides[_hk(basePlan.type)];
+    let plan = basePlan;
+    if (teeOvKey) {
+      const teeClub = _lastClubsList.find(c => c.key === teeOvKey);
+      if (teeClub) {
+        const resolved = findBestContinuation(teeClub, _lastHoleLength, _lastDriverTotal, _lastClubsList, driverCarry, hcp, _lastInRough, windState, _holeHcpAdj, _personalCal, true);
+        if (resolved) plan = { ...resolved, type: basePlan.type };
+      }
+    }
+    if (shot2OvKey && plan.shots?.length >= 2) {
+      const forced2 = _lastClubsList.find(c => c.key === shot2OvKey);
+      if (forced2) {
+        const teeShot  = plan.shots[0];
+        const approach = _lastHoleLength - teeShot.total - forced2.total;
+        if (approach >= 0) {
+          const rawScore = 2 + expectedStrokesRemaining(approach, driverCarry, hcp, _lastInRough, windState, undefined, _holeHcpAdj, _personalCal);
+          plan = { ...plan, shots: [teeShot, forced2], approach, score: rawScore };
+        }
+      }
+    }
+    return plan;
+  });
+}
 
 let windState = {
   speedMs:    null,   // sustained wind speed m/s (10-min average at 10m height)
@@ -1598,6 +1632,10 @@ initServices({
     const driverTotal = driverClub ? driverClub.total : driver * getRollFactor('driver', conditions);
     const driverCarry = driverClub ? driverClub.carry : driver;
     const isFirm = conditions === 'firm';
+    _lastClubsList   = clubsList;
+    _lastHoleLength  = hole;
+    _lastDriverTotal = driverTotal;
+    _lastInRough     = inRough;
 
     // ── Par 3 ──────────────────────────────────────────────────────────
     if (parValue === 3) {
@@ -2361,7 +2399,7 @@ initMapView({
   getHandicap:             () => _readHandicap(),
   destinationFromBearing:  (lat, lon, b, d) => destinationFromBearing(lat, lon, b, d),
   getBearingBetween:       (lat1, lon1, lat2, lon2) => getBearingBetween(lat1, lon1, lat2, lon2),
-  getComputedStrategies:   () => _lastComputedStrategies,
+  getComputedStrategies:   () => _buildResolvedStrategies(),
   recalculate:             () => calculate(),
   fetchMapWind: async () => {
     let orientPermGranted = false;
