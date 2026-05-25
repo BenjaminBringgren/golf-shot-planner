@@ -311,13 +311,28 @@ let _lastClubsList          = null;
 let _lastHoleLength         = 0;
 let _lastDriverTotal        = 0;
 let _lastInRough            = false;
+let _lastIsFirm             = false;
+
+function _resolveApproachClub(approachDist, approachOvKey) {
+  if (!_lastClubsList || approachDist == null) return null;
+  if (approachOvKey) {
+    if (_lastClubsList.find(c => c.key === approachOvKey)) return approachOvKey;
+  }
+  const maxRunup    = _lastIsFirm ? 20 : 15;
+  const approachList = _lastClubsList.filter(c => c.key !== 'driver');
+  const reachable   = approachList.filter(c => c.carry <= approachDist && approachDist - c.carry <= maxRunup);
+  if (reachable.length > 0) return reachable.reduce((b, c) => c.carry > b.carry ? c : b).key;
+  const overShoot   = approachList.filter(c => c.carry > approachDist);
+  if (overShoot.length > 0) return overShoot.reduce((s, c) => c.carry < s.carry ? c : s).key;
+  return null;
+}
 
 function _buildResolvedStrategies() {
   if (!_lastComputedStrategies.length || !_lastClubsList) return _lastComputedStrategies;
   const driverCarry = _lastClubsList.find(c => c.key === 'driver')?.carry ?? 0;
   const hcp = _readHandicap();
   return _lastComputedStrategies.map(basePlan => {
-    const teeOvKey  = teeOverrides[_hk(basePlan.type)];
+    const teeOvKey   = teeOverrides[_hk(basePlan.type)];
     const shot2OvKey = shot2Overrides[_hk(basePlan.type)];
     let plan = basePlan;
     if (teeOvKey) {
@@ -338,6 +353,9 @@ function _buildResolvedStrategies() {
         }
       }
     }
+    // Resolve approach club (only user-overridable on 1-shot plans)
+    const appOvKey = plan.shots?.length === 1 ? (approachOverrides[_hk(basePlan.type)] || null) : null;
+    plan = { ...plan, approachClubKey: _resolveApproachClub(plan.approach, appOvKey) };
     return plan;
   });
 }
@@ -1636,6 +1654,7 @@ initServices({
     _lastHoleLength  = hole;
     _lastDriverTotal = driverTotal;
     _lastInRough     = inRough;
+    _lastIsFirm      = isFirm;
 
     // ── Par 3 ──────────────────────────────────────────────────────────
     if (parValue === 3) {

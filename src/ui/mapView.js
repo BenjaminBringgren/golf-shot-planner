@@ -438,7 +438,7 @@ function _buildDots(strategy, teeMark, bearing) {
     const next = _callbacks.destinationFromBearing(prev.lat, prev.lon, b, strategy.approach);
     dots.push(next);
     dists.push(strategy.approach);
-    clubs.push(null);
+    clubs.push(strategy.approachClubKey ?? null);
     windDeltas.push(null);
   }
   return { dots, dists, clubs, windDeltas };
