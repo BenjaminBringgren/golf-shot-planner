@@ -757,12 +757,15 @@ function _renderShotOverlay() {
   const bearing = _overlayBearing;
   const { dots, dists, clubs, windDeltas } = _buildDots(strategy, teeMark, bearing);
 
-  // Restore user-dragged positions if the dot count matches.
+  // Restore user-dragged positions. Partial caches (fewer entries than dots-1) are allowed:
+  // cached entries override leading dots, remaining dots keep engine-computed positions.
+  // This lets tee-only drags on 3-shot plans preserve the tee landing while the engine
+  // re-picks shot2, instead of snapping everything back to the straight bearing line.
   const cacheKey = `${courseId}|${holeIdx}|${type}`;
   const cached = _dotPosCache[cacheKey];
-  const hasCached = cached && cached.length === dots.length - 1;
+  const hasCached = cached && cached.length > 0 && cached.length <= dots.length - 1;
   if (hasCached) {
-    for (let i = 1; i < dots.length; i++) dots[i] = cached[i - 1];
+    for (let i = 0; i < cached.length; i++) dots[i + 1] = cached[i];
   }
 
   _shotDots       = dots;
@@ -774,8 +777,7 @@ function _renderShotOverlay() {
   _setLineGeoJSON(dots);
 
   for (let i = 0; i < dots.length - 1; i++) {
-    // When cached positions are in use, recalculate the actual segment distance so
-    // the label reflects the true haversine distance rather than the plan distance.
+    // When any cached positions are in use, recalculate segment distances from actual coords.
     const labelDist = hasCached
       ? _callbacks.haversine(dots[i].lat, dots[i].lon, dots[i + 1].lat, dots[i + 1].lon)
       : dists[i];
