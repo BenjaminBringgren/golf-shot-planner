@@ -2491,6 +2491,14 @@ initMapView({
   getActivePlanType:       () => _lastActivePlanType,
   getPar3Plan:             () => _lastPar3Plan,
   recalculate:             () => calculate(),
+  clearStrategyOverrides: (stratType) => {
+    if (stratType) {
+      delete teeOverrides[_hk(stratType)];
+      delete shot2Overrides[_hk(stratType)];
+      delete approachOverrides[_hk(stratType)];
+    }
+    delete par3ClubOverrides[_overrideCourseId + '|' + _overrideHoleIdx];
+  },
   findBestClubForDist: (distM, excludeDriver) => {
     const c = _findBestClubByTotal(distM, excludeDriver);
     return c ? { key: c.key, total: c.total } : null;
