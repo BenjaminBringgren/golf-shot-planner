@@ -4,6 +4,29 @@ Format: `[file affected] description`
 
 ---
 
+## 2026-05-26
+
+### Map overlay — new features and bug fixes
+
+- `[CLAUDE.md, docs/architecture.md]` `src/ui/mapView.js` added to key files and layer diagram — Mapbox GL overlay for scope dots, shot lines, labels, dispersion arc, drag-to-override
+- `[CLAUDE.md, docs/ui-patterns.md]` Map overlay system documented: render lifecycle, `_whenStyleLoaded` rule, callback interface, `_dotPosCache` partial cache behaviour, dispersion arc geometry
+- `[docs/override-system.md]` Drag-to-club override documented: `findBestClubForDist` / `commitClubOverride` callbacks, `segmentKey` values, `stratType` closure capture
+- `[docs/ui-patterns.md]` Fixed stale `:active` press-feedback rule — corrected to `.is-pressed` class pattern (`:active` is unreliable on Safari/WKWebView)
+
+### Map overlay — bug fixes (no doc change)
+- Fix map stuck on load: immediate `_renderShotOverlay` now gated on pre-existing GPS position — avoids race where `_whenStyleLoaded` fires before async GPS resolves
+- Fix par 4 tee drag snapping back to straight line: cache full dot slice on 2-shot plans so dragged tee position survives re-render
+- Fix 3-shot tee drag snapping: partial caches (length < dots−1) now accepted — tee position preserved while engine re-picks shot2
+- Fix approach dot not updating club live during drag: removed `segmentKey &&` guard from incoming label lookup (`segmentKey` is null for approach dot)
+- Fix label color mismatch when drag crosses strategy boundary: `_activeStratColor` now set before strategy guard so failed renders can't leave stale color
+
+### Dispersion arc
+- Introduced dispersion arc (white, 70% opacity, ±40° sweep) on active scope dot
+- Arc center offset `R − 15m` backward from scope so peak sits ~15m beyond crosshair toward target
+- `_DRIVER_95` and `_DISP_SCALE` recalibrated to real-world 95th-percentile data (Trackman/Shot Scope) — previous values were ~2× too wide, irons/wedges disproportionately so
+
+---
+
 ## 2026-04-24
 
 ### Refactor — preparatory in-place changes (Sub-steps A, B, C)

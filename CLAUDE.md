@@ -71,6 +71,7 @@ Phase 2 (next): SwiftUi rebuild - make it truly iOS native
 | `src/app/courses.js` | app | Course CRUD, hole-to-play logic, course editor, blendedScore, computeHoleStrokeCounts |
 | `src/app/holeFlow.js` | app | Stage machine for advanced score entry: STAGE_SHOTS → STAGE_PUTTS → STAGE_RESULT. Owns penalty/relief logic and pick-up |
 | `src/app/rounds.js` | app | Round stats, score rendering, My Golf sub-pages, showMgSub |
+| `src/ui/mapView.js` | ui | Mapbox GL map overlay: scope dots, shot lines, labels, dispersion arc, drag-to-override |
 | `src/ui/carousel.js` | ui | Strategy carousel, wind breakdown, chip row sync |
 | `src/ui/scorecard.js` | ui | Active round scorecard, round complete overlay, saved round detail |
 | `src/ui/shotSheet/` | ui | Shot-by-shot entry UI components (index.js orchestrates; LieGrid, ShotChips, PuttsCard, ResultBar, etc.) |
@@ -218,6 +219,65 @@ relevant src/ui/ module (structure and behaviour).
 If you are about to write anything into index.html beyond
 a structural HTML element — stop and put it in the
 correct module instead.
+
+## Map overlay system (mapView.js)
+
+`src/ui/mapView.js` renders the Mapbox GL overlay on the Play tab. It is a pure UI
+module — zero storage, zero engine imports. All data flows in via callbacks.
+
+### Initialisation
+`router.js` calls `initMapView({ ...callbacks })` once. `openMapView()` is called each
+time the map drawer opens. Never call `_renderShotOverlay` directly — always go through
+`_whenStyleLoaded(() => _renderShotOverlay())` so it fires after the GL style is ready.
+
+### Key callbacks (passed from router.js)
+| Callback | Returns | Purpose |
+|---|---|---|
+| `getComputedStrategies()` | `Strategy[]` | Shot plans to render |
+| `getHandicap()` | `number` | HCP for dispersion arc |
+| `getGpsSnapshot()` | `{teeMark, ballMark}` | Current GPS marks |
+| `haversine(lat1,lon1,lat2,lon2)` | `number` (m) | Distance between two points |
+| `destinationFromBearing(lat,lon,brg,d)` | `{lat,lon}` | Point at bearing + distance |
+| `findBestClubForDist(distM, excludeDriver)` | `string\|null` | Nearest club key for a distance |
+| `commitClubOverride(segmentKey, distM, stratType)` | `void` | Write drag result as override + recalc |
+
+### Dot position cache (`_dotPosCache`)
+Keyed by `courseId|holeIdx|type`. Stores user-dragged dot positions so they survive
+re-renders (strategy switch, calculate()). Partial caches (fewer entries than dots−1)
+are allowed — cached entries override leading dots, the rest use engine positions.
+
+### Drag-to-club
+On `drag`: compute live distance → `findBestClubForDist` → update label text.
+On `dragend`: `commitClubOverride(segmentKey, distM, stratType)` → override written,
+`calculate()` called, carousel re-renders.
+
+`segmentKey` values per dot:
+- `'tee'` — first scope dot (par 4/5)
+- `'shot2'` — second scope dot (3-shot plans)
+- `'par3'` — par 3 scope dot
+- `null` — approach/last dot (no override, label updates live only)
+
+### Dispersion arc
+Arc is a ±40° sweep (80° total) centered at `arcCenter`, radius `R`. Arc center is
+offset `R − 15 m` backward from the scope dot so the arc's forward peak sits ~15m
+beyond the scope (just above the crosshair ring toward the target).
+
+Width = `2 × R × sin(40°) ≈ R × 1.286`.
+
+`_DRIVER_95` — arc radius by HCP band (calibrated to real-world 95th-percentile data):
+- HCP ≤5: 47m → arc width ~60m
+- HCP ≤12: 58m → arc width ~75m
+- HCP ≤20: 78m → arc width ~100m
+- HCP ≤28: 97m → arc width ~125m
+- HCP ≤54: 124m → arc width ~160m
+
+Club scale factors in `_DISP_SCALE` — shorter clubs are proportionally much tighter
+than carry ratio implies. Driver = 1.00; 7-iron = 0.51; 56° = 0.27.
+
+### Color consistency rule
+`_activeStratColor` must be set **before** the strategy guard in `_renderShotOverlay`.
+If set after, a failed render (no strategy found) leaves the stale color from the
+previous render, causing label/arc color mismatches when dragging across strategies.
 
 ## SF Symbols
 All icons in this app use Apple SF Symbols. Never substitute

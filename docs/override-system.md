@@ -129,6 +129,39 @@ Missing `type` causes `undefined` to appear in strategy labels in the compare ta
 
 ---
 
+## Drag-to-club overrides (map overlay)
+
+Dragging a scope dot on the map updates the club for that segment live and commits an
+override on release. Two callbacks bridge mapView.js → router.js:
+
+### `findBestClubForDist(distM, excludeDriver)`
+Called on every `drag` event. Returns the key of the club in `_lastClubsList` whose
+`.total` distance is closest to `distM`. `excludeDriver` is true for all dots except
+the tee dot. Returns `null` if no club list is available.
+
+Used for live label updates only — no state mutation.
+
+### `commitClubOverride(segmentKey, distM, stratType)`
+Called on `dragend`. Writes to the appropriate override object and calls `calculate()`.
+
+| `segmentKey` | Override object written | Notes |
+|---|---|---|
+| `'tee'` | `teeOverrides[_hk(stratType)]` | driver included |
+| `'shot2'` | `shot2Overrides[_hk(stratType)]` | driver excluded |
+| `'par3'` | `par3ClubOverrides[courseId\|holeIdx]` | stratType ignored |
+| `null` | — | approach dot; no commit, label only |
+
+After writing the override, `calculate()` is called so the carousel re-renders to
+reflect the drag result.
+
+### `_hk(stratType)` in drag context
+`stratType` is captured at marker-creation time from the `type` string in
+`_renderShotOverlay` closure scope (e.g. `"Max distance"`). It is passed as the third
+argument to `commitClubOverride` and used directly as the `_hk()` argument — no
+extra state variable needed.
+
+---
+
 ## Multi-render consistency
 
 The override state must be applied consistently across all render paths:

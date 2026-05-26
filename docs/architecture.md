@@ -9,6 +9,7 @@ Dependencies flow **downward only**. No layer may import from a layer above it. 
 │           src/ui/                       │
 │   renders DOM, owns no business logic   │
 │   carousel.js  scorecard.js  sheets.js  │
+│   mapView.js                            │
 └───────────────────┬─────────────────────┘
                     │ imports down only
 ┌───────────────────▼─────────────────────┐
@@ -42,13 +43,13 @@ Dependencies flow **downward only**. No layer may import from a layer above it. 
 
 | Layer | File(s) | May import from | Example import |
 |---|---|---|---|
-| `src/ui/` | carousel.js, scorecard.js, sheets.js | engine, storage, platform | `import { interpolate } from '../engine/calculations.js'` |
+| `src/ui/` | carousel.js, scorecard.js, sheets.js, mapView.js | engine, storage, platform | `import { interpolate } from '../engine/calculations.js'` |
 | `src/app/` | router.js, rounds.js, courses.js | ui, engine, storage, platform | `import { renderPlan } from '../ui/carousel.js'` |
 | `src/engine/` | clubs.js, calculations.js | **nothing** | (no imports) |
 | `src/storage/` | storage.js | **nothing** | (no imports) |
 | `src/platform/` | gps.js, weather.js | **nothing** | (no imports) |
 
-Note: src/ui/ may import from src/app/ for data types but never for calling app-layer functions — those go through the window.* bridge in router.js (see below).
+Note: src/ui/ may import from src/app/ for data types but never for calling app-layer functions — those go through the callbacks pattern (see below). mapView.js receives all data via the callbacks object passed to `initMapView()`; it has no direct imports from src/app/.
 
 ## The Engine Layer Constraint (Absolute)
 

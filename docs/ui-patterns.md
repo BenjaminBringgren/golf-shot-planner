@@ -69,13 +69,25 @@ These colours must be applied consistently everywhere pills appear — strategy 
 Minimum 44×44px for any interactive element. Chips are 42px tall. FAB is 72px diameter.
 
 ### Press feedback
-All interactive elements need `:active` state:
+**Never use `:active` for press feedback.** Safari/WKWebView does not reliably clear
+`:active` when the DOM changes during a touch gesture.
+
+Use the `.is-pressed` class instead:
 ```css
-:active { transform: scale(0.98); }
-/* or for backgrounds: */
-:active { background: #f5f4f0; }
+.my-button.is-pressed { transform: scale(0.98); background: #f5f4f0; }
 ```
-Never rely on browser default tap highlight — always set `-webkit-tap-highlight-color: transparent` and provide explicit feedback.
+The global touch handler in `router.js` adds/removes `.is-pressed` on
+`touchstart`/`touchend`/`touchcancel` via delegated events on `document`.
+
+When adding a new interactive element:
+1. Add `.your-class.is-pressed { ... }` in `src/styles.css`
+2. If it is not a `<button>`, add its selector to `_PRESS_SEL` in `router.js`
+
+**Also never use bare `:hover`.** iOS fires `:hover` on tap and it sticks.
+Always wrap hover rules: `@media (hover: hover) { .foo:hover { ... } }`
+
+Never rely on browser default tap highlight — always set
+`-webkit-tap-highlight-color: transparent`.
 
 ### Bottom sheets
 Standard pattern:
@@ -163,6 +175,46 @@ The app is used on-course with one hand. Information hierarchy must support scan
 
 ### Mockup requirement
 Any change that affects layout, information hierarchy, or the position of a UI element requires a visual mockup before implementation. Get explicit approval before writing code.
+
+---
+
+## Map overlay (mapView.js)
+
+### Render lifecycle
+`openMapView()` starts GPS/compass and gates the initial render on whether a GPS
+position already exists. If not, `_locateAndCenter()` triggers the render internally
+once GPS resolves. This avoids a race where `_whenStyleLoaded` fires before the GPS
+snapshot is available, producing a blank overlay.
+
+### `_whenStyleLoaded(cb)`
+Always wrap `_renderShotOverlay()` calls in `_whenStyleLoaded`. It calls `cb`
+immediately if the Mapbox style is already loaded, otherwise queues on `style.load`.
+
+### Scope dot dragging
+- `drag` → haversine distance → `findBestClubForDist` → live label update (no mutation)
+- `dragend` → `commitClubOverride(segmentKey, distM, stratType)` → override + recalc
+
+Approach dot (`segmentKey = null`) updates label live but does **not** commit an
+override — the approach club is always engine-computed from the remaining distance.
+
+### `_dotPosCache` — partial caches
+Cache key: `courseId|holeIdx|type`. Partial caches (length < dots−1) are valid:
+cached entries override leading dots sequentially, remaining dots stay at
+engine-computed positions. This lets tee drags on 3-shot plans preserve the tee
+landing while the engine re-picks shot2 freely.
+
+On strategy snap (drag lands on a different strategy's club set), cache only the
+dragged dot — not the full slice — so subsequent re-renders pick clean engine positions
+for the remaining dots.
+
+### Dispersion arc geometry
+- Center offset: `_destinationPoint(scopeDot, bearing+180, R − 15)` — places arc
+  peak ~15m beyond the scope crosshair toward the target
+- Sweep: `bearingDeg ± 40°` (80° total)
+- Width: `2 × R × sin(40°) ≈ R × 1.286`
+- `R = _DRIVER_95[hcpBand].r × _DISP_SCALE[clubKey]`
+
+Arc is always drawn white (`#ffffff`) at 70% opacity on a separate `arc-line` layer.
 
 ---
 
