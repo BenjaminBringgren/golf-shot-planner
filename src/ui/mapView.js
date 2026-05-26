@@ -811,11 +811,15 @@ function _renderShotOverlay() {
       .setLngLat([dots[i].lon, dots[i].lat])
       .addTo(_map);
 
-    // Fixed bearing captured at drag-start so lateral tee drags don't rotate shot2.
-    let _dragBearing = null;
+    // Drag-start state captured once so shot2 feels heavy relative to tee movement.
+    let _dragBearing    = null;
+    let _dragStartTeePt = null;
+    let _dragStartShot2 = null;
     marker.on('dragstart', () => {
       if (outgoingKey === 'shot2') {
-        _dragBearing = _bearingDeg(_shotDots[idx], _shotDots[idx + 1]);
+        _dragBearing    = _bearingDeg(_shotDots[idx], _shotDots[idx + 1]);
+        _dragStartTeePt = { ..._shotDots[idx] };
+        _dragStartShot2 = { ..._shotDots[idx + 1] };
       }
     });
 
@@ -857,18 +861,29 @@ function _renderShotOverlay() {
             _shot2Collapsing = false;
             _shotMarkers[idx]?.getElement()?.style.setProperty('opacity', '1');
           }
-          const curShot2 = _shotDots[idx + 1];
-          const d2raw    = _callbacks.haversine(lat, lng, curShot2.lat, curShot2.lon);
-          const res2     = _callbacks.findBestClubForDist(d2raw, true);
-          if (res2?.total) {
-            // Clamp: shot2 must leave at least APPROACH_BUFFER metres before the green.
-            const shot2Dist = Math.min(res2.total, distToApproach - APPROACH_BUFFER);
-            if (shot2Dist > 0) {
-              const newShot2 = _destinationPoint({ lat, lon: lng }, _dragBearing, shot2Dist);
-              _shotDots[idx + 1] = newShot2;
-              _shotMarkers[idx]?.setLngLat([newShot2.lon, newShot2.lat]);
-            }
+          // Heavy follow: shot2 drifts at 20% of tee's forward displacement from
+          // its own drag-start position. Lateral tee movement has no effect (only
+          // the component along _dragBearing contributes). No per-frame accumulation.
+          const WEIGHT     = 0.20;
+          const bearingRad = _dragBearing * Math.PI / 180;
+          const dLatM      = (lat - _dragStartTeePt.lat) * 110574;
+          const dLonM      = (lng - _dragStartTeePt.lon) * 111320 * Math.cos(lat * Math.PI / 180);
+          const dForward   = dLatM * Math.cos(bearingRad) + dLonM * Math.sin(bearingRad);
+          const deltaM     = dForward * WEIGHT;
+          const shot2Lat   = _dragStartShot2.lat + (deltaM * Math.cos(bearingRad)) / 110574;
+          const shot2Lon   = _dragStartShot2.lon + (deltaM * Math.sin(bearingRad)) /
+                               (111320 * Math.cos(_dragStartShot2.lat * Math.PI / 180));
+          // Clamp: shot2 must leave APPROACH_BUFFER metres before the green.
+          const d2candidate = _callbacks.haversine(lat, lng, shot2Lat, shot2Lon);
+          const maxDist     = distToApproach - APPROACH_BUFFER;
+          let newShot2;
+          if (maxDist > 0 && d2candidate > maxDist) {
+            newShot2 = _destinationPoint({ lat, lon: lng }, _dragBearing, maxDist);
+          } else {
+            newShot2 = { lat: shot2Lat, lon: shot2Lon };
           }
+          _shotDots[idx + 1] = newShot2;
+          _shotMarkers[idx]?.setLngLat([newShot2.lon, newShot2.lat]);
         }
       }
 
@@ -915,7 +930,9 @@ function _renderShotOverlay() {
     });
 
     marker.on('dragend', () => {
-      _dragBearing = null;
+      _dragBearing    = null;
+      _dragStartTeePt = null;
+      _dragStartShot2 = null;
       const wasCollapsing = _shot2Collapsing;
       _shot2Collapsing = false;
 
