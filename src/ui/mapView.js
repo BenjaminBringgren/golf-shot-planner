@@ -829,21 +829,21 @@ function _renderShotOverlay() {
       if (outgoingKey === 'shot2' && _callbacks.findBestClubForDist && _dragBearing !== null) {
         const approachDot    = _shotDots[_shotDots.length - 1];
         const distToApproach = _callbacks.haversine(lat, lng, approachDot.lat, approachDot.lon);
-        const MIN_APPROACH   = 30;
 
-        const curShot2 = _shotDots[idx + 1];
-        const d2raw    = _callbacks.haversine(lat, lng, curShot2.lat, curShot2.lon);
-        const res2     = _callbacks.findBestClubForDist(d2raw, true);
+        // Two separate concepts:
+        // COLLAPSE — tee so close to green that no shot2 fits at all (< 50m remaining).
+        // CLAMP    — shot2 elastic follow, but cap it so it never overshoots the green.
+        const COLLAPSE_THRESHOLD = 50;
+        const APPROACH_BUFFER    = 20; // minimum metres left for approach after shot2
 
-        // Collapse when the shortest reachable shot2 club leaves < MIN_APPROACH to the green.
-        const shouldCollapse = !res2 || res2.total >= distToApproach - MIN_APPROACH;
+        const shouldCollapse = distToApproach < COLLAPSE_THRESHOLD;
 
         if (shouldCollapse) {
           if (!_shot2Collapsing) {
             _shot2Collapsing = true;
             _shotMarkers[idx]?.getElement()?.style.setProperty('opacity', '0');
           }
-          // Update the tee→(approach) label to show the direct remaining distance.
+          // Update the tee→approach label to show the direct remaining distance.
           if (_labelMarkers[idx]) {
             const aKey = _callbacks.findBestClubForDist?.(distToApproach, true)?.key ?? null;
             const m    = _midpoint({ lat, lon: lng }, approachDot);
@@ -857,10 +857,17 @@ function _renderShotOverlay() {
             _shot2Collapsing = false;
             _shotMarkers[idx]?.getElement()?.style.setProperty('opacity', '1');
           }
+          const curShot2 = _shotDots[idx + 1];
+          const d2raw    = _callbacks.haversine(lat, lng, curShot2.lat, curShot2.lon);
+          const res2     = _callbacks.findBestClubForDist(d2raw, true);
           if (res2?.total) {
-            const newShot2 = _destinationPoint({ lat, lon: lng }, _dragBearing, res2.total);
-            _shotDots[idx + 1] = newShot2;
-            _shotMarkers[idx]?.setLngLat([newShot2.lon, newShot2.lat]);
+            // Clamp: shot2 must leave at least APPROACH_BUFFER metres before the green.
+            const shot2Dist = Math.min(res2.total, distToApproach - APPROACH_BUFFER);
+            if (shot2Dist > 0) {
+              const newShot2 = _destinationPoint({ lat, lon: lng }, _dragBearing, shot2Dist);
+              _shotDots[idx + 1] = newShot2;
+              _shotMarkers[idx]?.setLngLat([newShot2.lon, newShot2.lat]);
+            }
           }
         }
       }
