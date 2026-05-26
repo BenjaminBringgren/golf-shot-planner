@@ -570,13 +570,13 @@ function _fitToOverlay() {
 // ── Dispersion arc ────────────────────────────────────────────────────────────
 
 // Lateral spread radius in metres for driver, by HCP band.
-// ~1.5× 95th-percentile stats for clear on-screen visibility as a landing-zone corridor.
+// ~2× 95th-percentile stats for clear on-screen visibility as a landing-zone corridor.
 const _DRIVER_95 = [
-  { maxHcp:  5, r:  50 },
-  { maxHcp: 12, r:  65 },
-  { maxHcp: 20, r:  81 },
-  { maxHcp: 28, r: 104 },
-  { maxHcp: 54, r: 138 },
+  { maxHcp:  5, r:  66 },
+  { maxHcp: 12, r:  86 },
+  { maxHcp: 20, r: 108 },
+  { maxHcp: 28, r: 138 },
+  { maxHcp: 54, r: 184 },
 ];
 // Lateral spread scale relative to driver, by club key.
 const _DISP_SCALE = {
@@ -615,7 +615,7 @@ function _destinationPoint(from, bearingDeg, distM) {
 function _arcCoords(center, bearingDeg, radiusM, steps = 48) {
   const R = 6371000, coords = [];
   for (let i = 0; i <= steps; i++) {
-    const angle = (bearingDeg - 25 + 50 * i / steps) * Math.PI / 180;
+    const angle = (bearingDeg - 40 + 80 * i / steps) * Math.PI / 180;
     const δ = radiusM / R;
     const φ1 = center.lat * Math.PI / 180, λ1 = center.lon * Math.PI / 180;
     const φ2 = Math.asin(Math.sin(φ1)*Math.cos(δ) + Math.cos(φ1)*Math.sin(δ)*Math.cos(angle));
@@ -657,7 +657,11 @@ function _refreshArc() {
   const bearing = _bearingDeg(_shotDots[_activeArcIdx - 1], center);
   const clubKey = _shotClubs[_activeArcIdx - 1];
   if (!clubKey) { _clearArcLayer(); return; }
-  _setArcGeoJSON(center, bearing, _dispersionRadius(clubKey, hcp), '#ffffff');
+  const R = _dispersionRadius(clubKey, hcp);
+  // Shift arc center backward by R so the arc's forward tip lands exactly on the scope dot.
+  // The arc then sweeps behind the scope — full lateral width preserved, zero forward overshoot.
+  const arcCenter = _destinationPoint(center, (bearing + 180) % 360, R);
+  _setArcGeoJSON(arcCenter, bearing, R, '#ffffff');
 }
 
 function _renderPar3Overlay(par3, teeMark, courseId, holeIdx) {
