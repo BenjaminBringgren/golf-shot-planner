@@ -748,11 +748,13 @@ function _renderShotOverlay() {
   const type = committedType || _callbacks.getActivePlanType?.() || null;
   if (!type) return;
 
+  // Set color before any guard so it's always current — even if the render bails
+  // early (e.g. stale strategies), the next successful render inherits the right color.
+  _activeStratColor = _customOverride ? '#888' : (_STRAT_COLORS[type] ?? '#888');
+
   const strategies = _callbacks.getComputedStrategies?.() ?? [];
   const strategy   = strategies.find(s => s.type === type);
   if (!strategy || !strategy.shots?.length) return;
-
-  _activeStratColor = _customOverride ? '#888' : (_STRAT_COLORS[type] ?? '#888');
 
   const bearing = _overlayBearing;
   const { dots, dists, clubs, windDeltas } = _buildDots(strategy, teeMark, bearing);
