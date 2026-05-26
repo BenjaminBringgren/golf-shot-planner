@@ -903,7 +903,7 @@ function _renderShotOverlay() {
       const prevDot = _shotDots[idx - 1];
       const d1      = _callbacks.haversine(prevDot.lat, prevDot.lon, lat, lng);
       if (_labelMarkers[idx - 1]) {
-        const liveKey = (segmentKey && _callbacks.findBestClubForDist)
+        const liveKey = _callbacks.findBestClubForDist
           ? (_callbacks.findBestClubForDist(d1, excludeDriver)?.key ?? _shotClubs[idx - 1])
           : _shotClubs[idx - 1];
         const m1 = _midpoint(prevDot, { lat, lon: lng });
