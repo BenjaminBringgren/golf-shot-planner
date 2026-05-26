@@ -594,6 +594,14 @@ function _bearingDeg(from, to) {
   ) * 180 / Math.PI + 360) % 360;
 }
 
+function _destinationPoint(from, bearingDeg, distM) {
+  const R = 6371000, δ = distM / R, θ = bearingDeg * Math.PI / 180;
+  const φ1 = from.lat * Math.PI / 180, λ1 = from.lon * Math.PI / 180;
+  const φ2 = Math.asin(Math.sin(φ1) * Math.cos(δ) + Math.cos(φ1) * Math.sin(δ) * Math.cos(θ));
+  const λ2 = λ1 + Math.atan2(Math.sin(θ) * Math.sin(δ) * Math.cos(φ1), Math.cos(δ) - Math.sin(φ1) * Math.sin(φ2));
+  return { lat: φ2 * 180 / Math.PI, lon: λ2 * 180 / Math.PI };
+}
+
 function _arcCoords(center, bearingDeg, radiusM, steps = 48) {
   const R = 6371000, coords = [];
   for (let i = 0; i <= steps; i++) {
@@ -681,7 +689,7 @@ function _renderPar3Overlay(par3, teeMark, courseId, holeIdx) {
     _setLineGeoJSON(_shotDots);
     _refreshArc();
     const d       = _callbacks.haversine(dots[0].lat, dots[0].lon, lat, lng);
-    const bestKey = _callbacks.findBestClubForDist?.(d, true) ?? club.key;
+    const bestKey = _callbacks.findBestClubForDist?.(d, true)?.key ?? club.key;
     if (_labelMarkers[0]) {
       const mid = _midpoint(dots[0], { lat, lon: lng });
       _labelMarkers[0].setLngLat([mid.lon, mid.lat]);
@@ -793,6 +801,23 @@ function _renderShotOverlay() {
     marker.on('drag', () => {
       const { lng, lat } = marker.getLngLat();
       _shotDots[idx] = { lat, lon: lng };
+
+      // Elastic shot2 follow: when dragging the tee dot, pull shot2 along the bearing
+      // toward the approach dot at the live best-club distance. Runs before spline redraw
+      // so the line animates with the updated shot2 position every frame.
+      if (outgoingKey === 'shot2' && _callbacks.findBestClubForDist) {
+        const curShot2 = _shotDots[idx + 1];
+        const d2raw    = _callbacks.haversine(lat, lng, curShot2.lat, curShot2.lon);
+        const res2     = _callbacks.findBestClubForDist(d2raw, true);
+        if (res2?.total) {
+          const approachDot = _shotDots[_shotDots.length - 1];
+          const bearing     = _bearingDeg({ lat, lon: lng }, approachDot);
+          const newShot2    = _destinationPoint({ lat, lon: lng }, bearing, res2.total);
+          _shotDots[idx + 1] = newShot2;
+          _shotMarkers[idx]?.setLngLat([newShot2.lon, newShot2.lat]);
+        }
+      }
+
       _setLineGeoJSON(_shotDots);
       if (idx === _activeArcIdx || idx === _activeArcIdx - 1) _refreshArc();
 
@@ -801,23 +826,33 @@ function _renderShotOverlay() {
       const d1      = _callbacks.haversine(prevDot.lat, prevDot.lon, lat, lng);
       if (_labelMarkers[idx - 1]) {
         const liveKey = (segmentKey && _callbacks.findBestClubForDist)
-          ? (_callbacks.findBestClubForDist(d1, excludeDriver) ?? _shotClubs[idx - 1])
+          ? (_callbacks.findBestClubForDist(d1, excludeDriver)?.key ?? _shotClubs[idx - 1])
           : _shotClubs[idx - 1];
         const m1 = _midpoint(prevDot, { lat, lon: lng });
         _labelMarkers[idx - 1].setLngLat([m1.lon, m1.lat]);
         _labelMarkers[idx - 1].getElement().textContent = _labelText(d1, liveKey, _shotWindDeltas[idx - 1]);
       }
 
-      // Outgoing segment — live club lookup (skip for approach segment).
+      // Outgoing segment label (uses elastically-updated _shotDots[idx+1] if applicable).
       if (idx < _shotDots.length - 1 && _labelMarkers[idx]) {
         const nextDot  = _shotDots[idx + 1];
         const d2       = _callbacks.haversine(lat, lng, nextDot.lat, nextDot.lon);
         const liveKey2 = (outgoingKey && _callbacks.findBestClubForDist)
-          ? (_callbacks.findBestClubForDist(d2, true) ?? _shotClubs[idx])
+          ? (_callbacks.findBestClubForDist(d2, true)?.key ?? _shotClubs[idx])
           : _shotClubs[idx];
         const m2 = _midpoint({ lat, lon: lng }, nextDot);
         _labelMarkers[idx].setLngLat([m2.lon, m2.lat]);
         _labelMarkers[idx].getElement().textContent = _labelText(d2, liveKey2, _shotWindDeltas[idx]);
+      }
+
+      // Approach label: reposition when shot2 moved (its start point changed).
+      if (outgoingKey === 'shot2' && idx + 2 < _shotDots.length && _labelMarkers[idx + 1]) {
+        const shot2Dot    = _shotDots[idx + 1];
+        const approachDot = _shotDots[idx + 2];
+        const d3 = _callbacks.haversine(shot2Dot.lat, shot2Dot.lon, approachDot.lat, approachDot.lon);
+        const m3 = _midpoint(shot2Dot, approachDot);
+        _labelMarkers[idx + 1].setLngLat([m3.lon, m3.lat]);
+        _labelMarkers[idx + 1].getElement().textContent = _labelText(d3, _shotClubs[idx + 1], _shotWindDeltas[idx + 1]);
       }
     });
 
@@ -844,7 +879,9 @@ function _renderShotOverlay() {
           _customOverride = false;
         } else if (snappedTo) {
           // Same-strategy snap (clubs still fit): keep dragged positions for this strategy.
-          _dotPosCache[cacheKey] = _shotDots.slice(1);
+          // If the tee dot was dragged, only cache tee landing so shot2 recalculates from
+          // the new tee position rather than staying pinned to a stale cached location.
+          _dotPosCache[cacheKey] = segmentKey === 'tee' ? [_shotDots[1]] : _shotDots.slice(1);
           _customOverride = false;
         } else {
           // No snap — custom override. Keep dragged positions for this strategy.

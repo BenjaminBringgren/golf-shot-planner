@@ -352,7 +352,7 @@ function _matchBaseStrategy(stratType) {
         (_lastHoleLength - effectiveTeeTot - c.total) >= 0
       );
       const recIdx = all2.findIndex(c => c.key === baseShot2);
-      const window3 = recIdx >= 0 ? all2.slice(recIdx, recIdx + 3) : all2.slice(0, 3);
+      const window3 = recIdx >= 0 ? all2.slice(recIdx, recIdx + 5) : all2.slice(0, 5);
       validShot2 = new Set(window3.map(c => c.key));
     }
 
@@ -2491,8 +2491,10 @@ initMapView({
   getActivePlanType:       () => _lastActivePlanType,
   getPar3Plan:             () => _lastPar3Plan,
   recalculate:             () => calculate(),
-  findBestClubForDist: (distM, excludeDriver) =>
-    _findBestClubByTotal(distM, excludeDriver)?.key ?? null,
+  findBestClubForDist: (distM, excludeDriver) => {
+    const c = _findBestClubByTotal(distM, excludeDriver);
+    return c ? { key: c.key, total: c.total } : null;
+  },
   commitClubOverride: (segs, stratType) => {
     for (const { key, dist } of segs) {
       if (key === 'par3') {
