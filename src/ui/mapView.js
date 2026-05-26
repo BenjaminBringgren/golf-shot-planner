@@ -264,8 +264,8 @@ async function _locateAndCenter() {
 
   _playerMarker.setLngLat([pos.lon, pos.lat]).addTo(_map);
   _playerPos = pos;
-  // Face player direction on first load (compass has had time to settle during GPS averaging).
-  if (_currentHeading !== 0 && _mapBearing === 0) _mapBearing = _currentHeading;
+  // Always re-orient to current heading so hole switches update the map rotation.
+  if (_currentHeading !== 0) _mapBearing = _currentHeading;
   _overlayBearing = _currentHeading;
 
   _whenStyleLoaded(() => {
@@ -291,21 +291,31 @@ async function _locateAndCenter() {
 
 // ── Lock rotation ─────────────────────────────────────────────────────────────
 
-function _toggleLock() {
+async function _toggleLock() {
   const arrow = _lockBtn?.querySelector('.map-lock-arrow');
   if (_liveRotate) {
-    // Disengage — freeze at current bearing
+    // Disengage — freeze at current bearing.
     _liveRotate = false;
     _lockBtn?.classList.remove('locked');
     if (arrow) arrow.style.transform = '';
-  } else {
-    // Engage — start live rotation and immediately snap to current heading
-    _liveRotate = true;
-    _mapBearing = _currentHeading;
-    _map?.easeTo({ bearing: _currentHeading, duration: 300 });
-    _lockBtn?.classList.add('locked');
-    if (arrow) arrow.style.transform = `rotate(${Math.round(_currentHeading)}deg)`;
+    return;
   }
+  // iOS 13+ requires an explicit user-gesture permission request before
+  // DeviceOrientationEvent fires. Do it here so the tap qualifies.
+  if (typeof DeviceOrientationEvent?.requestPermission === 'function') {
+    let result;
+    try { result = await DeviceOrientationEvent.requestPermission(); } catch (_) { return; }
+    if (result !== 'granted') return;
+    // Restart listeners now that permission is confirmed.
+    _stopCompass();
+    _startCompass();
+  }
+  // Engage — start live rotation and immediately snap to current heading.
+  _liveRotate = true;
+  _mapBearing = _currentHeading;
+  _map?.easeTo({ bearing: _currentHeading, duration: 300 });
+  _lockBtn?.classList.add('locked');
+  if (arrow) arrow.style.transform = `rotate(${Math.round(_currentHeading)}deg)`;
 }
 
 // ── Compass / player direction ─────────────────────────────────────────────────
@@ -349,6 +359,13 @@ function _stopCompass() {
 
 function _updatePlayerCone(heading) {
   _currentHeading = heading;
+  // One-time initial orientation: snap map to player direction as soon as the
+  // first compass reading arrives, without waiting for GPS to resolve.
+  if (_map && _mapBearing === 0 && heading !== 0) {
+    _mapBearing     = heading;
+    _overlayBearing = heading;
+    _map.easeTo({ bearing: heading, duration: 400 });
+  }
   if (_liveRotate && _map && Math.abs(heading - _mapBearing) > 0.5) {
     _mapBearing = heading;
     _map.easeTo({ bearing: heading, duration: 200, easing: t => t });
