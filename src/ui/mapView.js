@@ -52,6 +52,10 @@ let _activeArcIdx      = 1;    // which scope dot currently shows the dispersion
 // Survives map close/reopen within the same session.
 const _dotPosCache = {};
 
+export function clearDotPosCache() {
+  Object.keys(_dotPosCache).forEach(k => delete _dotPosCache[k]);
+}
+
 
 // ── Public API ────────────────────────────────────────────────────────────────
 

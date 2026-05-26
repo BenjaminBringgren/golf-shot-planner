@@ -22,7 +22,7 @@ import {
   clearGpsState, markTeePosition, recordShot, restoreGpsState, getGpsSnapshot,
   averagedPosition, haversine, destinationFromBearing, getBearingBetween,
 } from '../platform/gps.js';
-import { initMapView, setMapFabVisible, closeMapViewIfOpen, refreshMapInfoStrip } from '../ui/mapView.js';
+import { initMapView, setMapFabVisible, closeMapViewIfOpen, refreshMapInfoStrip, clearDotPosCache } from '../ui/mapView.js';
 import { fetchWind, fetchLocationName } from '../platform/weather.js';
 import {
   clubs, clubOrder, idx7, idxPW, clubMap, getRollFactor, WOOD_KEYS, IRON_KEYS,
@@ -223,11 +223,13 @@ function clearAllOverrides() {
   Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
   Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
   Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]);
+  clearDotPosCache();
 }
 function clearRoundOverrides() {
   Object.keys(shot2Overrides).forEach(k => delete shot2Overrides[k]);
   Object.keys(approachOverrides).forEach(k => delete approachOverrides[k]);
   Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]);
+  clearDotPosCache();
 }
 function clearGpsOverrides() {
   Object.keys(gpsShot2Overrides).forEach(k => delete gpsShot2Overrides[k]);
