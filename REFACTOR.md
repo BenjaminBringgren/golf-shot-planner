@@ -13,7 +13,7 @@ All output files must carry this comment at the top:
 **File:** `index.html`  
 **Current state:** Single-file vanilla HTML/CSS/JS, ~9,000 lines, zero dependencies, zero build tools.  
 **Hosted:** GitHub Pages (static). Tested on Brave and Safari on iPhone. Safari compatibility is a hard requirement.  
-**Goal of this refactor:** Split the single file into a logical modular structure using native ES modules — no build tools. Isolate the calculation engine cleanly to serve three sequential phases: continued web development on GitHub Pages, App Store distribution via Capacitor, and eventual full native rebuild in Expo / React Native.
+**Goal of this refactor:** Split the single file into a logical modular structure using native ES modules — no build tools. Isolate the calculation engine cleanly to serve two sequential phases: continued web development on GitHub Pages, then a full native rebuild in SwiftUI.
 
 ---
 
@@ -332,81 +332,23 @@ Refactor `index.html` into the five-layer ES module structure. No build tools. G
 
 ---
 
-### Phase 2 — When ready: Capacitor + App Store
+### Phase 2 — SwiftUI native rebuild
 
-Wrap the existing web app in a Capacitor native shell. HTML UI survives unchanged. Engine survives unchanged. One weekend of work produces an App Store submission. The market tells you whether people will pay for it.
+Replace the web UI with a native SwiftUI app. The five-layer architecture was designed specifically to make this clean: two layers swap, the engine and business logic layers serve as the behavioural specification, one layer rebuilds.
 
-**What changes:** A thin native Swift wrapper around your existing web app.  
-**What stays the same:** Everything in `src/`. All five layers. All your logic.  
-**Why Capacitor and not Expo here:** Capacitor is the fastest validated path to the App Store. You find out if the product has a market before investing weeks in a native UI rebuild.
-
-**Capacitor integration when ready:**
-```bash
-npm install @capacitor/core @capacitor/cli @capacitor/geolocation
-npx cap init "Golf Shot Planner" "com.bringgren.golfshotplanner"
-npx cap add ios
-```
-
-Replace `navigator.geolocation` in `src/platform/gps.js` with `@capacitor/geolocation` — this is the only file that changes. Everything else is untouched.
-
-**Exit criteria:** Real users, real revenue, clear signal the product is worth a full native rebuild.
-
----
-
-### Phase 3 — If it grows: Expo / React Native
-
-The market has validated the product. You invest in a proper native rebuild. Two layers swap, two layers copy unchanged, one layer rebuilds from scratch.
-
-| Layer | Action | Effort |
+| Layer | Action | Notes |
 |---|---|---|
-| `src/platform/` | Swap two files | Low |
-| `src/storage/` | Swap one file | Low |
-| `src/engine/` | Copy unchanged | Zero |
-| `src/app/` | Copy unchanged | Zero |
-| `src/ui/` | Rebuild in React Native | High |
+| `src/platform/` | Swap | `gps.js` → `CoreLocation`; `weather.js` → `URLSession` (same Open-Meteo API) |
+| `src/storage/` | Swap | `localStorage` → `UserDefaults` / `SwiftData`; all key constants stay identical |
+| `src/engine/` | Rewrite in Swift | Pure functions, zero side effects — direct port. Logic is the spec. |
+| `src/app/` | Rewrite in Swift | Business logic and state — direct port using `@Observable` / `@StateObject` |
+| `src/ui/` | Rebuild in SwiftUI | Web modules serve as behavioural spec; do not attempt to port HTML/CSS |
 
-**src/platform/ swaps:**
+**What the web app provides for the SwiftUI rebuild:**
+- `src/engine/calculations.js` — exact calculation logic, wind model, carry/roll math
+- `src/engine/clubs.js` — club table, relCarry values, roll factors (validated against Trackman data)
+- `src/ui/` modules — complete behavioural specification: interaction flows, data displayed, edge cases handled
 
-`gps.js`:
-```javascript
-// Web / Capacitor
-navigator.geolocation.getCurrentPosition(...)
+**The web app continues running** on GitHub Pages throughout and after the SwiftUI rebuild as a reference implementation and preview environment.
 
-// Expo
-import * as Location from 'expo-location';
-const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-```
-
-`weather.js`: No change — `fetch()` works identically in React Native.
-
-**src/storage/ swap:**
-```javascript
-// Web / Capacitor
-localStorage.setItem(KEY, JSON.stringify(value))
-
-// Expo
-import AsyncStorage from '@react-native-async-storage/async-storage';
-await AsyncStorage.setItem(KEY, JSON.stringify(value))
-```
-All key constants stay identical. All calling code in `src/app/` stays identical.
-
-**src/ui/ rebuild:**  
-The web UI modules are not used in Expo. They serve as the behavioural specification for the React Native rebuild:
-- `carousel.js` → `react-native-reanimated` + gesture handler
-- `scorecard.js` → RN `FlatList` components  
-- `sheets.js` → `@gorhom/bottom-sheet`
-- Wind compass → `react-native-gesture-handler`
-
-Do not attempt to port or adapt the HTML/CSS. Treat `src/ui/` as documentation.
-
-**Expo initialisation when ready:**
-```bash
-npx create-expo-app GolfShotPlanner --template blank-typescript
-cd GolfShotPlanner
-npx expo install expo-location expo-secure-store
-npx expo install @react-native-async-storage/async-storage
-npx expo install react-native-reanimated react-native-gesture-handler
-npx expo install @gorhom/bottom-sheet
-```
-
-The web app remains running on GitHub Pages as a development and preview environment throughout the Expo rebuild.
+**Exit criteria:** SwiftUI app feature-complete, submitted to App Store.

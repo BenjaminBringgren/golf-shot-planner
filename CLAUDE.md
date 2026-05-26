@@ -60,7 +60,9 @@ Never use Object.defineProperty on window (Safari bug).
 
 ## Product roadmap
 Phase 1 (done): Modular web app — this codebase, verified on iPhone Safari
-Phase 2 (next): SwiftUi rebuild - make it truly iOS native
+Phase 2 (next): SwiftUI native rebuild — platform/ and storage/ layers swap,
+  engine/ and app/ logic ported to Swift, ui/ rebuilt in SwiftUI.
+  Web app stays on GitHub Pages as reference implementation throughout.
 
 ## Key files
 
@@ -79,7 +81,7 @@ Phase 2 (next): SwiftUi rebuild - make it truly iOS native
 | `src/engine/calculations.js` | engine | Shot planning math, wind/temp adjustment, expected strokes |
 | `src/engine/clubs.js` | engine | Club table, carry interpolation, roll factors |
 | `src/storage/storage.js` | storage | All localStorage/sessionStorage — no other module touches storage |
-| `src/platform/gps.js` | platform | Geolocation, shot tracking — only file that changes for Capacitor |
+| `src/platform/gps.js` | platform | Geolocation, shot tracking — only file that changes for SwiftUI migration |
 | `src/platform/weather.js` | platform | Open-Meteo wind fetch, Nominatim reverse geocode |
 
 ## Typography
@@ -174,7 +176,7 @@ numeric inputs that need to enable a button as-you-type.
 type="number" with min/max clears the value on iOS for
 intermediate inputs below min, breaking input event handling.
 
-## Button press/hover states — iOS fix (applies to Capacitor too)
+## Button press/hover states — iOS fix
 Safari and WKWebView do not reliably clear :active when the DOM
 changes during a touch gesture. The app uses a global fix instead:
 

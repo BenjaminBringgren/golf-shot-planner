@@ -34,7 +34,7 @@ Dependencies flow **downward only**. No layer may import from a layer above it. 
 ┌───────────────────▼─────────────────────┐
 │           src/platform/                 │
 │   GPS, weather fetch                    │
-│   only layer that changes for Capacitor │
+│   only layer that changes for SwiftUI   │
 │   gps.js  weather.js                    │
 └─────────────────────────────────────────┘
 ```
