@@ -73,7 +73,7 @@ Phase 2 (next): SwiftUI native rebuild — platform/ and storage/ layers swap,
 | `src/app/courses.js` | app | Course CRUD, hole-to-play logic, course editor, blendedScore, computeHoleStrokeCounts |
 | `src/app/holeFlow.js` | app | Stage machine for advanced score entry: STAGE_SHOTS → STAGE_PUTTS → STAGE_RESULT. Owns penalty/relief logic and pick-up |
 | `src/app/rounds.js` | app | Round stats, score rendering, My Golf sub-pages, showMgSub |
-| `src/ui/mapView.js` | ui | Mapbox GL map overlay: scope dots, shot lines, labels, dispersion arc, drag-to-override |
+| `src/ui/mapView.js` | ui | Mapbox GL map overlay: scope dots, shot lines, labels, dispersion arc, drag-to-override. SwiftUI migration replaces Mapbox with MapKit. |
 | `src/ui/carousel.js` | ui | Strategy carousel, wind breakdown, chip row sync |
 | `src/ui/scorecard.js` | ui | Active round scorecard, round complete overlay, saved round detail |
 | `src/ui/shotSheet/` | ui | Shot-by-shot entry UI components (index.js orchestrates; LieGrid, ShotChips, PuttsCard, ResultBar, etc.) |

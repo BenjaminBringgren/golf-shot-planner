@@ -344,9 +344,17 @@ Replace the web UI with a native SwiftUI app. The five-layer architecture was de
 | `src/app/` | Rewrite in Swift | Business logic and state — direct port using `@Observable` / `@StateObject` |
 | `src/ui/` | Rebuild in SwiftUI | Web modules serve as behavioural spec; do not attempt to port HTML/CSS |
 
+**Map layer: Mapbox → MapKit**
+The web app uses Mapbox GL JS (browser-only). The SwiftUI app replaces it with Apple
+MapKit — native, free, no API key, first-class SwiftUI integration via `Map`,
+`MapPolyline`, and `Annotation` (iOS 17+). Feature parity is complete for everything
+the overlay uses: satellite imagery, polylines, draggable annotations, custom overlays.
+`src/ui/mapView.js` serves as the behavioural spec for the MapKit reimplementation.
+
 **What the web app provides for the SwiftUI rebuild:**
 - `src/engine/calculations.js` — exact calculation logic, wind model, carry/roll math
 - `src/engine/clubs.js` — club table, relCarry values, roll factors (validated against Trackman data)
+- `src/ui/mapView.js` — map overlay behavioural spec: scope dots, shot lines, labels, dispersion arc, drag-to-override
 - `src/ui/` modules — complete behavioural specification: interaction flows, data displayed, edge cases handled
 
 **The web app continues running** on GitHub Pages throughout and after the SwiftUI rebuild as a reference implementation and preview environment.
