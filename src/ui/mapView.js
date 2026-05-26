@@ -156,7 +156,12 @@ export function openMapView() {
     else       _map.resize();
     _locateAndCenter();
     _startCompass();
-    _whenStyleLoaded(() => _renderShotOverlay());
+    // Only render immediately if we already have position data (re-open after GPS resolved).
+    // If not, _locateAndCenter's internal _whenStyleLoaded fires after GPS resolves instead.
+    const _snap = _callbacks.getGpsSnapshot?.();
+    if (_playerPos || _snap?.teeMark) {
+      _whenStyleLoaded(() => _renderShotOverlay());
+    }
   }));
 }
 
