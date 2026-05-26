@@ -5,7 +5,9 @@
       "WebFetch(domain:www.golfmonthly.com)",
       "WebSearch",
       "WebFetch(domain:forums.golfwrx.com)",
-      "WebFetch(domain:clubhouse.swingu.com)"
+      "WebFetch(domain:clubhouse.swingu.com)",
+      "Bash(find \"/Users/Benjamin/Library/Mobile Documents/com~apple~CloudDocs/Golf Shot Planner/golf-shot-planner-ios\" -name \"*.swift\" 2>/dev/null | head -20)",
+      "Read(//Users/Benjamin/Library/Mobile Documents/com~apple~CloudDocs/Golf Shot Planner/golf-shot-planner-ios/**)"
     ]
   }
 }
