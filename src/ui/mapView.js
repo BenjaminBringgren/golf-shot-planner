@@ -569,25 +569,33 @@ function _fitToOverlay() {
 
 // ── Dispersion arc ────────────────────────────────────────────────────────────
 
-// Lateral spread radius in metres for driver, by HCP band.
-// ~2× 95th-percentile stats for clear on-screen visibility as a landing-zone corridor.
+// Lateral spread arc radius in metres for driver, by HCP band.
+// Arc width = 2 × R × sin(40°) = R × 1.286.
+// Calibrated to match real-world 95th-percentile lateral spread (Trackman/Shot Scope data):
+//   HCP ≤5:  arc width ~60m (66yd)   — scratch driver corridor
+//   HCP ≤12: arc width ~75m (82yd)
+//   HCP ≤20: arc width ~100m (110yd)
+//   HCP ≤28: arc width ~125m (137yd)
+//   HCP ≤54: arc width ~160m (175yd)
 const _DRIVER_95 = [
-  { maxHcp:  5, r:  66 },
-  { maxHcp: 12, r:  86 },
-  { maxHcp: 20, r: 108 },
-  { maxHcp: 28, r: 138 },
-  { maxHcp: 54, r: 184 },
+  { maxHcp:  5, r:  47 },
+  { maxHcp: 12, r:  58 },
+  { maxHcp: 20, r:  78 },
+  { maxHcp: 28, r:  97 },
+  { maxHcp: 54, r: 124 },
 ];
 // Lateral spread scale relative to driver, by club key.
+// Shorter clubs are proportionally much more accurate than the carry ratio implies —
+// higher loft, shorter shaft and slower swing all tighten dispersion significantly.
 const _DISP_SCALE = {
   driver: 1.00, fw3: 0.85, fw5: 0.80, fw7: 0.78,
-  hy3: 0.75, hy4: 0.75, hy5: 0.75, hy6: 0.75,
-  '2i': 0.73, u2: 0.73, u3: 0.73, u4: 0.73,
-  '3i': 0.72, '4i': 0.72,
-  '5i': 0.70, '6i': 0.70, '7i': 0.68, '8i': 0.68,
-  '9i': 0.65, pw: 0.65,
-  '48': 0.62, '50': 0.62, '52': 0.60, '54': 0.58,
-  '56': 0.56, '58': 0.54, '60': 0.52,
+  hy3: 0.75, hy4: 0.74, hy5: 0.73, hy6: 0.72,
+  '2i': 0.70, u2: 0.70, u3: 0.69, u4: 0.68,
+  '3i': 0.65, '4i': 0.63,
+  '5i': 0.58, '6i': 0.55, '7i': 0.51, '8i': 0.48,
+  '9i': 0.43, pw: 0.40,
+  '48': 0.36, '50': 0.34, '52': 0.32, '54': 0.29,
+  '56': 0.27, '58': 0.25, '60': 0.23,
 };
 
 function _dispersionRadius(clubKey, hcp) {
