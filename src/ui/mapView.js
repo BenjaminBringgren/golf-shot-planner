@@ -658,9 +658,9 @@ function _refreshArc() {
   const clubKey = _shotClubs[_activeArcIdx - 1];
   if (!clubKey) { _clearArcLayer(); return; }
   const R = _dispersionRadius(clubKey, hcp);
-  // Shift arc center backward by R so the arc's forward tip lands exactly on the scope dot.
-  // The arc then sweeps behind the scope — full lateral width preserved, zero forward overshoot.
-  const arcCenter = _destinationPoint(center, (bearing + 180) % 360, R);
+  // Shift center backward by R + 15m so the arc's forward tip sits ~15m behind the scope dot,
+  // placing it just outside the crosshair ring rather than at the center.
+  const arcCenter = _destinationPoint(center, (bearing + 180) % 360, R + 15);
   _setArcGeoJSON(arcCenter, bearing, R, '#ffffff');
 }
 
