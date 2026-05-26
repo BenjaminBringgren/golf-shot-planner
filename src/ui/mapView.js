@@ -968,9 +968,11 @@ function _renderShotOverlay() {
           delete _dotPosCache[cacheKey];
           _customOverride = false;
         } else if (snappedTo) {
-          // Same-strategy snap: only cache tee landing when tee was the dragged dot,
-          // so shot2 recalculates fresh. On collapse, cache only tee landing as well.
-          _dotPosCache[cacheKey] = (segmentKey === 'tee' || wasCollapsing)
+          // Cache only tee landing on 3-shot plans (outgoingKey==='shot2') so shot2
+          // recalculates fresh on re-render. On 2-shot plans outgoingKey is null, so
+          // cache the full slice — otherwise hasCached is always false (cached.length 1
+          // vs dots.length-1 of 2) and the dragged tee position is discarded entirely.
+          _dotPosCache[cacheKey] = (segmentKey === 'tee' && outgoingKey === 'shot2') || wasCollapsing
             ? [_shotDots[1]] : _shotDots.slice(1);
           _customOverride = false;
         } else {
