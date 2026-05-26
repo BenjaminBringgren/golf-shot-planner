@@ -482,8 +482,8 @@ function _formatClub(key) {
 }
 
 function _labelText(dist, club, windDelta) {
-  let text = `${Math.round(dist)}m`;
-  if (windDelta) text += ` ${windDelta > 0 ? '+' : ''}${windDelta}`;
+  const d = Math.round(dist);
+  let text = windDelta ? `Plays like ${d - windDelta}m` : `${d}m`;
   if (club) text += ` · ${_formatClub(club)}`;
   return text;
 }
