@@ -181,6 +181,9 @@ export function refreshMapInfoStrip() {
     _renderShotOverlay();
     if (_shotDots.length >= 2) _fitToOverlay();
   });
+  // Re-fetch GPS so the player dot and tee marker update for the new hole.
+  // _locateAndCenter is async; it does a second render+fit once the fix completes.
+  _locateAndCenter();
 }
 
 // ── Internal ──────────────────────────────────────────────────────────────────
