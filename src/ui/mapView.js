@@ -47,6 +47,7 @@ let _labelMarkers   = [];
 let _activeStratColor  = '#888';
 let _customOverride    = false; // true after a drag that didn't snap to any named strategy
 let _activeArcIdx      = 1;    // which scope dot currently shows the dispersion arc
+let _shot2Collapsing   = false; // true while tee drag has pushed shot2 below collapse threshold
 
 // Persists dot positions the user has dragged, keyed by 'courseId|holeIdx|strategyType'.
 // Survives map close/reopen within the same session.
@@ -387,10 +388,11 @@ function _clearShotOverlay() {
   _labelMarkers.forEach(m => m.remove());
   _shotMarkers  = [];
   _labelMarkers = [];
-  _shotDots       = [];
-  _nominalDists   = [];
-  _shotClubs      = [];
-  _shotWindDeltas = [];
+  _shotDots         = [];
+  _nominalDists     = [];
+  _shotClubs        = [];
+  _shotWindDeltas   = [];
+  _shot2Collapsing  = false;
   if (_map) {
     if (_map.getLayer('shot-line-layer')) _map.removeLayer('shot-line-layer');
     if (_map.getSource('shot-line'))      _map.removeSource('shot-line');
@@ -821,21 +823,53 @@ function _renderShotOverlay() {
       const { lng, lat } = marker.getLngLat();
       _shotDots[idx] = { lat, lon: lng };
 
-      // Elastic shot2 follow: pull shot2 along the pre-drag bearing at the live
-      // best-club distance. Uses the fixed drag-start bearing so lateral tee movement
-      // doesn't rotate shot2 toward a straight line.
+      // Elastic shot2 follow with collapse detection.
+      // Shot2 fades out when the tee landing is close enough that shot2 would overshoot
+      // or leave less than MIN_APPROACH meters before the green (= 2-shot territory).
       if (outgoingKey === 'shot2' && _callbacks.findBestClubForDist && _dragBearing !== null) {
+        const approachDot    = _shotDots[_shotDots.length - 1];
+        const distToApproach = _callbacks.haversine(lat, lng, approachDot.lat, approachDot.lon);
+        const MIN_APPROACH   = 30;
+
         const curShot2 = _shotDots[idx + 1];
         const d2raw    = _callbacks.haversine(lat, lng, curShot2.lat, curShot2.lon);
         const res2     = _callbacks.findBestClubForDist(d2raw, true);
-        if (res2?.total) {
-          const newShot2 = _destinationPoint({ lat, lon: lng }, _dragBearing, res2.total);
-          _shotDots[idx + 1] = newShot2;
-          _shotMarkers[idx]?.setLngLat([newShot2.lon, newShot2.lat]);
+
+        // Collapse when the shortest reachable shot2 club leaves < MIN_APPROACH to the green.
+        const shouldCollapse = !res2 || res2.total >= distToApproach - MIN_APPROACH;
+
+        if (shouldCollapse) {
+          if (!_shot2Collapsing) {
+            _shot2Collapsing = true;
+            _shotMarkers[idx]?.getElement()?.style.setProperty('opacity', '0');
+          }
+          // Update the tee→(approach) label to show the direct remaining distance.
+          if (_labelMarkers[idx]) {
+            const aKey = _callbacks.findBestClubForDist?.(distToApproach, true)?.key ?? null;
+            const m    = _midpoint({ lat, lon: lng }, approachDot);
+            _labelMarkers[idx].setLngLat([m.lon, m.lat]);
+            _labelMarkers[idx].getElement().textContent = _labelText(distToApproach, aKey, null);
+          }
+          // Silence the shot2→approach label.
+          if (_labelMarkers[idx + 1]) _labelMarkers[idx + 1].getElement().textContent = '';
+        } else {
+          if (_shot2Collapsing) {
+            _shot2Collapsing = false;
+            _shotMarkers[idx]?.getElement()?.style.setProperty('opacity', '1');
+          }
+          if (res2?.total) {
+            const newShot2 = _destinationPoint({ lat, lon: lng }, _dragBearing, res2.total);
+            _shotDots[idx + 1] = newShot2;
+            _shotMarkers[idx]?.setLngLat([newShot2.lon, newShot2.lat]);
+          }
         }
       }
 
-      _setLineGeoJSON(_shotDots);
+      // Draw spline — skip the shot2 dot when collapsed so line goes tee→approach directly.
+      const splineDots = (_shot2Collapsing && outgoingKey === 'shot2')
+        ? [_shotDots[0], _shotDots[idx], _shotDots[_shotDots.length - 1]]
+        : _shotDots;
+      _setLineGeoJSON(splineDots);
       if (idx === _activeArcIdx || idx === _activeArcIdx - 1) _refreshArc();
 
       // Incoming segment — live club lookup.
@@ -850,8 +884,8 @@ function _renderShotOverlay() {
         _labelMarkers[idx - 1].getElement().textContent = _labelText(d1, liveKey, _shotWindDeltas[idx - 1]);
       }
 
-      // Outgoing segment label (uses elastically-updated _shotDots[idx+1] if applicable).
-      if (idx < _shotDots.length - 1 && _labelMarkers[idx]) {
+      // Outgoing segment label — skipped when collapsed (collapse block handles label above).
+      if (!_shot2Collapsing && idx < _shotDots.length - 1 && _labelMarkers[idx]) {
         const nextDot  = _shotDots[idx + 1];
         const d2       = _callbacks.haversine(lat, lng, nextDot.lat, nextDot.lon);
         const liveKey2 = (outgoingKey && _callbacks.findBestClubForDist)
@@ -862,8 +896,8 @@ function _renderShotOverlay() {
         _labelMarkers[idx].getElement().textContent = _labelText(d2, liveKey2, _shotWindDeltas[idx]);
       }
 
-      // Approach label: reposition when shot2 moved (its start point changed).
-      if (outgoingKey === 'shot2' && idx + 2 < _shotDots.length && _labelMarkers[idx + 1]) {
+      // Approach label: reposition when shot2 moved (not applicable when collapsed).
+      if (!_shot2Collapsing && outgoingKey === 'shot2' && idx + 2 < _shotDots.length && _labelMarkers[idx + 1]) {
         const shot2Dot    = _shotDots[idx + 1];
         const approachDot = _shotDots[idx + 2];
         const d3 = _callbacks.haversine(shot2Dot.lat, shot2Dot.lon, approachDot.lat, approachDot.lon);
@@ -875,6 +909,9 @@ function _renderShotOverlay() {
 
     marker.on('dragend', () => {
       _dragBearing = null;
+      const wasCollapsing = _shot2Collapsing;
+      _shot2Collapsing = false;
+
       const segs = [];
       if (segmentKey) {
         const d1 = _callbacks.haversine(
@@ -882,29 +919,36 @@ function _renderShotOverlay() {
         );
         segs.push({ key: segmentKey, dist: d1 });
       }
-      if (outgoingKey) {
+      if (outgoingKey === 'shot2') {
+        // Collapsed: signal router to clear the shot2 override so the engine picks
+        // the optimal 2-shot or 3-shot continuation from the new tee landing.
+        // Normal: commit the actual shot2 distance.
+        segs.push({ key: 'shot2', dist: wasCollapsing ? null : _callbacks.haversine(
+          _shotDots[idx].lat, _shotDots[idx].lon, _shotDots[idx + 1].lat, _shotDots[idx + 1].lon
+        )});
+      } else if (outgoingKey) {
         const d2 = _callbacks.haversine(
           _shotDots[idx].lat, _shotDots[idx].lon, _shotDots[idx + 1].lat, _shotDots[idx + 1].lon
         );
         segs.push({ key: outgoingKey, dist: d2 });
       }
+
       const snappedTo = segs.length ? _callbacks.commitClubOverride?.(segs, type) : null;
       if (segs.length) {
         if (snappedTo && snappedTo !== type) {
-          // Snapped to a different strategy: discard dot cache for the original strategy
-          // and leave the new strategy uncached so it renders its own fresh positions.
           delete _dotPosCache[cacheKey];
           _customOverride = false;
         } else if (snappedTo) {
-          // Same-strategy snap (clubs still fit): keep dragged positions for this strategy.
-          // If the tee dot was dragged, only cache tee landing so shot2 recalculates from
-          // the new tee position rather than staying pinned to a stale cached location.
-          _dotPosCache[cacheKey] = segmentKey === 'tee' ? [_shotDots[1]] : _shotDots.slice(1);
+          // Same-strategy snap: only cache tee landing when tee was the dragged dot,
+          // so shot2 recalculates fresh. On collapse, cache only tee landing as well.
+          _dotPosCache[cacheKey] = (segmentKey === 'tee' || wasCollapsing)
+            ? [_shotDots[1]] : _shotDots.slice(1);
           _customOverride = false;
         } else {
-          // No snap — custom override. Keep dragged positions for this strategy.
-          _dotPosCache[cacheKey] = _shotDots.slice(1);
-          _customOverride = true;
+          // No snap — custom or collapsed. Cache only tee landing when collapsing
+          // since shot2 will be re-placed by the engine on re-render.
+          _dotPosCache[cacheKey] = wasCollapsing ? [_shotDots[1]] : _shotDots.slice(1);
+          _customOverride = !wasCollapsing;
         }
         _renderChips();
         _whenStyleLoaded(() => _renderShotOverlay());

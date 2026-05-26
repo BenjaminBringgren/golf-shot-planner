@@ -2512,8 +2512,13 @@ initMapView({
         const club = _findBestClubByTotal(dist, false);
         if (club) teeOverrides[_hk(stratType)] = club.key;
       } else if (key === 'shot2') {
-        const club = _findBestClubByTotal(dist, true);
-        if (club) shot2Overrides[_hk(stratType)] = club.key;
+        if (dist == null) {
+          // Collapsed drag: clear shot2 override so engine picks optimal continuation.
+          delete shot2Overrides[_hk(stratType)];
+        } else {
+          const club = _findBestClubByTotal(dist, true);
+          if (club) shot2Overrides[_hk(stratType)] = club.key;
+        }
       }
     }
     // Snap to a named strategy if the resulting clubs fall within its valid alternatives.
