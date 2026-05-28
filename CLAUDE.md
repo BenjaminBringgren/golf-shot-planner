@@ -85,8 +85,8 @@ Phase 2 (next): SwiftUI native rebuild — platform/ and storage/ layers swap,
 | `src/platform/weather.js` | platform | Open-Meteo wind fetch, Nominatim reverse geocode |
 
 ## Typography
-All font sizes must use Apple's Large (Default) Dynamic Type scale.
-No other values are permitted.
+All text font sizes must use Apple's Large (Default) Dynamic Type scale.
+No other values are permitted for text labels.
 
 | Role        | Size |
 |-------------|------|
@@ -107,7 +107,8 @@ Off-scale values like 9, 14, 18, 23, or 30px are not allowed —
 round to the nearest step in the table above.
 
 These rules apply everywhere without exception: CSS classes,
-inline styles in HTML, and JS-generated HTML strings.
+inline styles in HTML, JS-generated HTML strings, and Swift
+`.font(.system(size:))` calls on Text views.
 
 Practical minimum for this app is 13px (Footnote). Caption 1
 (12px) is permitted only in scorecards and genuinely
@@ -122,6 +123,22 @@ All-caps tracking labels (badges, chips, section headers, menu
 titles) use `text-transform: uppercase; letter-spacing: 0.04–0.05em`
 and must use font-weight: 700 — they read visually smaller due to
 letter-spacing, so the heavier weight is required for legibility.
+
+### Two exemptions from the scale rule
+
+**SF Symbol icons**: `Image(systemName:)` sized via `.font(.system(size:))`
+is not text — use whatever size looks right for the context (common
+values: 28pt for inline icons, 32–52pt for empty-state illustrations).
+
+**Hero display numbers**: Large numerics that ARE the primary content
+(shot count, putt count, round score hero) may exceed 34pt to match
+platform convention. Calibrate to the web app equivalent:
+- Shot counter: 80px web → ~72pt iOS
+- Putt counter: 64px web → ~64pt iOS
+- Round score hero (RoundCompleteView, RoundDetailView): 34px web → 64pt iOS
+- Score entry counter: 80px web → 64pt iOS
+These are intentionally larger on iOS than the web; do not shrink them
+to fit the label scale. The rule still applies to surrounding labels.
 
 ## Score color convention
 Never use green or blue for score values. Always:
